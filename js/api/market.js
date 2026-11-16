@@ -1,0 +1,684 @@
+// Market data layer. Live sources first (CoinGecko → CoinPaprika, Binance),
+// clearly-flagged demo data only if every live source is unreachable.
+import { CONFIG } from '../config.js';
+import { getJson, getJsonAny, peek, postJson, HttpError } from './http.js';
+import * as demo from '../lib/demo.js';
+import { syncClock, now } from './clock.js';
+import { load, save } from '../store.js';
+
+// ------------------------------------------------------------ status
+export const dataStatus = new EventTarget();
+dataStatus.demo = false;
+function markDemo(reason) {
+  if (!dataStatus.demo) {
+    dataStatus.demo = true;
+    dataStatus.dispatchEvent(new CustomEvent('change', { detail: { demo: true, reason } }));
+  }
+}
+function markLive() {
+  if (dataStatus.demo) {
+    dataStatus.demo = false;
+    dataStatus.dispatchEvent(new CustomEvent('change', { detail: { demo: false } }));
+  }
+}
+const stale = async (p) => { try { return await p; } catch (e) { if (e.staleValue !== undefined) return e.staleValue; throw e; } };
+const STABLE = new Set(CONFIG.STABLECOINS);
+// Coins whose price held still all week: stablecoins and tokenised funds the
+// list above does not know yet. Filled as the market list loads.
+const PEGGED = new Set();
+export const isStable = (sym) => STABLE.has(String(sym).toLowerCase()) || PEGGED.has(String(sym).toLowerCase());
+/** A week of prices that never moved more than 0.6% top to bottom: no crypto coin does that. */
+export function looksPegged(prices) {
+  const p = (prices || []).filter((x) => Number.isFinite(x) && x > 0);
+  if (p.length < 24) return false;
+  return Math.max(...p) / Math.min(...p) - 1 < 0.006;
+}
+
+// ------------------------------------------------------------ Binance symbols
+let symbolSetPromise = null;
+export function binanceSymbols() {
+  if (!symbolSetPromise) {
+    symbolSetPromise = (async () => {
+      try {
+        const rows = await getJsonAny(CONFIG.BINANCE_REST, '/api/v3/ticker/price', { ttl: 10 * 60e3, persist: true, key: 'bn:prices' });
+        return new Set(rows.map((r) => r.symbol).filter((s) => s.endsWith('USDT')));
+      } catch {
+        return new Set(demo.DEMO_USDT_SYMBOLS);
+      }
+    })();
+  }
+  return symbolSetPromise;
+}
+
+// ------------------------------------------------------------ markets
+function fromGecko(r) {
+  return {
+    id: r.id, symbol: r.symbol.toUpperCase(), name: r.name, image: r.image, rank: r.market_cap_rank,
+    price: r.current_price, marketCap: r.market_cap, volume24h: r.total_volume,
+    change1h: r.price_change_percentage_1h_in_currency, change24h: r.price_change_percentage_24h_in_currency ?? r.price_change_percentage_24h,
+    change7d: r.price_change_percentage_7d_in_currency, high24h: r.high_24h, low24h: r.low_24h,
+    circulatingSupply: r.circulating_supply, ath: r.ath, sparkline: r.sparkline_in_7d?.price || [], source: 'coingecko',
+  };
+}
+function fromPaprika(r) {
+  const q = r.quotes?.USD || {};
+  return {
+    id: r.id, symbol: r.symbol.toUpperCase(), name: r.name, image: `https://static.coinpaprika.com/coin/${r.id}/logo.png`, rank: r.rank,
+    price: q.price, marketCap: q.market_cap, volume24h: q.volume_24h, change1h: q.percent_change_1h, change24h: q.percent_change_24h,
+    change7d: q.percent_change_7d, high24h: null, low24h: null, circulatingSupply: r.circulating_supply, ath: q.ath_price, sparkline: [], source: 'paprika',
+  };
+}
+
+export function cachedMarkets() {
+  const g = peek('cg:markets');
+  return g ? g.map(fromGecko) : null;
+}
+
+export async function getMarkets() {
+  let rows;
+  try {
+    const raw = await stale(getJson(`${CONFIG.COINGECKO}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=1h,24h,7d`, { ttl: 60e3, persist: true, key: 'cg:markets' }));
+    rows = raw.map(fromGecko);
+    markLive();
+  } catch {
+    try {
+      const raw = await stale(getJson(`${CONFIG.PAPRIKA}/tickers?limit=250`, { ttl: 60e3, persist: true, key: 'pp:tickers' }));
+      rows = raw.map(fromPaprika);
+      markLive();
+    } catch {
+      markDemo('markets');
+      rows = demo.demoMarkets().map((m) => ({ ...m, symbol: m.symbol.toUpperCase(), source: 'demo' }));
+    }
+  }
+  const set = await binanceSymbols();
+  const seen = new Set();
+  // The upstream feed occasionally carries entries that are not really traded
+  // coins — tokenised shares and placeholder listings with no volume, no price
+  // history and a symbol that is a product code. One of those outranking
+  // Bitcoin makes the whole list look broken, so they are dropped.
+  const looksReal = (r) => {
+    if (r.price === null || r.price === undefined) return false;
+    if (/^[A-Z]{1,3}\d{4,}$/.test(String(r.symbol || ''))) return false; // e.g. PC0000023
+    const noMovement = (r.change24h === null || r.change24h === undefined || r.change24h === 0)
+      && (r.change7d === null || r.change7d === undefined || r.change7d === 0);
+    const noVolume = !r.volume24h;
+    if (noMovement && noVolume) return false;
+    return true;
+  };
+  for (const r of rows) if (looksPegged(r.sparkline)) PEGGED.add(String(r.symbol).toLowerCase());
+  return rows.filter(looksReal).map((r) => {
+    const pair = `${r.symbol}USDT`;
+    const binance = !isStable(r.symbol) && set.has(pair) && !seen.has(pair) ? pair : null;
+    if (binance) seen.add(pair);
+    return { ...r, binance };
+  });
+}
+
+let marketsCache = { at: 0, promise: null };
+export function markets() {
+  if (!marketsCache.promise || Date.now() - marketsCache.at > 60e3) {
+    marketsCache = { at: Date.now(), promise: getMarkets().catch((e) => { marketsCache.at = 0; throw e; }) };
+  }
+  return marketsCache.promise;
+}
+
+export async function findCoin(symbolOrId) {
+  const list = await markets();
+  const s = String(symbolOrId).toUpperCase();
+  return list.find((c) => c.symbol === s) || list.find((c) => c.id === symbolOrId) || null;
+}
+
+export async function getGlobal() {
+  try {
+    const { data } = await stale(getJson(`${CONFIG.COINGECKO}/global`, { ttl: 120e3, persist: true, key: 'cg:global' }));
+    return {
+      totalMarketCap: data.total_market_cap?.usd, totalVolume: data.total_volume?.usd,
+      btcDominance: data.market_cap_percentage?.btc, ethDominance: data.market_cap_percentage?.eth,
+      marketCapChange24h: data.market_cap_change_percentage_24h_usd, activeCryptocurrencies: data.active_cryptocurrencies, markets: data.markets,
+    };
+  } catch {
+    try {
+      const g = await stale(getJson(`${CONFIG.PAPRIKA}/global`, { ttl: 120e3, persist: true, key: 'pp:global' }));
+      return { totalMarketCap: g.market_cap_usd, totalVolume: g.volume_24h_usd, btcDominance: g.bitcoin_dominance_percentage, ethDominance: null, marketCapChange24h: g.market_cap_change_24h, activeCryptocurrencies: g.cryptocurrencies_number, markets: null };
+    } catch {
+      markDemo('global');
+      return demo.demoGlobal();
+    }
+  }
+}
+
+export async function getFearGreed() {
+  try {
+    const r = await stale(getJson(`${CONFIG.FEAR_GREED}?limit=30`, { ttl: 30 * 60e3, persist: true, key: 'fng' }));
+    return r.data.map((d) => ({ value: +d.value, classification: d.value_classification, timestamp: +d.timestamp }));
+  } catch {
+    return demo.demoFearGreed();
+  }
+}
+
+export async function getTrending() {
+  try {
+    const { coins } = await stale(getJson(`${CONFIG.COINGECKO}/search/trending`, { ttl: 10 * 60e3, persist: true, key: 'cg:trending' }));
+    return coins.slice(0, 8).map(({ item }) => ({
+      id: item.id, symbol: item.symbol.toUpperCase(), name: item.name, image: item.small || item.thumb, rank: item.market_cap_rank,
+      price: item.data?.price ?? null, change24h: item.data?.price_change_percentage_24h?.usd ?? null,
+    }));
+  } catch {
+    return demo.demoTrending().map((t) => ({ ...t, image: null }));
+  }
+}
+
+export async function getCoinProfile(coin) {
+  if (!coin || coin.source !== 'coingecko') return null;
+  try {
+    const r = await stale(getJson(`${CONFIG.COINGECKO}/coins/${encodeURIComponent(coin.id)}?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false`, { ttl: 30 * 60e3, persist: true, key: `cg:coin:${coin.id}` }));
+    const md = r.market_data || {};
+    return {
+      description: (r.description?.en || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 1400),
+      categories: (r.categories || []).filter(Boolean).slice(0, 6),
+      homepage: r.links?.homepage?.find(Boolean) || null,
+      explorer: r.links?.blockchain_site?.find(Boolean) || null,
+      genesisDate: r.genesis_date, athDate: md.ath_date?.usd, atl: md.atl?.usd,
+      change30d: md.price_change_percentage_30d, change1y: md.price_change_percentage_1y,
+      totalSupply: md.total_supply, maxSupply: md.max_supply, fdv: md.fully_diluted_valuation?.usd,
+    };
+  } catch {
+    // null means "this coin has no reference profile to fetch". A failed or
+    // rate-limited request is a different thing, and the page has to be able to
+    // tell them apart: it used to print "Max supply ∞" for Bitcoin whenever
+    // CoinGecko throttled the request.
+    return { unavailable: true };
+  }
+}
+
+export async function searchCoins(q) {
+  const s = q.trim().toLowerCase();
+  if (!s) return [];
+  const list = await markets().catch(() => []);
+  const local = list.filter((c) => c.symbol.toLowerCase().startsWith(s) || c.name.toLowerCase().includes(s)).slice(0, 8);
+  return local;
+}
+
+// Keep the app on the exchange's clock, re-checked every 10 minutes.
+export async function syncExchangeClock() {
+  return syncClock(() => getJsonAny(CONFIG.BINANCE_REST, '/api/v3/time', { ttl: 0 }));
+}
+
+// ------------------------------------------------------------ candles
+export const INTERVAL_MS = { '1s': 1e3, '5s': 5e3, '10s': 1e4, '1m': 6e4, '3m': 18e4, '5m': 3e5, '15m': 9e5, '30m': 18e5, '1h': 36e5, '2h': 72e5, '4h': 144e5, '6h': 216e5, '12h': 432e5, '1d': 864e5, '3d': 2592e5, '1w': 6048e5 };
+
+// Binance publishes 1-second candles but nothing between 1s and 1m, so 5s and
+// 10s are built here by merging 1s candles into fixed buckets. Anything faster
+// than 1s does not exist as a candle anywhere — that is raw trade data.
+export const SECOND_INTERVALS = ['1s', '5s', '10s'];
+const BUILT_FROM_1S = { '5s': 5, '10s': 10 };
+// One request returns 1000 candles, so a second-chart is capped where the wait
+// is still short: 1s ≈ 17 min of history, 5s ≈ 1.4 h, 10s ≈ 1.7 h.
+export const MAX_BARS = { '1s': 1000, '5s': 1000, '10s': 600 };
+
+export const isSecondInterval = (iv) => SECOND_INTERVALS.includes(iv);
+
+/** Merge candles into buckets of `factor` (e.g. five 1s candles → one 5s candle). */
+export function bucketCandles(rows, factor, stepMs) {
+  const size = factor * stepMs;
+  const out = [];
+  for (const r of rows) {
+    const t = Math.floor(r.t / size) * size;
+    const last = out[out.length - 1];
+    if (last && last.t === t) {
+      last.h = Math.max(last.h, r.h);
+      last.l = Math.min(last.l, r.l);
+      last.c = r.c;
+      last.v += r.v;
+    } else {
+      out.push({ t, o: r.o, h: r.h, l: r.l, c: r.c, v: r.v });
+    }
+  }
+  return out;
+}
+
+const mapKlines = (rows) => rows.map((k) => ({ t: k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4], v: +k[5] }));
+
+// Paginates backwards, 1000 candles per request.
+async function fetchKlines(pair, interval, total, ttl) {
+  let out = [];
+  let endTime = null;
+  while (out.length < total) {
+    const limit = Math.min(1000, total - out.length);
+    const path = `/api/v3/klines?symbol=${pair}&interval=${interval}&limit=${limit}${endTime ? `&endTime=${endTime}` : ''}`;
+    const rows = mapKlines(await getJsonAny(CONFIG.BINANCE_REST, path, { ttl, key: `bn:${path}` }));
+    if (!rows.length) break;
+    out = rows.concat(out);
+    endTime = rows[0].t - 1;
+    if (rows.length < limit) break;
+  }
+  return out;
+}
+
+// Fetch up to `total` candles (paginates backwards, 1000 per request).
+
+// Candles for a coin that does not trade on Binance.
+//
+// The old path asked CoinGecko's /ohlc endpoint for 365 days and labelled the
+// result "1d". That endpoint does not return daily candles at that range — it
+// returns FOUR-DAY candles, 92 of them. So every non-Binance coin was drawing a
+// 4-day chart under a 1d button, with far too little history for EMA200 or the
+// forecast, which is why low-cap coins showed a blank forecast and a blank
+// EMA200 rather than an explanation.
+//
+// /market_chart returns evenly spaced price points instead: hourly for a 90-day
+// request, daily for a 365-day one. Those are bucketed here onto real interval
+// boundaries, so a "1d" candle covers one day and a "4h" candle covers four
+// hours. The high and low of each bucket come from the points inside it, so on
+// the finest interval a candle's wick is its own open and close and nothing
+// more — the result is marked lowRes so the page can say that plainly.
+const GECKO_STEP = { hourly: 36e5, daily: 864e5 };
+
+// ------------------------------------------------------------ other exchanges
+// Coins Binance does not list still trade elsewhere. These exchanges publish
+// candles through public APIs that allow browser requests, so a coin like XMR
+// or HYPE gets real OHLCV candles on every timeframe instead of CoinGecko's
+// hourly line (which cannot draw a 1m, 5m or 15m chart at all).
+export const EX_BAR = {
+  gate: { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1h': '1h', '4h': '4h', '1d': '1d', '1w': '7d' },
+  htx: { '1m': '1min', '5m': '5min', '15m': '15min', '30m': '30min', '1h': '60min', '4h': '4hour', '1d': '1day', '1w': '1week' },
+  okx: { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1h': '1H', '2h': '2H', '4h': '4H', '6h': '6Hutc', '12h': '12Hutc', '1d': '1Dutc', '1w': '1Wutc' },
+};
+// A chart an exchange does not publish is built from its 1h candles, on the
+// UTC boundaries Binance uses (a 6h candle opens at 00:00, 06:00, 12:00 and
+// 18:00 UTC). Gate.io and HTX have no 2h, 6h or 12h candles, so a coin only
+// they list had no candles at all on those trader charts.
+export const EX_AGG = { '2h': { base: '1h', n: 2 }, '6h': { base: '1h', n: 6 }, '12h': { base: '1h', n: 12 } };
+/** Candles merged into `step`-long ones on UTC boundaries; a first bucket the rows start inside is dropped. */
+export function aggregateCandles(rows, step) {
+  const out = [];
+  for (const r of rows) {
+    const t = Math.floor(r.t / step) * step;
+    const last = out[out.length - 1];
+    if (last && last.t === t) {
+      last.h = Math.max(last.h, r.h);
+      last.l = Math.min(last.l, r.l);
+      last.c = r.c;
+      last.v += r.v;
+    } else out.push({ t, o: r.o, h: r.h, l: r.l, c: r.c, v: r.v, first: r.t });
+  }
+  return out.filter((b) => b.first === b.t).map(({ first, ...b }) => b);
+}
+const exBar = (ex, interval) => EX_BAR[ex]?.[interval] || null;
+const exCan = (interval) => Boolean(EX_BAR.gate[interval] || EX_AGG[interval]);
+const EX_NAME = { gate: 'Gate.io', htx: 'HTX', okx: 'OKX' };
+const num = (v) => +v;
+
+async function gateCandles(sym, bar, total, ttl, step) {
+  const base = `https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${sym}_USDT&interval=${bar}`;
+  const map = (rows) => rows.map((r) => ({ t: r[0] * 1e3, o: num(r[5]), h: num(r[3]), l: num(r[4]), c: num(r[2]), v: num(r[6]) }));
+  let out = map(await getJson(`${base}&limit=${Math.min(1000, total)}`, { ttl, timeout: 9000 }));
+  // Gate refuses `limit` together with a time window, so older pages ask for
+  // an explicit from/to range of at most 1,000 candles.
+  while (out.length && out.length < total) {
+    const to = out[0].t / 1e3 - 1, n = Math.min(1000, total - out.length);
+    const rows = map(await getJson(`${base}&from=${Math.floor(to - (n - 1) * step / 1e3)}&to=${Math.floor(to)}`, { ttl, timeout: 9000 }));
+    if (!rows.length) break;
+    out = rows.concat(out);
+  }
+  return out;
+}
+async function htxCandles(sym, bar, total, ttl) {
+  const j = await getJson(`https://api.huobi.pro/market/history/kline?symbol=${sym.toLowerCase()}usdt&period=${bar}&size=${Math.min(2000, total)}`, { ttl, timeout: 9000 });
+  if (j?.status !== 'ok' || !Array.isArray(j.data)) return [];
+  return j.data.map((r) => ({ t: r.id * 1e3, o: num(r.open), h: num(r.high), l: num(r.low), c: num(r.close), v: num(r.amount) })).reverse();
+}
+async function okxCandles(sym, bar, total, ttl) {
+  const inst = `${sym}-USDT`;
+  const map = (j) => (Array.isArray(j?.data) ? j.data : []).map((r) => ({ t: num(r[0]), o: num(r[1]), h: num(r[2]), l: num(r[3]), c: num(r[4]), v: num(r[5]) })).reverse();
+  let out = map(await getJson(`https://www.okx.com/api/v5/market/candles?instId=${inst}&bar=${bar}&limit=300`, { ttl, timeout: 9000 }));
+  // older candles come 100 at a time; stop at 1,000 to keep the request count sane
+  for (let i = 0; out.length && out.length < Math.min(total, 1000) && i < 8; i++) {
+    const rows = map(await getJson(`https://www.okx.com/api/v5/market/history-candles?instId=${inst}&bar=${bar}&after=${out[0].t}&limit=100`, { ttl, timeout: 9000 }));
+    if (!rows.length) break;
+    out = rows.concat(out);
+  }
+  return out;
+}
+const EX_FETCH = { gate: gateCandles, htx: htxCandles, okx: okxCandles };
+
+// Which exchange had a coin last time, so a coin only OKX lists does not cost
+// two refused requests (and two console errors) on every visit. A miss on all
+// three is remembered briefly, so a blip does not hide a coin for long.
+const VENUE_KEY = 'exVenue';
+const VENUE_HIT_MS = 7 * 864e5, VENUE_MISS_MS = 6 * 3600e3;
+const venueMemo = () => load(VENUE_KEY, {}) || {};
+function rememberVenue(sym, ex) {
+  // a note to save time next visit: failing to write it must never cost the candles
+  try {
+    const m = venueMemo();
+    m[sym] = { ex, at: Date.now() };
+    // keep it small: the 200 most recent coins
+    save(VENUE_KEY, Object.fromEntries(Object.entries(m).sort((a, b) => b[1].at - a[1].at).slice(0, 200)));
+  } catch { /* storage unavailable */ }
+}
+
+/**
+ * Real candles for a coin Binance does not list. Tries Gate.io, HTX and OKX in
+ * turn and keeps the first whose latest close is within 10% of the coin's
+ * market price — so a different token that happens to share the ticker is never
+ * charted — and whose newest candle is recent.
+ *
+ * The 10% proximity check guards *discovery* (only === null): it stops a
+ * different token that shares the ticker from being charted. When a specific
+ * already-validated source is requested (only === <ex>, e.g. the coin page
+ * catching up after a dropped socket), the check is skipped — otherwise a
+ * legitimate move of more than 10% while the socket is down would reject every
+ * poll from the known-good exchange and silently freeze the chart.
+ */
+/**
+ * Where this app gets a coin's candles: 'binance', 'gate', 'htx', 'okx', null
+ * (none of them lists it) or undefined (not known yet).
+ */
+export function knownVenue(coin) {
+  if (!coin?.symbol) return undefined;
+  if (coin.binance) return 'binance';
+  const sym = String(coin.symbol).toUpperCase();
+  if (!/^[A-Z0-9]{2,12}$/.test(sym)) return null;   // no exchange uses such a ticker (FIGR_HELOC)
+  const m = venueMemo()[sym];
+  if (!m) return undefined;
+  if (m.ex === null) return Date.now() - m.at < VENUE_MISS_MS ? null : undefined;
+  return Date.now() - m.at < VENUE_HIT_MS ? m.ex : undefined;
+}
+/** knownVenue, looking the coin up (a few small requests) if it is not known yet. */
+export async function findVenue(coin) {
+  const v = knownVenue(coin);
+  if (v !== undefined) return v;
+  const r = await exchangeCandles(coin, '1d', 60).catch(() => null);
+  return r ? r.source : knownVenue(coin);
+}
+
+export async function exchangeCandles(coin, interval, total = 500, only = null) {
+  const sym = String(coin?.symbol || '').toUpperCase();
+  const step = INTERVAL_MS[interval];
+  if (!sym || !/^[A-Z0-9]{2,12}$/.test(sym) || !exCan(interval)) return null;
+  const ttl = interval.endsWith('m') ? 15e3 : 60e3;
+  const known = only ? null : venueMemo()[sym];
+  if (known && known.ex === null && Date.now() - known.at < VENUE_MISS_MS) return null;
+  const first = known?.ex && Date.now() - known.at < VENUE_HIT_MS ? known.ex : null;
+  const order = only ? [only] : [...new Set([first, 'gate', 'htx', 'okx'].filter(Boolean))];
+  const answered = [], silent = [];
+  for (const ex of order) {
+    try {
+      const agg = !exBar(ex, interval) && EX_AGG[interval];
+      let rows = (agg
+        ? await EX_FETCH[ex](sym, EX_BAR[ex][agg.base], total * agg.n + agg.n, ttl, INTERVAL_MS[agg.base])
+        : await EX_FETCH[ex](sym, EX_BAR[ex][interval], total, ttl, step))
+        .filter((c) => [c.o, c.h, c.l, c.c].every((x) => Number.isFinite(x) && x > 0));
+      if (agg) rows = aggregateCandles(rows, step);
+      answered.push(ex);
+      // A listing with little history is not trusted when a coin is first looked
+      // for; the exchange already found for it only has to send what was asked
+      // (a check asks for the last few candles).
+      if (rows.length < (only ? 1 : ex === first ? Math.min(50, total) : 50)) continue;
+      const last = rows[rows.length - 1];
+      if (now() - last.t > step * 3 + 2 * 864e5) continue;
+      if (!only && Number.isFinite(coin.price) && coin.price > 0 && Math.abs(last.c / coin.price - 1) > 0.1) continue;
+      markLive();
+      if (!only && first !== ex) rememberVenue(sym, ex);
+      return { candles: rows.slice(-total), source: ex, venue: `${EX_NAME[ex]} ${sym}/USDT`, pair: null };
+    } catch (e) {
+      (!(e instanceof HttpError) || e.status === 0 || e.status === 429 || e.status >= 500 ? silent : answered).push(ex);
+    }
+  }
+  // Remembered as listed nowhere only when the exchanges answered. HTX and OKX
+  // say "no such pair" in a reply the page can read; Gate.io's reply cannot be
+  // read from a web page, so it looks like a dropped connection and counts as
+  // a "no" only when another exchange did answer. A dropped connection used to
+  // be remembered too, hiding the coin's chart for an hour.
+  const unreached = silent.some((ex) => ex !== 'gate') || (silent.length > 0 && !answered.length);
+  if (!only && !unreached) rememberVenue(sym, null);
+  return null;
+}
+
+async function geckoCandles(coin, interval, total) {
+  const want = INTERVAL_MS[interval];
+  if (!want) throw new HttpError(`Unknown interval ${interval}.`, 400);
+
+  // pick the finest series the endpoint will actually return for this range
+  const grain = want >= 864e5 ? 'daily' : 'hourly';
+  const step = GECKO_STEP[grain];
+  if (want < step) {
+    throw new HttpError(
+      `${coin.symbol || 'This coin'} does not trade on Binance, and the fallback price feed only goes down to ${grain === 'daily' ? 'one day' : 'one hour'}. Timeframes shorter than that are not available for it — they would have to be invented.`,
+      404,
+    );
+  }
+  // CoinGecko's free API refuses (401) any history longer than 365 days.
+  const days = grain === 'daily' ? 365 : 90;
+  const j = await stale(getJson(
+    `${CONFIG.COINGECKO}/coins/${encodeURIComponent(coin.id)}/market_chart?vs_currency=usd&days=${days}`,
+    { ttl: 5 * 60e3, key: `cg:mc:${coin.id}:${days}` },
+  ));
+  const pts = Array.isArray(j?.prices) ? j.prices : [];
+  if (pts.length < 2) throw new HttpError('No price history available for this coin', 404);
+
+  const buckets = new Map();
+  for (const [t, price] of pts) {
+    if (!Number.isFinite(price)) continue;
+    const key = Math.floor(t / want) * want;
+    const b = buckets.get(key);
+    if (!b) buckets.set(key, { t: key, o: price, h: price, l: price, c: price, v: 0 });
+    else { b.c = price; if (price > b.h) b.h = price; if (price < b.l) b.l = price; }
+  }
+  const candles = [...buckets.values()].sort((a, b) => a.t - b.t).slice(-total);
+  if (!candles.length) throw new HttpError('No price history available for this coin', 404);
+  return { candles, source: 'coingecko', pair: null, lowRes: true, grain, closeOnly: want === step };
+}
+
+/**
+ * Candles the forecast was tested on: real exchange OHLCV. CoinGecko's hourly
+ * line (lowRes) and demo candles are not, so the scans skip those coins and
+ * say how many they skipped.
+ */
+export const isTestedSource = (r) => Boolean(r) && !r.lowRes && r.source !== 'demo';
+
+// Candles the forecast (200), the AI trader (220) and the indicators need.
+const MIN_HISTORY = 260;
+
+export async function getCandles(coin, interval = '1h', total = 500) {
+  const pair = typeof coin === 'string' ? coin : coin?.binance;
+
+  // Second-by-second charts: fetch 1s candles and merge them where needed.
+  if (isSecondInterval(interval)) {
+    const factor = BUILT_FROM_1S[interval] || 1;
+    const want = Math.min(total, MAX_BARS[interval] || 600);
+    if (!pair) {
+      const demoId = (typeof coin === 'object' && coin?.source === 'demo' && coin.id) || demo.demoSymbolToId(`${coin?.symbol}USDT`);
+      if (demoId) { markDemo('candles'); return { candles: demo.demoCandles(demoId, interval, want), source: 'demo', pair: null }; }
+      throw new HttpError('Second-by-second candles are only available for coins that trade on Binance.', 404);
+    }
+    try {
+      const raw = await fetchKlines(pair, '1s', want * factor, 1200);
+      if (raw.length) {
+        markLive();
+        const candles = factor === 1 ? raw : bucketCandles(raw, factor, 1e3);
+        return { candles, source: 'binance', pair, seconds: true };
+      }
+    } catch { /* fall through to demo */ }
+    const demoId = demo.demoSymbolToId(pair);
+    if (demoId) { markDemo('candles'); return { candles: demo.demoCandles(demoId, interval, want), source: 'demo', pair }; }
+    throw new HttpError('Second-by-second candles are not available for this pair.', 404);
+  }
+
+  if (pair) {
+    try {
+      const ttl = interval.endsWith('m') ? 15e3 : 60e3;
+      let out = [];
+      let endTime = null;
+      while (out.length < total) {
+        const limit = Math.min(1000, total - out.length);
+        const path = `/api/v3/klines?symbol=${pair}&interval=${interval}&limit=${limit}${endTime ? `&endTime=${endTime}` : ''}`;
+        const rows = mapKlines(await getJsonAny(CONFIG.BINANCE_REST, path, { ttl, key: `bn:${path}` }));
+        if (!rows.length) break;
+        out = rows.concat(out);
+        endTime = rows[0].t - 1;
+        if (rows.length < limit) break;
+      }
+      // a pair that stopped trading long ago is treated as unavailable
+      if (out.length && now() - out[out.length - 1].t < INTERVAL_MS[interval] * 3 + 2 * 864e5) {
+        // A pair Binance listed recently has too little history for the
+        // indicators, the forecast and the AI (HYPE had 59 daily candles there:
+        // no signal, no forecast on 4h or 1d). An exchange that has listed the
+        // coin for longer gives the whole chart.
+        if (out.length < Math.min(total, MIN_HISTORY) && coin && typeof coin === 'object') {
+          const ex = await exchangeCandles(coin, interval, total).catch(() => null);
+          if (ex && ex.candles.length > out.length) return ex;
+        }
+        markLive();
+        return { candles: out, source: 'binance', pair };
+      }
+    } catch { /* fall through */ }
+  }
+  // Not on Binance (or Binance unreachable): real candles from another exchange.
+  if (coin && typeof coin === 'object') {
+    const ex = await exchangeCandles(coin, interval, total).catch(() => null);
+    if (ex) return ex;
+  }
+  if (coin && typeof coin === 'object' && coin.source === 'coingecko') {
+    // a 404 here is a real answer — "this timeframe does not exist for this
+    // coin" — so it is thrown rather than quietly replaced with demo candles
+    try {
+      return await geckoCandles(coin, interval, total);
+    } catch (err) {
+      if (err instanceof HttpError && err.status === 404 && /does not trade on Binance/.test(err.message)) throw err;
+    }
+  }
+  const demoId = (typeof coin === 'object' && coin?.source === 'demo' && coin.id) || demo.demoSymbolToId(pair || `${coin?.symbol}USDT`);
+  if (demoId) {
+    markDemo('candles');
+    return { candles: demo.demoCandles(demoId, interval, Math.min(total, 1500)), source: 'demo', pair };
+  }
+  if (!pair && typeof coin === 'object' && knownVenue(coin) === null) {
+    const sym = String(coin.symbol).toUpperCase();
+    const err = new HttpError(`${sym} is not traded on Binance, Gate.io, HTX or OKX, the exchanges this app reads, so it has no candles for a chart, indicators, a forecast or the AI.`, 404);
+    err.notListed = true;
+    throw err;
+  }
+  throw new HttpError('No price history available for this coin', 404);
+}
+
+/**
+ * The close of the candle that opened at `atMs`, read from the coin's exchange
+ * at that moment rather than from its latest candles, so a forecast logged
+ * days ago can still be graded (the latest 500 one-minute candles reach back
+ * eight hours, and 500 five-second ones 42 minutes). `{ close }`;
+ * `{ retry: true }` when it cannot be read yet (the candle is still forming,
+ * or a request failed); `{ missing: true }` when the exchange answered
+ * without that candle (its history does not reach back that far, or it does
+ * not list the coin).
+ */
+export async function closeAtTime(coin, interval, atMs) {
+  const step = INTERVAL_MS[interval];
+  if (!step || !Number.isFinite(atMs)) return { missing: true };
+  if (atMs + step > now()) return { retry: true };
+  const inside = (t) => t <= atMs && atMs - t < step; // the candle that holds atMs
+  try {
+    const pair = typeof coin === 'string' ? coin : coin?.binance;
+    if (pair) {
+      // A second chart is built from 1s candles: its close is the last 1s close inside it.
+      const second = isSecondInterval(interval);
+      const end = second ? atMs + step - 1e3 : atMs;
+      const path = `/api/v3/klines?symbol=${pair}&interval=${second ? '1s' : interval}&endTime=${end}&limit=1`;
+      const r = mapKlines(await getJsonAny(CONFIG.BINANCE_REST, path, { ttl: 864e5, key: `bn:${path}` }))[0];
+      const ok = r && r.c > 0 && (second ? r.t >= atMs && r.t <= end : inside(r.t));
+      return ok ? { close: r.c } : { missing: true };
+    }
+    if (!coin || typeof coin !== 'object' || !exCan(interval)) return { missing: true };
+    const venue = await findVenue(coin);
+    if (venue === null) return { missing: true };
+    if (!EX_FETCH[venue]) return { retry: true };
+    // a chart built from 1h candles closes with the last 1h candle inside it
+    if (!exBar(venue, interval) && EX_AGG[interval]) {
+      const base = EX_AGG[interval].base;
+      return closeAtTime(coin, base, Math.floor(atMs / step) * step + step - INTERVAL_MS[base]);
+    }
+    const sym = String(coin.symbol).toUpperCase(), bar = EX_BAR[venue][interval];
+    let rows;
+    if (venue === 'gate') {
+      const to = Math.floor(atMs / 1e3), from = Math.floor((atMs - step) / 1e3) + 1;
+      rows = (await getJson(`https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${sym}_USDT&interval=${bar}&from=${from}&to=${to}`, { ttl: 864e5, timeout: 9000 }))
+        .map((r) => ({ t: r[0] * 1e3, c: num(r[2]) }));
+    } else if (venue === 'okx') {
+      const j = await getJson(`https://www.okx.com/api/v5/market/history-candles?instId=${sym}-USDT&bar=${bar}&after=${atMs + 1}&limit=1`, { ttl: 864e5, timeout: 9000 });
+      rows = (Array.isArray(j?.data) ? j.data : []).map((r) => ({ t: num(r[0]), c: num(r[4]) }));
+    } else {
+      rows = await htxCandles(sym, bar, 2000, 60e3); // HTX serves only its latest 2,000 candles
+    }
+    const r = rows.filter((x) => inside(x.t) && x.c > 0).pop();
+    return r ? { close: r.c } : { missing: true };
+  } catch {
+    return { retry: true };
+  }
+}
+
+// How many decimals the exchange itself quotes this pair to. Showing fewer is a
+// rounded price pretending to be the real one, so the coin page asks for this.
+const tickCache = new Map();
+export async function getTickSize(pair) {
+  if (!pair) return null;
+  if (tickCache.has(pair)) return tickCache.get(pair);
+  try {
+    const r = await getJsonAny(CONFIG.BINANCE_REST, `/api/v3/exchangeInfo?symbol=${pair}`, { ttl: 864e5, key: `bn:info:${pair}` });
+    const f = r.symbols?.[0]?.filters?.find((x) => x.filterType === 'PRICE_FILTER');
+    const tick = f ? +f.tickSize : null;
+    const dp = tick && tick > 0 ? Math.max(0, Math.round(-Math.log10(tick))) : null;
+    tickCache.set(pair, dp);
+    return dp;
+  } catch { tickCache.set(pair, null); return null; }
+}
+
+export async function getDepth(pair, limit = 20) {
+  try {
+    const r = await getJsonAny(CONFIG.BINANCE_REST, `/api/v3/depth?symbol=${pair}&limit=${limit}`, { ttl: 2000 });
+    return { bids: r.bids.map(([p, q]) => [+p, +q]), asks: r.asks.map(([p, q]) => [+p, +q]) };
+  } catch { return null; }
+}
+
+export async function getTrades(pair, limit = 30) {
+  try {
+    const r = await getJsonAny(CONFIG.BINANCE_REST, `/api/v3/trades?symbol=${pair}&limit=${limit}`, { ttl: 2000 });
+    return r.map((t) => ({ id: t.id, price: +t.price, qty: +t.qty, time: t.time, buyerMaker: t.isBuyerMaker })).reverse();
+  } catch { return null; }
+}
+
+export async function getTickers24h(pairs) {
+  if (!pairs.length) return {};
+  try {
+    const rows = await getJsonAny(CONFIG.BINANCE_REST, `/api/v3/ticker/24hr?symbols=${encodeURIComponent(JSON.stringify(pairs))}`, { ttl: 15e3 });
+    return Object.fromEntries(rows.map((r) => [r.symbol, { price: +r.lastPrice, change24h: +r.priceChangePercent, quoteVolume: +r.quoteVolume, high: +r.highPrice, low: +r.lowPrice }]));
+  } catch { return {}; }
+}
+
+// ------------------------------------------------------------ wallets
+export const CHAINS = {
+  btc: { name: 'Bitcoin', symbol: 'BTC', pattern: /^(bc1[a-z0-9]{25,87}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/ },
+  eth: { name: 'Ethereum', symbol: 'ETH', pattern: /^0x[a-fA-F0-9]{40}$/ },
+  bsc: { name: 'BNB Smart Chain', symbol: 'BNB', pattern: /^0x[a-fA-F0-9]{40}$/ },
+  polygon: { name: 'Polygon', symbol: 'POL', pattern: /^0x[a-fA-F0-9]{40}$/ },
+  sol: { name: 'Solana', symbol: 'SOL', pattern: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/ },
+};
+
+export async function walletBalance(chain, address) {
+  const def = CHAINS[chain];
+  if (!def) throw new Error('Unsupported chain');
+  if (!def.pattern.test(address)) throw new Error(`That is not a valid ${def.name} address`);
+  if (chain === 'btc') {
+    const r = await getJsonAny(CONFIG.BTC_API, `/address/${address}`, { ttl: 60e3, timeout: 12000 });
+    const sats = r.chain_stats.funded_txo_sum - r.chain_stats.spent_txo_sum + r.mempool_stats.funded_txo_sum - r.mempool_stats.spent_txo_sum;
+    return { balance: sats / 1e8, symbol: def.symbol, txCount: r.chain_stats.tx_count };
+  }
+  if (chain === 'sol') {
+    const r = await postJson(CONFIG.RPC.sol, { jsonrpc: '2.0', id: 1, method: 'getBalance', params: [address] });
+    if (r.error) throw new Error(r.error.message);
+    return { balance: r.result.value / 1e9, symbol: def.symbol };
+  }
+  const r = await postJson(CONFIG.RPC[chain], { jsonrpc: '2.0', id: 1, method: 'eth_getBalance', params: [address, 'latest'] });
+  if (r.error) throw new Error(r.error.message);
+  return { balance: Number(BigInt(r.result) / 10n ** 9n) / 1e9, symbol: def.symbol };
+}

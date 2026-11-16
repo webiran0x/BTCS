@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Unit tests
+        run: node --test tests/*.test.mjs
+
+      - name: The indexable pages, sitemap and robots.txt match index.html and the tested records
+        run: node tools/build-pages.mjs --check
+
+  # The edge function, booted with Deno and no database: it must start, and its
+  # selftest must answer exactly what the site's engine computes. Nothing else
+  # checks the server code before it is deployed.
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: The server starts and its engine matches the site's
+        run: bash tools/server-smoke.sh
+
+  # Every page in a real browser: fails on any page error, failed import or a
+  # page that renders nothing. Unit tests cannot see a view that throws while
+  # rendering; this would have caught the Trading page breaking for anyone
+  # without an AI account yet.
+  smoke:
+    # Pinned: ubuntu-latest moved to 26.04, which this Playwright release cannot
+    # install a browser on ("does not support chromium on ubuntu26.04").
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install a browser
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: Every page loads without an error
+        run: |
+          python3 -m http.server 8099 --bind 127.0.0.1 >/dev/null 2>&1 &
+          sleep 1
+          node tools/smoke.mjs http://127.0.0.1:8099/
