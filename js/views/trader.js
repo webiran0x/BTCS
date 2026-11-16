@@ -26,7 +26,7 @@ async function pool(items, n, fn) {
   await Promise.all(Array.from({ length: Math.min(n, queue.length) }, async () => { while (queue.length) await fn(queue.shift()); }));
 }
 
-export const title = 'معامله‌گری';
+export const title = 'Trading';
 
 const CFG_KEY = 'traderCfg';
 const STATE_KEY = 'traderState';
@@ -37,10 +37,19 @@ const LESSONS_KEY = 'traderLessons';   // the self-review's changelog
 const AUTOLEARN_KEY = 'traderAutoLearn';
 
 export async function render(el) {
+  // prices: newest known price per coin. priceFrom says where it came from
+  // (a live tick, or the latest candle when no tick has arrived yet).
   const st = { disposed: false, charts: [], prices: {}, priceFrom: {}, running: false, noExchange: [] };
+  // each check after the first asks only for the candles that are new
   const candlesFor = candleCache(getCandles, { window: 500, stepOf: (iv) => INTERVAL_MS[iv] });
+  // How far back a held coin's missing candles are fetched (5m: 20 days).
   const BACKFILL_MAX = 6000;
+  // Coins that keep coming back with no price data (checks in a row they failed
+  // while others loaded), so the page can say so once and offer to drop them.
   const NODATA_KEY = 'traderNoData';
+  // Formal session machine: idle → running → stopped → running, RESET from any
+  // state. autoOn mirrors status === 'running' so the periodic catch-up timer
+  // and RUN_KEY keep working exactly as before.
   let session = load(SESSION_KEY, null);
   if (!session || !['idle', 'running', 'stopped'].includes(session.status)) {
     const hasState = !!load(STATE_KEY, null);
@@ -48,9 +57,18 @@ export async function render(el) {
     save(SESSION_KEY, session);
   }
   let autoOn = session.status === 'running';
+  // the user's own choices and what the self-review learned (traderrun.js)
   const cfg = configFrom(load(CFG_KEY, {}));
   let state = load(STATE_KEY, null);
+  // Each coin's own rules: on for daily accounts unless switched off (see
+  // PER_COIN_RULES for what they made and what they risked in testing). It
+  // follows the chart the account RUNS on, which only changes on a Reset, not
+  // the chart picked in Settings. Stored as an opt-out: for an hour they were
+  // opt-in, and a Save then stored "off" for anyone who never touched the box.
   const ownRulesOn = () => ownRulesFor(cfg, state);
+  // What the account actually trades: the settings, the chart's own measured
+  // rules, the self-review's lessons. Everything that trades or describes the
+  // rules reads this, so the page cannot describe one strategy and run another.
   const effective = (iv = state?.interval || cfg.interval) => rulesForChart(cfg, iv, load(LESSONS_KEY, []));
 
   const applySession = (event) => {
@@ -68,17 +86,25 @@ export async function render(el) {
   function syncSessionChip() {
     const chip = $('#sessionChip', el);
     if (!chip) return;
+    // only when it changes: redrawing it on every check restarted its pulse,
+    // which then never stopped (a repaint every frame while the page was open)
     const cls = `session-chip ${session.status}`, html = `<i></i>${sessionLabel(session.status)}`;
     if (chip.className !== cls) chip.className = cls;
     if (chip.innerHTML !== html) chip.innerHTML = html;
   }
 
   const all = await markets().catch(() => []);
+  // The best real price this page has for a coin: a live tick, the latest
+  // candle, or the market list (refreshed every minute). Never the entry price:
+  // Sell and Close used to fall back to it before the first tick arrived, or
+  // for a coin with no live stream, and recorded a 0% trade that never happened.
   const priceOf = (sym) => {
     if (Number.isFinite(st.prices[sym])) return st.prices[sym];
     const c = all.find((x) => x.symbol === sym && x.source !== 'demo');
     return Number.isFinite(c?.price) && c.price > 0 ? c.price : null;
   };
+  // A fresh exchange price for one coin, from its latest 1-minute candle, for
+  // when the live stream is blocked or has not delivered this coin yet.
   async function fetchPrice(sym) {
     const coin = all.find((c) => c.symbol === sym);
     if (!coin) return null;
@@ -90,6 +116,7 @@ export async function render(el) {
       return px;
     } catch { return null; }
   }
+  // Prices to mark every account with: the list prices, overridden by live ones.
   const marks = () => {
     const m = {};
     for (const c of all) if (c.source !== 'demo' && Number.isFinite(c.price)) m[c.symbol] = c.price;
@@ -99,56 +126,65 @@ export async function render(el) {
 
   el.innerHTML = `
     <div class="page-head">
-      <div><h1>معامله‌گری</h1>
-        <p>سه حساب در کنار هم: معاملات آزمایشی که خودتان انجام می‌دهید، معاملاتی که واقعی انجام داده‌اید، و هوش مصنوعی که استراتژی را به طور خودکار اجرا می‌کند. فقط حساب واقعی با پول واقعی سر و کار دارد — بی‌تی‌سی هرگز سفارشی ثبت نمی‌کند و کلیدی نگهداری نمی‌کند.</p>
-        <div class="callout warn mt" role="note"><b>${icon('info', 14)} شبیه‌سازی، نه تضمین سود</b><p>حساب‌های آزمایشی و هوش مصنوعی با پول شبیه‌سازی‌شده روی قیمت‌های زنده معامله می‌کنند. سفارش‌ها با قیمت کندل و کارمزد مدل‌سازی‌شده پر می‌شوند؛ سفارش‌های واقعی همچنین مشمول اسپیرید (Spread) و لغزش قیمت (Slippage) هستند، ممکن است به صورت جزئی یا اصلا پر نشوند، و صرافی‌ها ممکن است در میانه‌ی روند قطع شوند. در تست‌های رو به جلو (Walk-forward), قوانین در برخی دوره‌ها ضرر کرده‌اند و گاهی هولد کردن ساده عملکرد بهتری داشته است؛ ارقام زیر هر دو حالت را با بیشترین افت نمایش می‌دهند. نتایج اینجا را به عنوان مدرکی درباره قوانین در نظر بگیرید، نه بازدهی تضمین‌شده. پیشنهاد مالی محسوب نمی‌شود. <a class="acc" href="#/learn">نحوه تست قوانین ←</a></p></div>
-        <details class="mt"><summary class="fine" style="cursor:pointer">معنای هر حساب و استراتژی</summary>
+      <div><h1>Trading</h1>
+        <p>Three accounts, side by side: the demo trades you place yourself, the trades you really made, and the AI running the strategy on its own. Only the real account involves real money — CoinVantage never places an order and holds no keys.</p>
+        <div class="callout warn mt" role="note"><b>${icon('info', 14)} Simulation, not a path to profit</b><p>The demo and AI accounts trade simulated money on live prices. Orders fill at the candle's price with modelled fees; real orders also pay spread and slippage, can fill partly or not at all, and exchanges can go down mid-move. In walk-forward tests the rules have lost money in some periods and simply holding has sometimes done better: the figures below show both, with the worst drop. Treat a result here as evidence about the rules, not an expected return. Not financial advice. <a class="acc" href="#/learn">How the rules are tested →</a></p></div>
+        <details class="mt"><summary class="fine" style="cursor:pointer">What each account and strategy means</summary>
           <dl class="defs">
-            <dt>حساب آزمایشی (Demo)</dt><dd>پول شبیه‌سازی‌شده برای معامله دستی و تمرین بدون ریسک. کارمزدها مدل‌سازی شده‌اند؛ لغزش قیمت خیر.</dd>
-            <dt>حساب هوش مصنوعی (AI)</dt><dd>پول شبیه‌سازی‌شده که به طور خودکار بر اساس تنظیمات انتخابی شما در تنظیمات، روی قیمت‌های زنده در مرورگر شما و (هنگام ورود به حساب) در ابری معامله می‌کند.</dd>
-            <dt>حساب واقعی (Real)</dt><dd>سابقه معاملاتی که خودتان در یک صرافی ثبت کرده‌اید (دستی یا از طریق فایل). اپلیکیشن هرگز آن‌ها را ثبت نمی‌کند.</dd>
-            <dt>استراتژی پیش‌فرض تست‌شده</dt><dd>قوانین هر چارت که با در نظر گرفتن کارمزدها در تست‌های رو به جلو بررسی شده‌اند. نتیجه اندازه‌گیری‌شده آن‌ها (خوب یا بد) در کنار حساب نمایش داده می‌شود.</dd>
-            <dt>استراتژی سفارشی</dt><dd>تنظیمات شخصی شما. این تنظیمات بخشی از تست رو به جلو نبوده‌اند، بنابراین ارقام تست‌شده درباره آن‌ها صدق نمی‌کنند؛ گزینه «تست این تنظیمات» نگاهی به گذشته دارد که معمولاً روی تاریخچه قبلی بهتر به نظر می‌رسد.</dd>
+            <dt>Demo account</dt><dd>Simulated money you trade by hand, to practise without risk. Fees are modelled; slippage is not.</dd>
+            <dt>AI account</dt><dd>Simulated money traded automatically by the rules you choose in Settings, on live prices, in your browser and (when signed in) in the cloud.</dd>
+            <dt>Real account</dt><dd>A record of trades you placed yourself on an exchange, entered by hand or imported, measured the same way. The app never places them.</dd>
+            <dt>Tested default strategy</dt><dd>The rules for each chart that went through the walk-forward test with fees included. Their measured result, good or bad, is shown next to the account.</dd>
+            <dt>Custom strategy</dt><dd>Your own settings. They were not part of the walk-forward test, so the tested figures say nothing about them; "Test these settings" gives a look back, which flatters rules picked on the same history.</dd>
           </dl></details>
         <p class="fine" id="syncNote">${syncNote()}</p></div>
       <div class="row">
         <span class="session-chip ${session.status}" id="sessionChip"><i></i>${sessionLabel(session.status)}</span>
-        <button class="btn" id="cfgBtn">${icon('chip', 16)} تنظیمات</button>
-        <button class="btn ghost" id="resetBtn"${state ? '' : ' hidden'}>بازنشانی</button>
-        <button class="btn ghost" id="stopBtn" hidden>${icon('close', 16)} توقف هوش مصنوعی</button>
-        <button class="btn primary" id="startBtn">${state ? icon('refresh', 16) + ' به‌روزرسانی' : icon('bolt', 16) + ' شروع ترید بات'}</button>
+        <button class="btn" id="cfgBtn">${icon('chip', 16)} Settings</button>
+        <button class="btn ghost" id="resetBtn"${state ? '' : ' hidden'}>Reset</button>
+        <button class="btn ghost" id="stopBtn" hidden>${icon('close', 16)} Stop the AI</button>
+        <button class="btn primary" id="startBtn">${state ? icon('refresh', 16) + ' Catch up now' : icon('bolt', 16) + ' Start the trader'}</button>
       </div>
     </div>
     <div id="body">${state ? skeleton(6, 26) : startCard()}</div>`;
 
+  // The measured result, stated before anyone starts it: each chart's rules
+  // were picked on older candles and run on newer ones they had never seen,
+  // three times, all coins in one account with fees. A feature that cannot
+  // beat buying and holding should say so on its own page.
   function verdictCard() {
     const iv = state?.interval || cfg.interval;
     const w = CHART_TESTED[iv];
     const TFS = ['15m', '1h', '4h', '1d'];
+    // Showing one timeframe's numbers under another label would present a test
+    // that was never run.
     if (!w) {
       return `<div class="card" style="border-color:var(--warn)">
-      <div class="card-h"><h3>${icon('info', 16)} روی تایم‌فریم ${esc(iv)} تست نشده است</h3></div>
-      <p class="fine">این استراتژی روی تایم‌فریم‌های ${TFS.join(', ')} ارزیابی شده است. روی ${esc(iv)} این بات ${cfg.strategy === 'custom' ? 'قوانین شخصی شما' : 'قوانین استاندارد'} را بدون نتیجه اندازه‌گیری‌شده مشخص معامله می‌کند؛ گزینه «تست این تنظیمات» در بخش تنظیمات عملکرد آن‌ها را روی کندل‌های اخیر نشان می‌دهد. قوانین فعال: ${esc(rulesText(effective(iv)))}</p>
+      <div class="card-h"><h3>${icon('info', 16)} Not tested on the ${esc(iv)} chart</h3></div>
+      <p class="fine">This strategy was measured on ${TFS.join(', ')} charts. On ${esc(iv)} it trades ${cfg.strategy === 'custom' ? 'your own rules' : 'the standard rules'} with no measured result to expect; "Test these settings" in Settings shows how they did on recent candles. Rules in force: ${esc(rulesText(effective(iv)))}</p>
     </div>`;
     }
     const sign = (v) => pct(v, 2);
     const traded = (x) => (x.adopt ? x.own : x.standard);
-    const pickVerdict = (x) => (x.cleared ? `در این دوره عملکرد بهتری داشت اما در دوره قبل نه (${esc(x.previous?.measuredOn || '')})، و قوانین فقط زمانی تغییر می‌کنند که دو دوره متوالی توافق داشته باشند` : `عملکرد بهتری نداشت${x.previous?.cleared ? ` (در دوره قبل چنین بود، تاریخ ${esc(x.previous?.measuredOn)})` : ''}`);
+    // a chart's own pick is traded once two runs in a row clear the bar (CHART_RULES)
+    const pickVerdict = (x) => (x.cleared ? `it beat them clearly enough in this run but not in the run before (${esc(x.previous?.measuredOn || '')}), and the rules change only when two runs in a row agree` : `did not beat them clearly enough${x.previous?.cleared ? ` (it had in the run before, on ${esc(x.previous.measuredOn)})` : ''}`);
     const r = traded(w);
     const e = effective(iv);
     return `<div class="card" style="border-color:var(--warn)">
-      <div class="card-h"><h3>${icon('info', 16)} عملکرد واقعی این استراتژی در تست‌ها</h3><span class="fine">اندازه‌گیری‌شده در ${esc(CHART_TESTED.measuredOn)}، نه تخمینی</span></div>
-      <p>بررسی کندل به کندل روی ${w.coins ?? CHART_TESTED.coins} ارز در یک حساب، با احتساب کارمزدها، در ${CHART_TESTED.blocks} دوره پشت سر هم حدود ${esc(w.block)} (${esc(w.from)} → ${esc(w.to)}). ${w.adopt ? `پیش از هر دوره، قوانین از میان ${CHART_TESTED.configs} مجموعه قانون روی تاریخچه قبلی انتخاب شده و روی دوره‌ای که هرگز ندیده بودند اجرا شدند.` : `قوانین استاندارد در هر سه دوره اجرا شدند؛ در کنار آن‌ها، انتخاب از میان ${CHART_TESTED.configs} مجموعه قانون روی تاریخچه پیش از هر دوره نیز تست شد و ${pickVerdict(w)}.`} ${cfg.strategy === 'custom' ? `<b>شما در حال معامله با قوانین شخصی خود هستید که بخشی از این تست نبوده‌اند</b>، بنابراین این آمار درباره آن‌ها صدق نمی‌کند؛ برای نگاهی به گذشته از «تست این تنظیمات» در تنظیمات استفاده کنید. برای مقایسه، قوانین تست‌شده برای ${esc(iv)} به طور میانگین <b class="${r.ret >= 0 ? 'up' : 'down'}">${sign(r.ret)}</b> در هر دوره بازدهی داشتند در حالی که هولد کردن همان ارزها <b class="${w.hold >= 0 ? 'up' : 'down'}">${sign(w.hold)}</b> بود.` : `روی ${esc(iv)} قوانینی که معامله می‌شوند به طور میانگین <b class="${r.ret >= 0 ? 'up' : 'down'}">${sign(r.ret)}</b> در هر دوره با میانگین بدترین افت ${r.dd}% بازدهی داشتند، در حالی که هولد کردن همان ارزها به طور میانگین <b class="${w.hold >= 0 ? 'up' : 'down'}">${sign(w.hold)}</b> با بدترین افت ${w.holdDrop}% بود. ${r.ret > w.hold ? 'روی این تایم‌فریم عملکرد بهتری نسبت به هولد کردن طی سه دوره داشته است؛ این یک مدرک است، نه تضمین.' : 'روی این تایم‌فریم هولد کردن سود بیشتری داشته است.'}${w.previous && !w.adopt && Math.abs(w.previous.ret - r.ret) >= 2 ? ` نتیجه در تاریخ ${esc(w.previous.measuredOn)} روی کندل‌های تقریباً مشابه ${sign(w.previous.ret)} در هر دوره بود: نتایج هر تست را به عنوان تقریب در نظر بگیرید.` : ''}${r.dd < w.holdDrop - 5 ? (r.ret > w.hold ? ' همچنین افت بسیار کمتری داشت.' : ' اما افت بسیار کمتری داشت.') : ''} بدترین افت شامل معاملات باز در بسته شدن هر کندل است.${w.fillCost ? ` این تست هر سفارش را با قیمت کندل پر می‌کند؛ با احتساب 0.05% لغزش و اسپرید در هر طرف، حدود ${w.fillCost} واحد کمتر در هر دوره سود کرده است.` : ''}`}</p>
-      <div class="tbl-wrap mt"><table class="tbl fit"><thead><tr><th class="l">تایم‌فریم</th><th class="hide-p">دوره تست</th><th class="hide-p">قوانین</th><th>نتیجه هر دوره</th><th>بدترین افت</th><th class="hide-p">قوانین استاندارد</th><th>هولد کردن</th><th class="hide-p">بدترین افت هولد</th><th class="hide-p">معاملات</th></tr></thead><tbody>
-        ${TFS.map((k) => { const x = CHART_TESTED[k], t = traded(x); return `<tr${k === iv ? ' style="font-weight:600"' : ''}><td class="l">${k}</td><td class="fine wrap hide-p" style="min-width:96px">${esc(x.from)} → ${esc(x.to)}</td><td class="fine hide-p">${x.adopt ? 'شخصی' : 'استاندارد'}</td><td class="${t.ret >= 0 ? 'up' : 'down'}">${sign(t.ret)}</td><td class="down">−${t.dd}%</td><td class="hide-p ${x.standard.ret >= 0 ? 'up' : 'down'}">${sign(x.standard.ret)}</td><td class="${x.hold >= 0 ? 'up' : 'down'}">${sign(x.hold)}</td><td class="down hide-p">−${x.holdDrop}%</td><td class="hide-p">${t.trades}</td></tr>`; }).join('')}
+      <div class="card-h"><h3>${icon('info', 16)} What this strategy actually did when it was tested</h3><span class="fine">measured ${esc(CHART_TESTED.measuredOn)}, not estimated</span></div>
+      <p>Run candle by candle over ${w.coins ?? CHART_TESTED.coins} coins in one account, fees included, in ${CHART_TESTED.blocks} back-to-back periods of about ${esc(w.block)} (${esc(w.from)} → ${esc(w.to)}). ${w.adopt ? `Before each period the rules were picked from ${CHART_TESTED.configs} rule sets on the history before it, then run on a period they had never seen.` : `The standard rules ran through all three; next to them, a pick from ${CHART_TESTED.configs} rule sets made on the history before each period ran too, and ${pickVerdict(w)}.`} ${cfg.strategy === 'custom' ? `<b>You are trading your own rules, which were not part of this test</b>, so it says nothing about them; use "Test these settings" in Settings for a look back. For comparison, the tested rules for ${esc(iv)} averaged <b class="${r.ret >= 0 ? 'up' : 'down'}">${sign(r.ret)}</b> a period against <b class="${w.hold >= 0 ? 'up' : 'down'}">${sign(w.hold)}</b> for holding the same coins.` : `On ${esc(iv)} the rules it trades averaged <b class="${r.ret >= 0 ? 'up' : 'down'}">${sign(r.ret)}</b> a period with an average worst drop of ${r.dd}%, while holding the same coins averaged <b class="${w.hold >= 0 ? 'up' : 'down'}">${sign(w.hold)}</b> with a worst drop of ${w.holdDrop}%. ${r.ret > w.hold ? 'On this chart it did better than holding, over three periods; that is evidence, not a promise.' : 'On this chart holding made more.'}${w.previous && !w.adopt && Math.abs(w.previous.ret - r.ret) >= 2 ? ` The run on ${esc(w.previous.measuredOn)}, on nearly the same candles, gave ${sign(w.previous.ret)} a period: read any one run's average as rough.` : ''}${r.dd < w.holdDrop - 5 ? (r.ret > w.hold ? ' It also fell much less.' : ' But it fell much less.') : ''} Worst drops count open trades at every candle close, as the account itself would have shown them.${w.fillCost ? ` The test fills every order at the candle's price; with fills 0.05% worse each way (spread and slippage) it made about ${w.fillCost} points less a period.` : ''}`}</p>
+      <div class="tbl-wrap mt"><table class="tbl fit"><thead><tr><th class="l">Chart</th><th class="hide-p">Tested</th><th class="hide-p">Rules</th><th>Result a period</th><th>Worst drop</th><th class="hide-p">Standard rules</th><th>Holding</th><th class="hide-p">Holding's worst drop</th><th class="hide-p">Trades</th></tr></thead><tbody>
+        ${TFS.map((k) => { const x = CHART_TESTED[k], t = traded(x); return `<tr${k === iv ? ' style="font-weight:600"' : ''}><td class="l">${k}</td><td class="fine wrap hide-p" style="min-width:96px">${esc(x.from)} → ${esc(x.to)}</td><td class="fine hide-p">${x.adopt ? 'its own' : 'standard'}</td><td class="${t.ret >= 0 ? 'up' : 'down'}">${sign(t.ret)}</td><td class="down">−${t.dd}%</td><td class="hide-p ${x.standard.ret >= 0 ? 'up' : 'down'}">${sign(x.standard.ret)}</td><td class="${x.hold >= 0 ? 'up' : 'down'}">${sign(x.hold)}</td><td class="down hide-p">−${x.holdDrop}%</td><td class="hide-p">${t.trades}</td></tr>`; }).join('')}
       </tbody></table></div>
-      <p class="fine mt">قوانین فعال روی ${esc(iv)}: ${esc(rulesText(e))} ${cfg.strategy === 'custom' ? 'اینها قوانین شخصی شما هستند که در تنظیمات تعیین شده‌اند.' : w.adopt ? `این انتخاب خود تایم‌فریم است: در تست، انتخاب قوانین برای این تایم‌فریم بهتر از قوانین استاندارد عمل کرد (در ${w.better} از ${CHART_TESTED.blocks} دوره با ${sign(w.own.ret)} در برابر ${sign(w.standard.ret)} و افت ${w.own.dd}% در برابر ${w.standard.dd}%)، بنابراین مجدداً روی کل تاریخچه اعمال می‌شود.` : `انتخاب تایم‌فریم ${w.cleared ? `در این دوره قوانین استاندارد را شکست داد (در ${w.better} از ${CHART_TESTED.blocks} دوره با ${sign(w.own.ret)} در برابر ${sign(w.standard.ret)}) اما در دوره قبل نه، بنابراین تا زمان توافق در دو دوره متوالی حفظ می‌شود` : `عملکرد بهتری نسبت به قوانین استاندارد نداشت (در ${w.better} از ${CHART_TESTED.blocks} دوره${w.previous?.cleared ? `; در دوره قبل در تاریخ ${esc(w.previous.measuredOn)} چنین بود` : ''})، بنابراین تغییر نمی‌کند.`}`} کارمزدها ${r.fees}% از موجودی هر دوره را تشکیل دادند و ${r.win}% از معاملات برنده شدند.${iv === '15m' ? ' بازه ۱۵ دقیقه‌ای تنها ده روز است، بنابراین اعداد بسیار نوسان دارند.' : ''}${ownRulesText()}${ownRulesOn() ? ` تست‌شده روی ${PER_COIN_RULES.coins} ارز در فاصله ${esc(PER_COIN_RULES.tested.from)} تا ${esc(PER_COIN_RULES.tested.to)}، با انتخاب قوانین روی سال‌های پیشین: ${sign(PER_COIN_RULES.tested.own.ret)} با بدترین افت ${PER_COIN_RULES.tested.own.dd}%، در برابر ${sign(PER_COIN_RULES.tested.standard.ret)} و ${PER_COIN_RULES.tested.standard.dd}% برای قوانین روزانه تنها، و ${sign(PER_COIN_RULES.tested.hold)} برای هولد کردن ارزها (بدترین افت ${PER_COIN_RULES.tested.holdDrop}%).${PER_COIN_RULES.tested.previousRun ? ` در تست قبلی روی ${PER_COIN_RULES.tested.previousRun.coins} ارز، نتیجه ${sign(PER_COIN_RULES.tested.previousRun.own)} در برابر ${sign(PER_COIN_RULES.tested.previousRun.standard)} بود: نتایج بلندمدت به ارزها بستگی دارند.` : ''} می‌توانید این قابلیت را در تنظیمات خاموش کنید.` : ''}</p>
+      <p class="fine mt">Rules in force on ${esc(iv)}: ${esc(rulesText(e))} ${cfg.strategy === 'custom' ? 'These are your own rules, set in Settings.' : w.adopt ? `They are this chart's own pick: in the test, picking rules for the chart beat the standard rules in ${w.better} of ${CHART_TESTED.blocks} periods (${sign(w.own.ret)} against ${sign(w.standard.ret)} a period, worst drop ${w.own.dd}% against ${w.standard.dd}%), so they are re-picked the same way on all the history.` : `The chart's own pick ${w.cleared ? `beat the standard rules in this run (better in ${w.better} of ${CHART_TESTED.blocks} periods, ${sign(w.own.ret)} against ${sign(w.standard.ret)} a period) but not in the run before, so the chart keeps them until two runs in a row agree.` : `did not beat the standard rules clearly enough (better in ${w.better} of ${CHART_TESTED.blocks} periods${w.previous?.cleared ? `; it had in the run before, on ${esc(w.previous.measuredOn)}` : ''}), so it keeps them.`}`} Fees came to ${r.fees}% of the balance a period, and ${r.win}% of trades won.${iv === '15m' ? ' A 15m period is only ten days, so these numbers swing a lot between runs.' : ''}${ownRulesText()}${ownRulesOn() ? ` Tested on ${PER_COIN_RULES.coins} coins over ${esc(PER_COIN_RULES.tested.from)} → ${esc(PER_COIN_RULES.tested.to)}, with every rule chosen on the years before: ${sign(PER_COIN_RULES.tested.own.ret)} with a worst drop of ${PER_COIN_RULES.tested.own.dd}%, against ${sign(PER_COIN_RULES.tested.standard.ret)} and ${PER_COIN_RULES.tested.standard.dd}% for the daily rules alone, and ${sign(PER_COIN_RULES.tested.hold)} for holding the coins (worst drop ${PER_COIN_RULES.tested.holdDrop}%).${PER_COIN_RULES.tested.previousRun ? ` The run before, on ${PER_COIN_RULES.tested.previousRun.coins} coins, made ${sign(PER_COIN_RULES.tested.previousRun.own)} against ${sign(PER_COIN_RULES.tested.previousRun.standard)}: one long test swings with its coins and start date, so read the size of the gain as rough.` : ''} You can switch them off in Settings.` : ''}</p>
       ${ownRulesOn() ? coinRulesTable(e) : ''}
-      <p class="fine">${w.coins ?? CHART_TESTED.coins} ارز برتر امروز: ارزهایی که سقوط کرده یا دلست شده‌اند در تست حضور ندارند، که باعث بهتر نشان دادن نتایج (حتی هولد کردن) می‌شود.</p>
-      <p class="fine">بنابراین این حساب نمایش یک استراتژی است که روی قیمت‌های زنده و با احتساب کارمزدها اجرا می‌شود. این یک تضمین سود نیست و هیچ سفارش واقعی ثبت نمی‌کند.</p>
+      <p class="fine">The ${w.coins ?? CHART_TESTED.coins} coins are today's large coins: coins that collapsed or were delisted along the way are not in the test, which flatters every result here, holding's included.</p>
+      <p class="fine">So this account is a demonstration of a strategy, run honestly on live prices with fees counted, including the losing stretches. It is not a promise of profit. It places no real orders and holds no keys.</p>
     </div>`;
   }
 
+  // What each tested chart can make, per hour, day, week and month, at this
+  // account's risk and on its balance, after fees and the cost of real fills.
   function earningsCard() {
     const rows = earningsByChart(cfg);
     if (!rows.length) return '';
@@ -157,63 +193,72 @@ export async function render(el) {
     const s = state ? stats(state, marks()) : null;
     const bal = s ? s.equity : cfg.startingBalance;
     const dp = (v) => (Math.abs(v) < 0.01 ? 4 : Math.abs(v) < 0.1 ? 3 : 2);
+    // cents for a dollar or more, a little finer below it
     const signed = (v) => { const a = Math.abs(v); return `${v < 0 ? '−' : '+'}${money(a, { dp: a >= 0.1 ? 2 : a >= 0.01 ? 3 : 4 })}`; };
     const cell = (v) => `<b class="${v >= 0 ? 'up' : 'down'}">${signed((bal * v) / 100)}</b><br><small>${pct(v, dp(v))}</small>`;
+    // a phone shows thousands as K, so four columns fit in rupees as in dollars
     const short = (v) => (Math.abs(v * fx.rate) >= 1000 ? `${v < 0 ? '−' : '+'}${compact(Math.abs(v))}` : signed(v));
     const cellP = (v) => `<b class="${v >= 0 ? 'up' : 'down'}">${short((bal * v) / 100)}</b><br><small>${pct(v, dp(v))}</small>`;
+    // the account's own record so far, the same way
     const live = (() => {
       if (!s || !Number.isFinite(s.returnPct)) return null;
       const days = (Date.now() - (state.liveFrom || state.startedAt)) / 864e5;
       if (!(days >= 1)) return { early: true, hours: Math.max(0, Math.round(days * 24)) };
+      // a rate is shown for a span only once the account has run that long:
+      // two days of trades spread over a month read as a forecast, which they are not
       const d = s.returnPct / days;
       return { hour: d / 24, day: d, week: days >= 7 ? d * 7 : null, month: days >= 30 ? d * 30 : null, days };
     })();
-    const notYet = (need) => `<small class="muted">پس از ${need} روز</small>`;
+    const notYet = (need) => `<small class="muted">after ${need} days</small>`;
     const when = rows.map((r) => `${r.chart} ${r.from.slice(0, 7)} → ${r.to.slice(0, 7)}`).join(', ');
     return `<div class="card mt" id="earnCard">
-      <div class="card-h"><h3>${icon('chart', 16)} پتانسیل درآمدی: ساعتی، روزانه، هفتگی و ماهانه</h3><span class="fine">با ریسک ${rows[0].risk}% در هر معامله، با سرمایه ${money(bal)}</span></div>
-      <div class="tbl-wrap hide-p"><table class="tbl fine fit"><thead><tr><th class="l">تایم‌فریم</th><th>ساعتی</th><th>روزانه</th><th>هفتگی</th><th>ماهانه</th><th class="hide-p">بدترین دوره تست</th><th class="hide-t">هولد کردن (ماهانه)</th><th class="hide-t">معاملات ماهانه</th></tr></thead><tbody>
-        ${rows.map((r) => { const tags = [r.chart === iv ? 'فعلی' : '', top && r.chart === top.iv ? 'پیشنهادی' : ''].filter(Boolean); return `<tr${r.chart === iv ? ' style="font-weight:600"' : ''}><td class="l"><b>${esc(r.chart)}</b>${tags.length ? `<small>${tags.join(' · ')}</small>` : ''}</td>
+      <div class="card-h"><h3>${icon('chart', 16)} What it can make: per hour, day, week and month</h3><span class="fine">at ${rows[0].risk}% a trade, on ${money(bal)}</span></div>
+      <div class="tbl-wrap hide-p"><table class="tbl fine fit"><thead><tr><th class="l">Chart</th><th>Per hour</th><th>Per day</th><th>Per week</th><th>Per month</th><th class="hide-p">Worst test period</th><th class="hide-t">Holding the coins, a month</th><th class="hide-t">Trades a month</th></tr></thead><tbody>
+        ${rows.map((r) => { const tags = [r.chart === iv ? 'yours' : '', top && r.chart === top.iv ? 'recommended' : ''].filter(Boolean); return `<tr${r.chart === iv ? ' style="font-weight:600"' : ''}><td class="l"><b>${esc(r.chart)}</b>${tags.length ? `<small>${tags.join(' · ')}</small>` : ''}</td>
           <td>${cell(r.per.hour)}</td><td>${cell(r.per.day)}</td><td>${cell(r.per.week)}</td><td>${cell(r.per.month)}</td>
-          <td class="hide-p ${r.worst >= 0 ? 'up' : 'down'}">${pct(r.worst, 2)}<small>در ${esc(r.block)}</small></td>
+          <td class="hide-p ${r.worst >= 0 ? 'up' : 'down'}">${pct(r.worst, 2)}<small>in ${esc(r.block)}</small></td>
           <td class="hide-t ${r.holdPer.month >= 0 ? 'up' : 'down'}">${pct(r.holdPer.month, 2)}</td><td class="hide-t">${r.tradesPerMonth}</td></tr>`; }).join('')}
-        ${live ? `<tr><td class="l"><b>حساب شما تا کنون</b><br><small>${live.early ? `${live.hours} ساعت ترید` : `${Math.round(live.days)} روز زنده`}</small></td>${live.early ? '<td colspan="7" class="l muted">بسیار زود است: کمتر از یک روز قابل ارزیابی نیست</td>' : `<td>${cell(live.hour)}</td><td>${cell(live.day)}</td><td>${live.week === null ? notYet(7) : cell(live.week)}</td><td>${live.month === null ? notYet(30) : cell(live.month)}</td><td class="l muted hide-p">سابقه شخصی</td><td colspan="2" class="hide-t"></td>`}</tr>` : ''}
+        ${live ? `<tr><td class="l"><b>Your account so far</b><br><small>${live.early ? `${live.hours} h of trading` : `${Math.round(live.days)} day${Math.round(live.days) === 1 ? '' : 's'}, live`}</small></td>${live.early ? '<td colspan="7" class="l muted">too early to say: a day of trading is the least this can be read on</td>' : `<td>${cell(live.hour)}</td><td>${cell(live.day)}</td><td>${live.week === null ? notYet(7) : cell(live.week)}</td><td>${live.month === null ? notYet(30) : cell(live.month)}</td><td class="l muted hide-p">its own record</td><td colspan="2" class="hide-t"></td>`}</tr>` : ''}
       </tbody></table></div>
-      <div class="tbl-wrap show-pb"><table class="tbl fine fit"><thead><tr><th>ساعتی</th><th>روزانه</th><th>هفتگی</th><th>ماهانه</th></tr></thead><tbody>
-        ${rows.map((r) => `<tr><th colspan="4" class="l">${esc(r.chart)}${r.chart === iv ? ' · فعلی' : ''}${top && r.chart === top.iv ? ' · پیشنهادی' : ''} <span class="muted">· بدترین دوره تست ${pct(r.worst, 2)} در ${esc(r.block)}</span></th></tr>
+      <div class="tbl-wrap show-pb"><table class="tbl fine fit"><thead><tr><th>Per hour</th><th>Per day</th><th>Per week</th><th>Per month</th></tr></thead><tbody>
+        ${rows.map((r) => `<tr><th colspan="4" class="l">${esc(r.chart)}${r.chart === iv ? ' · yours' : ''}${top && r.chart === top.iv ? ' · recommended' : ''} <span class="muted">· worst test period ${pct(r.worst, 2)} in ${esc(r.block)}</span></th></tr>
           <tr><td>${cellP(r.per.hour)}</td><td>${cellP(r.per.day)}</td><td>${cellP(r.per.week)}</td><td>${cellP(r.per.month)}</td></tr>`).join('')}
-        ${live && !live.early ? `<tr><th colspan="4" class="l">حساب شما · ${Math.round(live.days)} روز</th></tr><tr><td>${cellP(live.hour)}</td><td>${cellP(live.day)}</td><td>${live.week === null ? notYet(7) : cellP(live.week)}</td><td>${live.month === null ? notYet(30) : cellP(live.month)}</td></tr>` : ''}
+        ${live && !live.early ? `<tr><th colspan="4" class="l">Your account so far · ${Math.round(live.days)} days</th></tr><tr><td>${cellP(live.hour)}</td><td>${cellP(live.day)}</td><td>${live.week === null ? notYet(7) : cellP(live.week)}</td><td>${live.month === null ? notYet(30) : cellP(live.month)}</td></tr>` : ''}
       </tbody></table></div>
-      <p class="fine mt">میانگین هر تایم‌فریم در تمام دوره‌های تست با ${esc(rows.every((r) => r.rules === rows[0].rules) ? rows[0].rules : 'قوانین تست‌شده')}، پس از کسر کارمزدها و لغزش (0.05% در هر طرف).<span class="show-t"> هولد کردن و تعداد معاملات در صفحه بزرگ‌تر نمایش داده می‌شوند.</span> نتایج واقعی ناهمگون هستند: بیشتر ساعات و روزها معامله‌ای ندارند. در صورت تمایل، تایم‌فریم ${top ? esc(top.iv) : 'پیشنهادی'} بازدهی بالاتری داشته است. انتظاری از گذشته، نه تضمین.</p>
-      <p class="fine">هولد کردن ساده در این دوره‌های صعودی بازدهی بیشتری داشت. مزیت هوش مصنوعی افت کمتر و ماندن در وجه نقد هنگام عدم وجود سیگنال است.</p>
+      <p class="fine mt">Each chart's average over its ${rows[0].periods} walk-forward test periods with ${esc(rows.every((r) => r.rules === rows[0].rules) ? rows[0].rules : 'its tested rules')}, after fees and the cost of real fills (0.05% worse each way), spread evenly over time.<span class="show-t"> Holding the coins and the number of trades a month are shown on a wider screen.</span> Real results come in lumps: most hours and many days have no trade at all, and the worst test period is shown beside each. The charts were tested on different stretches of time (${esc(when)}), so read across rows with care.${top ? ` Recommended: ${esc(top.iv)}, which made the most a month at the tested 1.5% a trade.` : ''}</p>
+      <p class="fine">Holding the same coins made more than the AI on every chart in these periods, which were mostly rising markets. The AI's case is that it fell less on the way and sits in cash when nothing qualifies. An expectation from past periods, not a promise.</p>
     </div>`;
   }
 
+  // What each watched coin trades on the daily chart, so "its own rules" is
+  // something you can read rather than take on trust.
   function coinRulesTable(base) {
-    const buys = (r) => `${r.entryMode === 'breakout' ? 'شکست سقف ۲۰ کندلی' : r.entryMode === 'pullback' ? `پولبک در روند صعودی (RSI ${PULLBACK_RSI} یا کمتر)` : `امتیاز +${r.entryScore} یا بیشتر`}${r.momentumConfirm ? '، تایید مومنتوم' : ''}${r.trendFilter && r.entryMode !== 'pullback' ? '، در روند صعودی' : ''}`;
-    const sells = (r) => `${r.trailAtr ? `حد ضرر متحرک ${r.trailAtr} ATR` : `تارگت ${r.rMultiple}R`}${r.signalExitBars ? `، یا ${r.signalExitBars} کندل بازگشتی` : ''}`;
+    const buys = (r) => `${r.entryMode === 'breakout' ? 'new 20-candle high' : r.entryMode === 'pullback' ? `dip in an uptrend (RSI ${PULLBACK_RSI} or lower)` : `score +${r.entryScore} or more`}${r.momentumConfirm ? ', momentum up' : ''}${r.trendFilter && r.entryMode !== 'pullback' ? ', in an uptrend' : ''}`;
+    const sells = (r) => `${r.trailAtr ? `stop trailing ${r.trailAtr} ATR` : `target ${r.rMultiple}R`}${r.signalExitBars ? `, or ${r.signalExitBars} reversal candles` : ''}`;
     const rows = cfg.universe.map((sym) => {
       const own = PER_COIN_RULES.rules[sym];
       const r = own ? { ...base, ...own } : base;
-      return `<tr><td class="l"><b>${esc(sym)}</b>${own ? '' : ' <small class="fine">قوانین روزانه</small>'}</td><td class="l fine wrap">${esc(buys(r))}</td><td>${r.atrStop} ATR</td><td class="l fine wrap">${esc(sells(r))}</td></tr>`;
+      return `<tr><td class="l"><b>${esc(sym)}</b>${own ? '' : ' <small class="fine">daily rules</small>'}</td><td class="l fine wrap">${esc(buys(r))}</td><td>${r.atrStop} ATR</td><td class="l fine wrap">${esc(sells(r))}</td></tr>`;
     }).join('');
     const n = cfg.universe.filter((sym) => PER_COIN_RULES.rules[sym]).length;
-    return `<details class="mt"><summary class="fine" style="cursor:pointer">قوانین اختصاصی هر ارز (${n} از ${cfg.universe.length} ارز)</summary>
-      <div class="tbl-wrap mt"><table class="tbl"><thead><tr><th class="l">ارز</th><th class="l">شرایط خرید</th><th>حد ضرر</th><th class="l">شرایط فروش</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <p class="fine">انتخاب‌شده بر اساس تاریخچه روزانه هر ارز. ارزهای فاقد قانون اختصاصی از قوانین روزانه پیش‌فرض استفاده می‌کنند.</p>
+    return `<details class="mt"><summary class="fine" style="cursor:pointer">Each coin's rules on this chart (${n} of ${cfg.universe.length} have their own)</summary>
+      <div class="tbl-wrap mt"><table class="tbl"><thead><tr><th class="l">Coin</th><th class="l">Buys on</th><th>Stop</th><th class="l">Sells at</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <p class="fine">Chosen on each coin's own daily history; a coin without its own uses the daily rules. Switch them off in Settings.</p>
     </details>`;
   }
 
+  // Self-improvement status: rolling hit-rate windows over the forecasts in
+  // your record, graded later. Kept with the account when signed in.
   function learningCard() {
     const ledger = loadLedger();
     const ls = learningStatus(ledger);
     const spark = accuracySparkline(ledger, 50);
     const trendText = {
-      'improving': 'بازه اخیر بالاتر از بازه قبلی',
-      'stable': 'ثابت و پایدار',
-      'declining': 'بازه اخیر پایین‌تر از بازه قبلی',
-      'warming-up': 'نیاز به حداقل ۱۰ پیش‌بینی قطعی شده',
-      'unknown': 'پیش‌بینی قطعی‌شده کافی نیست',
+      'improving': 'recent window above the longer one',
+      'stable': 'holding steady',
+      'declining': 'recent window below the longer one',
+      'warming-up': 'needs at least 10 resolved forecasts',
+      'unknown': 'not enough resolved forecasts yet',
     }[ls.trend] || ls.trend;
     const trendCls = ls.trend === 'improving' ? 'up' : ls.trend === 'declining' ? 'down' : 'flat';
     const win = (w) => {
@@ -223,40 +268,47 @@ export async function render(el) {
       return `<b class="${cls}">${r.pct}%</b> <span class="fine">(${r.hits}/${r.total})</span>`;
     };
     return `<div class="card mt" id="learnCard">
-      <div class="card-h"><h3>${icon('ai', 16)} سابقه پیش‌بینی‌های شما</h3><span class="chip ${trendCls}">${esc(TREND_WORDS[ls.trend] || ls.trend)}</span></div>
-      <p class="fine">هر پیش‌بینی پیش از مشخص شدن نتیجه ثبت و سپس ارزیابی می‌شود. هنگام ورود به حساب، این سابقه در ابر ذخیره می‌شود. ثبت امتیاز به معنای بهتر شدن پیش‌بینی‌ها نیست؛ دقت نزدیک به ۵۰٪ تصادفی است.</p>
+      <div class="card-h"><h3>${icon('ai', 16)} Your forecast record</h3><span class="chip ${trendCls}">${esc(TREND_WORDS[ls.trend] || ls.trend)}</span></div>
+      <p class="fine">Every forecast shown to you is logged before the outcome is known, then scored when its horizon passes. Signed in, the record is kept with your account in the cloud, so every device adds to the same one. Rolling windows below are hit rates over your last N resolved forecasts — not a claim about future performance. Keeping score does not make the forecasts better; a hit rate near 50% is a coin toss.</p>
       <div class="grid g4 mt">
-        <div class="stat"><span class="k">۲۰ تای اخیر</span><span class="v">${win(20)}</span></div>
-        <div class="stat"><span class="k">۵۰ تای اخیر</span><span class="v">${win(50)}</span></div>
-        <div class="stat"><span class="k">۱۰۰ تای اخیر</span><span class="v">${win(100)}</span></div>
-        <div class="stat"><span class="k">مقایسه ۲۰ و ۵۰</span><span class="v ${trendCls}" style="font-size:16px">${esc(TREND_WORDS[ls.trend] || ls.trend)}</span><span class="s fine">${esc(trendText)}</span></div>
+        <div class="stat"><span class="k">Last 20</span><span class="v">${win(20)}</span></div>
+        <div class="stat"><span class="k">Last 50</span><span class="v">${win(50)}</span></div>
+        <div class="stat"><span class="k">Last 100</span><span class="v">${win(100)}</span></div>
+        <div class="stat"><span class="k">Last 20 against last 50</span><span class="v ${trendCls}" style="font-size:16px">${esc(TREND_WORDS[ls.trend] || ls.trend)}</span><span class="s fine">${esc(trendText)}</span></div>
       </div>
-      ${spark.length > 1 ? `<div class="mt"><div class="fine" style="margin-bottom:4px">دقت در ${spark.length} پیش‌بینی اخیر (محاسبه روی ۲۰ مورد)</div>${sparklineSvg(spark, { width: 240, height: 36, color: 'var(--accent)' })}</div>` : ''}
-      <p class="fine mt">نسخه مدل v${ls.modelVersion} · ${ls.total} پیش‌بینی ثبت‌شده · ${ls.resolved} قطعی‌شده · ${ls.pending} در انتظار رسیدن موعد.</p>
+      ${spark.length > 1 ? `<div class="mt"><div class="fine" style="margin-bottom:4px">Hit rate over the last ${spark.length} resolved forecasts (rolling 20)</div>${sparklineSvg(spark, { width: 240, height: 36, color: 'var(--accent)' })}</div>` : ''}
+      <p class="fine mt">Model v${ls.modelVersion} · ${ls.total} forecast${ls.total === 1 ? '' : 's'} recorded · ${ls.resolved} resolved · ${ls.pending} still waiting for their horizon.</p>
+      <div class="mt">
+        <div class="fine">Once 15 forecasts have resolved, a hit rate below 55% over the last 50 (or the last 20, if fewer have resolved) pulls the displayed confidence a quarter of the way toward 50/50, and halfway if the hit rate is below 40%. This is measured on your own record only.</div>
+      </div>
     </div>`;
   }
 
+  // Tells people where their trades are kept, on the page where they look for them.
   function syncNote() {
     if (auth.user) {
       const cloud = [...(state?.log || [])].reverse().find((e) => e.kind === 'check' && e.by === 'cloud');
-      return `ذخیره شده در حساب شما: در هر دستگاهی که وارد شوید این معاملات را می‌بینید. در حالی که هوش مصنوعی فعال است، ابری معاملات را با بسته بودن صفحه انجام می‌دهد${cloud ? ` (آخرین بررسی ابری ${ago(cloud.t)})` : ''}.`;
+      return `Saved to your account: every device you sign in on shows these same trades. While the AI is on, the cloud trades each new ${esc(state?.interval || cfg.interval)} candle as it closes, with this page closed${cloud ? ` (last cloud check ${ago(cloud.t)})` : ''}.`;
     }
-    if (backendEnabled()) return 'فقط در همین مرورگر ذخیره شده و فقط هنگام باز بودن صفحه معامله می‌کند. <a href="#" id="syncSignIn">وارد شوید</a> تا در ابر و با بسته بودن صفحه نیز معامله کند.';
-    return 'فقط در همین مرورگر ذخیره شده است.';
+    if (backendEnabled()) return 'Saved in this browser only, and it only trades while this page is open. <a href="#" id="syncSignIn">Sign in</a> to keep it trading in the cloud with the page closed, and to see the same trades on every device.';
+    return 'Saved in this browser only.';
   }
 
+  // Trades this device had that the account did not, set aside when another
+  // device's copy was saved first (see lib/cloudsync.js).
   function backupCard() {
     const b = auth.user ? backupFor(load, auth.user.id) : null;
     if (!b) return '';
-    const NAMES = { myDemoState: 'حساب آزمایشی شما', realTradeState: 'حساب واقعی شما' };
+    const NAMES = { myDemoState: 'your demo account', realTradeState: 'your real account' };
     const parts = Object.entries(b.keys).map(([k, v]) => [k, missingTrades(v, load(k, null)).length]).filter(([, n]) => n)
-      .map(([k, n]) => `${n} معامله در ${NAMES[k]}`);
+      .map(([k, n]) => `${n} trade${n === 1 ? '' : 's'} in ${NAMES[k]}`);
     if (!parts.length) return '';
-    const list = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} و ${parts[parts.length - 1]}` : parts[0];
+    const list = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0];
     return `<div class="card" id="backupCard" style="border-color:var(--warn)">
-      <div class="card-h"><h3>${icon('info', 16)} معاملات این دستگاه کنار گذاشته شدند</h3><span class="fine">${dateTime(b.at, false)}</span></div>
-      <p class="fine">دستگاه دیگری نسخه متفاوتی از معاملات شما را ذخیره کرده است. نسخه ذخیره‌شده نسخه اصلی است. این دستگاه دارای ${esc(list)} است که نسخه ابری ندارد.</p>
-      <div class="row mt" style="gap:8px"><button class="btn sm" id="bkUse">استفاده از نسخه این دستگاه</button><button class="btn sm ghost" id="bkDrop">حفظ نسخه ذخیره‌شده ابری</button></div>
+      <div class="card-h"><h3>${icon('info', 16)} Trades from this device were set aside</h3><span class="fine">${dateTime(b.at, false)}</span></div>
+      <p class="fine">Another device saved a different copy of your trades before this one could. The saved copy is the one shown here and on your other devices. This device's copy has ${esc(list)} that the saved copy does not.</p>
+      <p class="fine">Use this device's copy to replace the saved one everywhere, or keep the saved copy and drop this one.</p>
+      <div class="row mt" style="gap:8px"><button class="btn sm" id="bkUse">Use this device's copy</button><button class="btn sm ghost" id="bkDrop">Keep the saved copy</button></div>
     </div>`;
   }
 
@@ -264,12 +316,14 @@ export async function render(el) {
     $('#bkUse', el)?.addEventListener('click', () => {
       if (!auth.user) return;
       restoreBackup({ load, save, remove }, auth.user.id);
-      toast('نسخه این دستگاه به عنوان نسخه اصلی در همه جا ذخیره شد.', 'up');
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
+      toast("This device's copy is now the saved copy on every device.", 'up');
+      window.dispatchEvent(new HashChangeEvent('hashchange'));   // redraw from the restored accounts
     });
     $('#bkDrop', el)?.addEventListener('click', () => { remove('syncBackup'); draw(); });
   }
 
+  // How the rules buy and sell, in words.
+  // a function declaration, not a const: startCard() runs during the first render, above this line
   function rulesText(c) { return rulesInWords(c); }
 
   function startCard() {
@@ -277,41 +331,51 @@ export async function render(el) {
     const w = CHART_TESTED[e.interval];
     const r = w && (w.adopt ? w.own : w.standard);
     return `<div class="card empty">
-      <h3>اجرای استراتژی روی پول شبیه‌سازی‌شده</h3>
-      <p style="max-width:620px">نظارت بر ${cfg.universe.length} ارز روی تایم‌فریم ${esc(e.interval)}. ${rulesText(e)} تعیین اندازه موقعیت به گونه‌ای است که ضرر حداکثر ${cfg.riskPct}% سرمایه باشد، حداکثر ${cfg.maxPositionPct}% در یک ارز و هرگز بیشتر از موجودی نقد حساب.${ownRulesText()} هر معامله با کارمزد ثبت می‌شود.</p>
-      <p class="fine" style="max-width:620px">سرمایه اولیه ${money(cfg.startingBalance)}. نتایج تست‌شده را پیش از شروع مطالعه کنید${r ? ` — روی این تایم‌فریم ${r.ret > w.hold ? 'عملکرد بهتری نسبت به هولد کردن داشت (که تضمینی برای آینده نیست)' : 'هولد کردن نتیجه بهتری داشت'}` : ''}. هر زمان خواستید بدون ریست کردن حساب می‌توانید آن را متوقف کنید.</p>
+      <h3>Run the strategy on simulated money</h3>
+      <p style="max-width:620px">It watches ${cfg.universe.length} coins on the ${esc(e.interval)} chart. ${rulesText(e)} It sizes each position so a stop-out costs at most ${cfg.riskPct}% of the balance, with no more than ${cfg.maxPositionPct}% of it in one coin and never more cash than the account has.${ownRulesText()} Every trade is logged with the fee it would have paid.</p>
+      <p class="fine" style="max-width:620px">Starting balance ${money(cfg.startingBalance)}. Read the tested result above before you start it${r ? ` — on this chart ${r.ret > w.hold ? 'it did better than holding the same coins in that test, which is no promise it will again' : 'holding the same coins did better'}` : ''}. You can stop it at any time without resetting the account.</p>
     </div>${learningCard()}`;
   }
 
+  // The rule that opens a trade, in words, for whichever entry mode is set.
+  // Which of the watched coins trade their own rules, in a sentence.
   function ownRulesText() {
     if (!ownRulesOn()) return '';
     const own = cfg.universe.filter((s) => PER_COIN_RULES.rules[s]);
-    if (!own.length) return ' هیچ‌کدام از ارزهای تحت نظر قوانین اختصاصی ندارند.';
-    if (own.length === cfg.universe.length) return ' هر ارز با قوانین مخصوص به خود معامله می‌شود.';
-    return ` ${own.length} ارز از ${cfg.universe.length} ارز (${own.join(', ')}) قوانین مخصوص به خود را دارند؛ مابقی از قوانین عمومی استفاده می‌کنند.`;
+    if (!own.length) return ' None of the watched coins has rules of its own, so all of them use these.';
+    if (own.length === cfg.universe.length) return ' Each coin trades rules chosen on its own daily history instead of these.';
+    if (own.length === 1) return ` ${own[0]} trades rules chosen on its own daily history instead; the other coins use these.`;
+    return ` ${own.length} of the ${cfg.universe.length} coins (${own.join(', ')}) trade rules chosen on their own daily history instead; the rest use these.`;
   }
 
+  // ---------------------------------------------------------------- engine
   async function catchUp() {
     if (st.running) return;
     st.running = true;
     const btn = $('#startBtn', el);
     const old = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> در حال بررسی…';
+    btn.innerHTML = '<span class="spinner"></span> Working…';
     if (!state) state = newState(cfg);
+    // Replaying daily candles into an account that was started on hourly ones
+    // would mix two strategies in one balance, so the account keeps its own
+    // timeframe. Older saved accounts adopt the current setting once.
     if (!state.interval) state.interval = cfg.interval;
     const runCfg = runConfig(cfg, state, load(LESSONS_KEY, []));
 
     let processed = 0;
     const failed = [], noExchange = [];
     const forecastInputs = [];
+    // coins taken off the list while held: still checked, for their exits only
     const held = heldOffList(cfg, state);
     const bySymbol = {};
+    // four coins at a time: a list of thirty used to be fetched one by one
     const syms = [...cfg.universe, ...held];
     const fetched = new Map();
     await pool(syms, 4, async (sym) => {
       const coin = all.find((c) => c.symbol === sym);
       if (!coin || st.disposed) return;
+      // listed on none of the exchanges it reads: nothing to fetch
       if (knownVenue(coin) === null && !state.open[sym]) { fetched.set(sym, new Error('not listed')); return; }
       try { fetched.set(sym, await candlesFor(coin, runCfg.interval)); } catch (err) { fetched.set(sym, err); }
     });
@@ -322,20 +386,32 @@ export async function render(el) {
       try {
         const r = fetched.get(sym);
         if (!r || r instanceof Error) throw r || new Error('no candles');
+        // Demo candles are invented: never trade on them or price a position with them.
         if (r.source === 'demo') { failed.push(sym); continue; }
+        // Open positions used to be marked at their ENTRY price until a live
+        // tick arrived, so every one showed +$0.00 (0.00%). The newest candle's
+        // close is a real, recent price — use it until a tick replaces it.
         const lastPx = r.candles[r.candles.length - 1]?.c;
         if (Number.isFinite(lastPx) && st.priceFrom[sym] !== 'live') { st.prices[sym] = lastPx; st.priceFrom[sym] = 'candle'; }
+        // Only coins with real exchange candles are traded. One without them
+        // gets sparse price samples from CoinGecko (FIGR_HELOC, a tokenised
+        // home loan, was traded that way: 12 trades, nearly all losses), so it
+        // is skipped and a position already open in it is closed at that price.
         if (r.source === 'coingecko' || r.lowRes) {
           noExchange.push(sym);
           if (state.open[sym] && Number.isFinite(lastPx)) closeManual(state, runCfg, sym, lastPx, Date.now(), 'no exchange price');
           continue;
         }
+        // only fully closed candles drive decisions
         const candles = r.candles.slice(0, -1);
         bySymbol[sym] = candles;
         forecastInputs.push({ sym, candles });
       } catch { failed.push(sym); }
     }
     if (st.disposed) return;
+    // A coin is flagged only after two checks in a row with no data while other
+    // coins loaded: when the feeds are down every coin fails, and BTC must not be
+    // offered for removal. Demo candles mean the feeds are down, never the coin.
     const streak = load(NODATA_KEY, {});
     if (Object.keys(bySymbol).length) {
       for (const sym of failed) if (fetched.get(sym)?.source !== 'demo') streak[sym] = (streak[sym] || 0) + 1;
@@ -343,14 +419,18 @@ export async function render(el) {
       save(NODATA_KEY, streak);
     }
     st.noExchange = noExchange;
+    // A held coin's candles missing since the last one traded on (traderrun.js)
     for (const { sym, need } of backfillNeeds(state, bySymbol, INTERVAL_MS[runCfg.interval], { max: BACKFILL_MAX })) {
       const coin = all.find((c) => c.symbol === sym);
       try {
         const r = await getCandles(coin, runCfg.interval, need);
         if (r && r.source !== 'demo' && !r.lowRes && r.candles.length > bySymbol[sym].length) bySymbol[sym] = r.candles.slice(0, -1);
-      } catch {}
+      } catch { /* the window is used as before */ }
       if (st.disposed) return;
     }
+    // The page was closed or redrawn (a sync brought newer trades) while the last
+    // coin loaded: saving now would put this older copy back over them. Nothing
+    // is lost, since the next check replays the same candles.
     if (st.disposed) return;
     const lessons = load(LESSONS_KEY, []);
     const autoLearn = load(AUTOLEARN_KEY, true) !== false;
@@ -363,14 +443,22 @@ export async function render(el) {
     if (st.disposed) return;
     btn.disabled = false;
     btn.innerHTML = old;
-    if (failed.length && st.warnedNoData !== failed.join()) { st.warnedNoData = failed.join(); toast(`داده‌ای برای ${failed.join(', ')} یافت نشد — رد شد.`, 'info'); }
-    if (noExchange.length && !st.warnedNoExchange) st.warnedNoExchange = true, toast(`${noExchange.join(', ')} فاقد کندل صرافی هستند، بنابراین هوش مصنوعی آن‌ها را معامله نمی‌کند.`, 'info');
+    // once per visit for the same coins: every five-minute check used to repeat it
+    if (failed.length && st.warnedNoData !== failed.join()) { st.warnedNoData = failed.join(); toast(`No price data for ${failed.join(', ')} this time — skipped.`, 'info'); }
+    // once per visit: it would otherwise repeat on every five-minute check
+    if (noExchange.length && !st.warnedNoExchange) st.warnedNoExchange = true, toast(`${noExchange.join(', ')} ${noExchange.length > 1 ? 'have' : 'has'} no exchange candles, so the AI does not trade ${noExchange.length > 1 ? 'them' : 'it'}. The notice on this page can take ${noExchange.length > 1 ? 'them' : 'it'} off its list.`, 'info');
     draw();
-    if (processed) toast(`${processed.toLocaleString('en-US')} کندل جدید بررسی شد.`, 'up');
+    if (processed) toast(`Checked ${processed.toLocaleString('en-US')} new candle${processed === 1 ? '' : 's'}.`, 'up');
     learnFrom(forecastInputs, runCfg.interval);
+    // The AI learning center grades every indicator and the forecast. The cloud's
+    // job does that around the clock; only when its record cannot be read does
+    // this browser run a pass on the same candles.
     cloudLearning().then((c) => (c?.[runCfg.interval] ? null : learningPass(runCfg.interval, { candlesBySymbol: Object.fromEntries(forecastInputs.map((x) => [x.sym, x.candles])) }))).catch(() => {});
   }
 
+  // Self-improvement: score the forecasts whose horizon has passed, then log a
+  // fresh one per watched coin before its outcome is known. Runs in the worker
+  // after the account is drawn, so the page never waits on it.
   async function learnFrom(inputs, interval) {
     if (st.learning || !inputs.length) return;
     st.learning = true;
@@ -392,7 +480,14 @@ export async function render(el) {
     } finally { st.learning = false; }
   }
 
+  // What the AI did, newest first: every entry and exit it made, with the
+  // reading that triggered it. Built from the account itself, so it is always
+  // in step with the trade log.
   function activityCard() {
+    // Times are when the AI actually decided: at the CLOSE of the candle it
+    // read (the old feed printed the candle's opening time, an interval early).
+    // Anything before the account went live was replayed from past candles and
+    // is labelled so, instead of reading as if the AI did it live.
     const step = INTERVAL_MS[state.interval] || 0;
     const liveSince = state.startedAt;
     const ev = [];
@@ -403,30 +498,34 @@ export async function render(el) {
     }
     for (const c of state.log || []) ev.push({ t: c.t, kind: c.kind, c });
     ev.sort((a, b) => b.t - a.t);
-    const why = { target: 'اصابت به تارگت', 'stop-loss': 'اصابت به حد ضرر', 'trailing stop': 'فعال شدن حد ضرر متحرک', 'break-even stop': 'بازگشت به نقطه ورود پس از انتقال حد ضرر', 'signal reversal': 'برگشت سیگنال', 'sold into strength': 'رسیدن به محدوده هدف صعودی', 'no exchange price': 'عدم وجود قیمت صرافی' };
+    const why = { target: 'hit its target', 'stop-loss': 'hit its stop-loss', 'trailing stop': 'hit its trailing stop', 'break-even stop': 'came back to its entry after the stop was raised there', 'signal reversal': 'the signal turned against it', 'sold into strength': 'the bounce it bought for had arrived', 'no exchange price': 'no exchange trades this coin, so the AI stopped trading it' };
     const line = (e) => {
       if (e.kind === 'check') {
         const c = e.c;
-        const did = c.opened || c.closed ? `${c.opened ? `خرید ${c.opened}` : ''}${c.opened && c.closed ? '، ' : ''}${c.closed ? `فروش ${c.closed}` : ''}` : 'بدون معامله';
-        return `<b>بررسی ${c.coins} ارز${c.by === 'cloud' ? ' در ابر' : ''}</b> — ${c.candles.toLocaleString('en-US')} کندل بسته شده، ${did}${c.best ? ` · بیشترین امتیاز ${esc(c.best.sym)} ${c.best.score > 0 ? '+' : ''}${c.best.score}` : ''}`;
+        const did = c.opened || c.closed ? `${c.opened ? `opened ${c.opened}` : ''}${c.opened && c.closed ? ', ' : ''}${c.closed ? `closed ${c.closed}` : ''}` : 'no trade';
+        return `<b>Checked ${c.coins} coin${c.coins === 1 ? '' : 's'}${c.by === 'cloud' ? ' in the cloud' : ''}</b> — ${c.candles.toLocaleString('en-US')} new closed candle${c.candles === 1 ? '' : 's'}, ${did}${c.best ? ` · highest score ${esc(c.best.sym)} ${c.best.score > 0 ? '+' : ''}${c.best.score} (buys at +${c.bar})` : ''}${c.passed ? ` · <span class="warn">passed up a buy on ${esc(c.passed.syms.join(', '))}${c.passed.n > c.passed.syms.length ? ` and ${c.passed.n - c.passed.syms.length} more` : ''}: ${c.passed.why === 'nocash' ? 'all the cash was in open trades (Settings → Max in one coin)' : 'the most open trades allowed were already open'}</span>` : ''}`;
       }
-      if (e.kind === 'review') return `<b>خودارزیابی</b> — ${esc(e.c.text)}`;
-      if (e.kind === 'settings') return `<b>تغییر تنظیمات</b> — ${esc(e.c.text)}`;
+      if (e.kind === 'review') return `<b>Self-review</b> — ${esc(e.c.text)}`;
+      if (e.kind === 'settings') return `<b>Settings changed</b> — ${esc(e.c.text)}`;
       if (e.kind === 'buy') {
         const bar = e.p.entryBar;
-        return `<b>خرید ${esc(e.sym)}</b> در قیمت ${money(e.p.entry)}${Number.isFinite(e.p.openScore) ? ` — امتیاز ${e.p.openScore > 0 ? '+' : ''}${Math.round(e.p.openScore)}` : ''}`;
+        return `<b>Bought ${esc(e.sym)}</b> at ${money(e.p.entry)}${Number.isFinite(e.p.openScore) ? ` — score ${e.p.openScore > 0 ? '+' : ''}${Math.round(e.p.openScore)}${Number.isFinite(bar) ? ` cleared the +${bar} entry bar` : ''}` : ''}`;
       }
-      return `<b>فروش ${esc(e.sym)}</b> در قیمت ${money(e.p.exit)} — ${esc(why[e.p.reason] || e.p.reason)} · <span class="${e.p.pnl >= 0 ? 'up' : 'down'}">${e.p.pnl >= 0 ? '+' : '−'}${money(Math.abs(e.p.pnl))} (${pct(e.p.pnlPct)})</span>`;
+      return `<b>Sold ${esc(e.sym)}</b> at ${money(e.p.exit)} — ${esc(why[e.p.reason] || e.p.reason)} · <span class="${e.p.pnl >= 0 ? 'up' : 'down'}">${e.p.pnl >= 0 ? '+' : '−'}${money(Math.abs(e.p.pnl))} (${pct(e.p.pnlPct)})</span>`;
     };
     const replayed = ev.filter((e) => !['check', 'review', 'settings'].includes(e.kind) && e.t < liveSince).length;
     return `<div class="card mt">
-      <div class="card-h"><h3>${icon('ai', 16)} فعالیت هوش مصنوعی</h3><span class="fine">${autoOn ? 'در حال اجرا · بررسی هر ۵ دقیقه' : session.status === 'stopped' ? 'متوقف‌شده' : 'غیرفعال'}${st.lastRun ? ` · آخرین بررسی ${ago(st.lastRun)}` : ''}</span></div>
-      ${replayed ? `<p class="fine" style="margin-top:0">معاملات علامت‌گذاری‌شده با <span class="chip">بازپخش</span> مربوط به کندل‌های پیش از راه‌اندازی این حساب هستند تا سابقه خالی نباشد.</p>` : ''}
-      ${ev.length ? `<ul class="fine" style="list-style:none;padding:0;margin:0">${ev.slice(0, 30).map((e) => `<li style="padding:6px 0;border-bottom:1px solid var(--border)"><span class="muted" style="display:inline-block;min-width:150px">${dateTime(e.t)}</span>${!['check', 'review', 'settings'].includes(e.kind) && e.t < liveSince ? '<span class="chip" style="margin-right:6px">بازپخش</span>' : ''}${line(e)}</li>`).join('')}</ul>`
-        : `<p class="muted">${autoOn ? 'هنوز معامله‌ای انجام نشده — هوش مصنوعی در انتظار شرایط مناسب است.' : 'هوش مصنوعی متوقف است.'}</p>`}
+      <div class="card-h"><h3>${icon('ai', 16)} AI activity</h3><span class="fine">${autoOn ? 'running · checks every 5 minutes' : session.status === 'stopped' ? 'stopped · press Resume to continue' : 'idle'}${st.lastRun ? ` · last check ${ago(st.lastRun)}` : ''}</span></div>
+      ${replayed ? `<p class="fine" style="margin-top:0">Entries marked <span class="chip">replayed</span> happened on candles from before this account went live on ${dateTime(liveSince)} — the same rules run over past prices so the record does not start empty. Everything after that was decided live.</p>` : ''}
+      ${ev.length ? `<ul class="fine" style="list-style:none;padding:0;margin:0">${ev.slice(0, 30).map((e) => `<li style="padding:6px 0;border-bottom:1px solid var(--border)"><span class="muted" style="display:inline-block;min-width:150px">${dateTime(e.t)}</span>${!['check', 'review', 'settings'].includes(e.kind) && e.t < liveSince ? '<span class="chip" style="margin-right:6px">replayed</span>' : ''}${line(e)}</li>`).join('')}</ul>`
+        : `<p class="muted">${autoOn ? 'No trades yet — the AI is watching for a setup that meets its rules.' : `No trades yet. The AI is ${session.status === 'stopped' ? 'stopped' : 'not running'}, so it is not looking for setups — press ${session.status === 'stopped' ? 'Resume the AI' : 'Start the trader'} to let it trade.`}</p>`}
     </div>`;
   }
 
+  // ---------------------------------------------------------------- self-review
+  // The trader reads its own trade log, finds conditions that keep losing and
+  // switches on the filter that avoids them (or off, if a filter made things
+  // worse). Runs by itself after every check; the button runs it on demand.
   function selfReview() {
     if (!state) return null;
     const lessons = load(LESSONS_KEY, []);
@@ -435,7 +534,7 @@ export async function render(el) {
       save(CFG_KEY, cfg);
       save(LESSONS_KEY, lessons.slice(-50));
       save(STATE_KEY, state);
-      toast(`خودارزیابی ${changes.length} قانون را تغییر داد.`, 'up');
+      toast(`Self-review changed ${changes.length} rule${changes.length > 1 ? 's' : ''}.`, 'up');
     }
     return { review, changes };
   }
@@ -448,30 +547,37 @@ export async function render(el) {
     const autoLearn = load(AUTOLEARN_KEY, true) !== false;
     const o = review.overall;
     return `<div class="card mt" id="reviewCard">
-      <div class="card-h"><h3>${icon('ai', 16)} ارزیابی عملکرد معاملات</h3>
-        <div class="row" style="gap:8px"><label class="fine" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="autoLearn" ${autoLearn ? 'checked' : ''}> یادگیری خودکار</label>
-        <button class="btn sm" id="reviewNow">${icon('refresh', 14)} ارزیابی فوری</button></div></div>
-      <p class="fine" style="margin-top:0">پس از هر بررسی، هوش مصنوعی معاملات خود را تحلیل کرده و در صورت ضرر مداوم، فیلترهای مناسب را فعال یا غیرفعال می‌کند.</p>
+      <div class="card-h"><h3>${icon('ai', 16)} Self-review of the trade log</h3>
+        <div class="row" style="gap:8px"><label class="fine" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="autoLearn" ${autoLearn ? 'checked' : ''}> learn by itself</label>
+        <button class="btn sm" id="reviewNow">${icon('refresh', 14)} Review my trades now</button></div></div>
+      <p class="fine" style="margin-top:0">After every check the AI reads its own closed trades, groups them by what the market looked like when it bought, and switches on a filter when one condition keeps losing — or back off if a filter made results worse. It needs ${MIN_TRADES} closed trades before it changes anything, and every change is listed below with the numbers behind it.</p>
       <div class="grid g4 mt">
-        <div class="stat"><span class="k">معاملات بررسی‌شده</span><span class="v">${o.n}</span></div>
-        <div class="stat"><span class="k">برد</span><span class="v">${o.winRate === null ? '—' : `${o.winRate}%`}</span></div>
-        <div class="stat"><span class="k">میانگین نتیجه</span><span class="v ${o.avgR > 0 ? 'up' : o.avgR < 0 ? 'down' : ''}">${o.avgR === null ? '—' : `${o.avgR > 0 ? '+' : o.avgR < 0 ? '−' : ''}${Math.abs(o.avgR)}R`}</span></div>
-        <div class="stat"><span class="k">قوانین تغییریافته</span><span class="v">${lessons.filter((l) => !l.undo && !l.undone).length}</span></div>
+        <div class="stat"><span class="k">Trades read</span><span class="v">${o.n}</span></div>
+        <div class="stat"><span class="k">Won</span><span class="v">${o.winRate === null ? '—' : `${o.winRate}%`}</span></div>
+        <div class="stat"><span class="k">Average result</span><span class="v ${o.avgR > 0 ? 'up' : o.avgR < 0 ? 'down' : ''}">${o.avgR === null ? '—' : `${o.avgR > 0 ? '+' : o.avgR < 0 ? '−' : ''}${Math.abs(o.avgR)}R`}</span><span class="s fine">R = the amount risked per trade</span></div>
+        <div class="stat"><span class="k">Rules it changed</span><span class="v">${lessons.filter((l) => !l.undo && !l.undone).length}</span></div>
       </div>
       ${review.findings.length ? `<ul class="reasons mt">${review.findings.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
-      <p class="fine mt"><b>قوانین فعال کنونی:</b> ${active.length ? esc(active.join(' · ')) : 'هیچ‌کدام — استراتژی اصلی'}.</p>
+      ${(() => { const d = diagnose(state.closed, { startingBalance: state.startingBalance, fmt: (v) => `${v < 0 ? '−' : ''}${money(Math.abs(v))}` }); return d.length ? `<div class="mt"><div class="fine" style="margin-bottom:4px"><b>What drove the result</b></div><ul class="reasons">${d.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''; })()}
+      <p class="fine mt"><b>Rules in force now:</b> ${active.length ? esc(active.join(' · ')) : 'none yet — the original strategy'}.</p>
+      ${lessons.length ? `<div class="mt"><div class="fine" style="margin-bottom:4px"><b>What it changed, and when</b></div><ul class="fine" style="list-style:none;padding:0;margin:0">${[...lessons].reverse().slice(0, 12).map((l) => `<li style="padding:4px 0;border-bottom:1px solid var(--border)"><span class="muted" style="display:inline-block;min-width:150px">${dateTime(l.at)}</span>${esc(l.text)}${l.undone ? ' <span class="chip">later undone</span>' : ''}</li>`).join('')}</ul></div>` : ''}
     </div>`;
   }
 
   function wireReview() {
     $('#reviewNow', el)?.addEventListener('click', () => {
       const r = selfReview();
-      if (r && !r.changes.length) toast(r.review.overall.n < MIN_TRADES ? `تعداد معاملات ${r.review.overall.n} است — نیاز به ${MIN_TRADES} معامله دارد.` : 'موردی برای تغییر یافت نشد.', 'info');
+      if (r && !r.changes.length) toast(r.review.overall.n < MIN_TRADES ? `Read ${r.review.overall.n} trades — needs ${MIN_TRADES} before it changes anything.` : 'Read the log — nothing clear enough to change yet.', 'info');
       draw();
     });
-    $('#autoLearn', el)?.addEventListener('change', (e) => { save(AUTOLEARN_KEY, e.target.checked); toast(e.target.checked ? 'یادگیری خودکار فعال شد.' : 'یادگیری خودکار غیرفعال شد.', 'info'); });
+    $('#autoLearn', el)?.addEventListener('change', (e) => { save(AUTOLEARN_KEY, e.target.checked); toast(e.target.checked ? 'The AI will adjust its rules by itself after each check.' : 'Self-adjusting is off — use the button to review on demand.', 'info'); });
   }
 
+  // ---------------------------------------------------------------- view
+  // --- the real account -------------------------------------------------
+  // Trades actually placed on an exchange, typed in here. CoinVantage records
+  // them; it never places one. Same statistics as the simulated accounts so the
+  // three can be compared honestly.
   const REAL_KEY = 'realTradeState';
   const realState = () => load(REAL_KEY, null);
 
@@ -482,56 +588,60 @@ export async function render(el) {
     const open = has ? Object.entries(rs.open) : [];
     const closed = has ? [...rs.closed].reverse().slice(0, 25) : [];
     return `<div class="card mt">
-      <div class="card-h"><h3>حساب واقعی</h3><div class="row" style="gap:8px"><span class="chip up">سرمایه شخصی</span>${has ? '<button class="btn sm ghost" id="realReset">بازنشانی</button>' : ''}</div></div>
-      <p class="fine">ثبت معاملاتی که خودتان در صرافی انجام داده‌اید برای مقایسه. ${esc(REAL_NOTICE)}</p>
+      <div class="card-h"><h3>Real account</h3><div class="row" style="gap:8px"><span class="chip up">Your own money</span>${has ? '<button class="btn sm ghost" id="realReset">Reset</button>' : ''}</div></div>
+      <p class="fine">Record the trades you actually placed on an exchange, and they are measured the same way as the accounts above. ${esc(REAL_NOTICE)}</p>
 
       <div class="row mt" style="gap:10px;align-items:center;flex-wrap:wrap">
-        <label class="btn sm" style="cursor:pointer">${icon('exchanges', 14)} ورود از بایننس
+        <label class="btn sm" style="cursor:pointer">${icon('exchanges', 14)} Import from Binance
           <input type="file" id="csvIn" accept=".csv,.tsv,.txt" hidden>
         </label>
-        <span class="fine">بایننس → Orders → Trade History → Export. اطلاعات در مرورگر شما خوانده می‌شود و جایی آپلود نمی‌شود.</span>
+        <span class="fine">Binance → Orders → Trade History → Export. The file is read in your browser; nothing is uploaded.</span>
       </div>
       ${has ? `<div class="row mt" style="gap:8px;flex-wrap:wrap">
-        <button class="btn sm ghost" data-export="real-csv">دانلود معاملات (CSV)</button>
-        <button class="btn sm ghost" data-report="real">گزارش قابل چاپ</button>
+        <button class="btn sm ghost" data-export="real-csv">Download trades (CSV)</button>
+        <button class="btn sm ghost" data-report="real">Printable report</button>
       </div>` : ''}
       <p class="fine" id="csvMsg" hidden></p>
 
       <form id="rf" class="row mt" style="gap:8px;align-items:flex-end;flex-wrap:wrap">
-        <label class="fld">ارز<select class="inp" name="sym">${tradable.slice(0, 60).map((c) => `<option value="${esc(c.symbol)}">${esc(c.symbol)}</option>`).join('')}</select></label>
-        <label class="fld">جهت<select class="inp" name="side"><option value="long">خرید (Long)</option><option value="short">فروش (Short)</option></select></label>
-        <label class="fld">مقدار<input class="inp" name="qty" type="number" step="any" min="0" placeholder="0.05" style="width:100px" required></label>
-        <label class="fld">قیمت (${esc(fx.code)})<input class="inp" name="entry" type="number" step="any" min="0" placeholder="${esc(price(60000 * fx.rate))}" style="width:130px" required></label>
-        <label class="fld">قیمت خروج (${esc(fx.code)})<input class="inp" name="exit" type="number" step="any" min="0" placeholder="هنوز باز است" style="width:130px"></label>
-        <label class="fld">کارمزد (${esc(fx.code)})<input class="inp" name="fee" type="number" step="any" min="0" placeholder="0" style="width:100px"></label>
-        <button class="btn primary">ثبت معامله</button>
+        <label class="fld">Coin<select class="inp" name="sym">${tradable.slice(0, 60).map((c) => `<option value="${esc(c.symbol)}">${esc(c.symbol)}</option>`).join('')}</select></label>
+        <label class="fld">Side<select class="inp" name="side"><option value="long">Bought</option><option value="short">Sold short</option></select></label>
+        <label class="fld">Amount<input class="inp" name="qty" type="number" step="any" min="0" placeholder="0.05" style="width:100px" required></label>
+        <label class="fld">Price in (${esc(fx.code)})<input class="inp" name="entry" type="number" step="any" min="0" placeholder="${esc(price(60000 * fx.rate))}" style="width:130px" required></label>
+        <label class="fld">Price out (${esc(fx.code)})<input class="inp" name="exit" type="number" step="any" min="0" placeholder="still open" style="width:130px"></label>
+        <label class="fld">Fee (${esc(fx.code)})<input class="inp" name="fee" type="number" step="any" min="0" placeholder="0" style="width:100px"></label>
+        <button class="btn primary">Record trade</button>
       </form>
       <p class="fine down" id="rfErr" hidden></p>
 
       ${s3 ? `<div class="grid g4 mt">
-        <div class="stat"><span class="k">نتیجه قطعی‌شده</span><span class="v ${s3.returnPct >= 0 ? 'up' : 'down'}">${pct(s3.returnPct)}</span><span class="s fine">${money(s3.equity - s3.startingBalance)} روی پایه ${money(s3.startingBalance)}</span></div>
-        <div class="stat"><span class="k">نرخ برد</span><span class="v">${s3.winRate === null ? '—' : `${s3.winRate}%`}</span><span class="s fine">${s3.wins} برد / ${s3.losses} باخت</span></div>
-        <div class="stat"><span class="k">بیشترین افت</span><span class="v ${s3.maxDrawdownPct > 0 ? 'down' : 'flat'}">${pct(-s3.maxDrawdownPct, 1)}</span></div>
-        <div class="stat"><span class="k">معاملات</span><span class="v">${s3.trades}</span><span class="s fine">${s3.openCount} باز</span></div>
+        <div class="stat"><span class="k">Realised result</span><span class="v ${s3.returnPct >= 0 ? 'up' : 'down'}">${pct(s3.returnPct)}</span><span class="s fine">${money(s3.equity - s3.startingBalance)} on a ${money(s3.startingBalance)} basis</span></div>
+        <div class="stat"><span class="k">Win rate</span><span class="v">${s3.winRate === null ? '—' : `${s3.winRate}%`}</span><span class="s fine">${s3.wins}W / ${s3.losses}L${s3.profitFactor ? ` · PF ${s3.profitFactor}` : ''}</span></div>
+        <div class="stat"><span class="k">Max drawdown</span><span class="v ${s3.maxDrawdownPct > 0 ? 'down' : 'flat'}">${pct(-s3.maxDrawdownPct, 1)}</span></div>
+        <div class="stat"><span class="k">Trades</span><span class="v">${s3.trades}</span><span class="s fine">${s3.openCount} open</span></div>
       </div>` : ''}
 
-      ${open.length ? `<div class="tbl-wrap mt"><table class="tbl"><thead><tr><th class="l">ارز</th><th>جهت</th><th>ورود</th><th>اکنون</th><th>حجم</th><th>سود/زیان باز</th><th></th></tr></thead><tbody>
+      ${open.length ? `<div class="tbl-wrap mt"><table class="tbl"><thead><tr><th class="l">Coin</th><th>Side</th><th>In at</th><th>Now</th><th>Size</th><th>Open P&amp;L</th><th></th></tr></thead><tbody>
         ${open.map(([sym, p]) => {
           const px = priceOf(sym);
           const pnl = px === null ? null : (p.side === 'short' ? (p.entry - px) : (px - p.entry)) * p.qty;
-          return `<tr><td class="l"><b>${esc(sym)}</b></td><td>${p.side === 'short' ? 'شورت' : 'لانگ'}</td><td>${money(p.entry)}</td><td>${px === null ? '<span class="muted">بدون قیمت</span>' : money(px)}</td><td>${money(p.notional)}</td>
+          return `<tr><td class="l"><b>${esc(sym)}</b></td><td>${p.side === 'short' ? 'Short' : 'Long'}</td><td>${money(p.entry)}</td><td>${px === null ? '<span class="muted">no price yet</span>' : money(px)}</td><td>${money(p.notional)}</td>
             <td class="${pnl === null ? 'muted' : pnl >= 0 ? 'up' : 'down'}">${pnl === null ? '—' : `<b>${pnl >= 0 ? '+' : '−'}${money(Math.abs(pnl))}</b>`}</td>
-            <td><button class="btn sm" data-realclose="${esc(sym)}">ثبت فروش…</button></td></tr>`;
+            <td><button class="btn sm" data-realclose="${esc(sym)}">Record the sale…</button></td></tr>`;
         }).join('')}</tbody></table></div>` : ''}
 
-      ${closed.length ? `<div class="tbl-wrap mt"><table class="tbl"><thead><tr><th class="l">ارز</th><th class="l">بسته شده</th><th>ورود</th><th>خروج</th><th>نتیجه</th></tr></thead><tbody>
-        ${closed.map((t) => `<tr><td class="l"><b>${esc(t.symbol)}</b>${t.side === 'short' ? ' <small class="muted">شورت</small>' : ''}</td><td class="l fine">${dateTime(t.exitAt, false)}</td><td>${money(t.entry)}</td><td>${money(t.exit)}</td>
+      ${closed.length ? `<div class="tbl-wrap mt"><table class="tbl"><thead><tr><th class="l">Coin</th><th class="l">Closed</th><th>In</th><th>Out</th><th>Result</th></tr></thead><tbody>
+        ${closed.map((t) => `<tr><td class="l"><b>${esc(t.symbol)}</b>${t.side === 'short' ? ' <small class="muted">short</small>' : ''}</td><td class="l fine">${dateTime(t.exitAt, false)}</td><td>${money(t.entry)}</td><td>${money(t.exit)}</td>
           <td class="${t.pnl >= 0 ? 'up' : 'down'}"><b>${t.pnl >= 0 ? '+' : '−'}${money(Math.abs(t.pnl))}</b> <small>${pct(t.pnlPct)}</small></td></tr>`).join('')}
-      </tbody></table></div>` : '<p class="fine mt">معامله واقعی ثبت نشده است.</p>'}
-      ${has && rs.equityCurve.length > 2 ? `<div class="mt"><div class="card-h" style="margin-bottom:6px"><h3 style="font-size:14px">ارزش دارایی در طول زمان</h3><span class="fine">در مقایسه با هولد کردن بیت‌کوین</span></div><div id="realChart"></div><p class="fine" id="realChartNote"></p></div>` : ''}
+      </tbody></table></div>` : '<p class="fine mt">No real trades recorded yet.</p>'}
+      ${has && rs.equityCurve.length > 2 ? `<div class="mt"><div class="card-h" style="margin-bottom:6px"><h3 style="font-size:14px">Your money over time</h3><span class="fine">against simply holding Bitcoin</span></div><div id="realChart"></div><p class="fine" id="realChartNote"></p></div>` : ''}
     </div>`;
   }
 
+  // The chart that answers "was any of this worth it?": the real account's
+  // balance against the same money left in Bitcoin over the same period. A
+  // trading record without that comparison flatters itself — a 20% gain in a
+  // year Bitcoin doubled is a loss in every sense that matters.
   async function drawRealChart() {
     const host = $('#realChart', el);
     if (!host) return;
@@ -552,13 +662,13 @@ export async function render(el) {
         const base = inRange[0].c;
         holdSeries = inRange.map((c) => ({ x: c.t, y: (c.c / base) * rs.startingBalance }));
       }
-    } catch {}
+    } catch { /* the comparison is a bonus, not a requirement */ }
 
     if (st.disposed) return;
     const lc = new LineChart(host, { height: 240, yFormat: (v) => money(v), legend: true });
     st.charts.push(lc);
-    const series = [{ name: 'حساب شما', color: 'var(--accent)', width: 2.4, data: curve.map((p) => ({ x: p.t, y: p.equity })) }];
-    if (holdSeries) series.push({ name: 'هولد بیت‌کوین', color: 'var(--text-muted)', width: 1.6, dash: true, data: holdSeries });
+    const series = [{ name: 'Your account', color: 'var(--accent)', width: 2.4, data: curve.map((p) => ({ x: p.t, y: p.equity })) }];
+    if (holdSeries) series.push({ name: 'Holding BTC', color: 'var(--text-muted)', width: 1.6, dash: true, data: holdSeries });
     lc.set(series);
 
     if (note && holdSeries) {
@@ -566,56 +676,60 @@ export async function render(el) {
       const hold = ((holdSeries[holdSeries.length - 1].y / rs.startingBalance) - 1) * 100;
       const diff = mine - hold;
       note.textContent = diff >= 0
-        ? `عملکرد شما ${pct(diff, 1)} بهتر از هولد کردن بیت‌کوین بوده است.`
-        : `هولد کردن بیت‌کوین ${pct(Math.abs(diff), 1, false)} عملکرد بهتری داشته است.`;
+        ? `You are ${pct(diff, 1)} ahead of simply holding Bitcoin over this period.`
+        : `Holding Bitcoin would have done ${pct(Math.abs(diff), 1, false)} better over this period. Worth knowing before trading more.`;
       note.className = `fine ${diff >= 0 ? 'up' : 'down'}`;
     }
   }
 
+  // Downloads happen entirely in the browser — the data never left it, and the
+  // export should not be the moment it starts to.
   function wireExports() {
     const stamp = new Date().toISOString().slice(0, 10);
     $$('[data-export]', el).forEach((b) => b.addEventListener('click', () => {
       const which = b.dataset.export;
       const src = which === 'ai-csv' ? state : realState();
-      if (!src?.closed?.length) { toast('معامله بسته‌شده‌ای برای خروجی وجود ندارد.', 'info'); return; }
+      if (!src?.closed?.length) { toast('No closed trades to export yet.', 'info'); return; }
       downloadText(`coinvantage-${which === 'ai-csv' ? 'ai-trader' : 'my-trades'}-${stamp}.csv`, tradesCsv(src.closed));
-      toast(`${src.closed.length} معامله صادر شد.`, 'up');
+      toast(`${src.closed.length} trades exported.`, 'up');
     }));
     $$('[data-report]', el).forEach((b) => b.addEventListener('click', () => {
       const isAi = b.dataset.report === 'ai';
       const src = isAi ? state : realState();
-      if (!src) { toast('اطلاعاتی برای گزارش وجود ندارد.', 'info'); return; }
+      if (!src) { toast('Nothing to report on yet.', 'info'); return; }
       const s2 = stats(src, marks());
       const notes = isAi
-        ? ['<b>پول شبیه‌سازی‌شده.</b> این معاملات واقعی نیستند.']
-        : ['<b>ثبت دستی یا واردشده.</b> این معاملات واقعی در صرافی هستند.'];
+        ? ['<b>Simulated money.</b> These trades were never placed on an exchange. Fees are modelled, slippage is not.']
+        : ['<b>Recorded by hand or imported.</b> These are trades placed on an exchange; this app did not place them.'];
       const html = reportHtml({
-        title: isAi ? 'گزارش عملکرد ترید بات هوش مصنوعی' : 'گزارش عملکرد معاملات',
-        accountName: isAi ? 'حساب شبیه‌سازی‌شده' : 'حساب واقعی',
+        title: isAi ? 'AI trader — performance report' : 'Trading performance report',
+        accountName: isAi ? 'Simulated account' : 'Real account',
         stats: s2, closed: [...src.closed].reverse(),
         fmtMoney: (v) => money(v), notes,
       });
       const w = window.open('', '_blank');
-      if (!w) { downloadText(`coinvantage-report-${stamp}.html`, html, 'text/html;charset=utf-8'); toast('گزارش دانلود شد.', 'up'); return; }
+      if (!w) { downloadText(`coinvantage-report-${stamp}.html`, html, 'text/html;charset=utf-8'); toast('Report downloaded.', 'up'); return; }
       w.document.write(html);
       w.document.close();
     }));
   }
 
   function wireReal() {
+    // Import: parse in the browser, match buys to sells FIFO, and show what
+    // happened before writing anything.
     $('#csvIn', el)?.addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
       const msg = $('#csvMsg', el);
       msg.hidden = false;
       msg.className = 'fine';
-      msg.textContent = `در حال خواندن ${file.name}…`;
+      msg.textContent = `Reading ${file.name}…`;
       try {
         const text = await file.text();
         const { fills, errors, skipped } = parseTradeCsv(text);
         if (errors.length) { msg.className = 'fine down'; msg.textContent = errors[0]; return; }
         const { closed, open } = matchFills(fills);
-        if (!closed.length && !open.length) { msg.className = 'fine down'; msg.textContent = 'معامله‌ای از فایل استخراج نشد.'; return; }
+        if (!closed.length && !open.length) { msg.className = 'fine down'; msg.textContent = 'No trades could be matched from that file.'; return; }
 
         const rs = realState() || newState(cfg);
         let added = 0;
@@ -632,12 +746,12 @@ export async function render(el) {
         }
         save(REAL_KEY, rs);
         msg.className = 'fine up';
-        msg.textContent = `${added} معامله از ${fills.length} سفارش وارد شد — ${closed.length} بسته، ${open.length} باز.`;
-        toast(`${added} معامله وارد شد.`, 'up');
+        msg.textContent = `Imported ${added} trade${added === 1 ? '' : 's'} from ${fills.length} fills — ${closed.length} closed, ${open.length} still open${skipped ? `, ${skipped} row${skipped === 1 ? '' : 's'} skipped` : ''}.`;
+        toast(`${added} trades imported.`, 'up');
         draw();
       } catch (err) {
         msg.className = 'fine down';
-        msg.textContent = `خطا در خواندن فایل: ${err.message}`;
+        msg.textContent = `Could not read that file: ${err.message}`;
       } finally {
         e.target.value = '';
       }
@@ -649,6 +763,8 @@ export async function render(el) {
       const err = $('#rfErr', el);
       err.hidden = true;
       const rs = realState() || newState(cfg);
+      // The account is kept in USD so it can be marked against the exchange's
+      // own price; the form is in whatever currency the site is displaying.
       const toUsd = (v) => (v === null || v === '' || v === undefined ? v : (fx.rate ? +v / fx.rate : +v));
       const r = recordRealTrade(rs, cfg, {
         symbol: f3.sym.value, side: f3.side.value,
@@ -658,19 +774,21 @@ export async function render(el) {
       });
       if (!r.ok) { err.textContent = r.error; err.hidden = false; return; }
       save(REAL_KEY, rs);
-      toast(r.trade ? `ثبت شد: ${r.trade.pnl >= 0 ? 'سود' : 'زیان'} معامله ${money(Math.abs(r.trade.pnl))}` : 'معامله باز ثبت شد.', r.trade && r.trade.pnl < 0 ? 'down' : 'up');
+      toast(r.trade ? `Recorded: ${r.trade.pnl >= 0 ? 'a profit' : 'a loss'} of ${money(Math.abs(r.trade.pnl))} after fees.` : `Open ${f3.sym.value} trade recorded.`, r.trade && r.trade.pnl < 0 ? 'down' : 'up');
       draw();
     });
+    // A real trade closes at the price it was actually sold at on the exchange,
+    // so ask for it, with the current price filled in as a starting point.
     $$('[data-realclose]', el).forEach((b) => b.addEventListener('click', async () => {
       const sym = b.dataset.realclose;
       const now = priceOf(sym) ?? await fetchPrice(sym);
-      const m = modal(`<h3>ثبت فروش ${esc(sym)}</h3>
-        <p class="fine">قیمت فروش در صرافی را وارد کنید.</p>
+      const m = modal(`<h3>Record the sale of ${esc(sym)}</h3>
+        <p class="fine">Enter the price you sold at on your exchange. CoinVantage only records it: no order is placed.</p>
         <form class="stack mt" style="gap:10px" id="rcf">
-          <label class="fld">قیمت فروش (${esc(fx.code)})<input class="inp" name="px" type="number" step="any" min="0" required value="${now === null ? '' : esc(String(+(now * (fx.rate || 1)).toPrecision(8)))}"></label>
-          <label class="fld">کارمزد (${esc(fx.code)})<input class="inp" name="fee" type="number" step="any" min="0" value="${now === null ? '0' : esc(String(+(now * (realState()?.open[sym]?.qty || 0) * (cfg.feePct / 100) * (fx.rate || 1)).toPrecision(4)))}"></label>
+          <label class="fld">Price sold at (${esc(fx.code)})<input class="inp" name="px" type="number" step="any" min="0" required value="${now === null ? '' : esc(String(+(now * (fx.rate || 1)).toPrecision(8)))}"></label>
+          <label class="fld">Fee paid on the sale (${esc(fx.code)})<input class="inp" name="fee" type="number" step="any" min="0" value="${now === null ? '0' : esc(String(+(now * (realState()?.open[sym]?.qty || 0) * (cfg.feePct / 100) * (fx.rate || 1)).toPrecision(4)))}"><small class="fine">Filled in at the usual ${cfg.feePct}%; change it to what your exchange charged.</small></label>
           <p class="fine down" id="rcfErr" hidden></p>
-          <button class="btn primary">ثبت فروش</button>
+          <button class="btn primary">Record the sale</button>
         </form>`);
       $('#rcf', m.el).addEventListener('submit', (e) => {
         e.preventDefault();
@@ -680,51 +798,53 @@ export async function render(el) {
         const rs = realState();
         const pos = rs?.open[sym];
         if (pos) pos.feePaid = (pos.feePaid || 0) + Math.max(0, +f.fee.value || 0) / rate;
-        const r = rs ? closeManual(rs, { ...cfg, feePct: 0 }, sym, px, Date.now(), 'ثبت توسط شما') : { ok: false, error: 'این معامله دیگر باز نیست.' };
+        const r = rs ? closeManual(rs, { ...cfg, feePct: 0 }, sym, px, Date.now(), 'recorded by you') : { ok: false, error: 'This trade is no longer open.' };
         if (!r.ok) { const err = $('#rcfErr', m.el); err.textContent = r.error; err.hidden = false; return; }
         save(REAL_KEY, rs);
         m.close();
-        toast(`فروش ${sym} ثبت شد: ${r.trade.pnl >= 0 ? 'سود' : 'زیان'} ${money(Math.abs(r.trade.pnl))}`, r.trade.pnl >= 0 ? 'up' : 'down');
+        toast(`${sym} sale recorded: ${r.trade.pnl >= 0 ? 'a profit' : 'a loss'} of ${money(Math.abs(r.trade.pnl))} after fees.`, r.trade.pnl >= 0 ? 'up' : 'down');
         draw();
       });
     }));
     $('#realReset', el)?.addEventListener('click', () => {
       save(REAL_KEY, newState(cfg));
-      toast('حساب واقعی پاکسازی شد.', 'info');
+      toast('Real account cleared.', 'info');
       draw();
     });
   }
 
+  // Trades you placed yourself, from a coin page. Kept in their own account so
+  // the AI's record stays a record of the AI.
   const MY_KEY = 'myDemoState';
   const myState = () => load(MY_KEY, null);
 
   function myDemoCard() {
     const ms = myState();
     if (!ms || (!Object.keys(ms.open).length && !ms.closed.length)) {
-      return `<div class="card"><div class="card-h"><h3>معاملات آزمایشی شخصی</h3><span class="chip">حساب مجزا</span></div>
-        <p class="fine">هنوز معامله‌ای ثبت نشده است. صفحه هر ارزی را باز کنید، روی <b>معامله</b> بزنید و برای ثبت معامله آزمایشی دستی از آن استفاده کنید.</p></div>`;
+      return `<div class="card"><div class="card-h"><h3>Your own demo trades</h3><span class="chip">Separate account</span></div>
+        <p class="fine">Nothing here yet. Open any coin, press <b>Trade</b>, and use <b>Buy (demo)</b> to place a demo trade yourself at the live price. It is kept apart from the AI's account below, so your experiments never distort the strategy's record.</p></div>`;
     }
     const s2 = stats(ms, marks());
     const open = Object.entries(ms.open);
     const closed = [...ms.closed].reverse().slice(0, 20);
     return `<div class="card">
-      <div class="card-h"><h3>معاملات آزمایشی شخصی</h3><div class="row" style="gap:8px"><span class="chip">حساب مجزا</span><button class="btn sm ghost" id="myReset">بازنشانی</button></div></div>
+      <div class="card-h"><h3>Your own demo trades</h3><div class="row" style="gap:8px"><span class="chip">Separate account</span><button class="btn sm ghost" id="myReset">Reset</button></div></div>
       <div class="grid g4">
-        <div class="stat"><span class="k">موجودی</span><span class="v ${s2.returnPct >= 0 ? 'up' : 'down'}">${money(s2.equity)}</span><span class="s fine">شروع از ${money(s2.startingBalance)}</span></div>
-        <div class="stat"><span class="k">بازدهی</span><span class="v ${s2.returnPct >= 0 ? 'up' : 'down'}">${pct(s2.returnPct)}</span></div>
-        <div class="stat"><span class="k">نرخ برد</span><span class="v">${s2.winRate === null ? '—' : `${s2.winRate}%`}</span><span class="s fine">${s2.wins} برد / ${s2.losses} باخت</span></div>
-        <div class="stat"><span class="k">معاملات</span><span class="v">${s2.trades}</span><span class="s fine">${s2.openCount} باز</span></div>
+        <div class="stat"><span class="k">Balance</span><span class="v ${s2.returnPct >= 0 ? 'up' : 'down'}">${money(s2.equity)}</span><span class="s fine">started at ${money(s2.startingBalance)}</span></div>
+        <div class="stat"><span class="k">Return</span><span class="v ${s2.returnPct >= 0 ? 'up' : 'down'}">${pct(s2.returnPct)}</span></div>
+        <div class="stat"><span class="k">Win rate</span><span class="v">${s2.winRate === null ? '—' : `${s2.winRate}%`}</span><span class="s fine">${s2.wins}W / ${s2.losses}L</span></div>
+        <div class="stat"><span class="k">Trades</span><span class="v">${s2.trades}</span><span class="s fine">${s2.openCount} still open</span></div>
       </div>
-      ${open.length ? `<div class="tbl-wrap mt"><table class="tbl"><thead><tr><th class="l">ارز</th><th>خرید در</th><th>اکنون</th><th>حجم</th><th>سود/زیان باز</th><th></th></tr></thead><tbody>
+      ${open.length ? `<div class="tbl-wrap mt"><table class="tbl"><thead><tr><th class="l">Coin</th><th>Bought at</th><th>Now</th><th>Size</th><th>Open P&amp;L</th><th></th></tr></thead><tbody>
         ${open.map(([sym, p]) => {
           const px = priceOf(sym);
           const pnl = px === null ? null : (px - p.entry) * p.qty;
-          return `<tr><td class="l"><b>${esc(sym)}</b></td><td>${money(p.entry)}</td><td>${px === null ? '<span class="muted">بدون قیمت</span>' : money(px)}</td><td>${money(p.notional)}</td>
+          return `<tr><td class="l"><b>${esc(sym)}</b></td><td>${money(p.entry)}</td><td>${px === null ? '<span class="muted">no price yet</span>' : money(px)}</td><td>${money(p.notional)}</td>
             <td class="${pnl === null ? 'muted' : pnl >= 0 ? 'up' : 'down'}">${pnl === null ? '—' : `<b>${pnl >= 0 ? '+' : '−'}${money(Math.abs(pnl))}</b> <small>${pct((px / p.entry - 1) * 100)}</small>`}</td>
-            <td><button class="btn sm" data-mysell="${esc(sym)}">فروش</button></td></tr>`;
+            <td><button class="btn sm" data-mysell="${esc(sym)}">Sell</button></td></tr>`;
         }).join('')}
       </tbody></table></div>` : ''}
-      ${closed.length ? `<div class="tbl-wrap mt"><table class="tbl"><thead><tr><th class="l">ارز</th><th class="l">بسته شده</th><th>خرید</th><th>فروش</th><th>نتیجه</th></tr></thead><tbody>
+      ${closed.length ? `<div class="tbl-wrap mt"><table class="tbl"><thead><tr><th class="l">Coin</th><th class="l">Closed</th><th>Bought</th><th>Sold</th><th>Result</th></tr></thead><tbody>
         ${closed.map((t) => `<tr><td class="l"><b>${esc(t.symbol)}</b></td><td class="l fine">${dateTime(t.exitAt, false)}</td><td>${money(t.entry)}</td><td>${money(t.exit)}</td>
           <td class="${t.pnl >= 0 ? 'up' : 'down'}"><b>${t.pnl >= 0 ? '+' : '−'}${money(Math.abs(t.pnl))}</b> <small>${pct(t.pnlPct)}</small></td></tr>`).join('')}
       </tbody></table></div>` : ''}
@@ -735,25 +855,30 @@ export async function render(el) {
   function wireMyDemo() {
     $('#myReset', el)?.addEventListener('click', () => {
       save(MY_KEY, newState(cfg));
-      toast('حساب آزمایشی شخصی به موجودی اولیه بازگشت.', 'info');
+      toast('Your demo account is back to its starting balance.', 'info');
       draw();
     });
     $$('[data-mysell]', el).forEach((b) => b.addEventListener('click', async () => {
       const sym = b.dataset.mysell;
       const ms = myState();
       const px = priceOf(sym) ?? await fetchPrice(sym);
-      if (px === null) { toast(`قیمتی برای ${sym} در دسترس نیست.`, 'info'); return; }
+      if (px === null) { toast(`No price for ${sym} right now — try again in a moment.`, 'info'); return; }
       const r = closeManual(ms, cfg, sym, px);
       if (!r.ok) { toast(r.error, 'down'); return; }
       save(MY_KEY, ms);
-      toast(`فروش ${sym}: نتیجه ${money(Math.abs(r.trade.pnl))}`, r.trade.pnl >= 0 ? 'up' : 'down');
+      toast(`Sold ${sym}: ${r.trade.pnl >= 0 ? 'a profit' : 'a loss'} of ${money(Math.abs(r.trade.pnl))} after fees.`, r.trade.pnl >= 0 ? 'up' : 'down');
       draw();
     }));
   }
 
+  // Coins on the AI's list it cannot trade: none of the exchanges it reads has
+  // them (two checks in a row), or only CoinGecko's sparse prices do.
   const unlisted = (sym) => knownVenue(all.find((c) => c.symbol === sym)) === null;
   function untradable() {
     const streak = load(NODATA_KEY, {});
+    // A coin this browser cannot read but the cloud did on its last check is
+    // still traded there: a browser can be refused by an exchange the server is
+    // not (ten coins were once removed that way while the cloud read all of them).
     const step = INTERVAL_MS[state?.interval || cfg.interval] || 36e5;
     const cloud = [...(state?.log || [])].reverse().find((e) => e.kind === 'check' && e.by === 'cloud' && Array.isArray(e.failed));
     const cloudReads = (sym) => !!cloud && Date.now() - cloud.t < 2 * step + 36e5 && !cloud.failed.includes(sym);
@@ -761,14 +886,16 @@ export async function render(el) {
     const sparse = cfg.universe.filter((s) => st.noExchange.includes(s) && !noData.includes(s));
     return { noData, sparse, all: [...noData, ...sparse] };
   }
-
+  // What the settings change about the tested result, on the page itself: the
+  // dialog warned once, and an untested chart at 5% risk with the whole account
+  // in one coin then lost money with no reminder of why it might.
   function settingsCard() {
     const w = settingsWarnings({ ...cfg, interval: state?.interval || cfg.interval });
     if (!w.length) return '';
     return `<div class="card" style="border-color:var(--warn);margin-bottom:14px" id="settingsWarn">
-      <p style="margin:0"><b>تنظیمات شما با موارد تست‌شده متفاوت است، بنابراین نتایج تست‌شده برای این حساب صدق نمی‌کنند.</b></p>
+      <p style="margin:0"><b>Your settings are not the tested ones, so the tested result does not apply to this account.</b></p>
       <ul class="fine" style="margin:6px 0 0;padding-left:18px">${w.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
-      <button class="btn sm mt" type="button" id="warnUseBest">استفاده از بهترین تنظیمات تست‌شده</button>
+      <button class="btn sm mt" type="button" id="warnUseBest">Use the best tested setup</button>
     </div>`;
   }
 
@@ -777,9 +904,9 @@ export async function render(el) {
     if (!u.all.length) return '';
     const n = u.all.length;
     return `<div class="card" style="border-color:var(--warn)" id="untradable">
-      <p style="margin:0"><b>${n} ارز قابل معامله نیستند و رد می‌شوند.</b>
-      ${u.noData.length ? `${esc(u.noData.join(', '))}: فاقد داده صرافی. ` : ''}${u.sparse.length ? `${esc(u.sparse.join(', '))}: قیمت‌های محدود کوین‌گکو. ` : ''}</p>
-      <button class="btn sm mt" type="button" id="dropUntradable">حذف از لیست</button>
+      <p style="margin:0"><b>${n} coin${n > 1 ? 's' : ''} on the AI's list can't be traded, so ${n > 1 ? 'they are' : 'it is'} skipped on every check.</b>
+      ${u.noData.length ? `${esc(u.noData.join(', '))}: no price data from the exchanges it reads (Binance, Gate.io, HTX, OKX). ` : ''}${u.sparse.length ? `${esc(u.sparse.join(', '))}: only occasional CoinGecko prices, too sparse to trade on. ` : ''}The rest of the list is unaffected.</p>
+      <button class="btn sm mt" type="button" id="dropUntradable">Remove ${n > 1 ? 'them' : 'it'} from the list</button>
     </div>`;
   }
   function wireUntradable() {
@@ -788,8 +915,8 @@ export async function render(el) {
       if (!gone.length) return;
       cfg.universe = cfg.universe.filter((s) => !gone.includes(s));
       save(CFG_KEY, cfg);
-      if (state) { logCheck(state, { kind: 'settings', text: `حذف ${gone.join(', ')} (بدون داده قیمت)` }); save(STATE_KEY, state); }
-      toast(`ارزهای ${gone.join(', ')} حذف شدند.`, 'up');
+      if (state) { logCheck(state, { kind: 'settings', text: `removed ${gone.join(', ')} (no price data to trade on)` }); save(STATE_KEY, state); }
+      toast(`Removed ${gone.join(', ')} from the AI's list.`, 'up');
       draw();
     });
   }
@@ -804,70 +931,72 @@ export async function render(el) {
       ${backupCard()}
       ${myDemoCard()}
       ${realCard()}
-      <h3 class="mt" style="margin-bottom:8px">حساب اختصاصی هوش مصنوعی</h3>
+      <h3 class="mt" style="margin-bottom:8px">The AI's own account</h3>
       ${settingsCard()}
       ${untradableCard()}
       ${verdictCard()}
       ${earningsCard()}
       <div class="grid g4">
-        <div class="card"><div class="stat"><span class="k">موجودی فعلی</span><span class="v ${s.returnPct >= 0 ? 'up' : 'down'}">${money(s.equity)}</span><span class="s fine">شروع از ${money(s.startingBalance)}</span></div></div>
-        <div class="card"><div class="stat"><span class="k">بازدهی</span><span class="v ${s.returnPct >= 0 ? 'up' : 'down'}">${pct(s.returnPct)}</span><span class="s fine">از ${dateTime(s.since, false)}</span></div></div>
-        <div class="card"><div class="stat"><span class="k">نرخ برد</span><span class="v">${s.winRate === null ? '—' : `${s.winRate}%`}</span><span class="s fine">${s.wins} برد / ${s.losses} باخت</span></div></div>
-        <div class="card"><div class="stat"><span class="k">بیشترین افت</span><span class="v ${s.maxDrawdownPct > 0 ? 'down' : 'flat'}">${pct(-s.maxDrawdownPct, 1)}</span><span class="s fine">${s.openCount} باز · ${s.trades} بسته</span></div></div>
+        <div class="card"><div class="stat"><span class="k">Balance now</span><span class="v ${s.returnPct >= 0 ? 'up' : 'down'}">${money(s.equity)}</span><span class="s fine">started at ${money(s.startingBalance)}</span></div></div>
+        <div class="card"><div class="stat"><span class="k">Return</span><span class="v ${s.returnPct >= 0 ? 'up' : 'down'}">${pct(s.returnPct)}</span><span class="s fine">since ${dateTime(s.since, false)}${s.since < s.liveSince - 60e3 ? ` · replayed until ${dateTime(s.liveSince)}` : ''}</span></div></div>
+        <div class="card"><div class="stat"><span class="k">Win rate</span><span class="v">${s.winRate === null ? '—' : `${s.winRate}%`}</span><span class="s fine">${s.wins}W / ${s.losses}L${s.profitFactor ? ` · PF ${s.profitFactor}` : ''}</span></div></div>
+        <div class="card"><div class="stat"><span class="k">Max drawdown</span><span class="v ${s.maxDrawdownPct > 0 ? 'down' : 'flat'}">${pct(-s.maxDrawdownPct, 1)}</span><span class="s fine">${s.openCount} open · ${s.trades} closed</span></div></div>
       </div>
 
       <div class="card mt">
-        <div class="card-h"><h3>موقعیت‌های باز</h3><span class="fine">بر اساس قیمت زنده</span></div>
-        ${open.length ? `<div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">ارز</th><th class="hide-p">ورود</th><th>اکنون</th><th class="hide-p">حد ضرر</th><th class="hide-p">تارگت</th><th class="hide-t">حجم</th><th>سود/زیان باز</th><th class="l hide-t">زمان باز شدن</th></tr></thead><tbody>
+        <div class="card-h"><h3>Open positions</h3><span class="fine">marked against the live price (or the latest candle until a live price arrives)</span></div>
+        ${open.length ? `<div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">Coin</th><th class="hide-p">Entry</th><th>Now</th><th class="hide-p">Stop</th><th class="hide-p">Target</th><th class="hide-t">Size</th><th>Open P&amp;L</th><th class="l hide-t">Opened</th></tr></thead><tbody>
           ${open.map(([sym, p]) => {
             const px = st.prices[sym];
             if (!Number.isFinite(px)) {
               const coin = all.find((c) => c.symbol === sym);
               return `<tr data-sym="${esc(sym)}"><td class="l"><div class="coin-cell">${coinLogo(coin || { symbol: sym }, 22)}<b>${esc(sym)}</b></div></td>
-                <td class="hide-p">${money(p.entry)}</td><td class="muted">در حال بارگذاری…</td>
-                <td class="down hide-p">${money(p.stop)}</td><td class="up hide-p">${p.tp === null || p.tp === undefined ? 'متحرک' : money(p.tp)}</td>
-                <td class="hide-t">${money(p.notional)}</td><td class="muted fine">انتظار برای قیمت</td><td class="l fine hide-t">${dateTime(p.openedAt + (INTERVAL_MS[state.interval] || 0))}</td></tr>`;
+                <td class="hide-p">${money(p.entry)}</td><td class="muted">loading…</td>
+                <td class="down hide-p">${money(p.stop)}</td><td class="up hide-p">${p.tp === null || p.tp === undefined ? 'trailing' : money(p.tp)}</td>
+                <td class="hide-t">${money(p.notional)}</td><td class="muted fine">waiting for a price</td><td class="l fine hide-t">${dateTime(p.openedAt + (INTERVAL_MS[state.interval] || 0))}</td></tr>`;
             }
             const pnl = (px - p.entry) * p.qty;
             const coin = all.find((c) => c.symbol === sym);
             return `<tr data-sym="${esc(sym)}">
               <td class="l"><div class="coin-cell">${coinLogo(coin || { symbol: sym }, 22)}<b>${esc(sym)}</b></div></td>
-              <td class="hide-p">${money(p.entry)}</td><td>${money(px)}${st.priceFrom[sym] === 'candle' ? '<br><small class="fine">هر ۲۰ ثانیه</small>' : ''}</td>
+              <td class="hide-p">${money(p.entry)}</td><td>${money(px)}${st.priceFrom[sym] === 'candle' ? '<br><small class="fine" title="not on the Binance stream: read from its own exchange every 20 seconds">every 20 s</small>' : ''}</td>
               <td class="down hide-p">${money(p.stop)}${p.movedToBreakEven ? ' <span class="fine">(BE)</span>' : ''}</td>
-              <td class="up hide-p">${p.tp === null || p.tp === undefined ? 'متحرک' : money(p.tp)}</td>
+              <td class="up hide-p">${p.tp === null || p.tp === undefined ? 'trailing' : money(p.tp)}</td>
               <td class="hide-t">${money(p.notional)}</td>
               <td class="${pnl >= 0 ? 'up' : 'down'}"><b>${pnl >= 0 ? '+' : '−'}${money(Math.abs(pnl))}</b><br><small>${pct((px / p.entry - 1) * 100)}</small></td>
               <td class="l fine hide-t">${dateTime(p.openedAt + (INTERVAL_MS[state.interval] || 0))}<br><small>${ago(p.openedAt + (INTERVAL_MS[state.interval] || 0))}</small></td></tr>`;
           }).join('')}
-        </tbody></table></div>` : `<p class="muted">${autoOn ? 'هیچ موقعیت بازی وجود ندارد — هوش مصنوعی در انتظار سیگنال است.' : 'هوش مصنوعی متوقف است.'}</p>`}
+        </tbody></table></div>` : `<p class="muted">${autoOn ? 'No position open right now — the AI is waiting for a setup that meets its rules.' : 'No position open. The AI is not running, so none will open until you start it.'}</p>`}
       </div>
 
       ${activityCard()}
       ${reviewCard()}
 
-      ${state.equityCurve.length > 2 ? `<div class="card mt"><div class="card-h"><h3>روند موجودی</h3><span class="fine">شبیه‌سازی‌شده</span></div><div id="eqChart"></div></div>` : ''}
+      ${state.equityCurve.length > 2 ? `<div class="card mt"><div class="card-h"><h3>Balance over time</h3><span class="fine">simulated</span></div><div id="eqChart"></div></div>` : ''}
 
       <div class="card mt">
-        <div class="card-h"><h3>تاریخچه معاملات</h3><div class="row" style="gap:8px"><span class="fine">${s.trades} بسته · ${money(s.feesPaid)} کارمزد</span><button class="btn sm ghost" data-export="ai-csv">CSV</button><button class="btn sm ghost" data-report="ai">گزارش</button></div></div>
-        ${closed.length ? `<div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">ارز</th><th class="l hide-p">باز شدن</th><th class="l">بسته شدن</th><th class="hide-p">ورود</th><th class="hide-p">خروج</th><th>نتیجه</th><th class="l">دلیل بسته شدن</th></tr></thead><tbody>
+        <div class="card-h"><h3>Trade log</h3><div class="row" style="gap:8px"><span class="fine">${s.trades} closed · ${money(s.feesPaid)} paid in fees</span><button class="btn sm ghost" data-export="ai-csv">CSV</button><button class="btn sm ghost" data-report="ai">Report</button></div></div>
+        ${closed.length ? `<div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">Coin</th><th class="l hide-p">Opened</th><th class="l">Closed</th><th class="hide-p">Entry</th><th class="hide-p">Exit</th><th>Result</th><th class="l">Why it closed</th></tr></thead><tbody>
           ${closed.slice(0, 60).map((t) => `<tr data-sym="${esc(t.symbol)}">
             <td class="l"><b>${esc(t.symbol)}</b></td>
             <td class="l fine hide-p">${dateTime(t.openedAt + (INTERVAL_MS[state.interval] || 0))}</td><td class="l fine wrap">${dateTime(t.exitAt + (INTERVAL_MS[state.interval] || 0))}</td>
             <td class="hide-p">${money(t.entry)}</td><td class="hide-p">${money(t.exit)}</td>
             <td class="${t.pnl >= 0 ? 'up' : 'down'}"><b>${t.pnl >= 0 ? '+' : '−'}${money(Math.abs(t.pnl))}</b> <small>${pct(t.pnlPct)}</small></td>
             <td class="l"><span class="chip ${t.reason === 'target' ? 'up' : t.reason === 'stop-loss' ? 'down' : ''}">${esc(t.reason)}</span></td></tr>`).join('')}
-        </tbody></table></div>` : '<p class="muted">معامله بسته‌شده‌ای وجود ندارد.</p>'}
+        </tbody></table></div>` : '<p class="muted">No closed trades yet.</p>'}
       </div>
 
       <div class="card mt" style="background:var(--surface-2)">
-        <h3>توضیحات و سلب مسئولیت</h3>
-        <p class="fine">${esc(PAPER_NOTICE)} نتایج شامل کارمزد ${cfg.feePct}% در هر طرف است.</p>
+        <h3>What this is and is not</h3>
+        <p class="fine">${esc(PAPER_NOTICE)} Results include a ${cfg.feePct}% fee per side and assume the stop is hit first whenever a candle contains both the stop and the target — so the record errs against the strategy, never for it.</p>
+        <p class="fine">A simulation cannot reproduce slippage, thin order books or an exchange going down mid-move. Treat a good run here as evidence the rules are sane, not as an expected return.</p>
       </div>
       ${learningCard()}`;
 
     $$('tr[data-sym]', el).forEach((tr) => tr.addEventListener('click', () => { location.hash = `#/coin/${tr.dataset.sym}`; }));
     wireBackup();
     wireUntradable();
+    // opens Settings with the best tested setup filled in, to look at before saving
     $('#warnUseBest', el)?.addEventListener('click', () => { $('#cfgBtn', el).click(); document.querySelector('.modal #useBest')?.click(); });
     wireMyDemo();
     wireReal();
@@ -882,102 +1011,126 @@ export async function render(el) {
     if ($('#eqChart', el)) {
       const lc = new LineChart($('#eqChart', el), { height: 240, yFormat: (v) => money(v), legend: false });
       st.charts.push(lc);
+      // The curve gets a point only while a trade is open; a week in cash would
+      // end the line at the last trade, so it is carried flat to now.
       const pts = state.equityCurve.map((p) => ({ x: p.t, y: p.equity }));
       const nowT = Date.now(), lastPt = pts[pts.length - 1];
       if (lastPt && nowT - lastPt.x > (INTERVAL_MS[state.interval] || 36e5)) pts.push({ x: nowT, y: s.equity });
-      lc.set([{ name: 'موجودی', color: 'var(--accent)', width: 2.2, data: pts }]);
+      lc.set([{ name: 'Balance', color: 'var(--accent)', width: 2.2, data: pts }]);
     }
   }
 
+  // ---------------------------------------------------------------- settings
+  // Every choice here takes effect: a coin that cannot be traded is named and
+  // left out (never silently dropped), a new chart can start a fresh account
+  // straight away, and your own rules are traded as you set them.
   function resetAccount() {
     const wasRunning = autoOn;
     state = newState(cfg, { liveFrom: Date.now() }); save(STATE_KEY, state);
     st.prices = {}; st.priceFrom = {};
     applySession('RESET');
     saveLedger(newLedger());
+    // a reset clears the account, not the choice to run the AI
     if (wasRunning) applySession('START');
     return wasRunning;
   }
 
+  // What a set of settings can be expected to make: in % and money, the
+  // spread between test periods, and the same test at each risk level.
   function yieldHtml(c) {
     const y = expectedYield(c);
     const sign = (v) => pct(v, 2);
-    if (!y) return `<b>بازدهی پیش‌بینی‌شده</b><p class="fine" style="margin:6px 0 0">داده‌ای برای انتظار وجود ندارد.</p>`;
+    if (!y) return `<b>Expected yield</b><p class="fine" style="margin:6px 0 0">Nothing measured to expect: ${c.strategy === 'custom' ? 'your own rules were never tested' : `the ${esc(c.interval)} chart was never tested`}. "Test these settings" below shows how they did on recent candles.</p>`;
     const own = c.strategy !== 'custom' && !c.ownRulesOff && c.interval === PER_COIN_RULES.interval;
     const cash = (v) => `${v >= 0 ? '+' : '−'}${money(Math.abs((c.startingBalance * v) / 100))}`;
     const top = y.levels.reduce((a, l) => (!a || l.ret > a.ret ? l : a), null);
     const n = (c.universe || []).length;
-    return `<b>بازدهی پیش‌بینی‌شده</b> <span class="fine">بر اساس تست ${esc(y.chart)}، با ریسک ${y.risk}%</span>
-      <p class="fine" style="margin:6px 0 0">حدود <b class="${y.ret >= 0 ? 'up' : 'down'}">${sign(y.ret)}</b> در هر ${esc(y.block)} (${cash(y.ret)} روی سرمایه ${money(c.startingBalance)}): ${sign(y.lo)} در بدترین دوره، ${sign(y.hi)} در بهترین دوره، ${y.up} دوره از ${y.periods} دوره صعودی.</p>
-      ${y.levels.length ? `<div class="tbl-wrap mt"><table class="tbl fine fit"><thead><tr><th class="l">ریسک هر معامله</th><th>میانگین هر دوره</th><th>بدترین → بهترین</th><th>بیشترین افت</th><th class="hide-p">دوره‌های صعودی</th></tr></thead><tbody>
-        ${y.levels.map((l) => `<tr${l.risk === y.risk ? ' style="font-weight:700"' : ''}><td class="l">${l.risk}%${l.risk === y.risk ? '<small>انتخاب شما</small>' : ''}</td><td class="${l.ret >= 0 ? 'up' : 'down'}">${sign(l.ret)}</td><td class="range">${sign(l.lo)} → ${sign(l.hi)}</td><td>${l.dd}%</td><td class="hide-p">${l.up} از ${y.periods}</td></tr>`).join('')}
-      </tbody></table></div>` : ''}`;
+    return `<b>Expected yield</b> <span class="fine">from the walk-forward test of the ${esc(y.chart)} rules, at ${y.risk}% a trade</span>
+      <p class="fine" style="margin:6px 0 0">About <b class="${y.ret >= 0 ? 'up' : 'down'}">${sign(y.ret)}</b> per ${esc(y.block)} on average (${cash(y.ret)} on ${money(c.startingBalance)}): ${sign(y.lo)} in the worst of the ${y.periods} test periods, ${sign(y.hi)} in the best, a gain in ${y.up} of ${y.periods}. Worst drop along the way about ${y.dd}%, open trades counted; about ${y.trades} trades a period. Holding the same coins made ${sign(y.hold)} a period${y.holdDrop ? `, falling as far as ${y.holdDrop}% on the way` : ''}.${y.fillCost ? ` Fills 0.05% worse each way (spread, slippage) would take about ${y.fillCost} points off a period.` : ''}</p>
+      <p class="fine" style="margin:6px 0 0">Measured on ${y.coins} coins in one account${n && n < y.coins ? `; with ${n} coin${n === 1 ? '' : 's'} expect fewer trades` : ''}.${VOL_SCALE.charts.includes(c.interval) && c.strategy !== 'custom' ? ` These figures are from before ${esc(c.interval)} began buying less while a coin is unusually volatile; in a test on the same periods that added ${VOL_SCALE.tested[c.interval].ret >= 0 ? '+' : '−'}${Math.abs(VOL_SCALE.tested[c.interval].ret)} points a period and cut the worst drop by ${Math.abs(VOL_SCALE.tested[c.interval].dd)} points.` : ''}${y.capsDiffer ? ' Your caps on open trades or on one coin differ from the test\'s (5 open, 25% a coin), so treat it as rougher.' : ''}${own ? ` With each coin's own rules on, a separate test over ${PER_COIN_RULES.tested.from.slice(0, 4)}–${PER_COIN_RULES.tested.to.slice(0, 4)} made ${sign(PER_COIN_RULES.tested.own.ret)} against ${sign(PER_COIN_RULES.tested.standard.ret)} without them.` : ''} An expectation from past periods, not a promise.</p>
+      ${y.levels.length ? `<div class="tbl-wrap mt"><table class="tbl fine fit"><thead><tr><th class="l">Risk a trade</th><th>Average a period</th><th>Worst → best period</th><th>Worst drop</th><th class="hide-p">Periods up</th></tr></thead><tbody>
+        ${y.levels.map((l) => `<tr${l.risk === y.risk ? ' style="font-weight:700"' : ''}><td class="l">${l.risk}%${l.risk === y.risk ? '<small>yours</small>' : ''}</td><td class="${l.ret >= 0 ? 'up' : 'down'}">${sign(l.ret)}</td><td class="range">${sign(l.lo)} → ${sign(l.hi)}</td><td>${l.dd}%</td><td class="hide-p">${l.up} of ${y.periods}</td></tr>`).join('')}
+      </tbody></table></div>
+      <p class="fine" style="margin:6px 0 0">Each row is the same test at that risk${y.levels.some((l) => l.risk === y.risk) ? '' : `; yours (${y.risk}%) is read between the two nearest rows`}. The best average came at ${top.risk}% a trade${top.risk < y.levels[y.levels.length - 1].risk ? ' and higher settings made no more: with at most 25% in one coin, a higher setting soon stops making positions bigger' : `, with a worst drop of ${top.dd}% against ${y.levels[0].dd}% at ${y.levels[0].risk}% and a worst period of ${sign(top.lo)}`}. Read off these same periods, so a guide, not a promise.</p>` : ''}`;
   }
 
   $('#cfgBtn', el).addEventListener('click', () => {
     const coins = all.filter((c) => !isStable(c.symbol)).slice(0, 100);
     const chosen = new Set(cfg.universe);
+    // every coin seen to have no data, on the list or not, so it is not picked again
     const streakNow = load(NODATA_KEY, {});
     const noDataNow = [...Object.keys(streakNow).filter((k) => streakNow[k] >= 2), ...st.noExchange];
+    // A coin none of the exchanges lists cannot be picked: CoinGecko's top 100
+    // includes some (FIGR_HELOC, a tokenised home loan), and the quick picks
+    // used to add them.
     const VENUE = { gate: 'Gate.io', htx: 'HTX', okx: 'OKX' };
     const venueTag = (c) => {
       const v = knownVenue(c);
-      if (v === null) return ' <small class="down" title="روی صرافی‌های پشتیبانی‌شده نیست">بدون صرافی</small>';
-      if (noDataNow.includes(c.symbol)) return ' <small class="down">بدون داده</small>';
+      if (v === null) return ' <small class="down" title="Not traded on Binance, Gate.io, HTX or OKX, the exchanges this app reads, so there is no price data to trade on">no exchange</small>';
+      if (noDataNow.includes(c.symbol)) return ' <small class="down" title="no price data the AI can trade on">no data</small>';
       if (v === 'binance') return '';
-      return v ? ` <small class="muted">${VENUE[v]}</small>` : ' <small class="muted">در حال بررسی…</small>';
+      return v ? ` <small class="muted" title="not on Binance: candles come from ${VENUE[v]}">${VENUE[v]}</small>` : ' <small class="muted" title="not on Binance: looking for it on Gate.io, HTX and OKX">checking…</small>';
     };
     const best = bestTestedChart();
     const own = cfg.custom ? { ...CUSTOM_DEFAULT, ...cfg.custom } : { ...CUSTOM_DEFAULT };
     const exitOf = (r) => (r.trailAtr ? `t${r.trailAtr}` : `r${r.rMultiple}`);
     const chartLabel = (i) => {
       const x = CHART_TESTED[i];
-      if (!x) return `${i} — تست‌نشده`;
+      if (!x) return `${i} — not tested`;
       const t = x.adopt ? x.own : x.standard;
-      return `${i} — تست‌شده ${pct(t.ret, 2)} در هر ${x.block} (هولد ${pct(x.hold, 2)})`;
+      return `${i} — tested ${pct(t.ret, 2)} per ${x.block} (holding ${pct(x.hold, 2)})`;
     };
-    const m = modal(`<h3>تنظیمات ترید بات</h3>
-      <div class="card mt" style="padding:12px" id="todo"><b>راهنمای سریع</b>
-        <p class="fine" style="margin:6px 0 0">تنظیمات پیشنهادی: تایم‌فریم <b>${esc(best.iv)}</b> با قوانین تست‌شده. ریسک را روی ۱ تا ۲٪ تنظیم کنید.</p>
-        <button class="btn sm mt" type="button" id="useBest">استفاده از بهترین تنظیمات تست‌شده</button>
+    const m = modal(`<h3>Trader settings</h3>
+      <div class="card mt" style="padding:12px" id="todo"><b>What to do</b>
+        <p class="fine" style="margin:6px 0 0">Best tested setup: the <b>${esc(best.iv)}</b> chart with the tested rules. After the cost of real fills (0.05% worse each way) it made ${pct(best.net, 2)} per ${esc(best.block)} on average, about ${pct(best.month, 1)} a month, with a worst drop of ${best.dd}%; holding the same coins made ${pct(best.hold, 2)} a period, and its worst period ${best.worstNet >= 0 ? 'still made money' : `lost ${Math.abs(best.worstNet)}%`}. Keep risk at 1–2% a trade, pick at least five coins, and leave the self-review on. None of this is a promise: the tests looked back, the market goes forward.</p>
+        <button class="btn sm mt" type="button" id="useBest">Use the best tested setup</button>
         <div id="todoLive"></div></div>
       <form class="stack mt" style="gap:12px" id="cf" novalidate>
-        <fieldset class="stack" style="gap:8px;border:0;padding:0;margin:0;min-width:0"><legend class="fine"><b>حساب و ریسک</b></legend>
+        <fieldset class="stack" style="gap:8px;border:0;padding:0;margin:0;min-width:0"><legend class="fine"><b>Account and risk</b></legend>
           <div class="row" style="gap:8px;flex-wrap:wrap">
-            <label class="fld">سرمایه اولیه${fx.code === 'USD' ? '' : ` (${esc(fx.code)})`}<input class="inp" name="startingBalance" type="number" min="${Math.ceil(100 * fx.rate)}" step="any" value="${Math.round(cfg.startingBalance * fx.rate)}" style="width:150px"></label>
-            <label class="fld">ریسک هر معامله %<input class="inp" name="riskPct" type="number" min="0.1" max="5" step="0.1" value="${cfg.riskPct}" style="width:110px"></label>
-            <label class="fld">حداکثر معاملات باز<input class="inp" name="maxPositions" type="number" min="1" max="20" value="${cfg.maxPositions}" style="width:110px"></label>
-            <label class="fld">حداکثر سهم یک ارز %<input class="inp" name="maxPositionPct" type="number" min="5" max="100" step="5" value="${cfg.maxPositionPct}" style="width:120px"></label>
-            <label class="fld">کارمزد هر معامله %<input class="inp" name="feePct" type="number" min="0" max="1" step="0.01" value="${cfg.feePct}" style="width:110px"></label>
+            <label class="fld">Starting balance${fx.code === 'USD' ? '' : ` (${esc(fx.code)})`}<input class="inp" name="startingBalance" type="number" min="${Math.ceil(100 * fx.rate)}" step="any" value="${Math.round(cfg.startingBalance * fx.rate)}" style="width:150px"></label>
+            <label class="fld">Risk per trade %<input class="inp" name="riskPct" type="number" min="0.1" max="5" step="0.1" value="${cfg.riskPct}" style="width:110px"></label>
+            <label class="fld">Max open trades<input class="inp" name="maxPositions" type="number" min="1" max="20" value="${cfg.maxPositions}" style="width:110px"></label>
+            <label class="fld">Max in one coin %<input class="inp" name="maxPositionPct" type="number" min="5" max="100" step="5" value="${cfg.maxPositionPct}" style="width:120px"></label>
+            <label class="fld">Fee per trade %<input class="inp" name="feePct" type="number" min="0" max="1" step="0.01" value="${cfg.feePct}" style="width:110px"></label>
           </div>
+          ${fx.code === 'USD' ? '' : `<p class="fine" style="margin:0">The starting balance is in ${esc(fx.code)} at today's rate (${money(cfg.startingBalance)} is $${cfg.startingBalance.toLocaleString('en-US', { maximumFractionDigits: 2 })}); the account itself is kept in US dollars, like the prices it trades at.</p>`}
         </fieldset>
-        <fieldset class="stack" style="gap:8px;border:0;padding:0;margin:0;min-width:0"><legend class="fine"><b>تایم‌فریم</b></legend>
-          <select class="inp" name="interval" aria-label="تایم‌فریم" style="width:100%">${TRADER_CHARTS.map((i) => `<option value="${i}" ${i === cfg.interval ? 'selected' : ''}>${esc(chartLabel(i))}</option>`).join('')}</select>
-          <label class="row fine" style="gap:8px;align-items:flex-start" id="switchRow" hidden><input type="checkbox" name="switchNow" checked style="margin-top:2px"><span>شروع حساب تازه روی تایم‌فریم جدید. اطلاعات قبلی پاک خواهند شد.</span></label>
+        <fieldset class="stack" style="gap:8px;border:0;padding:0;margin:0;min-width:0"><legend class="fine"><b>Chart</b></legend>
+          <select class="inp" name="interval" aria-label="Chart" style="width:100%">${TRADER_CHARTS.map((i) => `<option value="${i}" ${i === cfg.interval ? 'selected' : ''}>${esc(chartLabel(i))}</option>`).join('')}</select>
+          <label class="row fine" style="gap:8px;align-items:flex-start" id="switchRow" hidden><input type="checkbox" name="switchNow" checked style="margin-top:2px"><span>Start a fresh account on the new chart now. This account has trades on <b>${esc(state?.interval || cfg.interval)}</b>; mixing two charts in one balance would muddle its record, so the old trades and balance are cleared. Untick to keep this account and switch at the next Reset.</span></label>
         </fieldset>
-        <fieldset class="stack" style="gap:8px;border:0;padding:0;margin:0;min-width:0"><legend class="fine"><b>استراتژی</b></legend>
-          <label class="row" style="gap:8px"><input type="radio" name="strategy" value="tested" ${cfg.strategy === 'custom' ? '' : 'checked'}><span>قوانین تست‌شده برای این تایم‌فریم <span class="fine">(پیشنهادی)</span></span></label>
-          <label class="row" style="gap:8px;align-items:flex-start;margin-left:24px" id="ownRow"><input type="checkbox" name="ownRules" ${cfg.ownRulesOff ? '' : 'checked'} style="margin-top:3px"><span class="fine">در تایم‌فریم روزانه، هر ارز از قوانین مختص به خود استفاده کند.</span></label>
-          <label class="row" style="gap:8px"><input type="radio" name="strategy" value="custom" ${cfg.strategy === 'custom' ? 'checked' : ''}><span>قوانین شخصی من</span></label>
+        <fieldset class="stack" style="gap:8px;border:0;padding:0;margin:0;min-width:0"><legend class="fine"><b>Strategy</b></legend>
+          <label class="row" style="gap:8px"><input type="radio" name="strategy" value="tested" ${cfg.strategy === 'custom' ? '' : 'checked'}><span>Tested rules for the chart <span class="fine">(recommended)</span></span></label>
+          <label class="row" style="gap:8px;align-items:flex-start;margin-left:24px" id="ownRow"><input type="checkbox" name="ownRules" ${cfg.ownRulesOff ? '' : 'checked'} style="margin-top:3px"><span class="fine">On the daily chart, each coin trades rules chosen on its own history (${PER_COIN_RULES.coins} coins have them). Tested ${PER_COIN_RULES.tested.from.slice(0, 4)}–${PER_COIN_RULES.tested.to.slice(0, 4)}: ${pct(PER_COIN_RULES.tested.own.ret, 2)} against ${pct(PER_COIN_RULES.tested.standard.ret, 2)} for the daily rules alone, worst drop ${PER_COIN_RULES.tested.own.dd}% against ${PER_COIN_RULES.tested.standard.dd}%.${(() => { const w = PER_COIN_RULES.tested.walkForward; return w && w.own < w.shared ? ` But coin by coin, over ${w.periods} walk-forward periods, they did worse than one shared rule set (${pct(w.own, 2)} against ${pct(w.shared, 2)} a period, better in ${w.better} of ${w.periods}), so the account result rests on a few coins: switching this off is a fair choice.` : ''; })()}</span></label>
+          <label class="row" style="gap:8px"><input type="radio" name="strategy" value="custom" ${cfg.strategy === 'custom' ? 'checked' : ''}><span>My own rules <span class="fine">(no published test)</span></span></label>
           <div class="stack" id="customBox" style="gap:8px;margin-left:24px">
             <div class="row" style="gap:8px;flex-wrap:wrap">
-              <label class="fld">شرایط خرید<select class="inp" name="entryMode">${[['trend', 'امتیاز قوی'], ['breakout', 'شکست سقف ۲۰ کندلی'], ['pullback', 'پولبک در روند صعودی']].map(([v, t]) => `<option value="${v}" ${own.entryMode === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
-              <label class="fld">حد ضرر<select class="inp" name="atrStop">${[1.5, 2, 3].map((v) => `<option value="${v}" ${own.atrStop === v ? 'selected' : ''}>${v} ATR پایین‌تر از ورود</option>`).join('')}</select></label>
-              <label class="fld">خروج<select class="inp" name="exit">${[['r2', 'تارگت 2R'], ['r3', 'تارگت 3R'], ['t3', 'تراکتینگ ATR 3'], ['t4', 'تراکتینگ ATR 4']].map(([v, t]) => `<option value="${v}" ${exitOf(own) === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+              <label class="fld">Buy when<select class="inp" name="entryMode">${[['trend', 'the score is strong'], ['breakout', 'it breaks a 20-candle high'], ['pullback', 'it dips in an uptrend']].map(([v, t]) => `<option value="${v}" ${own.entryMode === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+              <label class="fld">Stop<select class="inp" name="atrStop">${[1.5, 2, 3].map((v) => `<option value="${v}" ${own.atrStop === v ? 'selected' : ''}>${v} ATR below entry</option>`).join('')}</select></label>
+              <label class="fld">Sell at<select class="inp" name="exit">${[['r2', 'a target of 2× the risk'], ['r3', 'a target of 3× the risk'], ['t3', 'a stop trailing 3 ATR'], ['t4', 'a stop trailing 4 ATR']].map(([v, t]) => `<option value="${v}" ${exitOf(own) === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
             </div>
+            <label class="row fine" style="gap:8px"><input type="checkbox" name="momentumConfirm" ${own.momentumConfirm ? 'checked' : ''}>only buy when short-term momentum agrees</label>
+            <label class="row fine" style="gap:8px"><input type="checkbox" name="trendFilter" ${own.trendFilter ? 'checked' : ''}>only buy coins in an uptrend (above their 200-candle average)</label>
+            <label class="row fine" style="gap:8px"><input type="checkbox" name="marketFilter" ${own.marketFilter ? 'checked' : ''}>only buy while Bitcoin itself is in an uptrend</label>
+            <label class="row fine" style="gap:8px"><input type="checkbox" name="signalExit" ${own.signalExitBars ? 'checked' : ''}>sell after 2 candles of signal reversal</label>
           </div>
         </fieldset>
-        <fieldset class="stack" style="gap:8px;border:0;padding:0;margin:0;min-width:0"><legend class="fine"><b>ارزها</b> <span id="coinCount"></span></legend>
-          <div class="row" style="gap:6px;flex-wrap:wrap"><input class="inp" id="coinFind" placeholder="جستجوی ارز" aria-label="جستجوی ارز" style="flex:1;min-width:140px">
-            <button class="btn sm" type="button" data-pick="10">۱۰ برتر</button><button class="btn sm" type="button" data-pick="20">۲۰ برتر</button><button class="btn sm" type="button" data-pick="all">همه</button><button class="btn sm" type="button" data-pick="tested">تست‌شده‌ها</button><button class="btn sm" type="button" data-pick="own">دارای قوانین اختصاصی</button><button class="btn sm" type="button" data-pick="0">پاک کردن</button></div>
+        <fieldset class="stack" style="gap:8px;border:0;padding:0;margin:0;min-width:0"><legend class="fine"><b>Coins</b> <span id="coinCount"></span></legend>
+          <div class="row" style="gap:6px;flex-wrap:wrap"><input class="inp" id="coinFind" placeholder="Find a coin" aria-label="Find a coin" style="flex:1;min-width:140px">
+            <button class="btn sm" type="button" data-pick="10">Top 10</button><button class="btn sm" type="button" data-pick="20">Top 20</button><button class="btn sm" type="button" data-pick="all">All</button><button class="btn sm" type="button" data-pick="tested" title="The ${TESTED_COINS.length} coins the published results were measured on">The ${TESTED_COINS.length} tested</button><button class="btn sm" type="button" data-pick="own">Coins with own rules</button><button class="btn sm" type="button" data-pick="0">Clear</button></div>
           <div id="coinGrid" class="pick-grid">
-            ${coins.map((c) => `<label class="fine pick" data-coin="${esc(c.symbol)}" data-name="${esc((c.name || '').toLowerCase())}"><input type="checkbox" value="${esc(c.symbol)}" ${chosen.has(c.symbol) ? 'checked' : knownVenue(c) === null ? 'disabled' : ''} ${noDataNow.includes(c.symbol) || knownVenue(c) === null ? 'data-nodata="1"' : ''}><b>${esc(c.symbol)}</b>${PER_COIN_RULES.rules[c.symbol] ? ' <small title="دارای قوانین اختصاصی روزانه">★</small>' : ''}<span data-venue>${venueTag(c)}</span></label>`).join('')}
+            ${coins.map((c) => `<label class="fine pick" data-coin="${esc(c.symbol)}" data-name="${esc((c.name || '').toLowerCase())}"><input type="checkbox" value="${esc(c.symbol)}" ${chosen.has(c.symbol) ? 'checked' : knownVenue(c) === null ? 'disabled' : ''} ${noDataNow.includes(c.symbol) || knownVenue(c) === null ? 'data-nodata="1"' : ''}><b>${esc(c.symbol)}</b>${PER_COIN_RULES.rules[c.symbol] ? ' <small title="has its own daily rules">★</small>' : ''}${(cfg.excluded || []).includes(c.symbol) ? ' <small class="down" title="benched by the self-review">benched</small>' : ''}<span data-venue>${venueTag(c)}</span></label>`).join('')}
           </div>
+          ${(cfg.excluded || []).length ? `<label class="row fine" style="gap:8px"><input type="checkbox" name="unbench"><span>Trade the coins the self-review benched again (${esc(cfg.excluded.join(', '))})</span></label>` : ''}
+          <p class="fine" style="margin:0">Up to ${MAX_COINS} coins. ★ = has its own daily rules. Coins with no exchange candles are skipped at each check and named in the activity log.</p>
         </fieldset>
-        <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="testCfg">${icon('chart', 16)} تست تنظیمات</button><button class="btn primary">ذخیره تنظیمات</button></div>
+        <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="testCfg">${icon('chart', 16)} Test these settings</button><button class="btn primary">Save settings</button></div>
         <div id="testOut"></div>
       </form>`, { wide: true });
     const f = $('#cf', m.el);
+    // Coins Binance does not list are looked up on Gate.io, HTX and OKX (a few
+    // small requests each, remembered for days); the grid says what was found.
     pool(coins.filter((c) => knownVenue(c) === undefined), 3, async (c) => {
       const v = await findVenue(c);
       const row = f.isConnected && f.querySelector(`#coinGrid [data-coin="${CSS.escape(c.symbol)}"]`);
@@ -990,6 +1143,7 @@ export async function render(el) {
       const picks = [...f.querySelectorAll('#coinGrid input:checked')].map((x) => x.value);
       const exit = f.exit.value;
       return {
+        // typed in the currency the page shows; kept in dollars, at least $100
         startingBalance: f.startingBalance.value === f.startingBalance.defaultValue || !(+f.startingBalance.value > 0)
           ? cfg.startingBalance : Math.max(100, Math.round((+f.startingBalance.value / fx.rate) * 1e6) / 1e6),
         riskPct: Math.min(5, Math.max(0.1, +f.riskPct.value || DEFAULT_CONFIG.riskPct)),
@@ -998,7 +1152,7 @@ export async function render(el) {
         feePct: Math.min(1, Math.max(0, Number.isFinite(+f.feePct.value) ? +f.feePct.value : DEFAULT_CONFIG.feePct)),
         interval: f.interval.value,
         strategy: f.querySelector('input[name="strategy"]:checked')?.value === 'custom' ? 'custom' : 'tested',
-        custom: { entryMode: f.entryMode.value, atrStop: +f.atrStop.value, rMultiple: exit[0] === 'r' ? +exit.slice(1) : 3, trailAtr: exit[0] === 't' ? +exit.slice(1) : null },
+        custom: { entryMode: f.entryMode.value, atrStop: +f.atrStop.value, rMultiple: exit[0] === 'r' ? +exit.slice(1) : 3, trailAtr: exit[0] === 't' ? +exit.slice(1) : null, momentumConfirm: f.momentumConfirm.checked, trendFilter: f.trendFilter.checked, marketFilter: f.marketFilter.checked, signalExitBars: f.signalExit.checked ? 2 : null },
         ownRulesOff: !f.ownRules.checked,
         universe: picks,
       };
@@ -1009,15 +1163,18 @@ export async function render(el) {
       $('#ownRow', m.el).hidden = next.strategy === 'custom';
       const hasTrades = state && (Object.keys(state.open || {}).length || (state.closed || []).length);
       $('#switchRow', m.el).hidden = !(hasTrades && next.interval !== (state?.interval || cfg.interval));
-      $('#coinCount', m.el).textContent = `· ${next.universe.length} ارز انتخاب شده`;
+      $('#coinCount', m.el).textContent = `· ${next.universe.length} chosen${next.universe.length > MAX_COINS ? ` — only ${MAX_COINS} can be traded` : ''}`;
       const warn = settingsWarnings({ ...cfg, ...next });
+      // only this part is redrawn: a button redrawn under the pointer would
+      // swallow the click that blurred the field before it
       $('#todoLive', m.el).innerHTML = `<div class="mt" style="border-top:1px solid var(--border);padding-top:8px">${yieldHtml({ ...cfg, ...next })}</div>
-        ${warn.length ? `<ul class="fine" style="margin:8px 0 0;padding-left:18px">${warn.map((w) => `<li class="down">${esc(w)}</li>`).join('')}</ul>` : '<p class="fine up" style="margin:8px 0 0">تنظیمات فاقد هشدار هستند.</p>'}`;
+        ${warn.length ? `<ul class="fine" style="margin:8px 0 0;padding-left:18px">${warn.map((w) => `<li class="down">${esc(w)}</li>`).join('')}</ul>` : '<p class="fine up" style="margin:8px 0 0">Nothing in these settings needs a warning.</p>'}`;
     };
     $('#useBest', m.el).addEventListener('click', () => {
       f.interval.value = best.iv;
       f.querySelector('input[name="strategy"][value="tested"]').checked = true;
       f.ownRules.checked = true;
+      // exactly what the published test ran: its risk, position limits and coins
       f.riskPct.value = DEFAULT_CONFIG.riskPct;
       f.maxPositions.value = DEFAULT_CONFIG.maxPositions;
       f.maxPositionPct.value = DEFAULT_CONFIG.maxPositionPct;
@@ -1033,6 +1190,7 @@ export async function render(el) {
     for (const b of f.querySelectorAll('[data-pick]')) b.addEventListener('click', () => {
       const v = b.dataset.pick;
       const boxes = [...f.querySelectorAll('#coinGrid input')];
+      // the top N coins it can trade: ones with no price data are passed over
       let n = 0;
       const want = (x) => (v === 'own' ? !!PER_COIN_RULES.rules[x.value] : v === 'tested' ? TESTED_COINS.includes(x.value) : v === 'all' ? n++ < MAX_COINS : n++ < +v);
       boxes.forEach((x) => { x.checked = !x.disabled && !x.dataset.nodata && want(x); });
@@ -1042,64 +1200,97 @@ export async function render(el) {
       const next = { ...cfg, ...read() };
       const syms = next.universe.slice(0, MAX_COINS);
       const out = $('#testOut', m.el);
-      if (!syms.length) { out.innerHTML = '<p class="fine down">لطفاً حداقل یک ارز انتخاب کنید.</p>'; return; }
-      out.innerHTML = `<p class="fine"><span class="spinner"></span> در حال تست تنظیمات روی ۱۰۰۰ کندل اخیر…</p>`;
+      if (!syms.length) { out.innerHTML = '<p class="fine down">Pick at least one coin to test.</p>'; return; }
+      out.innerHTML = `<p class="fine"><span class="spinner"></span> Replaying these settings on the last 1,000 ${esc(next.interval)} candles of ${syms.length} coin${syms.length === 1 ? '' : 's'}…</p>`;
       const by = {};
       await pool(syms, 4, async (sym) => {
         const coin = all.find((c) => c.symbol === sym);
         if (!coin) return;
-        try { const r = await getCandles(coin, next.interval, 1000); if (r.source !== 'demo' && r.source !== 'coingecko' && !r.lowRes) by[sym] = r.candles.slice(0, -1); } catch {}
+        try { const r = await getCandles(coin, next.interval, 1000); if (r.source !== 'demo' && r.source !== 'coingecko' && !r.lowRes) by[sym] = r.candles.slice(0, -1); } catch { /* skipped */ }
       });
       if (!m.el.isConnected) return;
       const rules = rulesForChart({ ...next, excluded: [] }, next.interval, load(LESSONS_KEY, []));
       const res = backtestSettings({ ...rules, perCoin: next.strategy !== 'custom' && !next.ownRulesOff && next.interval === PER_COIN_RULES.interval ? PER_COIN_RULES.rules : null }, by);
-      if (!res.coins) { out.innerHTML = '<p class="fine down">داده کافی برای این ارزها وجود ندارد.</p>'; return; }
+      if (!res.coins) { out.innerHTML = '<p class="fine down">None of these coins had enough exchange candles on this chart to test.</p>'; return; }
       const sign = (v) => pct(v, 2);
-      out.innerHTML = `<div class="card" style="padding:12px"><b>نتیجه تست روی کندل‌های اخیر</b>
-        <p class="fine" style="margin:6px 0 0">${res.coins} ارز، بازدهی: <b class="${res.ret >= 0 ? 'up' : 'down'}">${sign(res.ret)}</b> در برابر <b>${sign(res.hold)}</b> برای هولد کردن. ${res.trades} معامله بسته شد.</p></div>`;
+      out.innerHTML = `<div class="card" style="padding:12px"><b>How these settings did on recent candles</b>
+        <p class="fine" style="margin:6px 0 0">${res.coins} coin${res.coins === 1 ? '' : 's'}, ${esc(new Date(res.from).toISOString().slice(0, 10))} → ${esc(new Date(res.to).toISOString().slice(0, 10))}, fees included: <b class="${res.ret >= 0 ? 'up' : 'down'}">${sign(res.ret)}</b> against <b>${sign(res.hold)}</b> for holding the same coins. ${res.trades} trade${res.trades === 1 ? '' : 's'} closed${res.trades ? `, ${res.winRate}% won` : ''}, worst drop ${res.dd}%, ${res.open} still open. ${Object.keys(by).length < syms.length ? `${syms.length - Object.keys(by).length} coin${syms.length - Object.keys(by).length === 1 ? '' : 's'} had no exchange candles and ${syms.length - Object.keys(by).length === 1 ? 'was' : 'were'} left out.` : ''}</p>
+        <p class="fine" style="margin:6px 0 0">A look back, not a promise. ${next.strategy === 'custom' ? 'Rules tuned until they look good here usually do worse live.' : 'The tested rules were picked on history that includes these candles, so they look better here than they will live; the walk-forward result is the one to expect.'}</p></div>`;
     });
     refresh();
 
     f.addEventListener('submit', (e) => {
       e.preventDefault();
       const next = read();
-      if (!next.universe.length) { toast('لطفاً حداقل یک ارز انتخاب کنید.', 'down'); return; }
+      if (!next.universe.length) { toast('Pick at least one coin.', 'down'); return; }
       const dropped = next.universe.slice(MAX_COINS);
       next.universe = next.universe.slice(0, MAX_COINS);
       const before = { ...cfg };
-      Object.assign(cfg, next);
+      const unbench = f.unbench?.checked;
+      Object.assign(cfg, next, unbench ? { excluded: [] } : {});
       save(CFG_KEY, cfg);
+      // the record: what changed, in the account's activity log
+      const changes = [];
+      if (before.interval !== cfg.interval) changes.push(`chart ${before.interval} → ${cfg.interval}`);
+      if (before.startingBalance !== cfg.startingBalance) changes.push(`starting balance ${money(before.startingBalance)} → ${money(cfg.startingBalance)}`);
+      if ((before.strategy || 'tested') !== cfg.strategy) changes.push(cfg.strategy === 'custom' ? 'now your own rules' : 'now the tested rules');
+      else if (cfg.strategy === 'custom' && JSON.stringify(before.custom) !== JSON.stringify(cfg.custom)) changes.push('own rules changed');
+      if (before.riskPct !== cfg.riskPct) changes.push(`risk ${before.riskPct}% → ${cfg.riskPct}% a trade`);
+      if (before.maxPositions !== cfg.maxPositions) changes.push(`max open ${before.maxPositions} → ${cfg.maxPositions}`);
+      if (before.maxPositionPct !== cfg.maxPositionPct) changes.push(`max in one coin ${before.maxPositionPct}% → ${cfg.maxPositionPct}%`);
+      if (before.feePct !== cfg.feePct) changes.push(`fee ${before.feePct}% → ${cfg.feePct}%`);
+      if (!!before.ownRulesOff !== !!cfg.ownRulesOff) changes.push(cfg.ownRulesOff ? 'coins\' own daily rules off' : 'coins\' own daily rules on');
+      const added = cfg.universe.filter((s) => !before.universe.includes(s)), removed = before.universe.filter((s) => !cfg.universe.includes(s));
+      if (added.length) changes.push(`added ${added.join(', ')}`);
+      if (removed.length) changes.push(`removed ${removed.join(', ')}`);
+      if (unbench) changes.push('benched coins allowed again');
       m.close();
       const hasTrades = state && (Object.keys(state.open || {}).length || (state.closed || []).length);
       const chartChanged = state && state.interval !== cfg.interval;
-      let msg = 'تنظیمات ذخیره شد.';
+      let msg = 'Settings saved.';
       if (state && hasTrades && chartChanged && f.switchNow?.checked) {
         const running = resetAccount();
-        msg = `تنظیمات ذخیره شد. حساب جدید روی تایم‌فریم ${cfg.interval} شروع به کار کرد.`;
+        msg = `Settings saved. A fresh account started on ${cfg.interval} with ${money(cfg.startingBalance)}${running ? '; the AI keeps running' : ''}.`;
+      } else if (state && !hasTrades && (chartChanged || state.startingBalance !== cfg.startingBalance)) {
+        // an account with no trades has nothing to protect: it follows the settings at once
+        state = state.interval === cfg.interval
+          ? { ...state, balance: cfg.startingBalance, startingBalance: cfg.startingBalance, equityCurve: [] }
+          : { ...newState(cfg, { liveFrom: state.liveFrom }), log: state.log || [] };
+        msg = `Settings saved. The AI's account now starts at ${money(cfg.startingBalance)} on ${cfg.interval}.`;
       } else if (state) {
         if (state.startingBalance !== cfg.startingBalance) {
+          // its trades were sized as a share of the balance, so scaled they are what it would have done with that much
           state = rescaleAccount(state, cfg.startingBalance);
-          msg = `تنظیمات ذخیره شد. موجودی و معاملات مقیاس‌بندی شدند.`;
+          msg = `Settings saved. The AI's account now counts from ${money(cfg.startingBalance)}: its balance and every trade are scaled to it, so each result in % stays the same.`;
         }
+        if (chartChanged) msg += ` This account keeps trading ${state.interval} until you press Reset; then it starts on ${cfg.interval}.`;
       }
-      toast(msg, 'up');
+      if (cfg.startingBalance === 100 && before.startingBalance !== 100 && +f.startingBalance.value / fx.rate < 100) msg += ` The starting balance cannot be under ${money(100)}.`;
+      if (dropped.length) msg += ` Only ${MAX_COINS} coins can be traded, so ${dropped.join(', ')} ${dropped.length === 1 ? 'was' : 'were'} left out.`;
+      if (state && changes.length) { logCheck(state, { kind: 'settings', text: changes.join(' · ') }); save(STATE_KEY, state); }
+      toast(msg, dropped.length ? 'info' : 'up');
       draw();
       if (state && autoOn) catchUp();
     });
   });
 
   $('#resetBtn', el)?.addEventListener('click', () => {
-    const m = modal(`<h3>بازنشانی حساب هوش مصنوعی؟</h3><p>این کار موجودی و تاریخچه معاملات را پاک کرده و از ${money(cfg.startingBalance)} روی تایم‌فریم ${cfg.interval} از نو آغاز می‌کند.</p>
-      <div class="row mt" style="gap:8px"><button class="btn" id="no">انصراف</button><button class="btn primary" id="yes">بازنشانی</button></div>`);
+    const m = modal(`<h3>Reset the AI's account?</h3><p>This wipes the simulated balance and the whole trade log and starts again from ${money(cfg.startingBalance)} on ${cfg.interval}. ${autoOn ? 'The AI keeps running' : 'The AI stays stopped until you start it'}, and from now on it only trades candles that open after the reset — nothing from before is replayed. It cannot be undone.</p>
+      <div class="row mt" style="gap:8px"><button class="btn" id="no">Keep it</button><button class="btn primary" id="yes">Reset</button></div>`);
     $('#no', m.el).addEventListener('click', m.close);
     $('#yes', m.el).addEventListener('click', () => {
+      // Start clean from now: no candle that opened before this moment is ever
+      // traded, so the old trades cannot come back on the next Start.
       const wasRunning = resetAccount();
       m.close(); draw();
-      toast(`حساب بازنشانی شد.`, 'info');
+      toast(wasRunning ? `Account reset to ${money(cfg.startingBalance)}. The AI is still running and trades new ${cfg.interval} candles from now on.` : `Account reset to ${money(cfg.startingBalance)}. Press Start the trader when you want it running.`, 'info');
       if (wasRunning) catchUp();
     });
   });
 
+  // Stop must actually stop: it clears the run flag, so neither the 5-minute
+  // timer nor a page reload opens another position. The account and its history
+  // are left untouched — stopping is not resetting.
   function syncRunButtons() {
     const stopB = $('#stopBtn', el);
     const startB = $('#startBtn', el);
@@ -1107,16 +1298,17 @@ export async function render(el) {
     const resetB = $('#resetBtn', el);
     if (resetB) resetB.hidden = !state;
     if (startB) {
-      startB.innerHTML = !state ? `${icon('bolt', 16)} شروع ترید بات`
-        : autoOn ? `${icon('refresh', 16)} به‌روزرسانی`
-        : `${icon('bolt', 16)} ${session.status === 'stopped' ? 'ادامه فعالیت' : 'شروع ترید بات'}`;
+      startB.innerHTML = !state ? `${icon('bolt', 16)} Start the trader`
+        : autoOn ? `${icon('refresh', 16)} Catch up now`
+        : `${icon('bolt', 16)} ${session.status === 'stopped' ? 'Resume the AI' : 'Start the trader'}`;
     }
   }
 
   $('#stopBtn', el)?.addEventListener('click', () => {
     applySession('STOP');
-    draw();
-    toast('هوش مصنوعی متوقف شد. موقعیت‌های باز همچنان فعال هستند.', 'info');
+    draw(); // the account cards say whether the AI is looking for trades
+    const openCount = Object.keys(state?.open || {}).length;
+    toast(openCount ? `AI stopped. ${openCount} open position${openCount > 1 ? 's stay' : ' stays'} open — close them from the table, or resume.` : 'AI stopped. It will not open any new trades.', 'info');
   });
 
   $('#startBtn', el).addEventListener('click', () => {
@@ -1124,7 +1316,12 @@ export async function render(el) {
     catchUp();
   });
 
+  // live marks + periodic catch-up
   const onTick = (e) => {
+    // Every account marks against these prices, so a symbol held only in the
+    // demo or real account has to be recorded too. It used to keep prices for
+    // the AI's positions alone, which left the other two frozen at their entry
+    // price and closed them at a fabricated 0%.
     const wanted = new Set([
       ...Object.keys(state?.open || {}),
       ...Object.keys(myState()?.open || {}),
@@ -1141,11 +1338,16 @@ export async function render(el) {
     }
   };
   window.addEventListener('cv:tickers', onTick);
+  // Signing in or out here changes where the trades are kept.
   const wireSyncNote = () => $('#syncSignIn', el)?.addEventListener('click', (e) => { e.preventDefault(); openAuth(); });
   const onAuth = () => { const n = $('#syncNote', el); if (n) { n.innerHTML = syncNote(); wireSyncNote(); } };
   auth.addEventListener('change', onAuth);
   wireSyncNote();
   const timer = setInterval(() => { if (!st.disposed && state && autoOn) catchUp(); }, 5 * 60e3);
+  // Coins Binance does not stream (XMR on HTX, STABLE on Gate.io…) were marked
+  // only at each check, an hour apart on a 1h account, so an open trade in one
+  // sat on an old price. They are read from their own exchange every 20 seconds
+  // while the page is in view, as the coin page does.
   const venueTimer = setInterval(async () => {
     if (st.disposed || document.hidden) return;
     const held = [...new Set([...Object.keys(state?.open || {}), ...Object.keys(myState()?.open || {}), ...Object.keys(realState()?.open || {})])]
@@ -1160,20 +1362,30 @@ export async function render(el) {
     if (moved && !st.disposed) draw();
   }, 20e3);
 
+  // draw() renders the demo and real accounts too, so it has to run whether or
+  // not the AI has ever been started — otherwise a user who placed a demo trade
+  // from a coin page arrives here and sees nothing but the start card.
   draw();
   syncRunButtons();
   syncSessionChip();
+  // Your demo and real positions in coins the AI does not watch get a price
+  // here, so their open profit shows without waiting for the live stream.
   (async () => {
     const need = [...new Set([...Object.keys(myState()?.open || {}), ...Object.keys(realState()?.open || {})])].filter((sym) => !Number.isFinite(st.prices[sym]));
     let got = 0;
     for (const sym of need) { if (st.disposed) return; if ((await fetchPrice(sym)) !== null) got++; }
     if (got && !st.disposed) draw();
   })();
+  // Another tab of this site saved the AI's settings or account. This tab used to
+  // keep its own older copy in memory and save it back at its next check or
+  // Save, so a change made in one tab came undone. It now takes the newer copy
+  // (and starts no check, so two open tabs cannot set each other off).
   const onStorage = (e) => {
     if (st.disposed || !e.key) return;
     if (e.key === `cv:${CFG_KEY}`) {
       const saved = load(CFG_KEY, {}) || {};
-      Object.assign(cfg, { ...DEFAULT_CONFIG, ...Object.fromEntries(Object.entries(saved)) });
+      Object.assign(cfg, { ...DEFAULT_CONFIG, ...Object.fromEntries(Object.entries(saved).filter(([k]) => USER_KEYS.includes(k) || (saved.v === 2 && LEARNED_KEYS.includes(k)))), v: 2 });
+      cfg.riskPct = Math.min(5, Math.max(0.1, +cfg.riskPct || DEFAULT_CONFIG.riskPct));
       draw();
     } else if (e.key === `cv:${STATE_KEY}` && !st.running) {
       state = load(STATE_KEY, null);
@@ -1183,6 +1395,9 @@ export async function render(el) {
   window.addEventListener('storage', onStorage);
 
   if (state && autoOn) catchUp();
+  // First visit: run the play-money account once on its own, so the page opens
+  // on a replayed record instead of an empty start card. Only ever automatic
+  // once per device — after a Stop or a Reset it waits for the user again.
   else if (!state && session.status === 'idle' && !load(AUTO_KEY, false)) {
     save(AUTO_KEY, true);
     applySession('START');

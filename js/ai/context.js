@@ -27,11 +27,11 @@ export async function analyzeCoin(symbol, { interval = '4h', withForecast = true
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < 90e3 && (!withForecast || hit.forecast)) return hit;
   const coin = await findCoin(symbol);
-  if (!coin) throw new Error(`ارز ${symbol} در میان ۲۵۰ ارز برتر یافت نشد.`);
-  onStep?.('بارگذاری داده‌های زنده نمودار…');
+  if (!coin) throw new Error(`I couldn't find ${symbol} in the top 250 coins.`);
+  onStep?.('Loading live chart data…');
   const main = await getCandles(coin, interval, 1500);
   const signal = generateSignal(main.candles, { interval });
-  onStep?.('بررسی سایر تایم‌فریم‌ها…');
+  onStep?.('Checking other timeframes…');
   const others = ['15m', '1h', '4h', '1d'].filter((iv) => iv !== interval);
   const mtf = { [interval]: signal };
   await Promise.all(others.map(async (iv) => {
@@ -42,17 +42,23 @@ export async function analyzeCoin(symbol, { interval = '4h', withForecast = true
   let forecast = hit?.forecast || null;
   const horizon = DEFAULT_HORIZON[interval] || 12;
   if (withForecast && !forecast) {
-    onStep?.('اجرای پیش‌بینی هوش مصنوعی (الگو‌یابی و مدل‌های یادگیری ماشین)…');
+    onStep?.('Running AI forecast (pattern matching + ML models)…');
+    // the timeframe is passed, not guessed from the spacing of the last two candles
     forecast = await runForecast(main.candles, { horizon, intervalMs: INTERVAL_MS[interval] });
   }
+  // Long-range study on daily candles: what happened the last times this chart
+  // looked like today, plus this coin's seasonality. Never blocks the answer.
   let history = hit?.history || null;
   if (!history) {
-    onStep?.('مقایسه شرایط امروز با سال‌های گذشته…');
+    onStep?.('Comparing today with previous years…');
     history = await getCandles(coin, '1d', 2000)
       .then((d) => runHistory(d.candles, { window: 45, horizons: [7, 30, 90], horizon: 30 }))
       .catch(() => null);
   }
+  // How long the move lasts and when it turns — the other half of "will it go up".
   const timing = forecast?.ok ? timingOutlook(forecast, { intervalMs: INTERVAL_MS[interval], interval }) : null;
+  // Recent headlines for this coin. Context for the answer only — never an
+  // input to the price model, whose accuracy is measured on price data alone.
   let news = hit?.news || null;
   if (!news && backendEnabled()) {
     news = await getNews({ coin: coin.symbol, limit: 6 }).catch(() => []);
@@ -66,6 +72,8 @@ export async function analyzeCoin(symbol, { interval = '4h', withForecast = true
   return result;
 }
 
+// "Which coin should I buy?" needs the whole market, not one chart. Scans the
+// top coins and returns a ranked verdict for each, same engine as the advice page.
 const scanCache = new Map();
 export async function scanMarket({ interval = '4h', count = 40, onStep } = {}) {
   const key = `${interval}:${count}`;
@@ -80,18 +88,28 @@ export async function scanMarket({ interval = '4h', count = 40, onStep } = {}) {
     while (queue.length) {
       const coin = queue.shift();
       try {
+        // Same candles and model as the coin page; CoinGecko and demo data are
+        // skipped and counted, because the forecast was never tested on them.
         const res = await getCandles(coin, interval, 1500);
+        // on a chart the AI trader was tested on, what its rule is doing in this
+        // coin now (closed candles only, as the trader reads them)
         const ai = CHART_TESTED[interval]?.standard && isTestedSource(res) ? aiSignal(res.candles.slice(0, -1), interval, coin.symbol) : null;
         if (isTestedSource(res)) rows.push({ coin, signal: generateSignal(res.candles, { interval }), candles: res.candles, ai });
         else skipped++;
       } catch { skipped++; }
-      onStep?.(`در حال اسکن بازار… ${++done}/${list.length}`);
+      onStep?.(`Scanning the market… ${++done}/${list.length}`);
     }
   };
   await Promise.all([worker(), worker(), worker(), worker()]);
 
+  // Forecast + timing only for the coins with a real technical signal — that
+  // keeps the answer fast without dropping anything that could be a pick.
+  // Every scanned coin gets a forecast. The shortlist used to be the 10 coins
+  // with the strongest chart score — the one reading measured to have no edge —
+  // so most coins were never forecast and could never be recommended.
   const shortlist = rows.filter((r) => r.signal.ok);
   const horizon = DEFAULT_HORIZON[interval] || 12;
+  // All at once: the worker pool (js/lib/compute.js) runs as many as the device has cores for.
   let forecasted = 0;
   await Promise.all(shortlist.map(async (row) => {
     try {
@@ -99,7 +117,7 @@ export async function scanMarket({ interval = '4h', count = 40, onStep } = {}) {
       row.forecast = fc;
       row.timing = fc?.ok ? timingOutlook(fc, { intervalMs: INTERVAL_MS[interval], interval }) : null;
     } catch { /* advice still works from the signal alone */ }
-    onStep?.(`محاسبه پیش‌بینی… ${++forecasted}/${shortlist.length}`);
+    onStep?.(`Forecasting… ${++forecasted}/${shortlist.length}`);
   }));
   for (const row of rows) {
     row.advice = adviseCoin({ signal: row.signal, forecast: row.forecast, timing: row.timing, interval: row.interval || interval, trust: directionTrustFor(row.interval || interval).trust });
@@ -110,6 +128,7 @@ export async function scanMarket({ interval = '4h', count = 40, onStep } = {}) {
   return rows;
 }
 
+/** Compact market picks for the analyst and the LLM. */
 export function marketContext(rows, interval) {
   const { buys, avoid, wait, total } = rankAdvice(rows);
   const shape = (r) => ({
@@ -129,6 +148,8 @@ export function marketContext(rows, interval) {
     waitFor: r.advice.waitFor?.[0] || null,
     topReason: r.advice.reasons[0]?.text || null,
   });
+  // The AI trader's rule on this chart: the one call in the app with a tested
+  // record, so it is reported even when no reading clears the evidence bar.
   const t = CHART_TESTED[interval];
   const inTrade = rows.filter((r) => r.ai && (r.ai.action === 'buy' || r.ai.action === 'hold'));
   const rule = t?.standard ? {
@@ -150,26 +171,33 @@ export function marketContext(rows, interval) {
   };
 }
 
+// The whole market, read on several timeframes at once. "Which coin should I
+// buy?" has a different answer over the next few hours than over the next few
+// weeks, so the assistant answers all three rather than picking one for you.
 export const SCAN_FRAMES = [
-  { interval: '1h', label: 'کوتاه‌مدت' },
-  { interval: '4h', label: 'میان‌مدت (سوئینگ)' },
-  { interval: '1d', label: 'پوزیشن (روزانه)' },
+  { interval: '1h', label: 'Short term' },
+  { interval: '4h', label: 'Swing' },
+  { interval: '1d', label: 'Position' },
 ];
 
 export async function scanMarketMulti({ intervals = SCAN_FRAMES.map((f) => f.interval), count = 30, onStep } = {}) {
+  // The charts are read side by side; the worker pool shares the forecasts out.
   const byInterval = {};
-  onStep?.(`اسکن بازار در تایم‌فریم‌های ${intervals.join(', ')}…`);
+  onStep?.(`Scanning the market on the ${intervals.join(', ')} charts…`);
   await Promise.all(intervals.map(async (interval) => {
-    byInterval[interval] = await scanMarket({ interval, count, onStep: (t) => onStep?.(`${interval}: ${t.replace('در حال اسکن بازار… ', '')}`) });
+    byInterval[interval] = await scanMarket({ interval, count, onStep: (t) => onStep?.(`${interval}: ${t.replace('Scanning the market… ', '')}`) });
   }));
   return byInterval;
 }
 
+/** Per-timeframe picks plus the coins that look good on more than one timeframe. */
 export function marketContextMulti(byInterval) {
   const frames = SCAN_FRAMES
     .filter((f) => byInterval[f.interval])
     .map((f) => ({ label: f.label, ...marketContext(byInterval[f.interval], f.interval) }));
 
+  // A coin that ranks as a buy on two or three timeframes is a stronger call
+  // than one that only looks good on a single chart — say which, and how many.
   const tally = new Map();
   for (const fr of frames) {
     for (const b of fr.buys) {
@@ -189,6 +217,7 @@ export function marketContextMulti(byInterval) {
   return {
     frames,
     agree,
+    // the trader's rule on the chart that tested best, or the longest one read
     rule: (frames.find((f) => f.rule?.best) || [...frames].reverse().find((f) => f.rule))?.rule || null,
     avoid: [...avoidAll.values()].slice(0, 5),
     scanned: frames[0]?.scanned || 0,
@@ -196,11 +225,12 @@ export function marketContextMulti(byInterval) {
   };
 }
 
+/** Read two to four coins on the same timeframe so they can be ranked fairly. */
 export async function compareCoins(symbols, { interval = '4h', onStep } = {}) {
   const list = await markets().catch(() => []);
   const rows = [];
   for (const sym of symbols.slice(0, 4)) {
-    onStep?.(`در حال بررسی ${sym}…`);
+    onStep?.(`Reading ${sym}…`);
     try {
       const coin = await findCoin(sym);
       if (!coin) continue;
@@ -208,6 +238,7 @@ export async function compareCoins(symbols, { interval = '4h', onStep } = {}) {
       const { candles } = res;
       const signal = generateSignal(candles, { interval });
       let forecast = null, timing = null;
+      // No forecast on CoinGecko or demo candles: it was never tested on them.
       if (isTestedSource(res)) {
         try {
           forecast = await runForecast(candles, { horizon: DEFAULT_HORIZON[interval] || 12, intervalMs: INTERVAL_MS[interval] });
@@ -224,7 +255,7 @@ export async function compareCoins(symbols, { interval = '4h', onStep } = {}) {
         signalText: signal.ok ? signal.text : null,
         score: signal.ok ? signal.score : null,
         probUpPct: f ? f.probUpPct : null,
-        forecastNote: isTestedSource(res) ? null : 'بدون پیش‌بینی: این ارز فقط دارای داده‌های کوین‌گکو یا نمایشی است که الگوریتم پیش‌بینی روی آن تست نشده است.',
+        forecastNote: isTestedSource(res) ? null : 'No forecast: only CoinGecko or demo candles for this coin, which the forecast was never tested on.',
         accuracyPct: f ? f.testedDirectionPct : null,
         change24h: live?.change24h ?? coin.change24h ?? null,
         buyBetween: advice.plan ? advice.plan.entryZone : null,
@@ -232,7 +263,7 @@ export async function compareCoins(symbols, { interval = '4h', onStep } = {}) {
         sellTargets: advice.plan ? advice.plan.takeProfits : null,
         topReason: advice.reasons?.[0]?.text || null,
       });
-    } catch { /* skip a coin we cannot read */ }
+    } catch { /* skip a coin we cannot read rather than failing the whole answer */ }
   }
   return rows;
 }
@@ -248,6 +279,7 @@ export async function portfolioSummary() {
   });
 }
 
+// Context for the rule-based analyst (shape it expects)
 export function analystContext(a, portfolio) {
   const mtfShort = Object.fromEntries(Object.entries(a.mtf).map(([iv, s]) => [iv, s?.ok ? { score: s.score, text: s.text } : null]));
   return {
@@ -270,6 +302,7 @@ export function analystContext(a, portfolio) {
   };
 }
 
+// Compact JSON for the LLM
 export function llmData(a) {
   const s = a.signal;
   return {
@@ -294,9 +327,13 @@ export async function detectSymbol(text) {
   let from = 0;
   for (const w of words) {
     const at = raw.indexOf(w, from); from = at + w.length;
+    // Lower-case words are only tickers when they are a well-known coin used
+    // like one: "looks" (LooksRare) or "near term" (NEAR) are just English.
     const typedAsTicker = w.startsWith('$') || (w === w.toUpperCase() && /[A-Z]/.test(w));
     if (!typedAsTicker && !(COMMON_COINS.test(w.toLowerCase()) && isTickerMention(w, raw, at))) continue;
     const t = w.replace(/^\$/, '').toUpperCase();
+    // English words in capitals are not tickers, nor is "AI" in a question to
+    // an AI assistant ("how is my AI trader doing?") — unless typed as $AI.
     if (t.length < 2 || (!w.startsWith('$') && ['I', 'A', 'AN', 'IS', 'IT', 'TO', 'OR', 'ON', 'AT', 'BE', 'MY', 'ME', 'DO', 'SO', 'UP', 'IN', 'OF', 'THE', 'AND', 'FOR', 'NOW', 'BUY', 'SELL', 'CAN', 'WILL', 'GO', 'NEXT', 'HOW', 'WHAT', 'WHEN', 'SHOULD', 'ONE', 'ANY', 'ALL', 'NEW', 'OUT', 'GET', 'PUT', 'TOP', 'AI', 'BOT'].includes(t))) continue;
     const bySym = list.find((c) => c.symbol === t && c.binance);
     if (bySym) return bySym.symbol;

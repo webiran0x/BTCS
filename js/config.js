@@ -1,6 +1,7 @@
+// Site-wide settings. Rebrand the app by changing APP_NAME / TAGLINE.
 export const CONFIG = {
-  APP_NAME: 'BTCS',
-  TAGLINE: 'بازار زنده رمزارزها، سیگنال‌ها و پیش‌بینی‌های هوش مصنوعی',
+  APP_NAME: 'CoinVantage',
+  TAGLINE: 'Live crypto markets, signals & AI forecasts',
 
   // Market data (all public, key-less, CORS-enabled endpoints)
   BINANCE_REST: ['https://data-api.binance.vision', 'https://api.binance.com'],
@@ -21,9 +22,9 @@ export const CONFIG = {
   // Built-in AI (runs in the visitor's browser via WebGPU — no API key)
   WEBLLM_URL: 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm',
   LLM_MODELS: [
-    { id: 'Qwen3.5-2B-q4f16_1-MLC', label: 'Qwen 3.5 · 2B (پیشنهاد‌شده)', size: '≈1.4 GB', tier: 'balanced' },
-    { id: 'Qwen3.5-4B-q4f16_1-MLC', label: 'Qwen 3.5 · 4B (دقت بالاتر)', size: '≈2.6 GB', tier: 'large' },
-    { id: 'Qwen3.5-0.8B-q4f16_1-MLC', label: 'Qwen 3.5 · 0.8B (مخصوص موبایل، سریع‌تر)', size: '≈0.6 GB', tier: 'small' },
+    { id: 'Qwen3.5-2B-q4f16_1-MLC', label: 'Qwen 3.5 · 2B (recommended)', size: '≈1.4 GB', tier: 'balanced' },
+    { id: 'Qwen3.5-4B-q4f16_1-MLC', label: 'Qwen 3.5 · 4B (most accurate)', size: '≈2.6 GB', tier: 'large' },
+    { id: 'Qwen3.5-0.8B-q4f16_1-MLC', label: 'Qwen 3.5 · 0.8B (phones, fastest)', size: '≈0.6 GB', tier: 'small' },
     { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', label: 'Llama 3.2 · 3B', size: '≈1.8 GB', tier: 'large' },
   ],
   // Backend (Supabase). Safe to expose: the publishable key only works with row-level security.
@@ -33,14 +34,14 @@ export const CONFIG = {
 
   // Display currencies (rates come from CoinGecko / exchangerate-api, USD is the base)
   CURRENCIES: [
-    ['IRT', 'تومان', 'Iranian Toman'], ['IRR', 'ریال', 'Iranian Rial'],
-    ['USD', '$', 'US Dollar'], ['EUR', '€', 'Euro'], ['GBP', '£', 'British Pound'],
-    ['AED', 'د.إ', 'UAE Dirham'], ['SAR', '﷼', 'Saudi Riyal'], ['TRY', '₺', 'Turkish Lira'],
-    ['USDT', 'USDT', 'Tether'], ['PKR', '₨', 'Pakistani Rupee'], ['INR', '₹', 'Indian Rupee'],
-    ['JPY', '¥', 'Japanese Yen'], ['CNY', '¥', 'Chinese Yuan'], ['RUB', '₽', 'Russian Ruble']
+    ['USD', '$', 'US Dollar'], ['PKR', '₨', 'Pakistani Rupee'], ['EUR', '€', 'Euro'], ['GBP', '£', 'British Pound'],
+    ['AED', 'د.إ', 'UAE Dirham'], ['SAR', '﷼', 'Saudi Riyal'], ['INR', '₹', 'Indian Rupee'], ['TRY', '₺', 'Turkish Lira'],
+    ['NGN', '₦', 'Nigerian Naira'], ['IDR', 'Rp', 'Indonesian Rupiah'], ['BRL', 'R$', 'Brazilian Real'], ['JPY', '¥', 'Japanese Yen'],
+    ['CNY', '¥', 'Chinese Yuan'], ['RUB', '₽', 'Russian Ruble'], ['ZAR', 'R', 'South African Rand'], ['BDT', '৳', 'Bangladeshi Taka'],
   ],
-  
-  LANGS: [['fa', 'فارسی'], ['en', 'English']],
+  // Kept for when the page content is translated — nothing reads this while the
+  // language switcher is out of the header (see js/i18n.js).
+  LANGS: [['en', 'English'], ['ur', 'اردو']],
 
   // Derivatives / futures data
   FUTURES_REST: 'https://fapi.binance.com',

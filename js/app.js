@@ -692,15 +692,13 @@ if (location.protocol === 'https:') {
   };
 
   // Command answers, all from the same live data the pages use.
- // --- چت سریع: دستورات اسش و پاسخ‌ها از داده‌های زنده بازار ---
   const HELP = [
-    '/price BTC — قیمت لحظه‌ای، تغییرات ۲۴ ساعته و ۷ روزه',
-    '/signal ETH — امتیاز اندیکاتورها در تایم‌فریم ۱ ساعته (آموزشی، توصیه مالی نیست)',
-    '/market — وضعیت کلی بازار و رمزارزهای پیشتاز در ۲۴ ساعت گذشته',
-    '/clear — پاک‌سازی تاریخچه گفتگو',
-    'برای سوالات آزاد از صفحه هوش مصنوعی استفاده کنید (#/ai).'
+    '/price BTC   live price, 24h and 7d change',
+    '/signal ETH  indicator score on the 1h chart (educational, not advice)',
+    '/market      what is moving over the last 24h',
+    '/clear       clear this chat',
+    'Open questions: use the Ask page (#/ai).',
   ].join('\n');
-  
   const generateMCPResponse = async (message) => {
     if (message.startsWith('/')) {
       const [cmdRaw, ...rest] = message.slice(1).trim().split(/\s+/);
@@ -711,40 +709,40 @@ if (location.protocol === 'https:') {
           return HELP;
         case 'price': {
           const c = await findCoin(arg || 'BTC');
-          if (!c) return `ارزی با نماد "${arg}" پیدا نشد. مثال: /price BTC یا /price ETH`;
-          return `${c.name} (${c.symbol}): تحویل قیمت ${money(c.price)}\nتغییر ۲۴ ساعته: ${pct(c.change24h)} · ۷ روزه: ${pct(c.change7d)}`;
+          if (!c) return `No coin found for "${arg}". Try /price BTC or /price SOL.`;
+          return `${c.name} (${c.symbol}): ${money(c.price)}\n24h ${pct(c.change24h)} · 7d ${pct(c.change7d)}`;
         }
         case 'signal': {
           const c = await findCoin(arg || 'BTC');
-          if (!c) return `ارزی با نماد "${arg}" پیدا نشد. مثال: /signal BTC`;
+          if (!c) return `No coin found for "${arg}". Try /signal BTC.`;
           const { candles, source } = await getCandles(c, '1h', 300);
-          if (source === 'demo') return `داده‌های زنده بازار در حال حاضر در دسترس نیستند، بنابراین امکان محاسبه سیگنال ${c.symbol} وجود ندارد. لطفاً دقایقی دیگر تلاش کنید.`;
+          if (source === 'demo') return `Live prices are not loading right now, so there is no real ${c.symbol} signal to show. Try again in a minute.`;
           const s = generateSignal(candles, { interval: '1h' });
           if (!s.ok) return `${c.symbol}: ${s.reason}`;
           const rsi = Number.isFinite(s.indicators?.rsi) ? s.indicators.rsi.toFixed(1) : '—';
-          return `${c.symbol} در تایم‌فریم ۱ ساعته: امتیاز ${s.score > 0 ? '+' : ''}${s.score} (${s.text})، شاخص RSI برابر با ${rsi}.\n` +
-            'امتیاز بالا نشان‌دهنده قدرت حرکت است، نه تضمین آینده. جزئیات کامل در صفحه اختصاصی کوین قابل مشاهده است.';
+          return `${c.symbol} on the 1h chart: score ${s.score > 0 ? '+' : ''}${s.score} (${s.text}), RSI ${rsi}.\n` +
+            'A high score means the move is extended, not that it will continue. Full breakdown on the coin page.';
         }
         case 'market': {
           const list = (await markets()).filter((c) => Number.isFinite(c.change24h));
-          if (!list.length) return 'اطلاعات بازار در حال حاضر بارگذاری نشده است. لطفاً کمی صبر کنید.';
+          if (!list.length) return 'Market data is not available right now. Try again in a minute.';
           const up = list.filter((c) => c.change24h > 0).length;
           const sorted = [...list].sort((a, b) => b.change24h - a.change24h);
           const fmt = (c) => `${c.symbol} ${pct(c.change24h)}`;
-          return `از مجموع ${list.length} ارز، ${up} ارز در ۲۴ ساعت گذشته صعودی بوده‌اند.\n` +
-            `بیشترین رشد: ${sorted.slice(0, 3).map(fmt).join('، ')}\n` +
-            `بیشترین افت: ${sorted.slice(-3).reverse().map(fmt).join('، ')}`;
+          return `${up} of ${list.length} coins are up over 24h.\n` +
+            `Top gainers: ${sorted.slice(0, 3).map(fmt).join(', ')}\n` +
+            `Top losers: ${sorted.slice(-3).reverse().map(fmt).join(', ')}`;
         }
         case 'clear':
         case 'reset':
           chatMessages.querySelectorAll('.chat-message').forEach((m, i) => { if (i > 0) m.remove(); });
           return null;
         default:
-          return `دستور ناشناخته /${cmd}. برای مشاهده لیست دستورات عبارت /help را وارد کنید.`;
+          return `Unknown command /${cmd}. Type /help to see what is available.`;
       }
     }
 
-    return 'پاسخ‌دهی به دستورات سریع از روی داده‌های زنده بازار انجام می‌شود. برای راهنمایی /help را وارد کنید یا سوالات خود را در صفحه هوش مصنوعی (#/ai) بپرسید.';
+    return 'I answer quick commands from live data. Type /help to see them, or ask open questions on the Ask page (#/ai).';
   };
 
   // Enter key to send

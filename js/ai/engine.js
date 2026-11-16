@@ -48,10 +48,10 @@ export async function loadLocalModel(modelId) {
   loadingPromise = (async () => {
     const support = await deviceSupport();
     if (!support.webgpu) {
-      emit('unsupported', { text: 'این مرورگر یا دستگاه از WebGPU پشتیبانی نمی‌کند، بنابراین مدل محلی هوش مصنوعی نمی‌تواند در اینجا اجرا شود. در عوض از تحلیلگر مبتنی بر قوانین استفاده می‌شود.' });
+      emit('unsupported', { text: 'This browser/device has no WebGPU, so the local LLM cannot run here. The rule-based analyst is used instead.' });
       throw new Error('WebGPU not available');
     }
-    emit('loading', { progress: 0, text: 'بارگذاری موتور هوش مصنوعی…' });
+    emit('loading', { progress: 0, text: 'Loading AI runtime…' });
     try {
       webllm = webllm || (await import(/* @vite-ignore */ CONFIG.WEBLLM_URL));
       let id = modelId || (await recommendedModelId());
@@ -62,14 +62,14 @@ export async function loadLocalModel(modelId) {
       }
       if (engine) { try { await engine.unload(); } catch { /* ignore */ } }
       engine = await webllm.CreateMLCEngine(id, {
-        initProgressCallback: (r) => emit('loading', { progress: r.progress ?? 0, text: r.text || 'در حال دانلود مدل…' }),
+        initProgressCallback: (r) => emit('loading', { progress: r.progress ?? 0, text: r.text || 'Downloading model…' }),
       });
-      emit('ready', { model: id, progress: 1, text: 'آماده' });
+      emit('ready', { model: id, progress: 1, text: 'Ready' });
       settings.set({ llmModel: id, llmAuto: true });
       return engine;
     } catch (err) {
       engine = null;
-      emit('error', { text: `امکان راه‌اندازی هوش مصنوعی محلی وجود ندارد: ${err.message}` });
+      emit('error', { text: `Could not start the local AI: ${err.message}` });
       throw err;
     } finally {
       loadingPromise = null;
@@ -78,10 +78,23 @@ export async function loadLocalModel(modelId) {
   return loadingPromise;
 }
 
+// Every model offered here has a 4,096-token window (WebLLM 0.2.85's model
+// list) that the prompt and the answer share. The prompt used to be capped in
+// characters only: a coin's data plus a few turns of chat went over, the local
+// model refused the request and the answer quietly came from the rule-based
+// analyst; just under the limit, the answer was cut off mid-line. Your own
+// server gets the same budget, since Ollama and LM Studio default to 4,096
+// tokens too and Ollama cuts the start of a longer prompt (the instructions).
 export const CONTEXT_TOKENS = 4096;
 export const ANSWER_TOKENS = 700;
-const SLACK = 64;
+const SLACK = 64; // chat-template markers
 
+/**
+ * A token count that errs high. Qwen's tokenizer spends a token on every
+ * digit, so price data is far denser than prose. Fitted on this app's own
+ * prompts against the Qwen3 and Llama 3.2 tokenizers: never below the larger
+ * of the two counts, about 15% above it on average.
+ */
 export function estimateTokens(text) {
   let n = 0;
   for (const ch of String(text ?? '')) {
@@ -93,6 +106,7 @@ export function estimateTokens(text) {
   return Math.ceil(n);
 }
 
+// Detail the language model can do without, least useful first.
 const TRIM = [['aiForecast', 'models'], ['aiForecast', 'patternMatches'], ['aiForecast', 'notes'], ['recentHeadlines'], ['multiYearHistory'], ['moveTiming'], ['timeframes']];
 
 function shortenArrays(v, max) {
@@ -101,6 +115,13 @@ function shortenArrays(v, max) {
   return v;
 }
 
+/**
+ * The data as JSON within `limit` (characters, or whatever `size` measures),
+ * still valid JSON. It used to be cut at 5,000 characters mid-value, and the
+ * comparison, market scan and portfolio are added last, so they were what got
+ * lost. Now the bulkiest detail goes first, then long lists are shortened,
+ * then whole low-priority sections are left out.
+ */
 export function fitJson(data, limit = 5000, size = (x) => x.length) {
   let d = JSON.parse(JSON.stringify(data ?? {}));
   let s = JSON.stringify(d);
@@ -129,6 +150,7 @@ export function fitJson(data, limit = 5000, size = (x) => x.length) {
   return size(s) <= limit ? s : '{}';
 }
 
+// Text within `limit` tokens, cut at a line break.
 function fitText(text, limit) {
   if (estimateTokens(text) <= limit) return text;
   const out = [];
@@ -141,6 +163,12 @@ function fitText(text, limit) {
   return `${out.join('\n')}\n…`;
 }
 
+/**
+ * The chat for one question, within the model's window with room left for
+ * the answer. In order of need: the instructions and the question, the
+ * verified answer (FACTS), the last turn or two of the chat, then the raw
+ * data with its least useful detail dropped first.
+ */
 export function buildMessages(history, question, facts, data, { context = CONTEXT_TOKENS, answer = ANSWER_TOKENS } = {}) {
   let left = context - answer - SLACK - estimateTokens(AI_SYSTEM_PROMPT) - estimateTokens(question) - 20;
   const f = fitText(facts, Math.floor(left * 0.45));
@@ -154,38 +182,51 @@ export function buildMessages(history, question, facts, data, { context = CONTEX
     recent.unshift({ role: m.role, content });
     room -= t; left -= t;
   }
+  // a chat starts with the user's turn; some servers reject one that does not
   while (recent[0] && recent[0].role !== 'user') left += estimateTokens(recent.shift().content) + 6;
-  const user = `FACTS (تحلیل تأییدشده):\n${f}\n\nDATA (اطلاعات JSON):\n${fitJson(data, Math.max(0, left), estimateTokens)}\n\nQUESTION: ${question}`;
+  const user = `FACTS (verified analysis):\n${f}\n\nDATA (JSON):\n${fitJson(data, Math.max(0, left), estimateTokens)}\n\nQUESTION: ${question}`;
   return [{ role: 'system', content: AI_SYSTEM_PROMPT }, ...recent, { role: 'user', content: user }];
 }
 
+// A request the model refused for being longer than its window.
 const tooLong = (err) => err?.name === 'ContextWindowSizeExceededError' || /context (window|length)|maximum context|too many tokens|prompt is too long/i.test(String(err?.message || ''));
 
 const stripThink = (t) => t.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').replace(/^\s+/, '');
 
+/**
+ * The AI services the page may call (index.html's connect-src lists the same
+ * hosts): a server on this computer, or one of these OpenAI-compatible APIs.
+ * The browser blocks every other address, so it is refused here, with the
+ * reason, instead of failing later as "could not reach it".
+ */
 export const AI_HOSTS = ['api.openai.com', 'api.groq.com', 'openrouter.ai', 'api.together.xyz', 'api.mistral.ai', 'api.deepseek.com', 'generativelanguage.googleapis.com'];
 const LOCAL = new Set(['localhost', '127.0.0.1', '[::1]']);
 
+/** Checks the "your own AI server" settings. { ok, url, model, key } or { ok: false, field, error }. */
 export function checkCustomAI({ url = '', model = '', key = '' } = {}) {
   const u = String(url).trim();
-  if (!u) return { ok: false, field: 'url', error: 'آدرس سرور را وارد کنید، برای مثال http://localhost:11434/v1.' };
+  if (!u) return { ok: false, field: 'url', error: 'Enter the address of the server, for example http://localhost:11434/v1.' };
   let p;
-  try { p = new URL(u); } catch { return { ok: false, field: 'url', error: 'این یک آدرس وب معتبر نیست. آدرس باید با http:// یا https:// شروع شود.' }; }
-  if (p.protocol !== 'http:' && p.protocol !== 'https:') return { ok: false, field: 'url', error: 'تنها پروتکل‌های http:// و https:// مجاز هستند.' };
-  if (p.username || p.password) return { ok: false, field: 'url', error: 'کلید احراز هویت را در کادر کلید API وارد کنید، نه در آدرس سرور.' };
+  try { p = new URL(u); } catch { return { ok: false, field: 'url', error: 'That is not a web address. It should start with http:// or https://.' }; }
+  if (p.protocol !== 'http:' && p.protocol !== 'https:') return { ok: false, field: 'url', error: 'Only http:// and https:// addresses can be used.' };
+  if (p.username || p.password) return { ok: false, field: 'url', error: 'Put the key in the API key box, not in the address.' };
   const local = LOCAL.has(p.hostname);
-  if (p.protocol === 'http:' && !local) return { ok: false, field: 'url', error: 'آدرس‌های http:// ساده فقط روی همین رایانه (لوکالهاست) مجاز هستند. برای سرورهای دیگر از https:// استفاده کنید.' };
-  if (!local && !AI_HOSTS.includes(p.hostname)) return { ok: false, field: 'url', error: `این صفحه تنها مجاز به ارتباط با سرورهای لوکال یا ${AI_HOSTS.join(', ')} است؛ مرورگر سایر آدرس‌ها را مسدود می‌کند.` };
+  if (p.protocol === 'http:' && !local) return { ok: false, field: 'url', error: 'A plain http:// address is only allowed on this computer (localhost). Use https:// for a server elsewhere.' };
+  if (!local && !AI_HOSTS.includes(p.hostname)) return { ok: false, field: 'url', error: `This page may only call a server on this computer or ${AI_HOSTS.join(', ')}; the browser blocks every other address.` };
   const m = String(model).trim();
-  if (m && !/^[\w.:/@+-]{1,120}$/.test(m)) return { ok: false, field: 'model', error: 'نام مدل فقط می‌تواند شامل حروف، اعداد و . : / @ + - _ باشد.' };
+  if (m && !/^[\w.:/@+-]{1,120}$/.test(m)) return { ok: false, field: 'model', error: 'A model name is letters, numbers and . : / @ + - _ only.' };
   const k = String(key).trim();
-  if (k && !/^[\x21-\x7e]{8,400}$/.test(k)) return { ok: false, field: 'key', error: 'کلید API نباید شامل فاصله باشد و طول آن حداقل ۸ کاراکتر است.' };
+  if (k && !/^[\x21-\x7e]{8,400}$/.test(k)) return { ok: false, field: 'key', error: 'An API key has no spaces and is at least 8 characters.' };
   return { ok: true, url: `${p.origin}${p.pathname.replace(/\/+$/, '')}`, model: m, key: k };
 }
 
+// Streams an answer. Returns { text, source, cut } — cut: the answer stopped
+// at its length limit, not at its end.
 export async function askLLM({ history, question, facts, data, onText, signal }) {
   const custom = settings.get().customEndpoint;
   let err;
+  // Rebuilt smaller, once, if the model still finds the prompt too long: the
+  // token count here is an estimate, and your own server's window may be smaller.
   for (const context of [CONTEXT_TOKENS, Math.round(CONTEXT_TOKENS * 0.6)]) {
     const messages = buildMessages(history, question, facts, data, { context });
     try {
@@ -198,8 +239,10 @@ export async function askLLM({ history, question, facts, data, onText, signal })
   throw err;
 }
 
-const UNREACHABLE = 'از طریق مرورگر قابل دسترس نیست. بررسی کنید که سرور در حال اجرا بوده و دسترسی CORS را مجاز کرده باشد (در اولاما تنظیم OLLAMA_ORIGINS؛ در ال‌ام استودیو فعال‌سازی CORS). آدرس‌های http روی سیستم دیگر مسدود هستند؛ از https استفاده کنید یا مدل را روی همین کامپیوتر اجرا کنید';
-const WAIT_MS = 90e3;
+// A plain http:// address on another machine is blocked from an https page,
+// and Ollama and LM Studio refuse other websites until told to allow them.
+const UNREACHABLE = 'could not reach it from the browser. Check the server is running and allows this site (Ollama: set OLLAMA_ORIGINS; LM Studio: turn on CORS). A plain http:// address on another machine is blocked; use https, or run the model on this computer';
+const WAIT_MS = 90e3; // a model loading on your server can take a while to answer
 
 async function askEndpoint(messages, { onText, signal }) {
   const s = settings.get();
@@ -209,6 +252,8 @@ async function askEndpoint(messages, { onText, signal }) {
     customState.lastError = ok.error;
     throw new Error(ok.error);
   }
+  // Record whether this endpoint was actually reached, so the panel can stop
+  // reporting "Connected" for an address that has never answered.
   const ctl = new AbortController();
   const stop = () => ctl.abort();
   signal?.addEventListener('abort', stop, { once: true });
@@ -218,23 +263,26 @@ async function askEndpoint(messages, { onText, signal }) {
     try {
       res = await fetch(`${ok.url}/chat/completions`, {
         method: 'POST', signal: ctl.signal,
+        // no cookies, no referrer, and no following a redirect to another host
         credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error', cache: 'no-store',
         headers: { 'content-type': 'application/json', ...(s.customKey ? { authorization: `Bearer ${s.customKey}` } : {}) },
         body: JSON.stringify({ model: s.customModel || 'default', messages, stream: true, temperature: 0.3, max_tokens: ANSWER_TOKENS }),
       });
     } catch (err) {
       customState.reached = false;
-      customState.lastError = ctl.signal.reason?.message === 'timeout' && !signal?.aborted ? `پاسخی ظرف ${WAIT_MS / 1000} ثانیه دریافت نشد`
+      customState.lastError = ctl.signal.reason?.message === 'timeout' && !signal?.aborted ? `no answer within ${WAIT_MS / 1000} seconds`
         : /Failed to fetch|NetworkError|Load failed/i.test(String(err && err.message)) ? UNREACHABLE : String(err && err.message || err);
       throw err;
     } finally {
       clearTimeout(timer);
     }
     if (!res.ok || !res.body) {
+      // a short, plain-text reason only: the body can be anything, and an echo
+      // of the key or a page of HTML is no help in a status line
       const detail = (await res.text().catch(() => '')).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160);
       customState.reached = false;
-      customState.lastError = `خطای سرور ${res.status}${detail ? `: ${detail}` : ''}`;
-      throw new Error(`خطای اندپوینت هوش مصنوعی ${res.status} ${detail}`);
+      customState.lastError = `endpoint answered ${res.status}${detail ? `: ${detail}` : ''}`;
+      throw new Error(`AI endpoint error ${res.status} ${detail}`);
     }
     customState.reached = true;
     customState.lastError = null;
@@ -245,7 +293,7 @@ async function askEndpoint(messages, { onText, signal }) {
       const { value, done } = await reader.read();
       if (done) break;
       buf += dec.decode(value, { stream: true });
-      if (text.length > 20000) { ctl.abort(); break; }
+      if (text.length > 20000) { ctl.abort(); break; } // a runaway stream: keep what came
       const lines = buf.split('\n'); buf = lines.pop();
       for (const line of lines) {
         const m = /^data:\s*(.*)$/.exec(line.trim());
@@ -258,16 +306,18 @@ async function askEndpoint(messages, { onText, signal }) {
         } catch { /* partial */ }
       }
     }
-    return { text: stripThink(text), source: s.customModel || 'سرور هوش مصنوعی شما', where: 'endpoint', cut: finish === 'length' };
+    return { text: stripThink(text), source: s.customModel || 'your AI server', where: 'endpoint', cut: finish === 'length' };
   } finally {
     signal?.removeEventListener('abort', stop);
   }
 }
 
 async function askLocal(messages, { onText, signal }) {
-  if (!engine) throw new Error('هوش مصنوعی محلی بارگذاری نشده است');
+  if (!engine) throw new Error('Local AI not loaded');
   const stream = await engine.chat.completions.create({
     messages, stream: true, temperature: 0.3, top_p: 0.9, max_tokens: ANSWER_TOKENS,
+    // Turns off Qwen 3's hidden reasoning. WebLLM adds an empty think block to
+    // the answer for any model given this, Llama included, so only Qwen gets it.
     ...(/^Qwen3/i.test(aiState.model || '') ? { extra_body: { enable_thinking: false } } : {}),
   });
   let text = '', finish = null;
@@ -278,10 +328,16 @@ async function askLocal(messages, { onText, signal }) {
     const delta = choice?.delta?.content || '';
     if (delta) { text += delta; onText?.(stripThink(text)); }
   }
-  if (signal?.aborted) throw new DOMException(' متوقف شد', 'AbortError');
+  // A stopped answer is unfinished. It used to come back as if complete and
+  // replace the analyst's answer; Stop now ends with the analyst's, as it
+  // already did for a connected endpoint.
+  if (signal?.aborted) throw new DOMException('Stopped', 'AbortError');
   return { text: stripThink(text), source: aiState.model, where: 'device', cut: finish === 'length' };
 }
 
 export const localReady = () => !!engine && aiState.status === 'ready';
+// Having typed an address is not the same as having reached it. The UI used to
+// show "Connected" for any non-empty box, so a wrong URL looked healthy while
+// every answer quietly fell back to the rule-based analyst.
 export const customReady = () => !!settings.get().customEndpoint;
 export const customState = { reached: false, lastError: null };
