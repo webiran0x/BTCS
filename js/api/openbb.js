@@ -3,7 +3,7 @@
 // https://openbb.co/
 
 const OPENBB_BASE = 'https://demo.openbb.co/api/v1';
-const CACHE_KEY = 'coinvantageOpenBBCache';
+const CACHE_KEY = 'BTCSOpenBBCache';
 const CACHE_TTL = 60 * 15 * 1000; // 15 minutes
 
 // Data types supported by OpenBB

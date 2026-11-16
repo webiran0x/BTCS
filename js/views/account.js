@@ -173,7 +173,7 @@ export async function render(el, [flag]) {
     };
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
-    a.href = url; a.download = 'coinvantage-data.json'; a.click();
+    a.href = url; a.download = 'BTCS-data.json'; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   });
   $('#test', el).addEventListener('click', async () => {

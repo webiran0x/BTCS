@@ -4,19 +4,19 @@
 import { CONFIG } from '../config.js';
 import { $, icon } from '../ui.js';
 
-const ANALYST_KEY = 'coinvantageAnalystCache';
+const ANALYST_KEY = 'BTCSAnalystCache';
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour cache
 
 export async function startAnalyst() {
   // Initialize the WebLLM analyst if not already running
-  if (window.coinvantageAnalyst) {
-    return window.coinvantageAnalyst;
+  if (window.BTCSAnalyst) {
+    return window.BTCSAnalyst;
   }
 
   const { createWebLLM } = await import('./webllm-loader.js');
   const modelConfig = CONFIG.WEBLLM_MODELS?.[1] || {}; // Default to recommended
 
-  window.coinvantageAnalyst = createWebLLM({
+  window.BTCSAnalyst = createWebLLM({
     model: modelConfig.id,
     onProgress: (progress) => {
       // Update UI with analysis progress
@@ -34,7 +34,7 @@ export async function startAnalyst() {
     },
   });
 
-  return window.coinvantageAnalyst;
+  return window.BTCSAnalyst;
 }
 
 export async function getAnalysis(query, context = {}) {
@@ -43,7 +43,7 @@ export async function getAnalysis(query, context = {}) {
   const portfolio = context.portfolio || {};
   const symbols = context.symbols || [];
 
-  const prompt = `You are a cryptocurrency market analyst for CoinVantage. 
+  const prompt = `You are a cryptocurrency market analyst for BTCS. 
 Provide a concise analysis (max 300 words) covering:
 1. Current market trend for: ${symbols.join(', ') || 'major pairs'}
 2. Recent price action and key levels

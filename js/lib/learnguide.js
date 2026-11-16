@@ -1,4 +1,4 @@
-// The plain-language guide to how CoinVantage learns and is tested. One copy,
+// The plain-language guide to how BTCS learns and is tested. One copy,
 // used by the Learn page in the app (js/views/learn.js) and by the page search
 // engines read before the app runs (tools/build-pages.mjs). The figures in it
 // are read from the measured records, never typed here.

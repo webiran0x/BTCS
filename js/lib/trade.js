@@ -1,6 +1,6 @@
 // Hand-off links to exchanges.
 //
-// CoinVantage does not execute trades and holds no funds or keys. These links
+// BTCS does not execute trades and holds no funds or keys. These links
 // simply open the coin's spot market on an exchange the person already uses, so
 // they can act on a signal without hunting for the pair. Nothing is pre-filled
 // beyond the market, no referral codes are attached, and the trade happens
@@ -26,4 +26,4 @@ export function venuesFor(symbol) {
   return VENUES.map((v) => ({ ...v, href: v.url(s), pair: `${s}/${v.quote}` }));
 }
 
-export const TRADE_DISCLAIMER = 'These open the exchange in a new tab. CoinVantage never places the order, never holds your funds, and never asks for exchange API keys, private keys or seed phrases.';
+export const TRADE_DISCLAIMER = 'These open the exchange in a new tab. BTCS never places the order, never holds your funds, and never asks for exchange API keys, private keys or seed phrases.';

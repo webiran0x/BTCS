@@ -159,7 +159,7 @@ export async function render(el, [symParam]) {
     b.setAttribute('aria-label', on ? 'Remove from watchlist' : 'Add to watchlist');
   });
 
-  // Hand-off to an exchange. CoinVantage never places the order itself.
+  // Hand-off to an exchange. BTCS never places the order itself.
   $('#tradeBtn', el)?.addEventListener('click', () => {
     const venues = venuesFor(coin.symbol);
     const sig = st.signal;
@@ -483,7 +483,7 @@ export async function render(el, [symParam]) {
     if (!node) return;
     const text = money(p, { dp: st.dp });
     node.textContent = text;
-    document.title = `${coin.symbol} ${text} · CoinVantage`;
+    document.title = `${coin.symbol} ${text} · BTCS`;
 
     // These two sat next to a live price showing page-load values, so a coin
     // could tick up for an hour while the badge beside it still read -2%.

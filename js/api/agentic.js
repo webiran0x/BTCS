@@ -5,8 +5,8 @@
 import { CONFIG } from '../config.js';
 import { $, $$ , toast } from '../ui.js';
 
-const AGENT_KEY = 'coinvantageAgents';
-const TASK_LOG_KEY = 'coinvantageTaskLog';
+const AGENT_KEY = 'BTCSAgents';
+const TASK_LOG_KEY = 'BTCSTaskLog';
 const MAX_TASKS = 100;
 
 // Base agent class

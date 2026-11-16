@@ -2,7 +2,7 @@
 // "how does the forecast work?", "is this coin a scam?". These used to fall
 // through to the chart reading for whichever coin was in focus, so "hello" got
 // a page of Bitcoin indicators and "what is RSI?" got today's RSI value with no
-// explanation. Each definition says how CoinVantage itself uses the term.
+// explanation. Each definition says how BTCS itself uses the term.
 
 import { TESTED_ACCURACY } from './predict.js';
 import { SCORE_BUCKETS_TESTED } from './signals.js';
@@ -18,13 +18,13 @@ export const GLOSSARY = [
   { id: 'macd', title: 'MACD', re: /\bmacd\b/i,
     text: 'The gap between a fast (12-candle) and a slow (26-candle) exponential moving average, with a 9-candle signal line. MACD crossing above its signal line means momentum is turning up; crossing below, turning down. The histogram is the distance between the two.' },
   { id: 'ema', title: 'EMA (exponential moving average)', re: /\b(ema|sma|moving averages?|golden cross|death cross)\b/i,
-    text: 'An average of recent closing prices that gives more weight to the newest candles. CoinVantage uses the 20, 50 and 200 EMA: price above the 200 EMA is the usual definition of a long-term uptrend, and the 50 crossing above the 200 is the "golden cross" (below it, the "death cross").' },
+    text: 'An average of recent closing prices that gives more weight to the newest candles. BTCS uses the 20, 50 and 200 EMA: price above the 200 EMA is the usual definition of a long-term uptrend, and the 50 crossing above the 200 is the "golden cross" (below it, the "death cross").' },
   { id: 'bollinger', title: 'Bollinger Bands', re: /\bbollinger\b/i,
     text: 'A 20-candle average with bands two standard deviations above and below it. Price at the upper band is stretched up, at the lower band stretched down. Bands squeezing together mean volatility is unusually low, which often comes before a larger move in either direction.' },
   { id: 'atr', title: 'ATR (Average True Range)', re: /\b(atr|average true range)\b/i,
-    text: 'The average size of one candle\'s full move over the last 14 candles, gaps included. CoinVantage spaces stop-losses with it: a stop closer than about one ATR tends to be hit by ordinary noise.' },
+    text: 'The average size of one candle\'s full move over the last 14 candles, gaps included. BTCS spaces stop-losses with it: a stop closer than about one ATR tends to be hit by ordinary noise.' },
   { id: 'volatility', title: 'Volatility', re: /\b(volatil(e|ity)|fluctuat(e|es|ion|ions|ing)|price swings?)\b/i,
-    text: 'How far and how fast a price swings. Crypto is far more volatile than shares — daily moves of 5–10% are common for smaller coins. CoinVantage measures it with ATR and the forecast\'s 50% and 80% ranges, and spaces stop-losses wider on more volatile charts so normal swings don\'t trigger them.' },
+    text: 'How far and how fast a price swings. Crypto is far more volatile than shares — daily moves of 5–10% are common for smaller coins. BTCS measures it with ATR and the forecast\'s 50% and 80% ranges, and spaces stop-losses wider on more volatile charts so normal swings don\'t trigger them.' },
   { id: 'adx', title: 'ADX (Average Directional Index)', re: /\b(adx|directional (index|movement))\b|[+−-]di\b/i,
     text: 'Trend strength from 0 to 100 over 14 candles, whatever the direction. Under 20 the market is ranging; above 25 it is trending. +DI above −DI says the trend is up, −DI above +DI says down.' },
   { id: 'supertrend', title: 'Supertrend', re: /\bsuper ?trend\b/i,
@@ -38,7 +38,7 @@ export const GLOSSARY = [
   { id: 'donchian', title: 'Donchian channel', re: /\b(donchian|breakout levels?)\b/i,
     text: 'The highest high and lowest low of the last 20 candles. A close above the top or below the bottom is a breakout.' },
   { id: 'levels', title: 'Support and resistance', re: /\b(support|resistance)\b/i,
-    text: 'Support is a price area where falls have repeatedly stopped; resistance is where rises have stopped. CoinVantage finds them from swing highs and lows in the last 300 candles. Treat them as zones rather than exact prices — and a level that breaks often swaps roles.' },
+    text: 'Support is a price area where falls have repeatedly stopped; resistance is where rises have stopped. BTCS finds them from swing highs and lows in the last 300 candles. Treat them as zones rather than exact prices — and a level that breaks often swaps roles.' },
   { id: 'stop', title: 'Stop-loss', re: /\b(stop[- ]?loss(es)?|stops?)\b/i,
     text: 'A price at which you sell to cap the loss if the trade goes wrong. Put it where the trade idea is proven wrong — trade plans here use a multiple of ATR or just beyond the nearest support — then size the position so that being stopped out costs only 1–2% of your account.' },
   { id: 'tp', title: 'Take-profit', re: /\b(take[- ]?profits?|tp ?[123]?|profit targets?)\b/i,
@@ -163,13 +163,13 @@ function methodAnswer() {
 4. **History** — what this coin did after the times its chart looked like today, across years of daily data.
 5. **Verdict** — every reading is weighted by its measured accuracy, so one with no proven edge counts for nothing.
 
-The wording comes from a rule-based analyst built into the page, or from a language model that runs on your own device if you turn one on (or your own AI service if you connect one). Your questions are not sent to CoinVantage or to ChatGPT.
+The wording comes from a rule-based analyst built into the page, or from a language model that runs on your own device if you turn one on (or your own AI service if you connect one). Your questions are not sent to BTCS or to ChatGPT.
 
 **Honest limits:** across every timeframe tested the forecast was right ${t.all}% of the time, against ${t.allBaseline}% for always calling the more common direction — so it does **not** beat that baseline yet. Use it for ranges, levels and stop-losses, not as a crystal ball. Every figure is on the [Track record](#/track) page and on each coin page.`;
 }
 
 function siteLegitAnswer() {
-  return `**What CoinVantage is, plainly**
+  return `**What BTCS is, plainly**
 
 - A market-data and analysis site. It never takes deposits, never holds your coins and never connects to an exchange account, so it cannot move or lose your money.
 - **Trading** runs on simulated money. The real-trade journal only records trades you place yourself on your own exchange — it never places an order or holds a key.

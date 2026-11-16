@@ -127,7 +127,7 @@ export async function render(el) {
   el.innerHTML = `
     <div class="page-head">
       <div><h1>Trading</h1>
-        <p>Three accounts, side by side: the demo trades you place yourself, the trades you really made, and the AI running the strategy on its own. Only the real account involves real money — CoinVantage never places an order and holds no keys.</p>
+        <p>Three accounts, side by side: the demo trades you place yourself, the trades you really made, and the AI running the strategy on its own. Only the real account involves real money — BTCS never places an order and holds no keys.</p>
         <div class="callout warn mt" role="note"><b>${icon('info', 14)} Simulation, not a path to profit</b><p>The demo and AI accounts trade simulated money on live prices. Orders fill at the candle's price with modelled fees; real orders also pay spread and slippage, can fill partly or not at all, and exchanges can go down mid-move. In walk-forward tests the rules have lost money in some periods and simply holding has sometimes done better: the figures below show both, with the worst drop. Treat a result here as evidence about the rules, not an expected return. Not financial advice. <a class="acc" href="#/learn">How the rules are tested →</a></p></div>
         <details class="mt"><summary class="fine" style="cursor:pointer">What each account and strategy means</summary>
           <dl class="defs">
@@ -575,7 +575,7 @@ export async function render(el) {
 
   // ---------------------------------------------------------------- view
   // --- the real account -------------------------------------------------
-  // Trades actually placed on an exchange, typed in here. CoinVantage records
+  // Trades actually placed on an exchange, typed in here. BTCS records
   // them; it never places one. Same statistics as the simulated accounts so the
   // three can be compared honestly.
   const REAL_KEY = 'realTradeState';
@@ -690,7 +690,7 @@ export async function render(el) {
       const which = b.dataset.export;
       const src = which === 'ai-csv' ? state : realState();
       if (!src?.closed?.length) { toast('No closed trades to export yet.', 'info'); return; }
-      downloadText(`coinvantage-${which === 'ai-csv' ? 'ai-trader' : 'my-trades'}-${stamp}.csv`, tradesCsv(src.closed));
+      downloadText(`BTCS-${which === 'ai-csv' ? 'ai-trader' : 'my-trades'}-${stamp}.csv`, tradesCsv(src.closed));
       toast(`${src.closed.length} trades exported.`, 'up');
     }));
     $$('[data-report]', el).forEach((b) => b.addEventListener('click', () => {
@@ -708,7 +708,7 @@ export async function render(el) {
         fmtMoney: (v) => money(v), notes,
       });
       const w = window.open('', '_blank');
-      if (!w) { downloadText(`coinvantage-report-${stamp}.html`, html, 'text/html;charset=utf-8'); toast('Report downloaded.', 'up'); return; }
+      if (!w) { downloadText(`BTCS-report-${stamp}.html`, html, 'text/html;charset=utf-8'); toast('Report downloaded.', 'up'); return; }
       w.document.write(html);
       w.document.close();
     }));
@@ -783,7 +783,7 @@ export async function render(el) {
       const sym = b.dataset.realclose;
       const now = priceOf(sym) ?? await fetchPrice(sym);
       const m = modal(`<h3>Record the sale of ${esc(sym)}</h3>
-        <p class="fine">Enter the price you sold at on your exchange. CoinVantage only records it: no order is placed.</p>
+        <p class="fine">Enter the price you sold at on your exchange. BTCS only records it: no order is placed.</p>
         <form class="stack mt" style="gap:10px" id="rcf">
           <label class="fld">Price sold at (${esc(fx.code)})<input class="inp" name="px" type="number" step="any" min="0" required value="${now === null ? '' : esc(String(+(now * (fx.rate || 1)).toPrecision(8)))}"></label>
           <label class="fld">Fee paid on the sale (${esc(fx.code)})<input class="inp" name="fee" type="number" step="any" min="0" value="${now === null ? '0' : esc(String(+(now * (realState()?.open[sym]?.qty || 0) * (cfg.feePct / 100) * (fx.rate || 1)).toPrecision(4)))}"><small class="fine">Filled in at the usual ${cfg.feePct}%; change it to what your exchange charged.</small></label>

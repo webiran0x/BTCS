@@ -140,7 +140,7 @@ export async function render(el, [symParam]) {
         ${status === 'error' ? `<p class="fine down mt">${esc(aiState.text)}</p>` : ''}</details>`;
     }
     const body = base + extra;
-    card.innerHTML = `<div class="card-h"><h3>${icon('ai', 16)} CoinVantage AI · built in</h3></div>${body}
+    card.innerHTML = `<div class="card-h"><h3>${icon('ai', 16)} BTCS AI · built in</h3></div>${body}
       <details class="mt"><summary class="fine" style="cursor:pointer">Advanced: use your own AI server</summary>
         <form id="customForm" class="stack mt" style="gap:8px">
           <label class="fld">OpenAI-compatible URL<input class="inp" name="url" type="url" inputmode="url" autocomplete="off" spellcheck="false" maxlength="300" placeholder="http://localhost:11434/v1" value="${esc(settings.get().customEndpoint)}"></label>

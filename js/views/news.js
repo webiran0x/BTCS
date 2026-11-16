@@ -63,7 +63,7 @@ export async function render(el, [coinParam]) {
       ${coins.length ? `<div class="seg" id="cn" style="margin-bottom:10px"><button data-v="all" class="${coin === 'all' ? 'on' : ''}">Any coin</button>${coins.slice(0, 14).map((c) => `<button data-v="${esc(c)}" class="${coin === c ? 'on' : ''}">${esc(c)}</button>`).join('')}</div>` : ''}
       <div class="news-list" id="list"></div>
     </div>
-    <p class="fine mt">Headlines are collected automatically and shown unedited — ${esc('CoinVantage')} does not endorse or verify them. Always check the source before acting on a story.</p>`;
+    <p class="fine mt">Headlines are collected automatically and shown unedited — ${esc('BTCS')} does not endorse or verify them. Always check the source before acting on a story.</p>`;
 
   bindSeg($('#src', el), (v) => { source = v; draw(); });
   if ($('#cn', el)) bindSeg($('#cn', el), (v) => { coin = v; draw(); });

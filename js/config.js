@@ -1,6 +1,6 @@
 // Site-wide settings. Rebrand the app by changing APP_NAME / TAGLINE.
 export const CONFIG = {
-  APP_NAME: 'CoinVantage',
+  APP_NAME: 'BTCS',
   TAGLINE: 'Live crypto markets, signals & AI forecasts',
 
   // Market data (all public, key-less, CORS-enabled endpoints)

@@ -329,7 +329,7 @@ export async function render(el) {
           </div>
           <div class="card"><h3>Site</h3>
             <form class="stack mt" style="gap:10px" id="sf">
-              <label class="fld">Public site URL (used in e-mails and checkout)<input class="inp" name="url" value="${esc(site.url || '')}" placeholder="https://you.github.io/coinvantage/"></label>
+              <label class="fld">Public site URL (used in e-mails and checkout)<input class="inp" name="url" value="${esc(site.url || '')}" placeholder="https://you.github.io/BTCS/"></label>
               <label class="fld">Contact shown on legal pages<input class="inp" name="contact" value="${esc(site.contact || '')}" placeholder="support@example.com"></label>
               <label class="fld">Announcement banner (blank to hide)<input class="inp" name="announcement" value="${esc(site.announcement || '')}"></label>
               <button class="btn primary">Save site</button>

@@ -94,7 +94,7 @@ export const settings = {
  * behind, and kept responses beyond the cache's limit. Everything an account
  * keeps is in the cloud; this device holds a working copy of it.
  */
-const DEAD_KEYS = ['coinvantageAgents', 'coinvantageTaskLog', 'coinvantageOpenBBCache', 'coinvantageAnalystCache'];
+const DEAD_KEYS = ['BTCSAgents', 'BTCSTaskLog', 'BTCSOpenBBCache', 'BTCSAnalystCache'];
 export function tidyStorage() {
   try { for (const k of DEAD_KEYS) localStorage.removeItem(k); } catch { /* storage blocked */ }
 }

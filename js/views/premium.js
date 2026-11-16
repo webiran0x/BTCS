@@ -83,7 +83,7 @@ export async function render(el) {
 
       <div class="card mt">
         <h3>What Premium is not</h3>
-        <p class="fine">It is not a guarantee, a managed account or a trading bot. ${esc('CoinVantage')} never places trades and never asks for exchange API keys, private keys or seed phrases. Signals and forecasts are estimates from public market data, and the measured accuracy is published on the <a href="#/track">track record</a> page — read it before paying for anything.</p>
+        <p class="fine">It is not a guarantee, a managed account or a trading bot. ${esc('BTCS')} never places trades and never asks for exchange API keys, private keys or seed phrases. Signals and forecasts are estimates from public market data, and the measured accuracy is published on the <a href="#/track">track record</a> page — read it before paying for anything.</p>
         ${site.contact ? `<p class="fine">Questions: <b>${esc(site.contact)}</b></p>` : ''}
       </div>`;
 
