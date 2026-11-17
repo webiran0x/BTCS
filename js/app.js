@@ -26,23 +26,23 @@ if (typeof window !== 'undefined' && window.top !== window.self) {
 }
 
 const NAV = [
-  { path: '', label: 'Markets', icon: 'markets', short: 'Markets' },
-  { path: 'advice', label: 'Market scan', icon: 'bolt', short: 'Scan' },
-  { path: 'ai', label: 'Assistant', icon: 'ai', short: 'Ask' },
-  { path: 'trader', label: 'Trading', icon: 'forecast', short: 'Trading' },
-  { path: 'learn', label: 'AI learning', icon: 'ai', short: 'Learning' },
-  { path: 'scanner', label: 'Scanner', icon: 'scanner', short: 'Scanner' },
-  { path: 'track', label: 'Track record', icon: 'forecast', short: 'Record' },
-  { path: 'futures', label: 'Futures', icon: 'bolt', short: 'Futures' },
-  { path: 'news', label: 'News', icon: 'info', short: 'News' },
-  { path: 'compare', label: 'Compare', icon: 'compare', short: 'Compare' },
-  { path: 'tools', label: 'Tools', icon: 'calc', short: 'Tools' },
-  { path: 'exchanges', label: 'Exchanges', icon: 'exchanges', short: 'Exchanges' },
-  { path: 'wallet', label: 'Wallet', icon: 'wallet', short: 'Wallet' },
-  { path: 'alerts', label: 'Alerts', icon: 'alerts', short: 'Alerts' },
-  { path: 'premium', label: 'Premium', icon: 'star', short: 'Premium' },
+  { path: '', label: 'بازارها', icon: 'markets', short: 'بازارها' },
+  { path: 'advice', label: 'اسکن بازار', icon: 'bolt', short: 'اسکن' },
+  { path: 'ai', label: 'دستیار هوشمند', icon: 'ai', short: 'پرسش' },
+  { path: 'trader', label: 'معاملات', icon: 'forecast', short: 'معاملات' },
+  { path: 'learn', label: 'یادگیری هوش مصنوعی', icon: 'ai', short: 'یادگیری' },
+  { path: 'scanner', label: 'اسکنر', icon: 'scanner', short: 'اسکنر' },
+  { path: 'track', label: 'سابقه عملکرد', icon: 'forecast', short: 'سوابق' },
+  { path: 'futures', label: 'فیوچرز', icon: 'bolt', short: 'فیوچرز' },
+  { path: 'news', label: 'اخبار', icon: 'info', short: 'اخبار' },
+  { path: 'compare', label: 'مقایسه', icon: 'compare', short: 'مقایسه' },
+  { path: 'tools', label: 'ابزارها', icon: 'calc', short: 'ابزارها' },
+  { path: 'exchanges', label: 'صرافی‌ها', icon: 'exchanges', short: 'صرافی‌ها' },
+  { path: 'wallet', label: 'کیف پول', icon: 'wallet', short: 'کیف پول' },
+  { path: 'alerts', label: 'هشدارها', icon: 'alerts', short: 'هشدارها' },
+  { path: 'premium', label: 'اشتراک ویژه', icon: 'star', short: 'ویژه' },
 ];
-const ADMIN_NAV = { path: 'admin', label: 'Admin', icon: 'chip', short: 'Admin' };
+const ADMIN_NAV = { path: 'admin', label: 'مدیریت', icon: 'chip', short: 'مدیریت' };
 // Four destinations plus "More" — five cells, which is what fits a phone row.
 const MOBILE = ['', 'advice', 'ai', 'wallet'];
 
@@ -84,20 +84,20 @@ function renderNav() {
   $('#bottombar').innerHTML = `${MOBILE.map((p) => {
     const n = NAV.find((x) => x.path === p);
     return `<a href="#/${p}" class="${cur === p ? 'on' : ''}"${cur === p ? ' aria-current="page"' : ''}>${icon(n.icon, 22)}<span>${esc(t(n.short))}</span></a>`;
-  }).join('')}<button id="moreBtn" type="button" aria-haspopup="dialog" class="${MOBILE.includes(cur) ? '' : 'on'}">${icon('more', 22)}<span>${esc(t('More'))}</span></button>`;
+  }).join('')}<button id="moreBtn" type="button" aria-haspopup="dialog" class="${MOBILE.includes(cur) ? '' : 'on'}">${icon('more', 22)}<span>${esc(t('بیشتر'))}</span></button>`;
   $('#moreBtn').addEventListener('click', openMore);
 }
 
 function openMore() {
   const cur = location.hash.replace(/^#\/?/, '').split('/')[0];
   const rest = navItems().filter((n) => !MOBILE.includes(n.path));
-  const m = modal(`<h3>${esc(t('Menu'))}</h3>
+  const m = modal(`<h3>${esc(t('منو'))}</h3>
     <div class="sheet-grid">${rest.map((n) => `<a href="#/${n.path}" class="sheet-item ${cur === n.path ? 'on' : ''}">${icon(n.icon, 20)}<span>${esc(t(n.label))}</span></a>`).join('')}</div>
     <div class="sheet-grid mt">
-      <a href="#/account" class="sheet-item">${icon('wallet', 20)}<span>${esc(t('Account'))}</span></a>
-      <a href="#/legal/terms" class="sheet-item">${icon('info', 20)}<span>${esc(t('Terms of Service'))}</span></a>
-      <a href="#/legal/privacy" class="sheet-item">${icon('info', 20)}<span>${esc(t('Privacy Policy'))}</span></a>
-      <a href="#/legal/risk" class="sheet-item">${icon('info', 20)}<span>${esc(t('Risk Disclosure'))}</span></a>
+      <a href="#/account" class="sheet-item">${icon('wallet', 20)}<span>${esc(t('حساب کاربری'))}</span></a>
+      <a href="#/legal/terms" class="sheet-item">${icon('info', 20)}<span>${esc(t('شرایط استفاده'))}</span></a>
+      <a href="#/legal/privacy" class="sheet-item">${icon('info', 20)}<span>${esc(t('سیاست حفظ حریم خصوصی'))}</span></a>
+      <a href="#/legal/risk" class="sheet-item">${icon('info', 20)}<span>${esc(t('بیانیه ریسک'))}</span></a>
     </div>`);
   $$('a', m.el).forEach((a) => a.addEventListener('click', () => m.close()));
 }
@@ -132,8 +132,8 @@ async function route(opts) {
   // An address that names no page used to open Markets as if it were that page.
   // (A sign-in token in the address, which contains "=", is not a page name.)
   if (name && !VIEWS[name] && !name.includes('=')) {
-    view.innerHTML = `<div class="card empty"><h3>Page not found</h3><p>There is no page at <code>#/${esc(name)}</code>. The link may be old or mistyped.</p><a class="btn primary" href="#/">Go to Markets</a></div>`;
-    document.title = `Page not found · ${CONFIG.APP_NAME}`;
+    view.innerHTML = `<div class="card empty"><h3>صفحه پیدا نشد</h3><p>صفحه‌ای در مسیر <code>#/${esc(name)}</code> وجود ندارد. ممکن است لینک قدیمی باشد یا اشتباه تایپ شده باشد.</p><a class="btn primary" href="#/">بازگشت به بازارها</a></div>`;
+    document.title = `صفحه پیدا نشد · ${CONFIG.APP_NAME}`;
     window.scrollTo({ top: 0 });
     return;
   }
@@ -154,7 +154,7 @@ async function route(opts) {
     if (seq === routeSeq) {
       // inline onclick is blocked by the page CSP — this is the error screen, so
       // a Reload button that silently does nothing is the worst place for it
-      view.innerHTML = `<div class="card empty"><h3>Something went wrong</h3><p>${esc(err.message)}</p><button class="btn" id="errReload">Reload</button></div>`;
+      view.innerHTML = `<div class="card empty"><h3>خطایی رخ داد</h3><p>${esc(err.message)}</p><button class="btn" id="errReload">بارگذاری مجدد</button></div>`;
       document.getElementById('errReload')?.addEventListener('click', () => location.reload());
     }
   }
@@ -179,7 +179,7 @@ function initSearch() {
   const input = $('#searchInput'), box = $('#searchResults');
   // The full hint was cut to "Search coi" on a phone.
   const narrow = matchMedia('(max-width: 600px)');
-  const hint = () => { input.placeholder = narrow.matches ? 'Search' : 'Search coin (BTC, Ethereum…)'; };
+  const hint = () => { input.placeholder = narrow.matches ? 'جستجو' : 'جستجوی رمزارز (BTC, Ethereum…)'; };
   hint();
   narrow.addEventListener('change', hint);
   let items = [], active = -1, seq = 0, timer = null;
@@ -189,7 +189,7 @@ function initSearch() {
   input.setAttribute('aria-controls', 'searchResults');
   input.setAttribute('aria-expanded', 'false');
   box.setAttribute('role', 'listbox');
-  box.setAttribute('aria-label', 'Matching coins');
+  box.setAttribute('aria-label', 'رمزارزهای منطبق');
   const draw = () => {
     box.hidden = !items.length;
     input.setAttribute('aria-expanded', String(!!items.length));
@@ -232,7 +232,7 @@ async function initSelectors() {
   cur.value = fx.code;
   cur.addEventListener('change', async () => {
     const ok = await setCurrency(cur.value);
-    if (!ok) { toast('Exchange rate unavailable for that currency right now.', 'info'); cur.value = fx.code; return; }
+    if (!ok) { toast('نرخ تبدیل برای این ارز در حال حاضر در دسترس نیست.', 'info'); cur.value = fx.code; return; }
     refreshTickerPrices();
     route();
   });
@@ -246,7 +246,7 @@ function initAccount() {
     const p = auth.profile;
     btn.innerHTML = auth.user
       ? `<span class="avatar">${esc((p?.display_name || auth.user.email || '?').slice(0, 1).toUpperCase())}</span>`
-      : `${icon('wallet', 16)}<span class="hide-s">${esc(t('Sign in'))}</span>`;
+      : `${icon('wallet', 16)}<span class="hide-s">${esc(t('ورود'))}</span>`;
     btn.className = auth.user ? 'icon-btn' : 'btn sm';
     renderNav();
   };
@@ -254,15 +254,15 @@ function initAccount() {
     if (!auth.user) { (await import('./views/auth.js')).openAuth(); return; }
     const p = auth.profile;
     const m = modal(`<h3>${esc(p?.display_name || auth.user.email)}</h3>
-      <p class="muted" style="margin-top:-6px">${esc(t('Signed in as'))} ${esc(auth.user.email)}${p?.is_admin ? ' · <b>Admin</b>' : ''}</p>
+      <p class="muted" style="margin-top:-6px">${esc(t('وارد شده با حساب'))} ${esc(auth.user.email)}${p?.is_admin ? ' · <b>مدیر</b>' : ''}</p>
       <div class="stack mt" style="gap:8px">
-        <a class="btn" href="#/account">${esc(t('Account'))}</a>
-        <a class="btn" href="#/premium">${esc(t('Premium'))}</a>
-        ${p?.is_admin ? `<a class="btn" href="#/admin">${esc(t('Admin'))}</a>` : ''}
-        <button class="btn ghost" id="so">${esc(t('Sign out'))}</button>
+        <a class="btn" href="#/account">${esc(t('حساب کاربری'))}</a>
+        <a class="btn" href="#/premium">${esc(t('اشتراک ویژه'))}</a>
+        ${p?.is_admin ? `<a class="btn" href="#/admin">${esc(t('مدیریت'))}</a>` : ''}
+        <button class="btn ghost" id="so">${esc(t('خروج از حساب'))}</button>
       </div>`);
     $$('a', m.el).forEach((a) => a.addEventListener('click', () => m.close()));
-    $('#so', m.el).addEventListener('click', async () => { m.close(); await signOut(); toast('Signed out.', 'info'); });
+    $('#so', m.el).addEventListener('click', async () => { m.close(); await signOut(); toast('با موفقیت خارج شدید.', 'info'); });
   });
   auth.addEventListener('change', () => { paint(); syncNow({ signedIn: true }); });
   paint();
@@ -359,8 +359,8 @@ async function initTicker() {
     const pill = $('#livePill');
     pill.classList.toggle('on', e.detail.connected);
     pill.querySelector('span').textContent = e.detail.connected
-      ? t('Live · Binance stream')
-      : e.detail.paused ? t('Paused while the tab is in the background') : t('Reconnecting…');
+      ? t('زنده · جریان بایننس')
+      : e.detail.paused ? t('متوقف شده در پس‌زمینه') : t('در حال اتصال مجدد…');
   });
 }
 
@@ -375,9 +375,10 @@ function checkAlerts(pair, p) {
     if (a.triggered || `${a.symbol}USDT` !== pair) continue;
     if ((a.dir === 'above' && p >= a.price) || (a.dir === 'below' && p <= a.price)) {
       a.triggered = Date.now(); changed = true;
-      const msg = `${a.symbol} is ${a.dir} ${money(a.price)} (now ${money(p)})`;
+      const dirText = a.dir === 'above' ? 'بالاتر از' : 'پایین‌تر از';
+      const msg = `قیمت ${a.symbol} به ${dirText} ${money(a.price)} رسید (قیمت فعلی: ${money(p)})`;
       toast(`🔔 ${msg}`, a.dir === 'above' ? 'up' : 'down', 8000);
-      try { if (Notification.permission === 'granted') new Notification(`${CONFIG.APP_NAME} price alert`, { body: msg, icon: 'icon.svg' }); } catch { /* ignore */ }
+      try { if (Notification.permission === 'granted') new Notification(`هشدار قیمت ${CONFIG.APP_NAME}`, { body: msg, icon: 'icon.svg' }); } catch { /* ignore */ }
     }
   }
   if (changed) save('alerts', alerts);
@@ -399,17 +400,20 @@ async function showTriggeredServerAlerts() {
     const key = (a) => `${a.id}:${a.triggered_at}`;
     const fresh = rows.filter((a) => a.triggered_at && !seen.has(key(a)) && !seen.has(a.id));
     for (const a of fresh.slice(0, 4)) {
-      if (a.kind === 'signal') toast(`🔔 Your ${a.symbol} signal alert fired on the ${a.interval} chart while you were away`, 'info', 9000);
-      else toast(`🔔 ${a.symbol} went ${a.direction} ${money(a.price)} while you were away`, a.direction === 'above' ? 'up' : 'down', 9000);
+      if (a.kind === 'signal') toast(`🔔 هشدار سیگنال ${a.symbol} در نمودار ${a.interval} در زمان غیبت شما فعال شد`, 'info', 9000);
+      else {
+        const dirText = a.direction === 'above' ? 'بالاتر از' : 'پایین‌تر از';
+        toast(`🔔 قیمت ${a.symbol} در زمان غیبت شما به ${dirText} ${money(a.price)} رسید`, a.direction === 'above' ? 'up' : 'down', 9000);
+      }
       seen.add(key(a));
     }
     const freshAi = ai.filter((a) => a.triggered_at && !seen.has(`ai:${key(a)}`));
     for (const a of freshAi.slice(0, 4)) {
       const how = a.triggered_action || (a.side === 'long' ? 'buy' : a.side === 'short' ? 'sell' : null);
-      const what = how === 'buy' ? 'a BUY' : how === 'sell' ? 'a SELL' : 'a BUY or SELL';
-      const msg = `AI signal on ${a.symbol} (${a.interval} chart): ${what} at ${money(+a.triggered_price)}, ${new Date(a.triggered_at).toLocaleString()}. Simulated rules, not a forecast.`;
+      const what = how === 'buy' ? 'خرید (BUY)' : how === 'sell' ? 'فروش (SELL)' : 'خرید یا فروش';
+      const msg = `سیگنال هوش مصنوعی برای ${a.symbol} (نمودار ${a.interval}): پیشنهاد ${what} در قیمت ${money(+a.triggered_price)}، در تاریخ ${new Date(a.triggered_at).toLocaleString('fa-IR')}. این نتیجه بر اساس قوانین شبیه‌سازی است و پیش‌بینی قطعی نیست.`;
       toast(`🤖 ${msg}`, 'info', 10000);
-      try { if (Notification.permission === 'granted') new Notification(`${CONFIG.APP_NAME} AI signal`, { body: msg, icon: 'icon.svg' }); } catch { /* ignore */ }
+      try { if (Notification.permission === 'granted') new Notification(`سیگنال هوش مصنوعی ${CONFIG.APP_NAME}`, { body: msg, icon: 'icon.svg' }); } catch { /* ignore */ }
       seen.add(`ai:${key(a)}`);
     }
     if (fresh.length || freshAi.length) save('seenAlerts', [...seen].slice(-200));
@@ -420,13 +424,13 @@ auth.addEventListener('change', showTriggeredServerAlerts);
 // ---------------------------------------------------------------- risk gate (shown once)
 function riskGate() {
   if (load('riskAck', false)) return;
-  const m = modal(`<h3>Before you start</h3>
-    <p><b>${esc(CONFIG.APP_NAME)} is an analysis tool, not a broker.</b> It never places trades, never holds your money and never asks for exchange keys, private keys or seed phrases.</p>
-    <p>Signals, forecasts and AI answers are educational estimates built from public market data. They are often wrong. Crypto is volatile and you can lose everything you put in.</p>
-    <p class="fine">Measured accuracy of the forecast engine is published on every coin page and on the <a href="#/track">track record</a> page — read it before you rely on anything here.</p>
+  const m = modal(`<h3>پیش از شروع مطالعه کنید</h3>
+    <p><b>${esc(CONFIG.APP_NAME)} یک ابزار تحلیلی است، نه یک صرافی یا کارگزار.</b> این سامانه هرگز معامله‌ای ثبت نمی‌کند، دارایی شما را نگه نمی‌دارد و هرگز کلید صرافی، کلید خصوصی یا عبارت بازیابی (Seed Phrase) را درخواست نمی‌کند.</p>
+    <p>سیگنال‌ها، پیش‌بینی‌ها و پاسخ‌های هوش مصنوعی برآوردهای آموزشی هستند که از داده‌های عمومی بازار ساخته شده‌اند و ممکن است اشتباه باشند. بازار رمزارزها بسیار پرنوسان است و احتمال از دست دادن تمام سرمایه وجود دارد.</p>
+    <p class="fine">دقت اندازه‌گیری‌شده موتور پیش‌بینی در صفحه هر رمزارز و در بخش <a href="#/track">سابقه عملکرد</a> منتشر شده است — پیش از اتکا به داده‌ها، آن را مطالعه کنید.</p>
     <div class="row mt" style="gap:8px">
-      <button class="btn primary" id="ok">${esc(t('I understand'))}</button>
-      <a class="btn ghost" href="#/legal/risk" id="more">${esc(t('Risk Disclosure'))}</a>
+      <button class="btn primary" id="ok">${esc(t('متوجه شدم'))}</button>
+      <a class="btn ghost" href="#/legal/risk" id="more">${esc(t('بیانیه ریسک'))}</a>
     </div>`, { onClose: () => save('riskAck', true) });
   $('#ok', m.el).addEventListener('click', () => { save('riskAck', true); m.close(); });
   $('#more', m.el).addEventListener('click', () => { save('riskAck', true); m.close(); });
@@ -439,7 +443,7 @@ const paintBanners = () => { $('#banner').innerHTML = demoBanner + siteBanner; }
 
 dataStatus.addEventListener('change', (e) => {
   demoBanner = e.detail.demo
-    ? `<div class="banner">${icon('info', 16)} Live market APIs are not reachable from this network right now, so some panels show <b>demo data</b>. They switch back to live data automatically.</div>`
+    ? `<div class="banner">${icon('info', 16)} APIهای زنده بازار در حال حاضر از این شبکه در دسترس نیستند، بنابراین برخی بخش‌ها <b>داده‌های آزمایشی (دمو)</b> را نمایش می‌دهند. به محض برقراری ارتباط، داده‌ها به صورت خودکار زنده می‌شوند.</div>`
     : '';
   paintBanners();
 });
@@ -449,7 +453,7 @@ getAppSettings().then((s) => {
   const text = s?.site?.announcement;
   if (!text) return;
   if (load('dismissedNotice', '') === text) return;
-  siteBanner = `<div class="banner" id="siteNotice">${icon('info', 16)} ${esc(text)} <button class="icon-btn" id="noticeX" style="width:26px;height:26px;margin-left:auto" aria-label="Dismiss">${icon('close', 12)}</button></div>`;
+  siteBanner = `<div class="banner" id="siteNotice">${icon('info', 16)} ${esc(text)} <button class="icon-btn" id="noticeX" style="width:26px;height:26px;margin-left:auto" aria-label="بستن">${icon('close', 12)}</button></div>`;
   paintBanners();
   $('#noticeX')?.addEventListener('click', () => { save('dismissedNotice', text); siteBanner = ''; paintBanners(); });
 }).catch(() => { /* backend optional */ });
@@ -487,12 +491,12 @@ applyDir();
     const { changePassword } = await import('./api/security.js');
     const ok = await consumeRecoveryLink();
     if (!ok) return;
-    const m = modal(`<h3>Set a new password</h3>
-      <p class="fine">You followed a recovery link, so you can choose a new password now.</p>
+    const m = modal(`<h3>تعیین رمز عبور جدید</h3>
+      <p class="fine">شما از طریق لینک بازیابی وارد شده‌اید و اکنون می‌توانید رمز عبور جدیدی انتخاب کنید.</p>
       <form class="stack mt" style="gap:10px" id="rp">
-        <label class="fld">New password<input class="inp" name="pw" type="password" autocomplete="new-password" minlength="10" required autofocus></label>
-        <p class="fine">At least 10 characters.</p>
-        <button class="btn primary">Save new password</button>
+        <label class="fld">رمز عبور جدید<input class="inp" name="pw" type="password" autocomplete="new-password" minlength="10" required autofocus></label>
+        <p class="fine">حداقل ۱۰ کاراکتر.</p>
+        <button class="btn primary">ذخیره رمز عبور جدید</button>
         <p class="fine down" id="rpErr" hidden></p>
       </form>`);
     const f = m.el.querySelector('#rp'), err = m.el.querySelector('#rpErr');
@@ -502,7 +506,7 @@ applyDir();
       try {
         await changePassword(f.pw.value);
         m.close();
-        toast('Password updated — you are signed in.', 'up');
+        toast('رمز عبور به‌روزرسانی شد — اکنون وارد حساب خود شده‌اید.', 'up');
       } catch (e2) { err.textContent = e2.message; err.hidden = false; }
     });
   } catch (e) { console.warn('recovery link', e); }
@@ -548,7 +552,7 @@ const BUILD_STAMP = /^\d{8}-\d{6}$/;
 // has an answer on the page itself.
 {
   const tag = document.getElementById('buildTag');
-  if (tag) tag.textContent = `Version ${BUILD.slice(0, 4)}-${BUILD.slice(4, 6)}-${BUILD.slice(6, 8)} ${BUILD.slice(9, 11)}:${BUILD.slice(11, 13)} UTC`;
+  if (tag) tag.textContent = `نسخه ${BUILD.slice(0, 4)}-${BUILD.slice(4, 6)}-${BUILD.slice(6, 8)} ${BUILD.slice(9, 11)}:${BUILD.slice(11, 13)} UTC`;
 }
 
 // A tab left open for hours checks too, every half hour (see below). Found
@@ -592,7 +596,7 @@ async function checkForUpdate({ whenIdle = false } = {}) {
 // Saving silently failing is worse than saying so: everything keeps working for
 // the session and is then gone. Told once, not on every write.
 window.addEventListener('cv:store-failed', (e) => {
-  toast(`Nothing can be saved on this device — ${e.detail.reason}. Your watchlist, alerts and trades will be lost when you close the tab.`, 'down', 9000);
+  toast(`امکان ذخیره‌سازی در این دستگاه وجود ندارد — ${e.detail.reason}. واچ‌لیست، هشدارها و معاملات شما پس از بستن تب از بین خواهند رفت.`, 'down', 9000);
 });
 
 if (location.protocol === 'https:') {
@@ -615,14 +619,14 @@ if (location.protocol === 'https:') {
   const chatSend = $('#chatSend');
 
   const chatBtn = $('#chatBtn');
-  chatBtn.innerHTML = `${icon('ai', 18)}<span>Quick chat</span>`;
+  chatBtn.innerHTML = `${icon('ai', 18)}<span>گفتگوی سریع</span>`;
 
   // Toggle chat panel (its own button; the theme button only changes the theme)
   chatInput.maxLength = 120;
   const toggleChat = () => {
     chatPanel.hidden = !chatPanel.hidden;
     chatBtn.setAttribute('aria-expanded', String(!chatPanel.hidden));
-    chatBtn.setAttribute('aria-label', chatPanel.hidden ? 'Open quick chat' : 'Close quick chat');
+    chatBtn.setAttribute('aria-label', chatPanel.hidden ? 'باز کردن گفتگوی سریع' : 'بستن گفتگوی سریع');
     if (chatPanel.hidden) { chatInput.value = ''; chatBtn.focus(); }
     else setTimeout(() => chatInput.focus(), 50);
   };
@@ -647,7 +651,7 @@ if (location.protocol === 'https:') {
     // Add user message to UI
     const userMsg = document.createElement('div');
     userMsg.className = 'chat-message user';
-    userMsg.innerHTML = `<span class="avatar">You</span><span class="msg">${esc(trimmed)}</span>`;
+    userMsg.innerHTML = `<span class="avatar">شما</span><span class="msg">${esc(trimmed)}</span>`;
     chatMessages.appendChild(userMsg);
 
     // Clear input
@@ -656,7 +660,7 @@ if (location.protocol === 'https:') {
     // Show typing indicator
     const typingInd = document.createElement('div');
     typingInd.className = 'chat-message bot';
-    typingInd.innerHTML = `<span class="avatar">AI</span><span class="msg typing">...</span>`;
+    typingInd.innerHTML = `<span class="avatar">هوش مصنوعی</span><span class="msg typing">...</span>`;
     typingInd.id = 'typingIndicator';
     chatMessages.appendChild(typingInd);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -672,7 +676,7 @@ if (location.protocol === 'https:') {
 
       const botMsg = document.createElement('div');
       botMsg.className = 'chat-message bot';
-      botMsg.innerHTML = `<span class="avatar">AI</span><span class="msg">${esc(response)}</span>`;
+      botMsg.innerHTML = `<span class="avatar">هوش مصنوعی</span><span class="msg">${esc(response)}</span>`;
       chatMessages.appendChild(botMsg);
     } catch (err) {
       const typingEl = $('#typingIndicator');
@@ -681,7 +685,7 @@ if (location.protocol === 'https:') {
       const errorMsg = document.createElement('div');
       errorMsg.className = 'chat-message bot';
       console.warn('quick chat', err);
-      errorMsg.innerHTML = '<span class="avatar">AI</span><span class="msg">Live data did not load for that command, so there is no answer rather than a guess. Try again in a moment.</span>';
+      errorMsg.innerHTML = '<span class="avatar">هوش مصنوعی</span><span class="msg">داده‌های زنده برای این دستور بارگیری نشدند، بنابراین به جای حدس زدن پاسخی ارائه نشد. لطفاً لحظاتی دیگر دوباره تلاش کنید.</span>';
       chatMessages.appendChild(errorMsg);
     } finally {
       chatBusy = false;
@@ -693,11 +697,11 @@ if (location.protocol === 'https:') {
 
   // Command answers, all from the same live data the pages use.
   const HELP = [
-    '/price BTC   live price, 24h and 7d change',
-    '/signal ETH  indicator score on the 1h chart (educational, not advice)',
-    '/market      what is moving over the last 24h',
-    '/clear       clear this chat',
-    'Open questions: use the Ask page (#/ai).',
+    '/price BTC   قیمت زنده، تغییرات ۲۴ ساعته و ۷ روزه',
+    '/signal ETH  امتیاز اندیکاتور در نمودار ۱ ساعته (آموزشی، نه سیگنال قطعی)',
+    '/market      بررسی تغییرات بازار در ۲۴ ساعت گذشته',
+    '/clear       پاک کردن این گفتگو',
+    'پرسش‌های آزاد: از صفحه دستیار هوشمند (#/ai) استفاده کنید.',
   ].join('\n');
   const generateMCPResponse = async (message) => {
     if (message.startsWith('/')) {
@@ -709,40 +713,40 @@ if (location.protocol === 'https:') {
           return HELP;
         case 'price': {
           const c = await findCoin(arg || 'BTC');
-          if (!c) return `No coin found for "${arg}". Try /price BTC or /price SOL.`;
-          return `${c.name} (${c.symbol}): ${money(c.price)}\n24h ${pct(c.change24h)} · 7d ${pct(c.change7d)}`;
+          if (!c) return `رمزارزی برای «${arg}» پیدا نشد. دستور /price BTC یا /price SOL را امتحان کنید.`;
+          return `${c.name} (${c.symbol}): ${money(c.price)}\n۲۴ ساعت: ${pct(c.change24h)} · ۷ روز: ${pct(c.change7d)}`;
         }
         case 'signal': {
           const c = await findCoin(arg || 'BTC');
-          if (!c) return `No coin found for "${arg}". Try /signal BTC.`;
+          if (!c) return `رمزارزی برای «${arg}» پیدا نشد. دستور /signal BTC را امتحان کنید.`;
           const { candles, source } = await getCandles(c, '1h', 300);
-          if (source === 'demo') return `Live prices are not loading right now, so there is no real ${c.symbol} signal to show. Try again in a minute.`;
+          if (source === 'demo') return `قیمت‌های زنده در حال حاضر بارگیری نمی‌شوند، بنابراین سیگنال واقعی برای ${c.symbol} وجود ندارد. یک دقیقه دیگر دوباره تلاش کنید.`;
           const s = generateSignal(candles, { interval: '1h' });
           if (!s.ok) return `${c.symbol}: ${s.reason}`;
           const rsi = Number.isFinite(s.indicators?.rsi) ? s.indicators.rsi.toFixed(1) : '—';
-          return `${c.symbol} on the 1h chart: score ${s.score > 0 ? '+' : ''}${s.score} (${s.text}), RSI ${rsi}.\n` +
-            'A high score means the move is extended, not that it will continue. Full breakdown on the coin page.';
+          return `${c.symbol} در نمودار ۱ ساعته: امتیاز ${s.score > 0 ? '+' : ''}${s.score} (${s.text})، شاخص RSI برابر با ${rsi}.\n` +
+            'امتیاز بالا به معنای کشیدگی روند است، نه تداوم قطعی آن. تحلیل کامل در صفحه رمزارز موجود است.';
         }
         case 'market': {
           const list = (await markets()).filter((c) => Number.isFinite(c.change24h));
-          if (!list.length) return 'Market data is not available right now. Try again in a minute.';
+          if (!list.length) return 'داده‌های بازار در حال حاضر در دسترس نیستند. یک دقیقه دیگر دوباره تلاش کنید.';
           const up = list.filter((c) => c.change24h > 0).length;
           const sorted = [...list].sort((a, b) => b.change24h - a.change24h);
           const fmt = (c) => `${c.symbol} ${pct(c.change24h)}`;
-          return `${up} of ${list.length} coins are up over 24h.\n` +
-            `Top gainers: ${sorted.slice(0, 3).map(fmt).join(', ')}\n` +
-            `Top losers: ${sorted.slice(-3).reverse().map(fmt).join(', ')}`;
+          return `${up} رمزارز از ${list.length} رمزارز در ۲۴ ساعت گذشته رشد داشته‌اند.\n` +
+            `بیشترین رشدها: ${sorted.slice(0, 3).map(fmt).join('، ')}\n` +
+            `بیشترین افت‌ها: ${sorted.slice(-3).reverse().map(fmt).join('، ')}`;
         }
         case 'clear':
         case 'reset':
           chatMessages.querySelectorAll('.chat-message').forEach((m, i) => { if (i > 0) m.remove(); });
           return null;
         default:
-          return `Unknown command /${cmd}. Type /help to see what is available.`;
+          return `دستور ناشناخته /${cmd}. برای مشاهده دستورات موجود /help را تایپ کنید.`;
       }
     }
 
-    return 'I answer quick commands from live data. Type /help to see them, or ask open questions on the Ask page (#/ai).';
+    return 'من به دستورات سریع بر اساس داده‌های زنده پاسخ می‌دهم. برای مشاهده آن‌ها /help را تایپ کنید، یا سوالات آزاد خود را در صفحه دستیار هوشمند (#/ai) بپرسید.';
   };
 
   // Enter key to send
@@ -769,7 +773,7 @@ if (location.protocol === 'https:') {
 
   const quickBar = document.createElement('div');
   quickBar.className = 'chat-quick';
-  quickBar.innerHTML = `<span class="muted">Try:</span>${quickQuestions.map(q => `<button class="quick-btn" type="button" data-cmd="${esc(q)}" aria-label="Run ${esc(q)}">${esc(q)}</button>`).join(' ')}`;
+  quickBar.innerHTML = `<span class="muted">امتحان کنید:</span>${quickQuestions.map(q => `<button class="quick-btn" type="button" data-cmd="${esc(q)}" aria-label="اجرای ${esc(q)}">${esc(q)}</button>`).join(' ')}`;
   chatMessages.parentNode.insertBefore(quickBar, chatInput.parentNode);
 
   quickBar.querySelectorAll('.quick-btn').forEach(btn => {
