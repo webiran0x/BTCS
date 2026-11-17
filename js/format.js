@@ -4,9 +4,9 @@ import { now } from './api/clock.js';
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /**
- * آدرسی از خارج برنامه (فید خبری، CoinGecko، یا سرور) که برای قرارگیری در href/src ایمن‌سازی می‌شود:
- * تنها آدرس‌های مطلق https:// (یا مسیرهای داخلی #/) مجاز هستند تا اسکریپت‌های مخرب مانند javascript: یا data:
- * وارد نشوند. سایر موارد به مقدار fallback تبدیل می‌شوند.
+- آدرسی از خارج برنامه (فید خبری، CoinGecko، یا سرور) که برای قرارگیری در href/src ایمن‌سازی می‌شود:
+- تنها آدرس‌های مطلق https:// (یا مسیرهای داخلی #/) مجاز هستند تا اسکریپت‌های مخرب مانند javascript: یا data:
+- وارد نشوند. سایر موارد به مقدار fallback تبدیل می‌شوند.
  */
 export function safeUrl(u, fallback = '') {
   const s = String(u ?? '').trim();
@@ -29,6 +29,12 @@ export function price(v) {
   if (v === null || v === undefined || !Number.isFinite(+v)) return '—';
   v = +v;
   const a = Math.abs(v);
+  
+  // اگر واحد پول تومان یا ریال باشد، اعشار نمایش داده نمی‌شود
+  if (fx.code === 'IRT' || fx.code === 'IRR') {
+    return Math.round(v * fx.rate).toLocaleString('en-US');
+  }
+
   // تعداد اعشار بر اساس بزرگی عدد تنظیم می‌شود: در قیمت‌های بالای ۱۰۰ دلار سنت‌ها مهم هستند،
   // اما در قیمت‌های کوچک‌تر دقت اعشار تا ۴ تا ۱۰ رقم افزایش می‌یابد.
   if (a >= 100) return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -42,6 +48,13 @@ export function price(v) {
 export function money(v, { showCode = false, dp } = {}) {
   if (v === null || v === undefined || !Number.isFinite(+v)) return '—';
   const converted = +v * fx.rate;
+
+  // حذف دو رقم اعشار نهایی برای تومان (IRT) و ریال (IRR) به دلیل بزرگی اعداد
+  if (fx.code === 'IRT' || fx.code === 'IRR') {
+    const rounded = Math.round(converted);
+    return `${fx.symbol}${rounded.toLocaleString('en-US')}${showCode && fx.code !== 'USD' ? ` ${fx.code}` : ''}`;
+  }
+
   // پارامتر dp دقت اعشار (Tick Size) صرافی برای این جفت‌ارز است تا قیمت بدون گرد کردن اضافی نمایش داده شود.
   const digits = dp === undefined || converted === 0 ? Infinity : Math.floor(Math.log10(Math.abs(converted))) + dp + 1;
   const text = dp === undefined || digits < 3
@@ -60,6 +73,16 @@ export function compact(v, prefix = '$') {
   const value = isMoney ? +v * fx.rate : +v;
   const sign = isMoney ? fx.symbol : prefix;
   const a = Math.abs(value);
+  
+  if (fx.code === 'IRT' || fx.code === 'IRR') {
+    const fInt = (x, suffix) => `${sign}${Math.round(x).toLocaleString('en-US')} ${suffix}`;
+    if (a >= 1e12) return fInt(value / 1e12, 'تریلیون');
+    if (a >= 1e9) return fInt(value / 1e9, 'میلیارد');
+    if (a >= 1e6) return fInt(value / 1e6, 'میلیون');
+    if (a >= 1e3) return fInt(value / 1e3, 'هزار');
+    return `${sign}${Math.round(value).toLocaleString('en-US')}`;
+  }
+
   const f = (x, suffix) => `${sign}${x.toLocaleString('en-US', { maximumFractionDigits: x >= 100 ? 1 : 2 })} ${suffix}`;
   if (a >= 1e12) return f(value / 1e12, 'تریلیون');
   if (a >= 1e9) return f(value / 1e9, 'میلیارد');
