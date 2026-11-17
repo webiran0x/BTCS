@@ -80,7 +80,7 @@ export async function render(el, [symParam]) {
     <div class="ap-futures-wrap" dir="rtl">
       <div class="ap-hero-card">
         <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">فیوچرز و مشتقات</h1>
-        <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0;max-width:900px">داده‌های اهرمی از معاملات پرپچوئل تتر (USDT perpetual) — بایننس، Bybit یا OKX: هزینه‌ای که معامله‌گران برای نگهداری پوزیشن‌ها می‌پردازند، میزان شلوغی پوزیشن‌ها و لیکوییدیشن‌های زنده.</p>
+        <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0;max-width:900px">داده‌های اهرمی از معاملات پرپچوئل تتر (USDT perpetual) — تا این لحظه: هزینه‌ای که معامله‌گران برای نگهداری پوزیشن‌ها می‌پردازند، میزان شلوغی پوزیشن‌ها و لیکوییدیشن‌های زنده.</p>
       </div>
 
       <div class="ap-bento-layout">
