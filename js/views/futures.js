@@ -80,7 +80,7 @@ export async function render(el, [symParam]) {
     <div class="ap-futures-wrap" dir="rtl">
       <div class="ap-hero-card">
         <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">فیوچرز و مشتقات</h1>
-        <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0;max-width:900px">داده‌های اهرمی از معاملات پرپچوئل تتر (USDT perpetual) — بایننس، Bybit یا OKX: هزینه‌ای که معامله‌گران برای نگهداری پوزیشن‌ها می‌پردازند، میزان شلوغی پوزیشن‌ها و لیکوییدیشن‌های زنده[cite: 14].</p>
+        <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0;max-width:900px">داده‌های اهرمی از معاملات پرپچوئل تتر (USDT perpetual) — بایننس، Bybit یا OKX: هزینه‌ای که معامله‌گران برای نگهداری پوزیشن‌ها می‌پردازند، میزان شلوغی پوزیشن‌ها و لیکوییدیشن‌های زنده.</p>
       </div>
 
       <div class="ap-bento-layout">
@@ -91,7 +91,7 @@ export async function render(el, [symParam]) {
         <div class="ap-card" style="margin-bottom:0">
           <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:1.15rem;color:#fff">لیکوییدیشن‌های زنده</h3><span class="live-pill" id="liqPill" style="padding:4px 10px;border-radius:8px;font-size:0.75rem;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6)"><i></i><span>در حال اتصال...</span></span></div>
           <div id="liqList"><p class="fine muted" style="color:rgba(255,255,255,0.5);font-size:0.85rem">در انتظار اولین لیکوییدیشن...</p></div>
-          <p class="fine mt" style="margin-top:16px;color:rgba(255,255,255,0.4);font-size:0.8rem;line-height:1.6">هر سطر یک پوزیشن اهرمی واقعی است که اجباراً بسته شده است[cite: 14]. سطرهای زیر ${money(MIN_LIQ_USD)} پنهان می‌شوند[cite: 14].</p>
+          <p class="fine mt" style="margin-top:16px;color:rgba(255,255,255,0.4);font-size:0.8rem;line-height:1.6">هر سطر یک پوزیشن اهرمی واقعی است که اجباراً بسته شده است. سطرهای زیر ${money(MIN_LIQ_USD)} پنهان می‌شوند.</p>
         </div>
       </div>
     </div>`;
@@ -126,7 +126,7 @@ export async function render(el, [symParam]) {
           <td>${compact(r.openInterestUsd)}</td></tr>`;
       }).join('')}
       </tbody></table></div>
-      <p class="fine mt" style="margin-top:12px;color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.5">نرخ تأمین مالی مثبت یعنی لانگ‌ها به شورت‌ها پاداش می‌دهند[cite: 14]. تسویه بسته به قرارداد هر ${intervals.join(' یا ')} ساعت انجام می‌شود[cite: 14].</p>`;
+      <p class="fine mt" style="margin-top:12px;color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.5">نرخ تأمین مالی مثبت یعنی لانگ‌ها به شورت‌ها پاداش می‌دهند. تسویه بسته به قرارداد هر ${intervals.join(' یا ')} ساعت انجام می‌شود.</p>`;
     $$('tr[data-sym]', el).forEach((tr) => tr.addEventListener('click', () => {
       st.sym = tr.dataset.sym;
       location.hash = `#/futures/${tr.dataset.sym}`;
