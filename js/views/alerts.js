@@ -6,49 +6,44 @@ import { fx } from '../api/fx.js';
 import { auth, backendEnabled, serverAlerts, createServerAlert, deleteServerAlert, serverAiAlerts, createAiAlert, deleteAiAlert } from '../api/backend.js';
 import { openAuth } from './auth.js';
 
-export const title = 'Alerts';
+export const title = 'هشدارها';
 
 export async function render(el, [preset]) {
   const all = await markets().catch(() => []);
   const coins = all.filter((c) => c.binance && !isStable(c.symbol));
   const perm = typeof Notification !== 'undefined' ? Notification.permission : 'unsupported';
   el.innerHTML = `
-    <div class="page-head"><div><h1>Alerts</h1><p>Three kinds: a <b>price alert</b> that watches a level, a <b>signal alert</b> that fires the moment the engine's setup triggers on a chart — with the entry, stop and targets in the message — and an <b>AI signal alert</b> that tells you when the AI signal buys or sells a coin.</p></div></div>
+    <div class="page-head"><div><h1>هشدارها</h1><p>سه نوع هشدار وجود دارد: <b>هشدار قیمت</b> که یک سطح را زیر نظر دارد، <b>هشدار سیگنال</b> که در لحظه فعال‌شدن تنظیمات موتور روی نمودار فعال می‌شود — همراه با نقطه ورود، حد ضرر و اهداف در پیام — و <b>هشدار سیگنال هوش مصنوعی</b> که زمانی که سیگنال هوش مصنوعی ارزی را می‌خرد یا می‌فروشد، به شما اطلاع می‌دهد.</p></div></div>
 
     <div class="card" style="margin-bottom:14px">
-      <div class="card-h"><h3>Signal alert</h3><span class="chip warn">Runs on the server</span></div>
+      <div class="card-h"><h3>هشدار سیگنال</h3><span class="chip warn">اجرا روی سرور</span></div>
       <div id="sigBox">${skeleton(3, 22)}</div>
     </div>
 
     <div class="card" style="margin-bottom:14px">
-      <div class="card-h"><h3>AI signal alert</h3><span class="chip warn">Runs on the server</span></div>
+      <div class="card-h"><h3>هشدار سیگنال هوش مصنوعی</h3><span class="chip warn">اجرا روی سرور</span></div>
       <div id="aiBox">${skeleton(3, 22)}</div>
     </div>
 
     <div class="grid g2">
       <div class="card">
-        <h3 style="margin-bottom:12px">New price alert</h3>
+        <h3 style="margin-bottom:12px">هشدار قیمت جدید</h3>
         <form id="f" class="stack" style="gap:10px">
-          <label class="fld">Coin<select class="inp" name="sym">${coins.map((c) => `<option value="${esc(c.symbol)}" ${c.symbol === (preset || 'BTC').toUpperCase() ? 'selected' : ''}>${esc(c.symbol)} · ${esc(c.name)}</option>`).join('')}</select></label>
+          <label class="fld">ارز<select class="inp" name="sym">${coins.map((c) => `<option value="${esc(c.symbol)}" ${c.symbol === (preset || 'BTC').toUpperCase() ? 'selected' : ''}>${esc(c.symbol)} · ${esc(c.name)}</option>`).join('')}</select></label>
           <div class="row">
-            <label class="fld">When price is<select class="inp" name="dir"><option value="above">Above</option><option value="below">Below</option></select></label>
-            <label class="fld" style="flex:1"><span>Price (<span id="curCode">${esc(fx.code)}</span>)</span><input class="inp" name="price" type="number" step="any" min="0" required></label>
+            <label class="fld">وقتی قیمت<select class="inp" name="dir"><option value="above">بالاتر از</option><option value="below">پایین‌تر از</option></select></label>
+            <label class="fld" style="flex:1"><span>قیمت (<span id="curCode">${esc(fx.code)}</span>)</span><input class="inp" name="price" type="number" step="any" min="0" required></label>
           </div>
           <p class="fine" id="cur"></p>
-          <button class="btn primary">${icon('alerts', 16)} Create alert</button>
+          <button class="btn primary">${icon('alerts', 16)} ایجاد هشدار</button>
           <p class="fine" id="reach"></p>
         </form>
-        <div class="mt" id="permBox">${perm === 'granted' ? '<p class="fine up">Browser notifications are on.</p>' : perm === 'unsupported' ? '<p class="fine">This browser does not support notifications — alerts appear as on-screen messages.</p>' : '<button class="btn sm" id="perm">Enable browser notifications</button>'}</div>
+        <div class="mt" id="permBox">${perm === 'granted' ? '<p class="fine up">اعلان‌های مرورگر فعال هستند.</p>' : perm === 'unsupported' ? '<p class="fine">این مرورگر از اعلان‌ها پشتیبانی نمی‌کند — هشدارها به صورت پیام‌های روی صفحه نمایش داده می‌شوند.</p>' : '<button class="btn sm" id="perm">فعال‌سازی اعلان‌های مرورگر</button>'}</div>
       </div>
-      <div class="card"><div class="card-h"><h3>Your alerts</h3><button class="btn sm ghost" id="clear">Clear triggered</button></div><div id="list"></div></div>
+      <div class="card"><div class="card-h"><h3>هشدارهای شما</h3><button class="btn sm ghost" id="clear">پاک کردن موارد فعال‌شده</button></div><div id="list"></div></div>
     </div>`;
 
   const f = $('#f', el);
-  // Alerts are compared against the exchange's USD price, but the whole app is
-  // shown in the chosen display currency. The field used to be labelled USD and
-  // sat directly under a price printed in that other currency, so anyone not on
-  // USD typed the number they could see and set a level that could never be
-  // reached. The field now takes the display currency and converts on save.
   const toUsd = (v) => (fx.rate ? v / fx.rate : v);
   const showCur = () => {
     const c = coins.find((x) => x.symbol === f.sym.value);
@@ -56,8 +51,8 @@ export async function render(el, [preset]) {
     if (code) code.textContent = fx.code;
     if (c) {
       $('#cur', el).textContent = fx.code === 'USD'
-        ? `Current price: ${money(c.price)}`
-        : `Current price: ${money(c.price)} (US$${price(c.price)})`;
+        ? `قیمت فعلی: ${money(c.price)}`
+        : `قیمت فعلی: ${money(c.price)} (US$${price(c.price)})`;
       if (!f.price.value) f.price.placeholder = price(c.price * fx.rate);
     }
   };
@@ -66,51 +61,46 @@ export async function render(el, [preset]) {
   window.addEventListener('cv:currency', onCurrency);
   showCur();
 
-  // --- signal alerts (server side) --------------------------------------
-  // These run in the backend so they still fire with the browser closed. The
-  // message carries the whole plan, because an alert that just says "BTC is
-  // interesting" makes you open the site to find out what to do.
   const INTERVALS = ['15m', '1h', '4h', '1d'];
-  const SIDES = [['any', 'Either direction'], ['long', 'Upside setups only'], ['short', 'Downside setups only']];
+  const SIDES = [['any', 'هر جهتی'], ['long', 'فقط تنظیمات صعودی'], ['short', 'فقط تنظیمات نزولی']];
 
   async function drawSignals() {
     const box = $('#sigBox', el);
     if (!box) return;
 
     if (!backendEnabled()) {
-      box.innerHTML = '<p class="fine">Signal alerts need the backend, which is not connected on this deployment. Price alerts below still work while the site is open.</p>';
+      box.innerHTML = '<p class="fine">هشدارهای سیگنال نیاز به سرور پشتیبان دارند که در این دپلوی متصل نیست. هشدارهای قیمت در پایین همچنان هنگام باز بودن سایت کار می‌کنند.</p>';
       return;
     }
     if (!auth.user) {
-      box.innerHTML = `<p class="fine">Sign in to set a signal alert — it runs on the server, so it reaches you with the browser closed.</p>
-        <button class="btn primary mt" id="sigSignIn">${icon('bolt', 16)} Sign in</button>`;
+      box.innerHTML = `<p class="fine">برای تنظیم هشدار سیگنال وارد شوید — این هشدار روی سرور اجرا می‌شود، بنابراین حتی با بسته بودن مرورگر به شما می‌رسد.</p>
+        <button class="btn primary mt" id="sigSignIn">${icon('bolt', 16)} ورود</button>`;
       $('#sigSignIn', box).addEventListener('click', () => openAuth('in'));
       return;
     }
 
     const rows = await serverAlerts().catch(() => null);
-    // A failed load used to read "No signal alerts yet" while alerts existed.
     if (!rows) {
-      box.innerHTML = `<p class="fine">Could not load your signal alerts — the server did not answer.</p><button class="btn sm" id="sigRetry">Try again</button>`;
+      box.innerHTML = `<p class="fine">بارگیری هشدارهای سیگنال امکان‌پذیر نبود — سرور پاسخ نداد.</p><button class="btn sm" id="sigRetry">تلاش مجدد</button>`;
       $('#sigRetry', box).addEventListener('click', drawSignals);
       return;
     }
     const sigs = rows.filter((r) => r.kind === 'signal');
     box.innerHTML = `
       <form id="sf" class="row" style="gap:10px;align-items:flex-end;flex-wrap:wrap">
-        <label class="fld">Coin<select class="inp" name="sym">${coins.slice(0, 60).map((c) => `<option value="${esc(c.symbol)}">${esc(c.symbol)} · ${esc(c.name)}</option>`).join('')}</select></label>
-        <label class="fld">Chart<select class="inp" name="iv">${INTERVALS.map((i) => `<option ${i === '4h' ? 'selected' : ''}>${i}</option>`).join('')}</select></label>
-        <label class="fld">Tell me about<select class="inp" name="side">${SIDES.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join('')}</select></label>
-        <label class="fld">Only if indicator agreement is at least<input class="inp" name="score" type="number" min="10" max="100" step="5" value="25" style="width:90px"></label>
-        <button class="btn primary">${icon('alerts', 16)} Create signal alert</button>
+        <label class="fld">ارز<select class="inp" name="sym">${coins.slice(0, 60).map((c) => `<option value="${esc(c.symbol)}">${esc(c.symbol)} · ${esc(c.name)}</option>`).join('')}</select></label>
+        <label class="fld">نمودار<select class="inp" name="iv">${INTERVALS.map((i) => `<option ${i === '4h' ? 'selected' : ''}>${i}</option>`).join('')}</select></label>
+        <label class="fld">اطلاع‌رسانی درباره<select class="inp" name="side">${SIDES.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join('')}</select></label>
+        <label class="fld">فقط در صورتی که توافق اندیکاتورها حداقل برابر باشد با<input class="inp" name="score" type="number" min="10" max="100" step="5" value="25" style="width:90px"></label>
+        <button class="btn primary">${icon('alerts', 16)} ایجاد هشدار سیگنال</button>
       </form>
-      <p class="fine mt">This number is how strongly the indicators agree, not how likely the trade is to pay — testing showed a higher figure does not mean a better outcome. It checks once each time a candle on that chart closes, and waits a full candle before telling you again. Delivery goes to Telegram and e-mail if you have linked them on the <a href="#/account">account page</a>.</p>
+      <p class="fine mt">این عدد میزان توافق قدرتمند اندیکاتورها را نشان می‌دهد، نه احتمال سودآوری معامله — تست‌ها نشان داده‌اند عدد بالاتر به معنای نتیجه بهتر نیست. این بررسی یک بار در زمان بسته شدن هر کندل روی آن نمودار انجام می‌شود و قبل از اطلاع‌رسانی مجدد، یک کندل کامل صبر می‌کند. در صورت اتصال تلگرام و ایمیل در <a href="#/account">صفحه حساب کاربری</a>، اعلان‌ها به آنجا ارسال می‌شوند.</p>
       ${sigs.length ? `<div class="stack mt" style="gap:8px">${sigs.map((a) => `
         <div class="row spread" style="padding:10px;border-radius:10px;background:var(--surface-2)">
-          <div><b>${esc(a.symbol)}</b> · ${esc(a.interval)} chart · ${esc(SIDES.find(([v]) => v === (a.side || 'any'))?.[1] || 'Either direction')} · agreement ≥ ${esc(String(a.min_score ?? 25))}
-            <br><small class="muted">${a.last_fired_at ? `Last fired ${ago(new Date(a.last_fired_at).getTime())}` : 'Waiting for a setup'}</small></div>
-          <button class="icon-btn" style="width:32px;height:32px" data-sigdel="${esc(String(a.id))}" aria-label="Delete signal alert">${icon('trash', 14)}</button>
-        </div>`).join('')}</div>` : '<p class="fine mt">No signal alerts yet.</p>'}`;
+          <div><b>${esc(a.symbol)}</b> · نمودار ${esc(a.interval)} · ${esc(SIDES.find(([v]) => v === (a.side || 'any'))?.[1] || 'هر جهتی')} · توافق ≥ ${esc(String(a.min_score ?? 25))}
+            <br><small class="muted">${a.last_fired_at ? `آخرین فعال‌سازی ${ago(new Date(a.last_fired_at).getTime())}` : 'در انتظار تنظیمات'}</small></div>
+          <button class="icon-btn" style="width:32px;height:32px" data-sigdel="${esc(String(a.id))}" aria-label="حذف هشدار سیگنال">${icon('trash', 14)}</button>
+        </div>`).join('')}</div>` : '<p class="fine mt">هنوز هیچ هشدار سیگنالی ثبت نشده است.</p>'}`;
 
     $('#sf', box).addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -123,7 +113,7 @@ export async function render(el, [preset]) {
           side: f2.side.value, min_score: Math.round(+f2.score.value) || 25,
           channels: ['telegram', 'email'], active: true,
         });
-        toast(`Signal alert set for ${f2.sym.value} on the ${f2.iv.value} chart.`, 'up');
+        toast(`هشدار سیگنال برای ${f2.sym.value} روی نمودار ${f2.iv.value} تنظیم شد.`, 'up');
         drawSignals();
       } catch (err) {
         toast(err.message, 'down');
@@ -136,40 +126,38 @@ export async function render(el, [preset]) {
     }));
   }
 
-  // AI signal alerts: a message when the coin page's AI signal (the chart's
-  // tested trading rules) buys or sells, checked on the server at each close.
-  const AI_SIDES = [['any', 'Buys and sells'], ['long', 'Buys only'], ['short', 'Sells only']];
+  const AI_SIDES = [['any', 'خریدها و فروش‌ها'], ['long', 'فقط خریدها'], ['short', 'فقط فروش‌ها']];
   async function drawAi() {
     const box = $('#aiBox', el);
     if (!box) return;
-    if (!backendEnabled()) { box.innerHTML = '<p class="fine">AI signal alerts need the backend, which is not connected on this deployment.</p>'; return; }
+    if (!backendEnabled()) { box.innerHTML = '<p class="fine">هشدارهای سیگنال هوش مصنوعی نیاز به سرور پشتیبان دارند که در این دپلوی متصل نیست.</p>'; return; }
     if (!auth.user) {
-      box.innerHTML = `<p class="fine">Sign in to get a message when the AI signal buys or sells a coin — it runs on the server, so it reaches you with the browser closed.</p>
-        <button class="btn primary mt" id="aiSignIn">${icon('bolt', 16)} Sign in</button>`;
+      box.innerHTML = `<p class="fine">برای دریافت پیام هنگام خرید یا فروش یک ارز توسط سیگنال هوش مصنوعی وارد شوید — این هشدار روی سرور اجرا می‌شود، بنابراین حتی با بسته بودن مرورگر به شما می‌رسد.</p>
+        <button class="btn primary mt" id="aiSignIn">${icon('bolt', 16)} ورود</button>`;
       $('#aiSignIn', box).addEventListener('click', () => openAuth('in'));
       return;
     }
     const rows = await serverAiAlerts().catch(() => null);
     if (!rows) {
-      box.innerHTML = '<p class="fine">Could not load your AI signal alerts — the server did not answer.</p><button class="btn sm" id="aiRetry">Try again</button>';
+      box.innerHTML = '<p class="fine">بارگیری هشدارهای سیگنال هوش مصنوعی امکان‌پذیر نبود — سرور پاسخ نداد.</p><button class="btn sm" id="aiRetry">تلاش مجدد</button>';
       $('#aiRetry', box).addEventListener('click', drawAi);
       return;
     }
     const mine = rows;
     box.innerHTML = `
       <form id="af" class="row" style="gap:10px;align-items:flex-end;flex-wrap:wrap">
-        <label class="fld">Coin<select class="inp" name="sym">${coins.slice(0, 60).map((c) => `<option value="${esc(c.symbol)}">${esc(c.symbol)} · ${esc(c.name)}</option>`).join('')}</select></label>
-        <label class="fld">Chart<select class="inp" name="iv">${['15m', '1h', '4h', '1d'].map((i) => `<option ${i === '1d' ? 'selected' : ''}>${i}</option>`).join('')}</select></label>
-        <label class="fld">Tell me about<select class="inp" name="side">${AI_SIDES.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join('')}</select></label>
-        <button class="btn primary">${icon('alerts', 16)} Create AI signal alert</button>
+        <label class="fld">ارز<select class="inp" name="sym">${coins.slice(0, 60).map((c) => `<option value="${esc(c.symbol)}">${esc(c.symbol)} · ${esc(c.name)}</option>`).join('')}</select></label>
+        <label class="fld">نمودار<select class="inp" name="iv">${['15m', '1h', '4h', '1d'].map((i) => `<option ${i === '1d' ? 'selected' : ''}>${i}</option>`).join('')}</select></label>
+        <label class="fld">اطلاع‌رسانی درباره<select class="inp" name="side">${AI_SIDES.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join('')}</select></label>
+        <button class="btn primary">${icon('alerts', 16)} ایجاد هشدار سیگنال هوش مصنوعی</button>
       </form>
-      <p class="fine mt">The same signal as on each coin page: the chart's tested trading rules, checked when a candle closes. The message says what it did — bought (with the stop) or sold (with the result after fees) — by Telegram or e-mail if set up, and on this site whenever it is open (with a browser notification if you allow them). In testing, buys like these picked direction no better than chance; the coin page and the Track record show the record. Nothing here places an order.</p>
+      <p class="fine mt">همان سیگنال موجود در صفحه هر ارز: قوانین معاملاتی تست‌شده نمودار، که هنگام بسته شدن کندل بررسی می‌شود. پیام اقدام انجام‌شده را اعلام می‌کند — خرید (همراه با حد ضرر) یا فروش (همراه با نتیجه پس از کسر کارمزد) — از طریق تلگرام یا ایمیل در صورت تنظیم، و روی این سایت در هر زمان که باز باشد (با اعلان مرورگر در صورت اجازه شما). در تست‌ها، خریدهایی از این دست جهت بازار را بهتر از شانس پیش‌بینی نکردند؛ صفحه ارز و سوابق عملکرد این سابقه را نشان می‌دهند. هیچ سفارشی در اینجا ثبت نمی‌شود.</p>
       ${mine.length ? `<div class="stack mt" style="gap:8px">${mine.map((a) => `
         <div class="row spread" style="padding:10px;border-radius:10px;background:var(--surface-2)">
-          <div><b>${esc(a.symbol)}</b> · ${esc(a.interval)} chart · ${esc(AI_SIDES.find(([v]) => v === (a.side || 'any'))?.[1] || 'Buys and sells')}
-            <br><small class="muted">${a.last_fired_at ? `Last fired ${ago(new Date(a.last_fired_at).getTime())}` : 'Waiting for a buy or sell'}</small></div>
-          <button class="icon-btn" style="width:32px;height:32px" data-aidel="${esc(String(a.id))}" aria-label="Delete AI signal alert">${icon('trash', 14)}</button>
-        </div>`).join('')}</div>` : '<p class="fine mt">No AI signal alerts yet.</p>'}`;
+          <div><b>${esc(a.symbol)}</b> · نمودار ${esc(a.interval)} · ${esc(AI_SIDES.find(([v]) => v === (a.side || 'any'))?.[1] || 'خریدها و فروش‌ها')}
+            <br><small class="muted">${a.last_fired_at ? `آخرین فعال‌سازی ${ago(new Date(a.last_fired_at).getTime())}` : 'در انتظار خرید یا فروش'}</small></div>
+          <button class="icon-btn" style="width:32px;height:32px" data-aidel="${esc(String(a.id))}" aria-label="حذف هشدار سیگنال هوش مصنوعی">${icon('trash', 14)}</button>
+        </div>`).join('')}</div>` : '<p class="fine mt">هنوز هیچ هشدار سیگنال هوش مصنوعی ثبت نشده است.</p>'}`;
     $('#af', box).addEventListener('submit', async (e) => {
       e.preventDefault();
       const f2 = e.currentTarget;
@@ -177,7 +165,7 @@ export async function render(el, [preset]) {
       btn.disabled = true;
       try {
         await createAiAlert({ symbol: f2.sym.value, interval: f2.iv.value, side: f2.side.value, channels: ['telegram', 'email'], active: true });
-        toast(`AI signal alert set for ${f2.sym.value} on the ${f2.iv.value} chart.`, 'up');
+        toast(`هشدار سیگنال هوش مصنوعی برای ${f2.sym.value} روی نمودار ${f2.iv.value} تنظیم شد.`, 'up');
         drawAi();
       } catch (err) {
         toast(err.message, 'down');
@@ -195,31 +183,28 @@ export async function render(el, [preset]) {
   const onAuth = () => { drawSignals(); drawAi(); loadElsewhere(); };
   auth.addEventListener('change', onAuth);
 
-  // Price alerts were kept only in this browser, so nothing reached Telegram or
-  // e-mail with the site closed, though the server already knew how to send
-  // them. Signed in, each one is now saved on the server as well.
   const signedIn = () => !!auth.user && backendEnabled();
   const reach = () => {
     const r = $('#reach', el);
     if (r) r.textContent = signedIn()
-      ? 'Signed in: the server watches your price alerts too and sends them to Telegram or e-mail with the site closed, once you link them on the account page.'
-      : 'Works while this site is open. Sign in to also get price alerts by Telegram or e-mail with the site closed.';
+      ? 'وارد شده‌اید: سرور هشدارهای قیمت شما را نیز زیر نظر دارد و پس از اتصال در صفحه حساب کاربری، با بسته بودن سایت آن‌ها را به تلگرام یا ایمیل ارسال می‌کند.'
+      : 'هنگام باز بودن سایت کار می‌کند. برای دریافت هشدارهای قیمت از طریق تلگرام یا ایمیل با بسته بودن سایت نیز وارد شوید.';
   };
-  let elsewhere = [];   // server price alerts saved from another device
+  let elsewhere = [];
   const row = (c, sym, dir, lvl, sub, attr) => `<div class="row spread" style="padding:10px;border-radius:10px;background:var(--surface-2)">
-        <div class="row">${coinLogo(c || { symbol: sym }, 26)}<div><b>${esc(sym)}</b> ${esc(dir)} <b>${money(lvl)}</b><br><small class="muted">${sub}</small></div></div>
-        <button class="icon-btn" style="width:32px;height:32px" ${attr} aria-label="Delete alert">${icon('trash', 14)}</button></div>`;
+        <div class="row">${coinLogo(c || { symbol: sym }, 26)}<div><b>${esc(sym)}</b> ${esc(dir === 'above' ? 'بالاتر از' : dir === 'below' ? 'پایین‌تر از' : dir)} <b>${money(lvl)}</b><br><small class="muted">${sub}</small></div></div>
+        <button class="icon-btn" style="width:32px;height:32px" ${attr} aria-label="حذف هشدار">${icon('trash', 14)}</button></div>`;
   const draw = () => {
     const alerts = load('alerts', []);
     const items = [
       ...alerts.map((a, i) => {
         const c = coins.find((x) => x.symbol === a.symbol);
-        return row(c, a.symbol, a.dir, a.price, `${a.triggered ? `✅ Triggered ${ago(a.triggered)}` : `Waiting · now ${money(c?.price)}`}${a.serverId ? ' · also by Telegram / e-mail' : ''}`, `data-del="${i}"`);
+        return row(c, a.symbol, a.dir, a.price, `${a.triggered ? `✅ فعال‌شده ${ago(a.triggered)}` : `در انتظار · اکنون ${money(c?.price)}`}${a.serverId ? ' · همچنین از طریق تلگرام / ایمیل' : ''}`, `data-del="${i}"`);
       }),
       ...elsewhere.map((a) => row(coins.find((x) => x.symbol === a.symbol), a.symbol, a.direction, Number(a.price),
-        `${a.triggered_at ? `✅ Triggered ${ago(new Date(a.triggered_at).getTime())}` : 'Waiting'} · saved on another device`, `data-srv="${esc(String(a.id))}"`)),
+        `${a.triggered_at ? `✅ فعال‌شده ${ago(new Date(a.triggered_at).getTime())}` : 'در انتظار'} · ذخیره‌شده روی دستگاه دیگر`, `data-srv="${esc(String(a.id))}"`)),
     ];
-    $('#list', el).innerHTML = items.length ? `<div class="stack" style="gap:8px">${items.join('')}</div>` : '<p class="muted">No alerts yet.</p>';
+    $('#list', el).innerHTML = items.length ? `<div class="stack" style="gap:8px">${items.join('')}</div>` : '<p class="muted">هنوز هیچ هشداری ثبت نشده است.</p>';
     $$('[data-del]', el).forEach((b) => b.addEventListener('click', async () => {
       const al = load('alerts', []);
       const [gone] = al.splice(+b.dataset.del, 1);
@@ -244,34 +229,32 @@ export async function render(el, [preset]) {
     e.preventDefault();
     const btn = f.querySelector('button');
     const typed = parseFloat(f.price.value);
-    // "0" passed the form's own check and made an alert that could never fire.
-    if (!(typed > 0)) { toast('Enter a price above zero.', 'down'); return; }
+    if (!(typed > 0)) { toast('قیمتی بالاتر از صفر وارد کنید.', 'down'); return; }
     const entry = { symbol: f.sym.value, dir: f.dir.value, price: toUsd(typed), created: Date.now() };
     const nowPx = coins.find((c) => c.symbol === entry.symbol)?.price;
     const already = Number.isFinite(nowPx) && ((entry.dir === 'above' && nowPx >= entry.price) || (entry.dir === 'below' && nowPx <= entry.price));
-    let where = 'It works while this site is open.';
+    let where = 'هنگام باز بودن سایت کار می‌کند.';
     if (signedIn()) {
       btn.disabled = true;
       try {
         entry.serverId = await createServerAlert({ kind: 'price', symbol: entry.symbol, direction: entry.dir, price: entry.price, channels: ['telegram', 'email'], active: true });
-        where = 'The server watches it too.';
-      } catch (err) { where = `Saved in this browser only: ${err.message}`; }
+        where = 'سرور نیز آن را زیر نظر دارد.';
+      } catch (err) { where = `فقط در این مرورگر ذخیره شد: ${err.message}`; }
       btn.disabled = false;
     }
     const alerts = load('alerts', []);
     alerts.unshift(entry);
     save('alerts', alerts);
-    toast(`Alert set: ${entry.symbol} ${entry.dir} ${money(entry.price)}. ${where}${already ? ` ${entry.symbol} is already ${entry.dir} that price, so it will go off straight away.` : ''}`, 'info');
+    toast(`هشدار تنظیم شد: ${entry.symbol} ${entry.dir === 'above' ? 'بالاتر از' : 'پایین‌تر از'} ${money(entry.price)}. ${where}${already ? ` ${entry.symbol} در حال حاضر ${entry.dir === 'above' ? 'بالاتر یا مساوی' : 'پایین‌تر یا مساوی'} آن قیمت است، بنابراین بلافاصله فعال خواهد شد.` : ''}`, 'info');
     f.price.value = '';
   });
   $('#perm', el)?.addEventListener('click', async () => {
     const r = await Notification.requestPermission();
-    $('#permBox', el).innerHTML = r === 'granted' ? '<p class="fine up">Browser notifications are on.</p>' : '<p class="fine">Notifications blocked — alerts will show on screen instead.</p>';
+    $('#permBox', el).innerHTML = r === 'granted' ? '<p class="fine up">اعلان‌های مرورگر فعال هستند.</p>' : '<p class="fine">اعلان‌ها مسدود شدند — هشدارها به جای آن روی صفحه نمایش داده می‌شوند.</p>';
   });
   $('#clear', el).addEventListener('click', () => {
     const all = load('alerts', []);
     save('alerts', all.filter((a) => !a.triggered));
-    // a server copy that has not fired yet would still fire later
     for (const a of all) if (a.triggered && a.serverId) deleteServerAlert(a.serverId).catch(() => {});
   });
   const onStore = (e) => { if (e.detail.key === 'alerts') draw(); };
