@@ -1,4 +1,4 @@
-// Terms, privacy policy and risk disclosure. Plain language, no filler.
+// شرایط استفاده، سیاست حفظ حریم خصوصی و افشای ریسک. زبان ساده و بدون حشو.
 import { CONFIG } from '../config.js';
 import { getAppSettings, cachedAppSettings } from '../api/backend.js';
 import { esc } from '../format.js';
@@ -6,108 +6,101 @@ import { TESTED_ACCURACY, recheckOverall } from '../lib/predict.js';
 import { TESTED_TIMING, timingSwing } from '../lib/timing.js';
 import { SCORE_BUCKETS_TESTED } from '../lib/signals.js';
 
-// The risk page used to restate the measured numbers as a hand-written
-// paragraph, and it kept the figures from an earlier run long after they were
-// superseded — the worst page on the site to be out of date. It is generated
-// from the same constants the rest of the app reads, so it cannot drift again.
 const IVS = ['1m', '5m', '15m', '1h', '4h', '1d'];
 const accuracyLine = () => IVS
   .filter((iv) => typeof TESTED_ACCURACY[iv] === 'number')
-  .map((iv) => `${iv} ${TESTED_ACCURACY[iv]}% against a ${TESTED_ACCURACY.baseline[iv]}% baseline`)
-  .join(', ');
+  .map((iv) => `${iv} معادل ${TESTED_ACCURACY[iv]}٪ در مقایسه با مبنای ${TESTED_ACCURACY.baseline[iv]}٪`)
+  .join('، ');
 const recheckLine = () => IVS
   .filter((iv) => TESTED_ACCURACY.recheck?.[iv])
-  .map((iv) => `${iv} ${TESTED_ACCURACY.recheck[iv].hit.toFixed(1)}% against ${TESTED_ACCURACY.recheck[iv].baseline.toFixed(1)}%`)
-  .join(', ');
+  .map((iv) => `${iv} معادل ${TESTED_ACCURACY.recheck[iv].hit.toFixed(1)}٪ در مقایسه با ${TESTED_ACCURACY.recheck[iv].baseline.toFixed(1)}٪`)
+  .join('، ');
 const timingLine = () => Object.entries(TESTED_TIMING.byInterval)
-  .map(([iv, t]) => `${iv} ${t.hitPct.toFixed(1)}% against ${t.baselinePct.toFixed(1)}%`)
-  .join(', ');
-// How far single charts moved between the last two timing runs, as "1.2 to 4.0".
+  .map(([iv, t]) => `${iv} معادل ${t.hitPct.toFixed(1)}٪ در مقایسه با ${t.baselinePct.toFixed(1)}٪`)
+  .join('، ');
+
 const timingSwingRange = () => {
   const s = Object.keys(TESTED_TIMING.byInterval).map(timingSwing).filter((v) => v !== null);
-  return s.length ? `${Math.min(...s).toFixed(1)} to ${Math.max(...s).toFixed(1)}` : null;
+  return s.length ? `${Math.min(...s).toFixed(1)} تا ${Math.max(...s).toFixed(1)}` : null;
 };
 
-export const title = (p) => ({ terms: 'Terms of Service', privacy: 'Privacy Policy', risk: 'Risk Disclosure' }[p?.[0]] || 'Legal');
+export const title = (p) => ({ terms: 'شرایط خدمات', privacy: 'سیاست حفظ حریم خصوصی', risk: 'افشای ریسک' }[p?.[0]] || 'قوانین');
 
 const N = CONFIG.APP_NAME;
 
 const PAGES = (contact) => ({
   terms: {
-    h: 'Terms of Service',
+    h: 'شرایط خدمات',
     body: `
-      <p class="fine">Last updated: September 2026</p>
-      <h2>1. What this service is</h2>
-      <p>${N} is a market-analysis website. It shows public market data, technical indicators, statistical forecasts and historical comparisons. It is an information tool and nothing more.</p>
-      <h2>2. What it is not</h2>
-      <p>${N} is <b>not</b> a broker, exchange, custodian, fund, or investment adviser. It never executes trades, never holds or moves your money or crypto, and never asks for exchange API keys, private keys or seed phrases. Anyone asking you for those while claiming to be us is committing fraud — do not comply.</p>
-      <h2>3. No financial advice</h2>
-      <p>Signals, scores, forecasts, AI answers and trade ideas are automated estimates produced from public data. They are frequently wrong. They are not personalised advice and take no account of your circumstances, tax position or risk tolerance. Every decision you make with this information is your own.</p>
-      <h2>4. Accounts</h2>
-      <p>You are responsible for keeping your password safe and for everything done through your account. Use a password you don't use elsewhere. You may delete your account at any time from the account page, which removes your profile and synced data.</p>
-      <h2>5. Acceptable use</h2>
-      <p>Don't scrape the service at volumes that degrade it for others, don't try to break authentication or access other users' data, don't resell or redistribute the data feeds, and don't use the service where it would be unlawful for you to do so.</p>
-      <h2>6. Premium</h2>
-      <p>Premium is a one-off payment for a fixed period, with no automatic renewal. It buys server-side features (alerts while your browser is closed, and tracking). It does not buy better predictions or any guarantee of profit. If a paid feature is unavailable for a sustained period, contact us and we will extend or refund the affected period.</p>
-      <h2>7. Third-party data</h2>
-      <p>Prices, candles, order books, derivatives data, news and exchange rates come from third parties (including Binance, CoinGecko, CoinPaprika and public news feeds). They may be delayed, incomplete or wrong, and they can stop working without notice. We don't control them and don't warrant them.</p>
-      <h2>8. Availability and liability</h2>
-      <p>The service is provided "as is", without warranty of any kind. To the maximum extent permitted by law, we are not liable for trading losses, missed opportunities, data errors, downtime, or any indirect or consequential loss. Where liability cannot be excluded, it is limited to the amount you paid us in the previous 12 months.</p>
-      <h2>9. Changes</h2>
-      <p>We may change these terms as the service evolves. Continued use after a change means you accept it.</p>
-      ${contact ? `<h2>10. Contact</h2><p>${esc(contact)}</p>` : ''}`,
+      <p class="fine" dir="ltr">آخرین به‌روزرسانی: سپتامبر ۲۰۲۶</p>
+      <h2>۱. ماهیت این سرویس</h2>
+      <p>${N} یک وب‌سایت تحلیل بازار است. این سرویس داده‌های عمومی بازار، اندیکاتورهای فنی، پیش‌بینی‌های آماری و مقایسه‌های تاریخی را نمایش می‌دهد. این ابزار صرفاً جهت اطلاع‌رسانی است و بس.</p>
+      <h2>۲. مواردی که این سرویس نیست</h2>
+      <p>${N} به هیچ عنوان کارگزار، صرافی، متولی، صندوق سرمایه‌گذاری یا مشاور مالی **نیست**. این پلتفرم هرگز معاملاتی را اجرا نمی‌کند، پول یا رمزارز شما را نگهداری یا جابه‌جا نمی‌سازد، و هرگز کلیدهای API صرافی، کلید خصوصی یا عبارت بازیابی (Seed Phrase) را درخواست نمی‌کند. هرکسی که با نام ما چنین مواردی را از شما خواست کلاهبردار است — به هیچ وجه اطمینان نکنید.</p>
+      <h2>۳. عدم ارائه پیشنهاد مالی</h2>
+      <p>سیگنال‌ها، امتیازها، پیش‌بینی‌ها، پاسخ‌های هوش مصنوعی و ایده‌های معاملاتی برآوردهای خودکار تولیدشده از داده‌های عمومی هستند. این موارد مکرراً دچار خطا می‌شوند. آن‌ها توصیه‌های شخصی نیستند و شرایط، وضعیت مالیاتی یا میزان ریسک‌پذیری شما را در نظر نمی‌گیرند. هر تصمیم که با این اطلاعات می‌گیرید کاملاً به عهده خودتان است.</p>
+      <h2>۴. حساب‌های کاربری</h2>
+      <p>شما مسئول حفظ امنیت رمز عبور خود و تمام فعالیت‌هایی هستید که از طریق حساب شما انجام می‌شود. از رمز عبوری استفاده کنید که جای دیگری از آن بهره نمی‌گیرید. شما می‌توانید در هر زمان از طریق صفحه حساب کاربری خود، اکانت خود را حذف کنید که این کار پروفایل و داده‌های همگام‌سازی‌شده شما را پاک می‌کند.</p>
+      <h2>۵. استفاده قابل قبول</h2>
+      <p>داده‌های سرویس را با حجم‌های بالا و مخرب استخراج نکنید، برای دور زدن احراز هویت یا دسترسی به داده‌های سایر کاربران تلاش نکنید، فیدهای داده را بازفروش یا بازتوزيع ننمایید، و در مکان‌هایی که استفاده از سرویس غیرقانونی است از آن بهره نگیرید.</p>
+      <h2>۶. اشتراک ویژه (Premium)</h2>
+      <p>اشتراک ویژه یک پرداخت یک‌باره برای یک دوره مشخص است و تمدید خودکار ندارد. این اشتراک امکانات سمت سرور (مانند هشدارها در زمان بسته بودن مرورگر و قابلیت پیگیری) را فراهم می‌کند. این اشتراک به معنای پیش‌بینی‌های بهتر یا تضمین سود نیست. اگر قابلیت پولی برای مدت‌زمان طولانی غیرقابل‌دسترس بود، با ما تماس بگیرید تا مدت‌زمان آن را تمدید کرده یا هزینه را عودت دهیم.</p>
+      <h2>۷. داده‌های شخص ثالث</h2>
+      <p>قیمت‌ها، کندل‌ها، دفترهای سفارش، داده‌های مشتقه، اخبار و نرخ تبدیل ارزها از منابع شخص ثالث (شامل بایننس، کوین‌گکو، کوین‌پپریکا و فیدهای خبری عمومی) دریافت می‌شوند. این داده‌ها ممکن است با تأخیر، ناقص یا نادرست باشند و بدون اطلاع قبلی قطع شوند. ما کنترلی روی آن‌ها نداریم و مسئولیتی در قبال صحتشان نمی‌پذیریم.</p>
+      <h2>۸. دسترسی و مسئولیت</h2>
+      <p>این سرویس «همان‌طور که هست» و بدون هیچ‌گونه ضمانتی ارائه می‌شود. تا حداکثر حد مجاز قانونی، ما مسئولیتی در قبال زیان‌های معاملاتی، فرصت‌های ازدست‌رفته، خطاهای داده، قطعی‌ها یا هرگونه خسارت غیرمستقیم یا تبعی نداریم. در مواردی که مسئولیت قابل سلب نباشد، سقف آن معادل مبلغی است که در ۱۲ ماه گذشته به ما پرداخت کرده‌اید.</p>
+      <h2>۹. تغییرات</h2>
+      <p>با تکامل سرویس، ممکن است این شرایط را تغییر دهیم. استفاده مداوم پس از اعمال تغییرات به منزله پذیرش آن‌هاست.</p>
+      ${contact ? `<h2>۱۰. تماس</h2><p>${esc(contact)}</p>` : ''}`,
   },
   privacy: {
-    h: 'Privacy Policy',
+    h: 'سیاست حفظ حریم خصوصی',
     body: `
-      <p class="fine">Last updated: October 2026</p>
-      <h2>The short version</h2>
-      <p>Most of ${N} runs inside your browser. Charts, indicators, signals, forecasts and the built-in AI are computed on your device. We collect the minimum needed to run accounts and alerts.</p>
-      <h2>Without an account</h2>
-      <p>Your watchlist, portfolio entries, wallet addresses you watch, alerts, settings and the Trading page's accounts are stored in your browser's local storage on your device. We cannot read them. Clearing your browser data deletes them.</p>
-      <p>We record anonymous page views (page path, referrer, coarse device type, browser language and a random session id that is discarded when you close the tab) to see which pages are worth improving. No cookies are used for advertising and no data is sold or shared with advertisers.</p>
-      <h2>With an account</h2>
-      <p>We store your e-mail address, display name, an encrypted password hash, and the data you choose to sync: watchlist, holdings, watch-only wallet addresses, chart drawings, app preferences, and the Trading page's accounts (your demo trades, the real trades you record with their amounts, prices, fees and notes, and the AI's simulated account with its rules). If you enable alerts we store the alerts you create and, if you link them, your Telegram chat id.</p>
-      <h2>Your market data stays yours</h2>
-      <p>Questions you type into the AI assistant are processed in your browser by the built-in model and are not sent to us. If you deliberately configure an external AI endpoint in settings, your prompts go to that provider under their policy, not ours.</p>
-      <h2>Third parties we send data to</h2>
-      <p>Your browser requests market data directly from public APIs (Binance, CoinGecko, CoinPaprika, mempool.space and others), so those providers see your IP address like any website you visit. Our backend runs on Supabase. E-mail, when enabled, is sent through Resend. Card payments, when enabled, are handled by Stripe — we never see your card details.</p>
-      <h2>Retention and deletion</h2>
-      <p>Account data is kept until you delete your account, which you can do yourself on the account page; it removes your profile, synced data and alerts. Anonymous page-view records are retained for 30 days. Verification codes expire in 15 minutes.</p>
-      <h2>Your rights</h2>
-      <p>You can download everything we hold for you as JSON from the account page, correct your details there, or delete the account outright. If you are in a jurisdiction with statutory data rights (such as the UK/EU GDPR), those rights apply and the export and delete tools are how we honour them.</p>
-      ${contact ? `<h2>Contact</h2><p>${esc(contact)}</p>` : ''}`,
+      <p class="fine" dir="ltr">آخرین به‌روزرسانی: اکتبر ۲۰۲۶</p>
+      <h2>نسخه کوتاه</h2>
+      <p>بخش عمده‌ای از ${N} در داخل مرورگر شما اجرا می‌شود. نمودارها، اندیکاتورها، سیگنال‌ها، پیش‌بینی‌ها و هوش مصنوعی داخلی بر روی دستگاه شما پردازش می‌شوند. ما حداقل داده‌های لازم برای مدیریت حساب‌ها و هشدارها را جمع‌آوری می‌کنیم.</p>
+      <h2>بدون داشتن حساب کاربری</h2>
+      <p>واچ‌لیست، اقلام پورتفوی، آدرس کیف پول‌های تحت نظارت، هشدارها، تنظیمات و حساب‌های بخش معامله در حافظه محلی (Local Storage) مرورگر شما روی دستگاهتان ذخیره می‌شوند. ما قادر به خواندن آن‌ها نیستیم. پاک کردن داده‌های مرورگر، آن‌ها را حذف می‌کند.</p>
+      <p>ما بازدیدهای ناشناس صفحات (مسیر صفحه، ارجاع‌دهنده، نوع کلی دستگاه، زبان مرورگر و شناسه جلسه تصادفی که هنگام بستن تب پاک می‌شود) را برای بررسی صفحات ارزشمند جهت بهبود ثبت می‌کنیم. هیچ کوکی برای تبلیغات استفاده نمی‌شود و هیچ داده‌ای به تبلیغ‌کنندگان فروخته یا منتقل نمی‌شود.</p>
+      <h2>با داشتن حساب کاربری</h2>
+      <p>ما آدرس ایمیل، نام نمایشی، هش رمز عبور رمزنگاری‌شده، و داده‌هایی که برای همگام‌سازی انتخاب می‌کنید را ذخیره می‌کنیم: واچ‌لیست، دارایی‌ها، آدرس‌های کیف پول فقط-تماشا، ترسیمات روی نمودار، ترجیحات برنامه، و حساب‌های بخش معامله (معاملات آزمایشی شما، معاملات واقعی ثبت‌شده با مقادیر، قیمت‌ها، کارمزدها و یادداشت‌ها، و حساب شبیه‌سازی‌شده هوش مصنوعی با قوانین آن). اگر هشدارها را فعال کنید، هشدارهای ساخته‌شده و در صورت اتصال، شناسه چت تلگرام شما را ذخیره می‌کنیم.</p>
+      <h2>داده‌های بازار شما متعلق به خودتان می‌ماند</h2>
+      <p>سؤالاتی که در دستیار هوش مصنوعی تایپ می‌کنید توسط مدل داخلی مرورگر شما پردازش شده و برای ما ارسال نمی‌شوند. اگر عمداً یک پایگاه هوش مصنوعی خارجی در تنظیمات پیکربندی کنید، دستورات شما طبق خط‌مشی آن ارائه‌دهنده پردازش خواهند شد، نه ما.</p>
+      <h2>اشخاص ثالثی که داده‌ها به آن‌ها ارسال می‌شود</h2>
+      <p>مرورگر شما داده‌های بازار را مستقیماً از APIهای عمومی (بایننس، کوین‌گکو، کوین‌پپریکا، mempool.space و غیره) درخواست می‌کند، بنابراین آن ارائه‌دهندگان مانند هر وب‌سایت دیگری آدرس IP شما را مشاهده می‌کنند. بک‌اند ما روی Supabase اجرا می‌شود. ایمیل‌ها (در صورت فعال‌سازی) از طریق Resend ارسال می‌شوند. پرداخت‌های کارتی (در صورت فعال‌سازی) توسط Stripe مدیریت می‌شوند — ما هرگز جزئیات کارت شما را نمی‌بینیم.</p>
+      <h2>نگهداری و حذف داده‌ها</h2>
+      <p>داده‌های حساب کاربری تا زمانی که خودتان آن را از صفحه حساب کاربری حذف کنید نگه داشته می‌شوند؛ حذف حساب، پروفایل، داده‌های همگام‌سازی‌شده و هشدارها را پاک می‌کند. سوابق بازدید ناشناس صفحه به مدت ۳۰ روز نگهداری می‌شوند. کدهای تأیید پس از ۱۵ دقیقه منقضی می‌شوند.</p>
+      <h2>حقوق شما</h2>
+      <p>شما می‌توانید تمام داده‌های مربوط به خود را به صورت فرمت JSON از صفحه حساب کاربری دانلود کنید، اطلاعات خود را در آنجا اصلاح کنید، یا حساب خود را فوراً حذف نمایید. اگر در حوزه‌ایی با قوانین حفاظتی داده (مانند GDPR بریتانیا/اتحادیه اروپا) هستید، آن حقوق اعمال می‌شوند و ابزارهای صادرات و حذف، ابزارهای ما برای اجرای تعهدات در برابر آن‌ها هستند.</p>
+      ${contact ? `<h2>تماس</h2><p>${esc(contact)}</p>` : ''}`,
   },
   risk: {
-    h: 'Risk Disclosure',
+    h: 'افشای ریسک',
     body: `
-      <h2>Read this before you trade anything</h2>
-      <p>Crypto assets are volatile, largely unregulated, and can lose most or all of their value quickly. Nothing on ${N} changes that.</p>
-      <h2>The forecasts have no measured edge on direction</h2>
-      <p>The engine is validated by walk-forward testing: every forecast is made using only the data that existed at that moment.${recheckOverall() ? ` In the latest test, ${recheckOverall().tests.toLocaleString('en-US')} forecasts on ${recheckOverall().coins} coins (${recheckOverall().measuredOn}), it called direction right <b>${recheckOverall().hit}%</b> of the time, against <b>${recheckOverall().baseline}%</b> for ignoring the engine entirely and always naming whichever direction turned out commoner for each coin over its forecasts (with ten forecasts a coin, that bar sits above 50% even by chance). By timeframe: ${recheckLine()}.` : ''} The release test before it, ${TESTED_ACCURACY.tests.toLocaleString('en-US')} forecasts on ${TESTED_ACCURACY.coins} coins, had ${TESTED_ACCURACY.all}% against ${TESTED_ACCURACY.allBaseline}%: ${accuracyLine()}. It did not beat its baseline in either test, and it is below it on ${TESTED_ACCURACY.noEdge.join(', ')}.</p>
+      <h2>پیش از معامله هر چیزی، این بخش را بخوانید</h2>
+      <p>دارایی‌های رمزارز پرنوسان، تا حد زیادی فاقد نظارت دولتی هستند و می‌توانند به سرعت بیشتر یا تمام ارزش خود را از دست بدهند. هیچ‌چیز در ${N} این واقعیت را تغییر نمی‌دهد.</p>
+      <h2>پیش‌بینی‌ها فاقد مزیت آماری اثبات‌شده در جهت حرکت بازار هستند</h2>
+      <p>موتور این سیستم با تست رو به جلو (Walk-forward) ارزیابی شده است: هر پیش‌بینی صرفاً با استفاده از داده‌هایی که در همان لحظه وجود داشته‌اند انجام شده است.${recheckOverall() ? ` در آخرین تست (${recheckOverall().tests.toLocaleString('fa-IR')} پیش‌بینی روی ${recheckOverall().coins} کوین در تاریخ ${recheckOverall().measuredOn})، جهت حرکت بازار در <b>${recheckOverall().hit.toLocaleString('fa-IR')}٪</b> مواقع به درستی پیش‌بینی شده است، در مقایسه با <b>${recheckOverall().baseline.toLocaleString('fa-IR')}٪</b> برای حالتی که موتور کاملاً نادیده گرفته شود و جهت شایع‌تر هر کوین در نظر گرفته شود (با ده پیش‌بینی برای هر کوین، این آستانه حتی به طور تصادفی هم بالای ۵۰٪ قرار می‌گیرد). بر اساس تایم‌فریم: ${recheckLine()}.` : ''} تست انتشار قبلی با ${TESTED_ACCURACY.tests.toLocaleString('fa-IR')} پیش‌بینی روی ${TESTED_ACCURACY.coins} کوین، دقتی معادل ${TESTED_ACCURACY.all}% در برابر مبنای ${TESTED_ACCURACY.allBaseline}% داشته است: ${accuracyLine()}. این موتور در هیچ‌کدام از تست‌ها نتوانست بر مبنای خود غلبه کند و در بازه‌های ${TESTED_ACCURACY.noEdge.join('، ')} پایین‌تر از آن قرار دارد.</p>
       <p>${esc(TESTED_ACCURACY.caveat)}</p>
-      <h2>The chart score does not mean what its name suggested</h2>
-      <p>Sorting ${SCORE_BUCKETS_TESTED.bars.toLocaleString()} bars of ${SCORE_BUCKETS_TESTED.coins} coins by the score this engine assigns them shows the share that rose mostly <b>falls</b> as the score rises — on every chart tested, the highest-scoring bars were the ones least likely to go up. Trading the reverse does not work either; both directions were tested over held-out data with fees and neither produced a positive expectancy. The score is therefore labelled as a description of how extended a trend is, not as a recommendation to buy or sell.</p>
-      <h2>Timing: a small edge, not a dependable one</h2>
-      <p>Timing — when a move's high or low tends to come — beat its random baseline across ${TESTED_TIMING.tests.toLocaleString('en-US')} tests on ${TESTED_TIMING.coins} coins: <b>${TESTED_TIMING.peakHitPct}%</b> against <b>${TESTED_TIMING.baselinePct}%</b>. By timeframe: ${timingLine()}.${TESTED_TIMING.previousRun ? ` A run a few hours earlier on nearly the same candles read ${TESTED_TIMING.previousRun.peakHitPct}% overall${timingSwingRange() ? `, and single charts moved ${timingSwingRange()} points between the two runs, as much as most of the edges` : ''}.` : ''} It is measured over one period and says nothing about direction. A well-placed turning point on a direction call with no edge is still a direction call with no edge.</p>
-      <p>None of this is a licence to bet large, and past measurements do not carry over to the future.</p>
-      <h2>Leverage</h2>
-      <p>The futures page shows what leveraged traders are doing because it is useful market context. It is not encouragement. Leverage magnifies losses, liquidations are permanent, and most retail leveraged accounts lose money.</p>
-      <h2>Position sizing beats prediction</h2>
-      <p>Never risk money you need. A common discipline is to risk a small fixed fraction of your capital per trade so no single wrong call matters much. ${N} shows a stop-loss with every signal for exactly this reason — a plan without an exit is not a plan.</p>
-      <h2>Scams</h2>
-      <p>${N} will never ask for your seed phrase, private key or exchange API key, never ask you to send crypto to "activate" anything, and never DM you with a guaranteed return. Wallet tracking here is watch-only: addresses are public information and cannot move funds.</p>
-      <h2>Regulation and tax</h2>
-      <p>Crypto rules and taxes differ by country and change often. You are responsible for your own compliance. We are not a licensed adviser in any jurisdiction.</p>
-      <h2>If trading is hurting you</h2>
-      <p>Chasing losses, hiding trades from people close to you, or borrowing to trade are warning signs. Trading can be addictive; if any of that sounds familiar, step away and talk to someone you trust or a professional support service in your country.</p>`,
+      <h2>امتیاز نمودار به معنای آنچه از نامش به نظر می‌رسد نیست</h2>
+      <p>مرتب‌سازی ${SCORE_BUCKETS_TESTED.bars.toLocaleString('fa-IR')} کندل از ${SCORE_BUCKETS_TESTED.coins} کوین بر اساس امتیازی که این موتور تعیین می‌کند نشان می‌دهد که سهم مواردی که رشد کرده‌اند با افزایش امتیاز غالباً **کاهش** می‌یابد — در تمام نمودارهای تست‌شده، کندل‌های با بالاترین امتیاز کمترین احتمال صعود را داشتند. معامله در جهت عکس نیز کارساز نیست؛ هر دو جهت روی داده‌های حفظ‌شده با احتساب کارمزد تست شدند و هیچ‌کدام بازدهی مثبتی نداشتند. بنابراین این امتیاز به عنوان توصیفی از میزان کشیدگی یک روند برچسب‌گذاری شده است، نه به عنوان پیشنهادی برای خرید یا فروش.</p>
+      <h2>زمان‌بندی: یک مزیت کوچک، نه چندان قابل اتکا</h2>
+      <p>زمان‌بندی — یعنی زمانی که اوج یا کف یک حرکت معمولاً رخ می‌دهد — در طول ${TESTED_TIMING.tests.toLocaleString('fa-IR')} تست روی ${TESTED_TIMING.coins} کوین از مبنای تصادفی خود پیشی گرفت: <b>${TESTED_TIMING.peakHitPct}%</b> در برابر <b>${TESTED_TIMING.baselinePct}%</b>. تفکیک بر اساس تایم‌فریم: ${timingLine()}.${TESTED_TIMING.previousRun ? ` یک اجرای دیگر در چند ساعت قبل روی تقریباً همان کندل‌ها، دقت کلی ${TESTED_TIMING.previousRun.peakHitPct}% را نشان داد${timingSwingRange() ? ` و نمودارهای منفرد بین دو اجرای مذکور ${timingSwingRange()} واحد نوسان داشتند که به اندازه بیشتر این مزیت‌هاست` : ''}.` : ''} این معیار روی یک دوره سنجیده شده و هیچ‌چیز درباره جهت حرکت نمی‌گوید. یک نقطه عطف دقیق روی پیش‌بینی جهتی که فاقد مزیت است، همچنان یک پیش‌بینی بدون مزیت باقی می‌ماند.</p>
+      <p>هیچ‌کدام از این موارد مجوزی برای ریسک کردن سرمایه کلان نیست، و عملکردهای گذشته تضمینی برای آینده نخواهند بود.</p>
+      <h2>اهرم (Leverage)</h2>
+      <p>صفحه معاملات آتی نشان می‌دهد معامله‌گران اهرمی چه می‌کنند چون این اطلاعات زمینه مفیدی از بازار است؛ اما این به معنای تشویق نیست. اهرم ضررها را چند برابر می‌کند، لیکوئید شدن‌ها دائمی هستند و اکثر حساب‌های اهرمی خرده‌فروشان زیان‌ده هستند.</p>
+      <h2>مدیریت حجم پوزیشن مهم‌تر از پیش‌بینی است</h2>
+      <p>هرگز پولی را که به آن نیاز دارید ریسک نکنید. یک انضباط رایج این است که بخش کوچکی و ثابتی از سرمایه خود را در هر معامله ریسک کنید تا هیچ پیش‌بینی اشتباهی لطمه جدی وارد نکند. ${N} به همین دلیل یک حد ضرر با هر سیگنال نمایش می‌دهد — برنامه‌ای که خروج نداشته باشد برنامه نیست.</p>
+      <h2>کلاهبرداری‌ها</h2>
+      <p>${N} هرگز عبارت بازیابی (Seed Phrase)، کلید خصوصی یا کلید API صرافی شما را درخواست نخواهد کرد، از شما نمی‌خواهد برای «فعال‌سازی» چیزی رمزارز بفرستید، و هرگز پیامی خصوصی حاوی تضمین سود برای شما ارسال نخواهد کرد. ردیابی کیف پول در اینجا فقط-تماشا (Watch-only) است: آدرس‌ها اطلاعاتی عمومی هستند و نمی‌توانند دارایی‌ها را جابه‌جا کنند.</p>
+      <h2>مقررات و مالیات</h2>
+      <p>قوانین و مالیات‌های رمزارز در کشورهای مختلف متفاوت است و مرتباً تغییر می‌کند. شما شخصاً مسئول رعایت قوانین حوزه خود هستید. ما در هیچ حوزه‌اس مشاور مجاز نیستیم.</p>
+      <h2>اگر تریدینگ به شما آسیب می‌زند</h2>
+      <p>تعقیب ضررها، پنهان کردن معاملات از افراد نزدیک، یا استقراض برای معامله از علائم هشداردهنده هستند. تریدینگ می‌تواند اعتیادآور باشد؛ اگر هر یک از این موارد برایتان آشنا به نظر می‌رسد، متوقف شوید و با فردی مورد اعتماد یا یک مرکز پشتیبانی تخصصی در کشور خود صحبت کنید.</p>`,
   },
 });
 
 export async function render(el, [page = 'terms']) {
-  // These pages are fixed text apart from one contact line. They used to stay
-  // blank until the settings request came back; they are now drawn at once from
-  // the contact this browser last saw, and redrawn only if the server differs.
   let shown;
   const draw = (contact) => {
     if (contact === shown || (shown !== undefined && !el.isConnected)) return;
@@ -115,9 +108,9 @@ export async function render(el, [page = 'terms']) {
     const pages = PAGES(contact);
     const p = pages[page] || pages.terms;
     el.innerHTML = `
-    <div class="page-head"><div><h1>${esc(p.h)}</h1></div>
-      <div class="seg">${Object.entries(pages).map(([k, v]) => `<button data-p="${k}" class="${k === page ? 'on' : ''}">${esc(v.h.split(' ')[0])}</button>`).join('')}</div></div>
-    <div class="card prose">${p.body}</div>`;
+    <div class="page-head" dir="rtl"><div><h1>${esc(p.h)}</h1></div>
+      <div class="seg" dir="ltr">${Object.entries(pages).map(([k, v]) => `<button data-p="${k}" class="${k === page ? 'on' : ''}">${esc(v.h.split(' ')[0])}</button>`).join('')}</div></div>
+    <div class="card prose" dir="rtl">${p.body}</div>`;
     el.querySelectorAll('[data-p]').forEach((b) => b.addEventListener('click', () => { location.hash = `#/legal/${b.dataset.p}`; }));
   };
   draw(cachedAppSettings()?.site?.contact || null);
