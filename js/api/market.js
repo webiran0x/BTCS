@@ -1,12 +1,12 @@
-// Market data layer. Live sources first (CoinGecko → CoinPaprika, Binance),
-// clearly-flagged demo data only if every live source is unreachable.
+// لایه داده بازار. منابع زنده در اولویت (CoinGecko → CoinPaprika, Binance)،
+// و داده‌های نمایشی (دمو) تنها در صورتی به صراحت استفاده می‌شوند که تمام منابع زنده در دسترس نباشند.
 import { CONFIG } from '../config.js';
 import { getJson, getJsonAny, peek, postJson, HttpError } from './http.js';
 import * as demo from '../lib/demo.js';
 import { syncClock, now } from './clock.js';
 import { load, save } from '../store.js';
 
-// ------------------------------------------------------------ status
+// ------------------------------------------------------------ وضعیت
 export const dataStatus = new EventTarget();
 dataStatus.demo = false;
 function markDemo(reason) {
@@ -23,18 +23,18 @@ function markLive() {
 }
 const stale = async (p) => { try { return await p; } catch (e) { if (e.staleValue !== undefined) return e.staleValue; throw e; } };
 const STABLE = new Set(CONFIG.STABLECOINS);
-// Coins whose price held still all week: stablecoins and tokenised funds the
-// list above does not know yet. Filled as the market list loads.
+// ارزهایی که قیمت آن‌ها در طول هفته ثابت مانده است: استِیبل‌کوین‌ها و صندوق‌های توکنیزه‌شده‌ای که
+// لیست بالا هنوز نمی‌شناسد. با بارگیری لیست بازار تکمیل می‌شوند.
 const PEGGED = new Set();
 export const isStable = (sym) => STABLE.has(String(sym).toLowerCase()) || PEGGED.has(String(sym).toLowerCase());
-/** A week of prices that never moved more than 0.6% top to bottom: no crypto coin does that. */
+/** یک هفته قیمت‌هایی که نوسان آن‌ها از بالا تا پایین کمتر از ۰.۶٪ بوده است: هیچ ارز دیجیتالی این‌گونه نیست. */
 export function looksPegged(prices) {
   const p = (prices || []).filter((x) => Number.isFinite(x) && x > 0);
   if (p.length < 24) return false;
   return Math.max(...p) / Math.min(...p) - 1 < 0.006;
 }
 
-// ------------------------------------------------------------ Binance symbols
+// ------------------------------------------------------------ نمادهای بایننس
 let symbolSetPromise = null;
 export function binanceSymbols() {
   if (!symbolSetPromise) {
@@ -50,7 +50,7 @@ export function binanceSymbols() {
   return symbolSetPromise;
 }
 
-// ------------------------------------------------------------ markets
+// ------------------------------------------------------------ بازارها
 function fromGecko(r) {
   return {
     id: r.id, symbol: r.symbol.toUpperCase(), name: r.name, image: r.image, rank: r.market_cap_rank,
@@ -92,13 +92,13 @@ export async function getMarkets() {
   }
   const set = await binanceSymbols();
   const seen = new Set();
-  // The upstream feed occasionally carries entries that are not really traded
-  // coins — tokenised shares and placeholder listings with no volume, no price
-  // history and a symbol that is a product code. One of those outranking
-  // Bitcoin makes the whole list look broken, so they are dropped.
+  // فید بالادستی گاهی اوقات مواردی را شامل می‌شود که در واقع ارزهای معامله‌پذیر نیستند —
+  // سهام توکنیزه‌شده و لیست‌های نمایشی (placeholder) بدون حجم، بدون تاریخچه قیمت
+  // و با نمادی که کد محصول است. اگر یکی از این موارد بالاتر از بیت‌کوین قرار گیرد،
+  // کل لیست خراب به نظر می‌رسد، بنابراین حذف می‌شوند.
   const looksReal = (r) => {
     if (r.price === null || r.price === undefined) return false;
-    if (/^[A-Z]{1,3}\d{4,}$/.test(String(r.symbol || ''))) return false; // e.g. PC0000023
+    if (/^[A-Z]{1,3}\d{4,}$/.test(String(r.symbol || ''))) return false; // به عنوان مثال PC0000023
     const noMovement = (r.change24h === null || r.change24h === undefined || r.change24h === 0)
       && (r.change7d === null || r.change7d === undefined || r.change7d === 0);
     const noVolume = !r.volume24h;
@@ -183,10 +183,9 @@ export async function getCoinProfile(coin) {
       totalSupply: md.total_supply, maxSupply: md.max_supply, fdv: md.fully_diluted_valuation?.usd,
     };
   } catch {
-    // null means "this coin has no reference profile to fetch". A failed or
-    // rate-limited request is a different thing, and the page has to be able to
-    // tell them apart: it used to print "Max supply ∞" for Bitcoin whenever
-    // CoinGecko throttled the request.
+    // مقدار null به معنای «این ارز پروفایل مرجعی برای دریافت ندارد» است. درخواست ناموفق
+    // یا دارای محدودیت نرخ (Rate-limited) مقوله متفاوتی است و صفحه باید قادر به تشخیص آن‌ها باشد:
+    // پیش‌تر هرگاه CoinGecko درخواست را محدود می‌کرد، برای بیت‌کوین عبارت «Max supply ∞» چاپ می‌شد.
     return { unavailable: true };
   }
 }
@@ -199,26 +198,26 @@ export async function searchCoins(q) {
   return local;
 }
 
-// Keep the app on the exchange's clock, re-checked every 10 minutes.
+// نگه‌داشتن برنامه روی ساعت صرافی، با بررسی مجدد هر ۱۰ دقیقه.
 export async function syncExchangeClock() {
   return syncClock(() => getJsonAny(CONFIG.BINANCE_REST, '/api/v3/time', { ttl: 0 }));
 }
 
-// ------------------------------------------------------------ candles
+// ------------------------------------------------------------ کندل‌ها (نمودار شمعی)
 export const INTERVAL_MS = { '1s': 1e3, '5s': 5e3, '10s': 1e4, '1m': 6e4, '3m': 18e4, '5m': 3e5, '15m': 9e5, '30m': 18e5, '1h': 36e5, '2h': 72e5, '4h': 144e5, '6h': 216e5, '12h': 432e5, '1d': 864e5, '3d': 2592e5, '1w': 6048e5 };
 
-// Binance publishes 1-second candles but nothing between 1s and 1m, so 5s and
-// 10s are built here by merging 1s candles into fixed buckets. Anything faster
-// than 1s does not exist as a candle anywhere — that is raw trade data.
+// بایننس کندل‌های ۱ ثانیه‌ای منتشر می‌کند اما بین ۱ ثانیه تا ۱ دقیقه چیزی وجود ندارد،
+// بنابراین بازه‌های ۵ ثانیه‌ای و ۱۰ ثانیه‌ای در اینجا با ادغام کندل‌های ۱ ثانیه‌ای در بازه‌های ثابت ساخته می‌شوند.
+// هیچ بازه‌ای سریع‌تر از ۱ ثانیه به عنوان کندل در هیچ‌کجا وجود ندارد — آن داده‌های خام معاملات (Trade) هستند.
 export const SECOND_INTERVALS = ['1s', '5s', '10s'];
 const BUILT_FROM_1S = { '5s': 5, '10s': 10 };
-// One request returns 1000 candles, so a second-chart is capped where the wait
-// is still short: 1s ≈ 17 min of history, 5s ≈ 1.4 h, 10s ≈ 1.7 h.
+// هر درخواست ۱۰۰۰ کندل برمی‌گرداند، بنابراین نمودار ثانیه‌ای در محدوده‌ای سقف‌گذاری می‌شود که زمان انتظار کوتاه بماند:
+// ۱ ثانیه ≈ ۱۷ دقیقه تاریخچه، ۵ ثانیه ≈ ۱.۴ ساعت، ۱۰ ثانیه ≈ ۱.۷ ساعت.
 export const MAX_BARS = { '1s': 1000, '5s': 1000, '10s': 600 };
 
 export const isSecondInterval = (iv) => SECOND_INTERVALS.includes(iv);
 
-/** Merge candles into buckets of `factor` (e.g. five 1s candles → one 5s candle). */
+/** ادغام کندل‌ها در بازه‌های `factor` (مثلاً پنج کندل ۱ ثانیه‌ای → یک کندل ۵ ثانیه‌ای). */
 export function bucketCandles(rows, factor, stepMs) {
   const size = factor * stepMs;
   const out = [];
@@ -239,7 +238,7 @@ export function bucketCandles(rows, factor, stepMs) {
 
 const mapKlines = (rows) => rows.map((k) => ({ t: k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4], v: +k[5] }));
 
-// Paginates backwards, 1000 candles per request.
+// صفحه‌بندی به عقب، ۱۰۰۰ کندل در هر درخواست.
 async function fetchKlines(pair, interval, total, ttl) {
   let out = [];
   let endTime = null;
@@ -255,41 +254,22 @@ async function fetchKlines(pair, interval, total, ttl) {
   return out;
 }
 
-// Fetch up to `total` candles (paginates backwards, 1000 per request).
-
-// Candles for a coin that does not trade on Binance.
-//
-// The old path asked CoinGecko's /ohlc endpoint for 365 days and labelled the
-// result "1d". That endpoint does not return daily candles at that range — it
-// returns FOUR-DAY candles, 92 of them. So every non-Binance coin was drawing a
-// 4-day chart under a 1d button, with far too little history for EMA200 or the
-// forecast, which is why low-cap coins showed a blank forecast and a blank
-// EMA200 rather than an explanation.
-//
-// /market_chart returns evenly spaced price points instead: hourly for a 90-day
-// request, daily for a 365-day one. Those are bucketed here onto real interval
-// boundaries, so a "1d" candle covers one day and a "4h" candle covers four
-// hours. The high and low of each bucket come from the points inside it, so on
-// the finest interval a candle's wick is its own open and close and nothing
-// more — the result is marked lowRes so the page can say that plainly.
-const GECKO_STEP = { hourly: 36e5, daily: 864e5 };
-
-// ------------------------------------------------------------ other exchanges
-// Coins Binance does not list still trade elsewhere. These exchanges publish
-// candles through public APIs that allow browser requests, so a coin like XMR
-// or HYPE gets real OHLCV candles on every timeframe instead of CoinGecko's
-// hourly line (which cannot draw a 1m, 5m or 15m chart at all).
+// ------------------------------------------------------------ سایر صرافی‌ها
+// ارزهایی که بایننس لیست نکرده است در صرافی‌های دیگر معامله می‌شوند. این صرافی‌ها کندل‌ها را
+// از طریق APIهای عمومی منتشر می‌کنند که درخواست‌های مرورگر را مجاز می‌دانند،
+// بنابراین ارزی مانند XMR یا HYPE کندل‌های واقعی OHLCV را در تمام تایم‌فریم‌ها دریافت می‌کند
+// به جای خط ساعتی CoinGecko (که اصلاً نمی‌تواند نمودار ۱m، ۵m یا ۱۵m رسم کند).
 export const EX_BAR = {
   gate: { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1h': '1h', '4h': '4h', '1d': '1d', '1w': '7d' },
   htx: { '1m': '1min', '5m': '5min', '15m': '15min', '30m': '30min', '1h': '60min', '4h': '4hour', '1d': '1day', '1w': '1week' },
   okx: { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1h': '1H', '2h': '2H', '4h': '4H', '6h': '6Hutc', '12h': '12Hutc', '1d': '1Dutc', '1w': '1Wutc' },
 };
-// A chart an exchange does not publish is built from its 1h candles, on the
-// UTC boundaries Binance uses (a 6h candle opens at 00:00, 06:00, 12:00 and
-// 18:00 UTC). Gate.io and HTX have no 2h, 6h or 12h candles, so a coin only
-// they list had no candles at all on those trader charts.
+// نموداری که صرافی منتشر نمی‌کند از کندل‌های ۱ ساعته آن، روی مرزهای UTC که بایننس استفاده می‌کند ساخته می‌شود
+// (یک کندل ۶ ساعته در ساعت‌های ۰۰:۰۰، ۰۶:۰۰، ۱۲:۰۰ و ۱۸:۰۰ UTC باز می‌شود).
+// صرافی‌های Gate.io و HTX کندل‌های ۲h، ۶h یا ۱۲h ندارند، بنابراین ارزی که فقط آن‌ها لیست کرده بودند
+// هیچ‌گونه کندلی روی این نمودارهای تریدر نداشت.
 export const EX_AGG = { '2h': { base: '1h', n: 2 }, '6h': { base: '1h', n: 6 }, '12h': { base: '1h', n: 12 } };
-/** Candles merged into `step`-long ones on UTC boundaries; a first bucket the rows start inside is dropped. */
+/** کندل‌های ادغام‌شده در بازه‌های طولانی‌تر `step` بر روی مرزهای UTC؛ اولین سطلی که ردیف‌ها درون آن شروع می‌شوند حذف می‌شود. */
 export function aggregateCandles(rows, step) {
   const out = [];
   for (const r of rows) {
@@ -313,8 +293,8 @@ async function gateCandles(sym, bar, total, ttl, step) {
   const base = `https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${sym}_USDT&interval=${bar}`;
   const map = (rows) => rows.map((r) => ({ t: r[0] * 1e3, o: num(r[5]), h: num(r[3]), l: num(r[4]), c: num(r[2]), v: num(r[6]) }));
   let out = map(await getJson(`${base}&limit=${Math.min(1000, total)}`, { ttl, timeout: 9000 }));
-  // Gate refuses `limit` together with a time window, so older pages ask for
-  // an explicit from/to range of at most 1,000 candles.
+  // صرافی Gate پارامتر limit را همراه با بازه زمانی نمی‌پذیرد، بنابراین صفحات قدیمی‌تر
+  // محدوده صریح از/تا حداکثر ۱۰۰۰ کندل را درخواست می‌کنند.
   while (out.length && out.length < total) {
     const to = out[0].t / 1e3 - 1, n = Math.min(1000, total - out.length);
     const rows = map(await getJson(`${base}&from=${Math.floor(to - (n - 1) * step / 1e3)}&to=${Math.floor(to)}`, { ttl, timeout: 9000 }));
@@ -332,7 +312,7 @@ async function okxCandles(sym, bar, total, ttl) {
   const inst = `${sym}-USDT`;
   const map = (j) => (Array.isArray(j?.data) ? j.data : []).map((r) => ({ t: num(r[0]), o: num(r[1]), h: num(r[2]), l: num(r[3]), c: num(r[4]), v: num(r[5]) })).reverse();
   let out = map(await getJson(`https://www.okx.com/api/v5/market/candles?instId=${inst}&bar=${bar}&limit=300`, { ttl, timeout: 9000 }));
-  // older candles come 100 at a time; stop at 1,000 to keep the request count sane
+  // کندل‌های قدیمی‌تر ۱۰۰ تا ۱۰۰ تا می‌آیند؛ برای معقول ماندن تعداد درخواست‌ها، در ۱۰۰۰ متوقف شوید
   for (let i = 0; out.length && out.length < Math.min(total, 1000) && i < 8; i++) {
     const rows = map(await getJson(`https://www.okx.com/api/v5/market/history-candles?instId=${inst}&bar=${bar}&after=${out[0].t}&limit=100`, { ttl, timeout: 9000 }));
     if (!rows.length) break;
@@ -342,50 +322,37 @@ async function okxCandles(sym, bar, total, ttl) {
 }
 const EX_FETCH = { gate: gateCandles, htx: htxCandles, okx: okxCandles };
 
-// Which exchange had a coin last time, so a coin only OKX lists does not cost
-// two refused requests (and two console errors) on every visit. A miss on all
-// three is remembered briefly, so a blip does not hide a coin for long.
+// صرافی‌ای که یک ارز آخرین بار در آن بوده است، به طوری که ارزی که فقط OKX لیست کرده است
+// در هر بازدید دو درخواست ردشده (و دو خطای کنسول) ایجاد نکند. عدم موفقیت در هر سه صرافی
+// به طور خلاصه به خاطر سپرده می‌شود، بنابراین یک اختلال جزئی ارز را برای مدت طولانی پنهان نمی‌کند.
 const VENUE_KEY = 'exVenue';
 const VENUE_HIT_MS = 7 * 864e5, VENUE_MISS_MS = 6 * 3600e3;
 const venueMemo = () => load(VENUE_KEY, {}) || {};
 function rememberVenue(sym, ex) {
-  // a note to save time next visit: failing to write it must never cost the candles
+  // یادداشتی برای صرفه‌جویی در زمان بازدید بعدی: عدم موفقیت در نوشتن نباید هرگز هزینه‌ای برای کندل‌ها داشته باشد
   try {
     const m = venueMemo();
     m[sym] = { ex, at: Date.now() };
-    // keep it small: the 200 most recent coins
+    // نگه داشتن در اندازه‌ای کوچک: ۲۰۰ ارز اخیراً دیده‌شده
     save(VENUE_KEY, Object.fromEntries(Object.entries(m).sort((a, b) => b[1].at - a[1].at).slice(0, 200)));
-  } catch { /* storage unavailable */ }
+  } catch { /* فضای ذخیره‌سازی در دسترس نیست */ }
 }
 
 /**
- * Real candles for a coin Binance does not list. Tries Gate.io, HTX and OKX in
- * turn and keeps the first whose latest close is within 10% of the coin's
- * market price — so a different token that happens to share the ticker is never
- * charted — and whose newest candle is recent.
- *
- * The 10% proximity check guards *discovery* (only === null): it stops a
- * different token that shares the ticker from being charted. When a specific
- * already-validated source is requested (only === <ex>, e.g. the coin page
- * catching up after a dropped socket), the check is skipped — otherwise a
- * legitimate move of more than 10% while the socket is down would reject every
- * poll from the known-good exchange and silently freeze the chart.
- */
-/**
- * Where this app gets a coin's candles: 'binance', 'gate', 'htx', 'okx', null
- * (none of them lists it) or undefined (not known yet).
+ * جایی که این برنامه کندل‌های یک ارز را از آن می‌گیرد: 'binance'، 'gate'، 'htx'، 'okx'، null
+ * (هیچ‌کدام آن را لیست نکرده‌اند) یا undefined (هنوز مشخص نیست).
  */
 export function knownVenue(coin) {
   if (!coin?.symbol) return undefined;
   if (coin.binance) return 'binance';
   const sym = String(coin.symbol).toUpperCase();
-  if (!/^[A-Z0-9]{2,12}$/.test(sym)) return null;   // no exchange uses such a ticker (FIGR_HELOC)
+  if (!/^[A-Z0-9]{2,12}$/.test(sym)) return null;   // هیچ صرافی‌ای از چنین تیکری استفاده نمی‌کند (مانند FIGR_HELOC)
   const m = venueMemo()[sym];
   if (!m) return undefined;
   if (m.ex === null) return Date.now() - m.at < VENUE_MISS_MS ? null : undefined;
   return Date.now() - m.at < VENUE_HIT_MS ? m.ex : undefined;
 }
-/** knownVenue, looking the coin up (a few small requests) if it is not known yet. */
+/** تابع knownVenue، جستجوی ارز (چند درخواست کوچک) در صورتی که هنوز شناخته نشده باشد. */
 export async function findVenue(coin) {
   const v = knownVenue(coin);
   if (v !== undefined) return v;
@@ -412,9 +379,8 @@ export async function exchangeCandles(coin, interval, total = 500, only = null) 
         .filter((c) => [c.o, c.h, c.l, c.c].every((x) => Number.isFinite(x) && x > 0));
       if (agg) rows = aggregateCandles(rows, step);
       answered.push(ex);
-      // A listing with little history is not trusted when a coin is first looked
-      // for; the exchange already found for it only has to send what was asked
-      // (a check asks for the last few candles).
+      // لیستی با تاریخچه کم هنگام جستجوی اولیه ارز مورد اعتماد نیست؛ صرافی‌ای که از قبل
+      // برای آن پیدا شده فقط باید آنچه درخواست شده را بفرستد (یک بررسی، آخرین کندل‌ها را می‌خواهد).
       if (rows.length < (only ? 1 : ex === first ? Math.min(50, total) : 50)) continue;
       const last = rows[rows.length - 1];
       if (now() - last.t > step * 3 + 2 * 864e5) continue;
@@ -426,11 +392,11 @@ export async function exchangeCandles(coin, interval, total = 500, only = null) 
       (!(e instanceof HttpError) || e.status === 0 || e.status === 429 || e.status >= 500 ? silent : answered).push(ex);
     }
   }
-  // Remembered as listed nowhere only when the exchanges answered. HTX and OKX
-  // say "no such pair" in a reply the page can read; Gate.io's reply cannot be
-  // read from a web page, so it looks like a dropped connection and counts as
-  // a "no" only when another exchange did answer. A dropped connection used to
-  // be remembered too, hiding the coin's chart for an hour.
+  // به عنوان لیست‌نشده در هیچ‌کجا به خاطر سپرده می‌شود تنها زمانی که صرافی‌ها پاسخ داده باشند.
+  // صرافی‌های HTX و OKX در پاسخی که صفحه می‌تواند بخواند می‌گویند «چنین جفت‌ارزی وجود ندارد»؛
+  // پاسخ Gate.io از یک صفحه وب قابل خواندن نیست، بنابراین شبیه یک اتصال قطع‌شده به نظر می‌رسد و
+  // تنها زمانی به عنوان «نه» حساب می‌شود که صرافی دیگری پاسخ داده باشد. قطع اتصال قبلاً نیز به خاطر
+  پ سپرده می‌شد و نمودار ارز را برای یک ساعت پنهان می‌کرد.
   const unreached = silent.some((ex) => ex !== 'gate') || (silent.length > 0 && !answered.length);
   if (!only && !unreached) rememberVenue(sym, null);
   return null;
@@ -438,25 +404,25 @@ export async function exchangeCandles(coin, interval, total = 500, only = null) 
 
 async function geckoCandles(coin, interval, total) {
   const want = INTERVAL_MS[interval];
-  if (!want) throw new HttpError(`Unknown interval ${interval}.`, 400);
+  if (!want) throw new HttpError(`بازه زمانی ناشناخته ${interval}.`, 400);
 
-  // pick the finest series the endpoint will actually return for this range
+  // انتخاب دقیق‌ترین سری که اندپوینت در واقع برای این محدوده برمی‌گرداند
   const grain = want >= 864e5 ? 'daily' : 'hourly';
   const step = GECKO_STEP[grain];
   if (want < step) {
     throw new HttpError(
-      `${coin.symbol || 'This coin'} does not trade on Binance, and the fallback price feed only goes down to ${grain === 'daily' ? 'one day' : 'one hour'}. Timeframes shorter than that are not available for it — they would have to be invented.`,
+      `${coin.symbol || 'این ارز'} در بایننس معامله نمی‌شود، و فید قیمت پشتیبان فقط تا ${grain === 'daily' ? 'یک روز' : 'یک ساعت'} پایین می‌آید. تایم‌فریم‌های کوتاه‌تر از آن برای این ارز در دسترس نیستند — آن‌ها باید ابداع شوند.`,
       404,
     );
   }
-  // CoinGecko's free API refuses (401) any history longer than 365 days.
+  // API رایگان CoinGecko هر تاریخچه‌ای طولانی‌تر از ۳۶۵ روز را رد می‌کند (۴۰۱).
   const days = grain === 'daily' ? 365 : 90;
   const j = await stale(getJson(
     `${CONFIG.COINGECKO}/coins/${encodeURIComponent(coin.id)}/market_chart?vs_currency=usd&days=${days}`,
     { ttl: 5 * 60e3, key: `cg:mc:${coin.id}:${days}` },
   ));
   const pts = Array.isArray(j?.prices) ? j.prices : [];
-  if (pts.length < 2) throw new HttpError('No price history available for this coin', 404);
+  if (pts.length < 2) throw new HttpError('تاریخچه قیمتی برای این ارز در دسترس نیست', 404);
 
   const buckets = new Map();
   for (const [t, price] of pts) {
@@ -467,31 +433,31 @@ async function geckoCandles(coin, interval, total) {
     else { b.c = price; if (price > b.h) b.h = price; if (price < b.l) b.l = price; }
   }
   const candles = [...buckets.values()].sort((a, b) => a.t - b.t).slice(-total);
-  if (!candles.length) throw new HttpError('No price history available for this coin', 404);
+  if (!candles.length) throw new HttpError('تاریخچه قیمتی برای این ارز در دسترس نیست', 404);
   return { candles, source: 'coingecko', pair: null, lowRes: true, grain, closeOnly: want === step };
 }
 
 /**
- * Candles the forecast was tested on: real exchange OHLCV. CoinGecko's hourly
- * line (lowRes) and demo candles are not, so the scans skip those coins and
- * say how many they skipped.
+ * کندل‌هایی که پیش‌بینی روی آن‌ها تست شده است: OHLCV واقعی صرافی. خط ساعتی CoinGecko
+ * (با رزولوشن پایین - lowRes) و کندل‌های دمو این‌طور نیستند، بنابراین اسکن‌ها از آن ارزها صرف‌نظر کرده
+ * و تعداد صرف‌نظرشده‌ها را اعلام می‌کنند.
  */
 export const isTestedSource = (r) => Boolean(r) && !r.lowRes && r.source !== 'demo';
 
-// Candles the forecast (200), the AI trader (220) and the indicators need.
+// کندل‌هایی که پیش‌بینی (۲۰۰)، تریدر هوش مصنوعی (۲۲۰) و اندیکاتورها به آن‌ها نیاز دارند.
 const MIN_HISTORY = 260;
 
 export async function getCandles(coin, interval = '1h', total = 500) {
   const pair = typeof coin === 'string' ? coin : coin?.binance;
 
-  // Second-by-second charts: fetch 1s candles and merge them where needed.
+  // نمودارهای ثانیه‌به‌ثانیه: دریافت کندل‌های ۱ ثانیه‌ای و ادغام آن‌ها در صورت نیاز.
   if (isSecondInterval(interval)) {
     const factor = BUILT_FROM_1S[interval] || 1;
     const want = Math.min(total, MAX_BARS[interval] || 600);
     if (!pair) {
       const demoId = (typeof coin === 'object' && coin?.source === 'demo' && coin.id) || demo.demoSymbolToId(`${coin?.symbol}USDT`);
       if (demoId) { markDemo('candles'); return { candles: demo.demoCandles(demoId, interval, want), source: 'demo', pair: null }; }
-      throw new HttpError('Second-by-second candles are only available for coins that trade on Binance.', 404);
+      throw new HttpError('کندل‌های ثانیه‌به‌ثانیه فقط برای ارزهایی در دسترس هستند که در بایننس معامله می‌شوند.', 404);
     }
     try {
       const raw = await fetchKlines(pair, '1s', want * factor, 1200);
@@ -500,10 +466,10 @@ export async function getCandles(coin, interval = '1h', total = 500) {
         const candles = factor === 1 ? raw : bucketCandles(raw, factor, 1e3);
         return { candles, source: 'binance', pair, seconds: true };
       }
-    } catch { /* fall through to demo */ }
+    } catch { /* ادامه به سمت دمو در صورت بروز خطا */ }
     const demoId = demo.demoSymbolToId(pair);
     if (demoId) { markDemo('candles'); return { candles: demo.demoCandles(demoId, interval, want), source: 'demo', pair }; }
-    throw new HttpError('Second-by-second candles are not available for this pair.', 404);
+    throw new HttpError('کندل‌های ثانیه‌به‌ثانیه برای این جفت‌ارز در دسترس نیستند.', 404);
   }
 
   if (pair) {
@@ -520,12 +486,12 @@ export async function getCandles(coin, interval = '1h', total = 500) {
         endTime = rows[0].t - 1;
         if (rows.length < limit) break;
       }
-      // a pair that stopped trading long ago is treated as unavailable
+      // جفت‌ارزی که مدت‌ها پیش معامله‌اش متوقف شده به عنوان غیرقابل‌دسترس در نظر گرفته می‌شود
       if (out.length && now() - out[out.length - 1].t < INTERVAL_MS[interval] * 3 + 2 * 864e5) {
-        // A pair Binance listed recently has too little history for the
-        // indicators, the forecast and the AI (HYPE had 59 daily candles there:
-        // no signal, no forecast on 4h or 1d). An exchange that has listed the
-        // coin for longer gives the whole chart.
+        // جفت‌ارزی که بایننس اخیراً لیست کرده تاریخچه بسیار کمی برای اندیکاتورها،
+        // پیش‌بینی و هوش مصنوعی دارد (مثلاً HYPE در آنجا ۵۹ کندل روزانه داشت:
+        // بدون سیگنال، بدون پیش‌بینی روی 4h یا 1d). صرافی‌ای که ارز را برای مدت طولانی‌تری
+        // لیست کرده باشد، کل نمودار را می‌دهد.
         if (out.length < Math.min(total, MIN_HISTORY) && coin && typeof coin === 'object') {
           const ex = await exchangeCandles(coin, interval, total).catch(() => null);
           if (ex && ex.candles.length > out.length) return ex;
@@ -533,16 +499,16 @@ export async function getCandles(coin, interval = '1h', total = 500) {
         markLive();
         return { candles: out, source: 'binance', pair };
       }
-    } catch { /* fall through */ }
+    } catch { /* ادامه جریان */ }
   }
-  // Not on Binance (or Binance unreachable): real candles from another exchange.
+  // در بایننس نیست (یا بایننس غیرقابل‌دسترس است): کندل‌های واقعی از صرافی دیگر.
   if (coin && typeof coin === 'object') {
     const ex = await exchangeCandles(coin, interval, total).catch(() => null);
     if (ex) return ex;
   }
   if (coin && typeof coin === 'object' && coin.source === 'coingecko') {
-    // a 404 here is a real answer — "this timeframe does not exist for this
-    // coin" — so it is thrown rather than quietly replaced with demo candles
+    // خطای 404 در اینجا یک پاسخ واقعی است — «این تایم‌فریم برای این ارز وجود ندارد» —
+    // بنابراین پرتاب می‌شود به جای اینکه به‌آرامی با کندل‌های دمو جایگزین شود.
     try {
       return await geckoCandles(coin, interval, total);
     } catch (err) {
@@ -556,32 +522,31 @@ export async function getCandles(coin, interval = '1h', total = 500) {
   }
   if (!pair && typeof coin === 'object' && knownVenue(coin) === null) {
     const sym = String(coin.symbol).toUpperCase();
-    const err = new HttpError(`${sym} is not traded on Binance, Gate.io, HTX or OKX, the exchanges this app reads, so it has no candles for a chart, indicators, a forecast or the AI.`, 404);
+    const err = new HttpError(`${sym} در صرافی‌های بایننس، Gate.io، HTX یا OKX (صرافی‌هایی که این برنامه می‌خواند) معامله نمی‌شود، بنابراین هیچ کندلی برای نمودار، اندیکاتورها، پیش‌بینی یا هوش مصنوعی ندارد.`, 404);
     err.notListed = true;
     throw err;
   }
-  throw new HttpError('No price history available for this coin', 404);
+  throw new HttpError('تاریخچه قیمتی برای این ارز در دسترس نیست', 404);
 }
 
 /**
- * The close of the candle that opened at `atMs`, read from the coin's exchange
- * at that moment rather than from its latest candles, so a forecast logged
- * days ago can still be graded (the latest 500 one-minute candles reach back
- * eight hours, and 500 five-second ones 42 minutes). `{ close }`;
- * `{ retry: true }` when it cannot be read yet (the candle is still forming,
- * or a request failed); `{ missing: true }` when the exchange answered
- * without that candle (its history does not reach back that far, or it does
- * not list the coin).
+ * قیمت بسته شدن (Close) کندلی که در `atMs` باز شده است، خوانده‌شده از صرافی ارز
+ * در آن لحظه به جای آخرین کندل‌های آن، به طوری که یک پیش‌بینی که روزها پیش ثبت شده
+ * همچنان قابل ارزیابی باشد (۵۰۰ کندل ۱ دقیقه‌ای آخر به ۸ ساعت قبل می‌رسند،
+ * و ۵۰۰ کندل ۵ ثانیه‌ای به ۴۲ دقیقه پیش). `{ close }`؛
+ * `{ retry: true }` هنگامی که هنوز قابل خواندن نیست (کندل در حال تشکیل است،
+ * یا درخواستی با شکست مواجه شده)؛ `{ missing: true }` هنگامی که صرافی بدون آن کندل
+ * پاسخ داده است (تاریخچه آن به آن اندازه به عقب نمی‌رسد، یا آن ارز را لیست نکرده است).
  */
 export async function closeAtTime(coin, interval, atMs) {
   const step = INTERVAL_MS[interval];
   if (!step || !Number.isFinite(atMs)) return { missing: true };
   if (atMs + step > now()) return { retry: true };
-  const inside = (t) => t <= atMs && atMs - t < step; // the candle that holds atMs
+  const inside = (t) => t <= atMs && atMs - t < step; // کندلی که atMs را در بر می‌گیرد
   try {
     const pair = typeof coin === 'string' ? coin : coin?.binance;
     if (pair) {
-      // A second chart is built from 1s candles: its close is the last 1s close inside it.
+      // یک نمودار ثانیه‌ای از کندل‌های ۱ ثانیه‌ای ساخته می‌شود: قیمت بسته شدن آن آخرین قیمت بسته شدن ۱ ثانیه‌ای داخل آن است.
       const second = isSecondInterval(interval);
       const end = second ? atMs + step - 1e3 : atMs;
       const path = `/api/v3/klines?symbol=${pair}&interval=${second ? '1s' : interval}&endTime=${end}&limit=1`;
@@ -593,7 +558,7 @@ export async function closeAtTime(coin, interval, atMs) {
     const venue = await findVenue(coin);
     if (venue === null) return { missing: true };
     if (!EX_FETCH[venue]) return { retry: true };
-    // a chart built from 1h candles closes with the last 1h candle inside it
+    // نموداری که از کندل‌های ۱ ساعته ساخته شده با آخرین کندل ۱ ساعته درون آن بسته می‌شود
     if (!exBar(venue, interval) && EX_AGG[interval]) {
       const base = EX_AGG[interval].base;
       return closeAtTime(coin, base, Math.floor(atMs / step) * step + step - INTERVAL_MS[base]);
@@ -608,7 +573,7 @@ export async function closeAtTime(coin, interval, atMs) {
       const j = await getJson(`https://www.okx.com/api/v5/market/history-candles?instId=${sym}-USDT&bar=${bar}&after=${atMs + 1}&limit=1`, { ttl: 864e5, timeout: 9000 });
       rows = (Array.isArray(j?.data) ? j.data : []).map((r) => ({ t: num(r[0]), c: num(r[4]) }));
     } else {
-      rows = await htxCandles(sym, bar, 2000, 60e3); // HTX serves only its latest 2,000 candles
+      rows = await htxCandles(sym, bar, 2000, 60e3); // صرافی HTX فقط آخرین ۲۰۰۰ کندل خود را سرویس می‌دهد
     }
     const r = rows.filter((x) => inside(x.t) && x.c > 0).pop();
     return r ? { close: r.c } : { missing: true };
@@ -617,8 +582,8 @@ export async function closeAtTime(coin, interval, atMs) {
   }
 }
 
-// How many decimals the exchange itself quotes this pair to. Showing fewer is a
-// rounded price pretending to be the real one, so the coin page asks for this.
+// تعداد اعشار قیمت که صرافی این جفت‌ارز را با آن قیمت‌گذاری می‌کند. نمایش ارقام کمتر
+// به معنای قیمت گردشده‌ای است که وانمود می‌کند قیمت واقعی است، بنابراین صفحه ارز این را درخواست می‌کند.
 const tickCache = new Map();
 export async function getTickSize(pair) {
   if (!pair) return null;
@@ -655,19 +620,19 @@ export async function getTickers24h(pairs) {
   } catch { return {}; }
 }
 
-// ------------------------------------------------------------ wallets
+// ------------------------------------------------------------ کیف پول‌ها
 export const CHAINS = {
-  btc: { name: 'Bitcoin', symbol: 'BTC', pattern: /^(bc1[a-z0-9]{25,87}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/ },
-  eth: { name: 'Ethereum', symbol: 'ETH', pattern: /^0x[a-fA-F0-9]{40}$/ },
-  bsc: { name: 'BNB Smart Chain', symbol: 'BNB', pattern: /^0x[a-fA-F0-9]{40}$/ },
-  polygon: { name: 'Polygon', symbol: 'POL', pattern: /^0x[a-fA-F0-9]{40}$/ },
-  sol: { name: 'Solana', symbol: 'SOL', pattern: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/ },
+  btc: { name: 'بیت‌کوین', symbol: 'BTC', pattern: /^(bc1[a-z0-9]{25,87}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/ },
+  eth: { name: 'اتریوم', symbol: 'ETH', pattern: /^0x[a-fA-F0-9]{40}$/ },
+  bsc: { name: 'بایننس اسمارت چین', symbol: 'BNB', pattern: /^0x[a-fA-F0-9]{40}$/ },
+  polygon: { name: 'پالیگان', symbol: 'POL', pattern: /^0x[a-fA-F0-9]{40}$/ },
+  sol: { name: 'سولانا', symbol: 'SOL', pattern: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/ },
 };
 
 export async function walletBalance(chain, address) {
   const def = CHAINS[chain];
-  if (!def) throw new Error('Unsupported chain');
-  if (!def.pattern.test(address)) throw new Error(`That is not a valid ${def.name} address`);
+  if (!def) throw new Error('شبکه پشتیبانی نمی‌شود');
+  if (!def.pattern.test(address)) throw new Error(`این یک آدرس معتبر برای ${def.name} نیست`);
   if (chain === 'btc') {
     const r = await getJsonAny(CONFIG.BTC_API, `/address/${address}`, { ttl: 60e3, timeout: 12000 });
     const sats = r.chain_stats.funded_txo_sum - r.chain_stats.spent_txo_sum + r.mempool_stats.funded_txo_sum - r.mempool_stats.spent_txo_sum;
