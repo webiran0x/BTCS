@@ -28,7 +28,7 @@ export const CONFIG = {
     { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', label: 'Llama 3.2 · 3B', size: '≈1.8 GB', tier: 'large' },
   ],
   // Backend (Supabase). Safe to expose: the publishable key only works with row-level security.
-  SUPABASE_URL: 'https://lsokeplagodofqlsslcy.supabase.co/rest/v1/',
+  SUPABASE_URL: 'https://lsokeplagodofqlsslcy.supabase.co',
   SUPABASE_KEY: 'sb_publishable_Fn2FAkgaybUV2mb42QML2g_O4Tc92kc',
   SUPABASE_JS: 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/+esm',
 
