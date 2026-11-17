@@ -359,7 +359,7 @@ async function initTicker() {
     const pill = $('#livePill');
     pill.classList.toggle('on', e.detail.connected);
     pill.querySelector('span').textContent = e.detail.connected
-      ? t('زنده · جریان بایننس')
+      ? t('زنده · متصل به دیتای جهانی')
       : e.detail.paused ? t('متوقف شده در پس‌زمینه') : t('در حال اتصال مجدد…');
   });
 }
