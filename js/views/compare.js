@@ -13,31 +13,123 @@ export async function render(el, [preset]) {
   const st = { coins: preset ? preset.split(',').map((s) => s.toUpperCase()).slice(0, 6) : ['BTC', 'ETH', 'SOL'], period: '30d', chart: null, selfSym: null, selfChart: null, selfSeq: 0, disposed: false };
   const all = await markets().catch(() => []);
   el.innerHTML = `
-    <div class="page-head">
-      <div><h1>مقایسه</h1><p>مقایسه هم‌زمان بازدهی، نوسانات، افت از سقف (Drawdown) و میزان هم‌بستگی حرکت رمزارزها.</p></div>
-      <div class="seg" id="per">${Object.keys(PERIODS).map((p) => `<button data-v="${p}" class="${p === st.period ? 'on' : ''}">${p.toUpperCase()}</button>`).join('')}</div>
-    </div>
-    <div class="card">
-      <div class="row" id="picked" style="margin-bottom:12px"></div>
-      <div id="chartArea"></div>
-    </div>
-    <div class="grid g2 mt cmp-grid">
-      <div class="card"><div class="card-h"><h3>آمار و شاخص‌ها</h3></div><div id="stats">${skeleton(5)}</div></div>
-      <div class="card"><div class="card-h"><h3>هم‌بستگی (Correlation)</h3><span class="fine">۱ = حرکت هم‌جهت · ۰ = بدون ارتباط · ۱− = حرکت معکوس</span></div><div id="corr">${skeleton(5)}</div></div>
-    </div>
-    <div class="card mt">
-      <div class="card-h">
-        <h3>${icon('history', 16)} مقایسه یک رمزارز با گذشته خودش</h3>
-        <span class="fine">بخش‌هایی از تاریخچه قیمت را که الگوی مشابهی داشته‌اند پیدا می‌کند و رفتار بعدی قیمت را نشان می‌دهد</span>
+    <style>
+      .ap-compare-wrap {
+        direction: rtl;
+        text-align: right;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding-bottom: 60px;
+      }
+      .ap-hero-card {
+        background: radial-gradient(circle at top right, rgba(94, 92, 230, 0.09), transparent 50%),
+                    radial-gradient(circle at bottom left, rgba(50, 215, 75, 0.07), transparent 50%),
+                    rgba(24, 24, 29, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 28px;
+        padding: 32px;
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        margin-bottom: 24px;
+        box-shadow: 0 24px 54px rgba(0, 0, 0, 0.35);
+      }
+      .ap-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 22px;
+        padding: 24px;
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        margin-bottom: 24px;
+      }
+      .ap-card:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+      }
+      .ap-compare-wrap .seg {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 4px;
+        border-radius: 12px;
+        display: inline-flex;
+        gap: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .ap-compare-wrap .seg button {
+        background: transparent;
+        border: 0;
+        color: rgba(255, 255, 255, 0.6);
+        padding: 6px 14px;
+        border-radius: 9px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .ap-compare-wrap .seg button.on {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      }
+      .ap-compare-wrap table.tbl {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .ap-compare-wrap table.tbl th, .ap-compare-wrap table.tbl td {
+        padding: 12px 16px;
+        text-align: right;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 0.9rem;
+      }
+      .ap-compare-wrap table.tbl th {
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 500;
+        font-size: 0.8rem;
+      }
+      .ap-compare-wrap table.tbl tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .ap-compare-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      @media(max-width: 960px) {
+        .ap-compare-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="ap-compare-wrap" dir="rtl">
+      <div class="ap-hero-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px">
+        <div>
+          <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">مقایسه</h1>
+          <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0;max-width:850px">مقایسه هم‌زمان بازدهی، نوسانات، افت از سقف (Drawdown) و میزان هم‌بستگی حرکت رمزارزها[cite: 15].</p>
+        </div>
+        <div class="seg" id="per">${Object.keys(PERIODS).map((p) => `<button data-v="${p}" class="${p === st.period ? 'on' : ''}">${p.toUpperCase()}</button>`).join('')}</div>
       </div>
-      <div class="seg" id="selfPick" style="margin-bottom:12px"></div>
-      <div id="selfBody">${skeleton(6, 26)}</div>
+
+      <div class="ap-card">
+        <div class="row" id="picked" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"></div>
+        <div id="chartArea"></div>
+      </div>
+
+      <div class="ap-compare-grid">
+        <div class="ap-card" style="margin-bottom:0"><div class="card-h" style="margin-bottom:16px"><h3 style="margin:0;font-size:1.15rem;color:#fff">آمار و شاخص‌ها</h3></div><div id="stats">${skeleton(5)}</div></div>
+        <div class="ap-card" style="margin-bottom:0"><div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:1.15rem;color:#fff">هم‌بستگی (Correlation)</h3><span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.8rem">۱ = هم‌جهت · ۰ = بدون ارتباط · ۱− = معکوس</span></div><div id="corr">${skeleton(5)}</div></div>
+      </div>
+
+      <div class="ap-card mt" style="margin-top:24px">
+        <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div><h3 style="margin:0 0 4px 0;font-size:1.15rem;color:#fff">${icon('history', 16)} مقایسه یک رمزارز با گذشته خودش</h3><span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem">یافتن الگوهای مشابه در تاریخچه قیمت و پیش‌بینی رفتار بعدی[cite: 15]</span></div>
+        </div>
+        <div class="seg" id="selfPick" style="margin-bottom:16px"></div>
+        <div id="selfBody">${skeleton(6, 26)}</div>
+      </div>
     </div>
     <datalist id="coinList">${all.filter((c) => !isStable(c.symbol)).map((c) => `<option value="${esc(c.symbol)}">${esc(c.name)}</option>`).join('')}</datalist>`;
 
   const drawPicked = () => {
-    $('#picked', el).innerHTML = st.coins.map((s, i) => `<span class="chip" style="border-left:4px solid var(${COLORS[i]})">${esc(s)} <button class="star" data-rm="${esc(s)}" aria-label="حذف ${esc(s)}" style="padding:0">${icon('close', 13)}</button></span>`).join('')
-      + (st.coins.length < 6 ? `<input class="inp" id="add" list="coinList" placeholder="+ افزودن ارز" style="width:130px;height:30px">` : '');
+    $('#picked', el).innerHTML = st.coins.map((s, i) => `<span class="chip" style="border-right:4px solid var(${COLORS[i]});background:rgba(255,255,255,0.06);padding:6px 12px;border-radius:10px;display:inline-flex;align-items:center;gap:8px;color:#fff">${esc(s)} <button class="star" data-rm="${esc(s)}" aria-label="حذف ${esc(s)}" style="background:transparent;border:0;color:rgba(255,255,255,0.6);cursor:pointer;padding:0;display:flex">${icon('close', 13)}</button></span>`).join('')
+      + (st.coins.length < 6 ? `<input class="inp" id="add" list="coinList" placeholder="+ افزودن ارز" style="width:130px;height:36px;padding:6px 12px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff">` : '');
     $$('[data-rm]', el).forEach((b) => b.addEventListener('click', () => { st.coins = st.coins.filter((c) => c !== b.dataset.rm); drawPicked(); load(); drawSelfPick(); loadSelf(); }));
     $('#add', el)?.addEventListener('change', (e) => {
       const v = e.target.value.trim().toUpperCase();
@@ -47,7 +139,7 @@ export async function render(el, [preset]) {
   };
 
   const load = async () => {
-    if (!st.coins.length) { $('#chartArea', el).innerHTML = '<div class="empty">برای مقایسه، یک رمزارز اضافه کنید.</div>'; return; }
+    if (!st.coins.length) { $('#chartArea', el).innerHTML = '<div class="empty" style="text-align:center;padding:30px;color:rgba(255,255,255,0.5)">برای مقایسه، یک رمزارز اضافه کنید.</div>'; return; }
     const [iv, count, perYear] = PERIODS[st.period];
     $('#chartArea', el).innerHTML = skeleton(8, 30);
     const series = (await Promise.all(st.coins.map(async (sym, i) => {
@@ -78,16 +170,16 @@ export async function render(el, [preset]) {
       const periodVol = Math.sqrt(r.reduce((a, b) => a + (b - mean) ** 2, 0) / r.length) * Math.sqrt(r.length);
       return { ...s, total, vol: vol * 100, dd: dd * 100, best: Math.max(...r) * 100, worst: Math.min(...r) * 100, ratio: periodVol ? (mean * r.length) / periodVol : 0, thin: false };
     });
-    $('#stats', el).innerHTML = `<div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">ارز</th><th>بازدهی</th><th>نوسان (سالانه)</th><th>بیشترین افت</th><th class="hide-m hide-l">بهترین / بدترین کندل</th><th>بازدهی ÷ ریسک</th></tr></thead><tbody>
-      ${stats.sort((a, b) => (b.total ?? -Infinity) - (a.total ?? -Infinity)).map((s) => `<tr data-sym="${esc(s.sym)}"><td class="l"><div class="coin-cell">${coinLogo(s.coin, 22)}<b>${esc(s.sym)}</b></div></td>
+    $('#stats', el).innerHTML = `<div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">ارز</th><th>بازدهی</th><th>نوسان (سالانه)</th><th>بیشترین افت</th><th class="hide-m hide-l">بهترین / بدترین</th><th>بازدهی ÷ ریسک</th></tr></thead><tbody>
+      ${stats.sort((a, b) => (b.total ?? -Infinity) - (a.total ?? -Infinity)).map((s) => `<tr data-sym="${esc(s.sym)}" style="cursor:pointer"><td class="l"><div class="coin-cell" style="display:flex;align-items:center;gap:8px">${coinLogo(s.coin, 22)}<b>${esc(s.sym)}</b></div></td>
         ${s.thin
-          ? `<td colspan="5" class="muted fine">تاریخچه قیمت کافی در این بازه زمانی برای محاسبه وجود ندارد</td>`
+          ? `<td colspan="5" class="muted fine">تاریخچه قیمت کافی نیست</td>`
           : `<td class="${s.total >= 0 ? 'up' : 'down'}"><b>${pct(s.total)}</b></td><td>${s.vol.toFixed(0)}%</td><td class="down">${pct(-s.dd, 1)}</td>
         <td class="hide-m hide-l"><span class="up">${pct(s.best, 1)}</span> / <span class="down">${pct(s.worst, 1)}</span></td><td>${s.ratio.toFixed(2)}</td>`}</tr>`).join('')}
-    </tbody></table></div><p class="fine mt">${stats.filter((x) => !x.thin).length ? `بهترین عملکرد در بازه ${st.period.toUpperCase()} گذشته: <b>${esc(stats.find((x) => !x.thin).sym)}</b> — این آمار فقط مربوط به بازه گذشته است و تضمینی برای عملکرد آینده نیست.` : ''} نسبت «بازدهی ÷ ریسک» حاصل تقسیم بازدهی دوره بر نوسانات همان دوره است: عدد بالاتر از ۱ به معنای سود قابل توجه نسبت به میزان نوسان است.</p>`;
+    </tbody></table></div><p class="fine mt" style="color:rgba(255,255,255,0.5);margin:12px 0 0;font-size:0.85rem;line-height:1.6">${stats.filter((x) => !x.thin).length ? `بهترین عملکرد در بازه ${st.period.toUpperCase()} گذشته: <b>${esc(stats.find((x) => !x.thin).sym)}</b> — عملکرد گذشته تضمینی برای آینده نیست[cite: 15].` : ''}</p>`;
     $$('#stats tr[data-sym]', el).forEach((tr) => tr.addEventListener('click', () => { location.hash = `#/coin/${tr.dataset.sym}`; }));
 
-    // correlation matrix on aligned timestamps
+    // correlation matrix
     const maps = series.map((s) => new Map(s.candles.slice(1).map((c, k) => [c.t, Math.log(c.c / s.candles[k].c)])));
     const corr = (a, b) => {
       const xs = [], ys = [];
@@ -102,16 +194,13 @@ export async function render(el, [preset]) {
       if (v === null) return '<td>—</td>';
       const a = Math.abs(v);
       const bg = v >= 0 ? `rgba(57,135,229,${0.1 + a * 0.55})` : `rgba(230,103,103,${0.1 + a * 0.55})`;
-      return `<td style="background:${bg};text-align:center;font-weight:600">${v.toFixed(2)}</td>`;
+      return `<td style="background:${bg};text-align:center;font-weight:600;color:#fff">${v.toFixed(2)}</td>`;
     };
     $('#corr', el).innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th></th>${series.map((s) => `<th style="text-align:center">${esc(s.sym)}</th>`).join('')}</tr></thead><tbody>
       ${series.map((s, i) => `<tr style="cursor:default"><td class="l"><b>${esc(s.sym)}</b></td>${series.map((_, j) => (i === j ? '<td style="text-align:center" class="muted">1.00</td>' : cell(corr(i, j)))).join('')}</tr>`).join('')}
-    </tbody></table></div><p class="fine mt">هم‌بستگی بالا به این معناست که نگهداری هم‌زمان هر دو ارز، تنوع‌بخشی (ریسک‌گریزی) چندانی به سبد شما اضافه نمی‌کند.</p>`;
+    </tbody></table></div><p class="fine mt" style="color:rgba(255,255,255,0.5);margin:12px 0 0;font-size:0.85rem">هم‌بستگی بالا به معنای عدم تنوع‌بخشی با نگهداری هم‌زمان آن‌هاست[cite: 15].</p>`;
   };
 
-
-  // ---------------------------------------------------------------------------
-  // مقایسه دیگر: مقایسه یک رمزارز با گذشته خودش.
   const CANDLE_WORD = { '1h': 'ساعته', '4h': 'چهار ساعته', '1d': 'روزانه' };
 
   const drawSelfPick = () => {
@@ -119,7 +208,7 @@ export async function render(el, [preset]) {
     if (!host) return;
     if (!st.coins.length) { host.innerHTML = '<span class="fine muted">برای مقایسه تاریخچه، یک ارز از بالا اضافه کنید.</span>'; return; }
     if (!st.coins.includes(st.selfSym)) st.selfSym = st.coins[0];
-    host.innerHTML = st.coins.map((s) => `<button data-self="${esc(s)}" class="${s === st.selfSym ? 'on' : ''}">${esc(s)}</button>`).join('');
+    host.innerHTML = st.coins.map((s) => `<button data-self="${esc(s)}" class="${s === st.selfSym ? 'on' : ''}" style="padding:6px 14px;border-radius:9px;border:0;background:${s === st.selfSym ? 'rgba(255,255,255,0.15)' : 'transparent'};color:${s === st.selfSym ? '#fff' : 'rgba(255,255,255,0.6)'};cursor:pointer;font-weight:500">${esc(s)}</button>`).join('');
     $$('[data-self]', host).forEach((b) => b.addEventListener('click', () => {
       if (b.dataset.self === st.selfSym) return;
       st.selfSym = b.dataset.self;
@@ -154,7 +243,7 @@ export async function render(el, [preset]) {
     const v = analogVerdict(match, score, { symbol: sym, interval: iv, horizonText: match.ok ? `${match.horizon} کندل ${CANDLE_WORD[iv] || ''}`.trim() : null });
 
     if (!match.ok) {
-      body.innerHTML = `<div class="empty"><p>${esc(match.reason)}</p></div>`;
+      body.innerHTML = `<div class="empty" style="text-align:center;padding:20px;color:rgba(255,255,255,0.5)"><p>${esc(match.reason)}</p></div>`;
       return;
     }
 
@@ -163,23 +252,22 @@ export async function render(el, [preset]) {
       : match.direction === 'down' ? 'تمایل تاریخی به نزول' : 'نتایج تاریخی دوگانه';
 
     body.innerHTML = `
-      <div class="row spread" style="gap:10px;flex-wrap:wrap">
-        <span class="chip ${v.tone === 'warn' ? 'warn' : v.tone}"><b>${esc(chip)}</b></span>
-        <span class="fine">${match.matches.length} الگوی منطبق · ساختار ${match.window} کندلی · افق ${match.horizon} کندل بعدی</span>
+      <div class="row spread" style="gap:10px;flex-wrap:wrap;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span class="chip ${v.tone === 'warn' ? 'warn' : v.tone}" style="padding:4px 10px;border-radius:8px;font-size:0.85rem"><b>${esc(chip)}</b></span>
+        <span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem">${match.matches.length} الگوی منطبق · افق ${match.horizon} کندل بعدی[cite: 15]</span>
       </div>
-      <p class="mt">${esc(v.headline)}</p>
-      <div id="selfChart" class="mt"></div>
-      <p class="fine" style="margin-top:6px">هر خط کم‌رنگ نشان‌دهنده یک بازه تاریخی منطبق است که طوری تراز شده‌اند تا نقطه پایان الگو روی عدد ۰ محور قرار گیرد. هر آنچه در سمت راست خط جداکننده قرار دارد، اتفاقی است که در واقعیت پس از آن رخ داده است.</p>
-      ${v.lines.map((l) => `<p class="fine" style="margin:8px 0 0">${esc(l)}</p>`).join('')}
-      <div class="tbl-wrap mt"><table class="tbl fit"><thead><tr>
-        <th class="l">زمان پایان الگوی مشابه</th><th>میزان شباهت</th><th>تغییر در ${match.horizon} کندل بعدی</th><th class="hide-m">سقف</th><th class="hide-m">کف</th>
+      <p style="color:rgba(255,255,255,0.85);line-height:1.6;margin:0 0 16px 0">${esc(v.headline)}</p>
+      <div id="selfChart" class="mt" style="margin-top:16px"></div>
+      <p class="fine" style="margin:12px 0;color:rgba(255,255,255,0.5);font-size:0.85rem">خطوط کم‌رنگ بازه‌های تاریخی مشابه را نشان می‌دهند[cite: 15]. سمت راست خط‌چین، رویدادهای واقعی پس از آن الگو است[cite: 15].</p>
+      ${v.lines.map((l) => `<p class="fine" style="margin:6px 0;color:rgba(255,255,255,0.6);font-size:0.85rem">${esc(l)}</p>`).join('')}
+      <div class="tbl-wrap mt" style="margin-top:16px"><table class="tbl fit"><thead><tr>
+        <th class="l">زمان پایان الگوی مشابه</th><th>شباهت</th><th>تغییر در ${match.horizon} کندل بعدی</th><th class="hide-m">سقف</th><th class="hide-m">کف</th>
       </tr></thead><tbody>
         ${match.matches.map((m) => `<tr style="cursor:default"><td class="l wrap">${esc(dateTime(m.endTime, iv !== '1d'))}</td>
           <td>${(m.similarity * 100).toFixed(0)}%</td>
           <td class="${m.futureReturnPct >= 0 ? 'up' : 'down'}"><b>${pct(m.futureReturnPct)}</b></td>
           <td class="hide-m up">${pct(m.maxUpPct)}</td><td class="hide-m down">${pct(m.maxDownPct)}</td></tr>`).join('')}
-      </tbody></table></div>
-      <p class="fine mt">نحوه امتیازدهی: الگویاب در ${score?.ok ? score.tests : 'کندل‌های'} گذشته تنها با استفاده از داده‌های موجود در همان زمان بازپخش شده و با فاصله حداقل یک افق زمانی از هم (برای جلوگیری از هم‌پوشانی نتایج) با رفتار واقعی بازار سنجیده شده است. تطبیق الگو تنها یکی از ابزارهای تحلیلی است و به تنهایی پیش‌بینی قطعی محسوب نمی‌شود.</p>`;
+      </tbody></table></div>`;
 
     const W = match.window;
     const host = $('#selfChart', el);
