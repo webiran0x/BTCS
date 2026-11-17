@@ -1,51 +1,48 @@
-// "Has this chart happened before, and what came next?"
+// «آیا این الگوی نمودار قبلاً اتفاق افتاده و پس از آن چه رخ داده است؟»
 //
-// The compare page puts two coins side by side. This module does the other
-// comparison a reader actually wants: the coin against its own past. It takes
-// the shape of the most recent candles, finds the past stretches that traced the
-// same shape, and lays out what price did in the bars that followed each one.
+// صفحه مقایسه دو رمزارز را در کنار هم قرار می‌دهد. این ماژول مقایسه دیگری را انجام می‌دهد
+// که خواننده واقعاً به دنبال آن است: مقایسه رمزارز با گذشته خودش. این بخش شکل اخیر کندل‌ها را
+// می‌گیرد، بازه‌های گذشته‌ای که همان شکل را دنبال کرده‌اند پیدا می‌کند و نشان می‌دهد که قیمت
+// در کندل‌های پس از هر یک چه رفتاری داشته است.
 //
-// The matching itself is findPatterns() from the forecast engine, which is
-// already written to look only at data available at the point it is asked about
-// — so the same function can be run at a past bar and scored against what really
-// happened. That is what backtestAnalog() does, and it is the reason this page
-// can put a measured hit-rate next to the picture instead of a promise.
+// خودِ عملیات تطبیق توسط تابع findPatterns() از موتور پیش‌بینی انجام می‌شود که از قبل طوری
+// نوشته شده تا فقط به داده‌های موجود در همان لحظه نگاه کند — بنابراین می‌توان همین تابع را در
+// کندل‌های گذشته اجرا کرد و در برابر آنچه واقعاً رخ داده امتیازدهی نمود. این کاری است که
+// backtestAnalog() انجام می‌دهد و به همین دلیل این صفحه می‌تواند به جای یک وعده، نرخ موفقیت
+// اندازه‌گیری‌شده را در کنار تصویر قرار دهد.
 //
-// Two honesty rules are baked in here:
-//   * the answer is compared against the majority-class baseline, because a coin
-//     that rose 60% of the time makes "up" look clever for free;
-//   * evaluation points are spaced at least one horizon apart, so overlapping
-//     futures cannot inflate the sample.
+// دو قانون صداقت در اینجا گنجانده شده است:
+//   * پاسخ با خط مبنای کلاس اکثریت (majority-class baseline) مقایسه می‌شود، زیرا رمزارزی که
+//     در ۶۰٪ مواقع رشد کرده، پیش‌بینی «صعود» را بدون هیچ هنری هوشمندانه جلوه می‌دهد؛
+//   * نقاط ارزیابی حداقل به اندازه یک افق زمانی از هم فاصله دارند تا آینده‌های هم‌پوشان
+//     نتوانند نمونه آماری را به صورت کاذب بزرگ جلوه دهند.
 
 import { findPatterns } from './predict.js';
 
 /**
- * What the method scored on real candles, each coin judged against its own
- * majority-class baseline, measured with tools/evaluate-analog.mjs (Evaluate
- * job "timing"). First on 12 Binance coins; on 2026-10-15 and again on 2026-10-16
- * on every coin the app can trade (106, from the exchange it reads each on;
- * fewer on 4h and 1d where history is short).
+ * امتیاز این روش روی کندل‌های واقعی؛ هر رمزارز در برابر خط مبنای کلاس اکثریت خودش سنجیده شده
+ * و با tools/evaluate-analog.mjs (تسک ارزیابی "timing") اندازه‌گیری شده است. ابتدا روی ۱۲ رمزارز
+ * بایننس؛ و در تاریخ‌های 2026-10-15 و مجدداً 2026-10-16 روی تمام رمزارزهای قابل معامله در اپلیکیشن
+ * (۱۰۶ رمزارز از صرافی مرجع هر کدام؛ تعداد کمتر در تایم‌فریم‌های 4h و 1d که تاریخچه کوتاه‌تری دارند).
  *
- * The result is negative and it is published here rather than buried: shape
- * matching draws a genuinely useful picture of what followed similar stretches,
- * but as a direction call it did not beat simply always naming the more common
- * outcome. On 106 coins 44 of 287 coin/chart pairs beat their baseline (15%;
- * 43 in the run before), and on every chart, in both runs, the average fell
- * short of it. The page still runs the
- * test live per coin, so a coin that does beat its own baseline is reported as
- * beating it — but the default framing is description, not prediction.
+ * نتیجه منفی است و به جای پنهان شدن، همین‌جا منتشر شده است: تطبیق شکل تصویر واقعاً مفیدی از
+ * اتفاقات پس از الگوهای مشابه ترسیم می‌کند، اما به عنوان یک سیگنال تشخیص جهت، عملکرد بهتری نسبت به
+ * انتخاب همیشگی نتیجه رایج‌تر نداشت. از بین ۱۰۶ رمزارز، ۴۴ جفت از ۲۸۷ جفت رمزارز/نمودار توانستند
+ * خط مبنای خود را شکست دهند (۱۵٪؛ در اجرای قبلی ۴۳ مورد)، و در هر دو اجرا، میانگین تمام نمودارها
+ * پایین‌تر از خط مبنا بود. صفحه همچنان این تست را به صورت زنده برای هر رمزارز اجرا می‌کند، بنابراین
+ * رمزارزی که خط مبنای خود را شکست دهد گزارش می‌شود — اما چارچوب پیش‌فرض «توصیف» است، نه «پیش‌بینی».
  */
 export const ANALOG_TESTED = {
   '1h': { meanAccuracy: 50.5, meanBaseline: 53.4, coinsBeatingBaseline: 27, coins: 104, tests: 13435 },
   '4h': { meanAccuracy: 51.0, meanBaseline: 57.7, coinsBeatingBaseline: 9, coins: 100, tests: 13008 },
   '1d': { meanAccuracy: 50.6, meanBaseline: 56.1, coinsBeatingBaseline: 8, coins: 83, tests: 8031 },
   beatsBaselineOverall: false, measuredOn: '2026-10-16',
-  // The run before, on the same coins: 1h 50.4% vs 53.5%, 4h 50.6% vs 56.6%,
-  // 1d 51.4% vs 55.9%; 43 of 287 coin/chart pairs beat their baseline.
+  // اجرای قبلی روی همین رمزارزها: 1h ۵۰.۴٪ در برابر ۵۳.۵٪، 4h ۵۰.۶٪ در برابر ۵۶.۶٪،
+  // 1d ۵۱.۴٪ در برابر ۵۵.۹٪؛ ۴۳ جفت از ۲۸۷ جفت رمزارز/نمودار خط مبنای خود را شکست دادند.
   previousRun: { measuredOn: '2026-10-15', pairsBeating: 43, pairs: 287 },
 };
 
-/** Window / horizon defaults per timeframe, in candles. */
+/** مقادیر پیش‌فرض پنجره (window) و افق (horizon) برای هر تایم‌فریم بر حسب تعداد کندل. */
 export const ANALOG_SHAPE = {
   '1h': { window: 48, horizon: 24 },
   '4h': { window: 36, horizon: 18 },
@@ -72,7 +69,7 @@ const quantile = (xs, q) => {
 };
 
 /**
- * Match the latest window against the coin's own history.
+ * تطبیق آخرین پنجره قیمتی با تاریخچه خودِ رمزارز.
  *
  * @returns {{ok: false, reason: string} | {
  *   ok: true, window: number, horizon: number,
@@ -86,12 +83,12 @@ const quantile = (xs, q) => {
  */
 export function historyMatch(candles, { interval = '1d', topK = 8, minCorr = 0.62 } = {}) {
   if (!Array.isArray(candles) || candles.length < 120) {
-    return { ok: false, reason: 'Not enough history on this timeframe to look for repeats yet.' };
+    return { ok: false, reason: 'هنوز تاریخچه قیمتی کافی در این تایم‌فریم برای جستجوی الگوهای تکراری وجود ندارد.' };
   }
   const { window, horizon } = shapeFor(interval);
   const r = findPatterns(candles, candles.length - 1, { window, horizon, topK, minCorr });
   if (!r.matches || r.matches.length < 3) {
-    return { ok: false, reason: `This stretch does not look like anything in the coin's own history (fewer than 3 windows past ${Math.round(minCorr * 100)}% similarity). That is a real answer: no repeat means no read.` };
+    return { ok: false, reason: `این روند شباهتی به هیچ‌یک از الگوهای گذشته این رمزارز ندارد (کمتر از ۳ پنجره با شباهت بالای ${Math.round(minCorr * 100)}٪ یافت شد). این یک پاسخ واقعی است: نبودِ تکرار یعنی نبودِ تحلیل.` };
   }
 
   const finals = r.matches.map((m) => m.futureReturnPct);
@@ -119,26 +116,26 @@ export function historyMatch(candles, { interval = '1d', topK = 8, minCorr = 0.6
 }
 
 /**
- * Score the method on this coin's own history, walking forward.
+ * امتیازدهی روش روی تاریخچه خودِ رمزارز به صورت گام به گام رو به جلو (Walk-forward).
  *
- * At each evaluation bar the matcher sees only the bars before it, votes up or
- * down, and is marked against what price actually did over the next `horizon`
- * candles. The majority-class baseline is reported next to it, because beating
- * a coin's own drift is the only result that means anything.
+ * در هر کندل ارزیابی، الگویاب فقط کندل‌های پیش از آن را می‌بیند، به صعود یا نزول رأی می‌دهد
+ * و در برابر آنچه قیمت در طول `horizon` کندل بعدی واقعاً انجام داده نمره می‌گیرد.
+ * خط مبنای کلاس اکثریت در کنار آن گزارش می‌شود، زیرا شکست دادن روند طبیعی خودِ رمزارز
+ * تنها نتیجه‌ای است که ارزش واقعی دارد.
  */
 export function backtestAnalog(candles, { interval = '1d', topK = 8, minCorr = 0.62, maxPoints = 160 } = {}) {
   const { window, horizon } = shapeFor(interval);
   const need = window * 2 + horizon + 12;
   if (!Array.isArray(candles) || candles.length < need + horizon + 20) {
-    return { ok: false, reason: 'Not enough history to score the method honestly on this timeframe.' };
+    return { ok: false, reason: 'تاریخچه کافی برای امتیازدهی صادقانه این روش در این تایم‌فریم وجود ندارد.' };
   }
   const first = need;
   const last = candles.length - 1 - horizon;
   const span = last - first;
-  if (span < horizon * 3) return { ok: false, reason: 'Not enough history to score the method honestly on this timeframe.' };
+  if (span < horizon * 3) return { ok: false, reason: 'تاریخچه کافی برای امتیازدهی صادقانه این روش در این تایم‌فریم وجود ندارد.' };
 
-  // never closer together than one horizon: overlapping futures are not
-  // independent samples and would make a small edge look bigger than it is
+  // هرگز نزدیک‌تر از یک افق زمانی نباشند: آینده‌های هم‌پوشان نمونه‌های مستقل نیستند
+  // و باعث می‌شوند یک برتری کوچک بزرگ‌تر از واقعیت به نظر برسد
   const step = Math.max(horizon, Math.ceil(span / maxPoints));
 
   let n = 0, hits = 0, ups = 0, confident = 0, confidentHits = 0, noRead = 0;
@@ -154,10 +151,10 @@ export function backtestAnalog(candles, { interval = '1d', topK = 8, minCorr = 0
     sumBrier += ((actualUp ? 1 : 0) - p) ** 2;
     if (Math.abs(p - 0.5) >= 0.1) { confident++; if ((p > 0.5) === actualUp) confidentHits++; }
   }
-  if (n < 20) return { ok: false, reason: 'Too few independent test points on this timeframe for the number to mean anything.' };
+  if (n < 20) return { ok: false, reason: 'تعداد نقاط آزمون مستقل در این تایم‌فریم برای معنادار بودن عدد بسیار کم است.' };
 
   const upRate = ups / n;
-  const baseline = Math.max(upRate, 1 - upRate) * 100; // always call the majority
+  const baseline = Math.max(upRate, 1 - upRate) * 100; // همیشه انتخاب اکثریت
   const accuracy = (hits / n) * 100;
 
   return {
@@ -177,57 +174,57 @@ export function backtestAnalog(candles, { interval = '1d', topK = 8, minCorr = 0
 }
 
 /**
- * One paragraph that states what the match found and what the score is worth.
- * Written here rather than in the view so the page, the assistant and any export
- * cannot drift into describing the same numbers differently.
+ * یک پاراگراف که یافته‌های تطبیق و ارزش امتیاز را بیان می‌کند.
+ * به جای نوشتن در بخش نمایش (view)، اینجا نوشته شده تا صفحه، دستیار هوشمند و هر خروجی دیگری
+ * دچار تناقض در توصیف اعداد یکسان نشوند.
  */
-// "+1.26%", "−7.67%": signed, with a true minus.
+// "+1.26%", "−7.67%": علامت‌دار، با علامت منفی واقعی.
 const sp = (v) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(2)}%`;
 
-export function analogVerdict(match, score, { symbol = 'this coin', interval = '1d', horizonText = null } = {}) {
-  if (!match?.ok) return { headline: match?.reason || 'No reading.', tone: 'flat', lines: [] };
-  const span = horizonText || `${match.horizon} candles`;
+export function analogVerdict(match, score, { symbol = 'این رمزارز', interval = '1d', horizonText = null } = {}) {
+  if (!match?.ok) return { headline: match?.reason || 'داده‌ای برای خوانش وجود ندارد.', tone: 'flat', lines: [] };
+  const span = horizonText || `${match.horizon} کندل`;
   const lines = [];
 
-  const dirWord = match.direction === 'up' ? 'higher' : match.direction === 'down' ? 'lower' : 'in no consistent direction';
-  // The count that went the way the word says. It used to be the up count every
-  // time, so a falling outcome read "1 of those 8 went lower" when 7 had.
+  const dirWord = match.direction === 'up' ? 'صعودی' : match.direction === 'down' ? 'نزولی' : 'بدون جهت مشخص';
+  // تعدادی که در جهت مورد نظر حرکت کرده‌اند. قبلاً همیشه تعداد صعودها شمرده می‌شد،
+  // بنابراین در یک نتیجه نزولی می‌نوشت «۱ مورد از ۸ مورد نزولی شد» در حالی که ۷ مورد نزولی شده بودند.
   const dirCount = match.direction === 'down' ? match.downCount : match.upCount;
   const failed = score && score.ok && !score.beatsBaseline;
   let headline;
   if (match.direction === 'mixed') {
-    headline = `${symbol} has traced this shape ${match.matches.length} times before on the ${interval} chart, and what followed was split — ${match.upCount} up, ${match.downCount} down. History is not taking a side here.`;
+    headline = `${symbol} پیش از این ${match.matches.length} بار این الگوی قیمتی را در نمودار ${interval} تکرار کرده و نتیجه آن دوگانه بوده است — ${match.upCount} صعود و ${match.downCount} نزول. تاریخچه در اینجا سمت خاصی را تأیید نمی‌کند.`;
   } else if (failed) {
-    // The count is still worth seeing; presenting it as a lean would be the
-    // claim the backtest below just refused.
-    headline = `${symbol} has traced this shape ${match.matches.length} times before on the ${interval} chart — ${dirCount} of them went ${dirWord} next. On this coin that count has not predicted the following move any better than chance, so read the picture below as history rather than as a lean.`;
+    // نمایش تعداد همچنان ارزشمند است؛ اما ارائه آن به عنوان یک سیگنال جهت‌دار، ادعایی است
+    // که بک‌تست زیر همین الان آن را رد کرده است.
+    headline = `${symbol} پیش از این ${match.matches.length} بار این الگوی قیمتی را در نمودار ${interval} تکرار کرده است — ${dirCount} مورد از آن‌ها در ادامه ${dirWord} بوده‌اند. در این رمزارز، این آمار حرکت بعدی را بهتر از شانس پیش‌بینی نکرده است؛ بنابراین تصویر زیر را به عنوان تاریخچه بخوانید نه یک سیگنال جهت‌دار.`;
   } else {
-    headline = `${symbol} has traced this shape ${match.matches.length} times before on the ${interval} chart, and ${dirCount} of those ${match.matches.length} went ${dirWord} over the next ${span}.`;
+    headline = `${symbol} پیش از این ${match.matches.length} بار این الگوی قیمتی را در نمودار ${interval} تکرار کرده و ${dirCount} مورد از آن ${match.matches.length} مورد در طول ${span} بعدی ${dirWord} بوده‌اند.`;
   }
 
-  lines.push(`Typical outcome: ${sp(match.medianPct)} after ${span}, with the middle half of past cases landing between ${sp(match.p25Pct)} and ${sp(match.p75Pct)}. Best case was ${sp(match.bestPct)}, worst was ${sp(match.worstPct)}.`);
-  lines.push(`Along the way those past cases typically rallied ${sp(match.typicalRallyPct)} at best and fell ${sp(match.typicalDrawdownPct)} at worst before the horizon was up — the path matters as much as the endpoint if you are using a stop.`);
-  lines.push(`Average shape similarity of the matches: ${match.avgSimilarityPct}%. A lower number means the "repeat" is looser than it looks on the chart.`);
+  lines.push(`نتیجه معمول: ${sp(match.medianPct)} پس از ${span}، به طوری که نیمی از موارد گذشته در بازه بین ${sp(match.p25Pct)} و ${sp(match.p75Pct)} قرار گرفته‌اند. بهترین حالت ${sp(match.bestPct)} و بدترین حالت ${sp(match.worstPct)} بوده است.`);
+  lines.push(`در طول مسیر، آن موارد گذشته پیش از پایان افق زمانی به طور معمول در بهترین حالت تا ${sp(match.typicalRallyPct)} رشد کرده و در بدترین حالت تا ${sp(match.typicalDrawdownPct)} افت داشته‌اند — اگر از حد ضرر استفاده می‌کنید، مسیر حرکت به اندازه نقطه پایان اهمیت دارد.`);
+  lines.push(`میانگین شباهت الگوی موارد منطبق: ${match.avgSimilarityPct}٪. عدد پایین‌تر به این معناست که «تکرار» الگو از آنچه روی نمودار به نظر می‌رسد آزادتر و تقریبی‌تر است.`);
 
   let tone = match.direction === 'up' ? 'up' : match.direction === 'down' ? 'down' : 'flat';
 
   if (score?.ok) {
     if (score.beatsBaseline) {
-      lines.push(`Scored on this coin's own history, this method called direction right ${score.accuracyPct}% of the time over ${score.tests} independent tests, against ${score.baselinePct}% for simply always calling the more common outcome — an edge of ${score.edgePts} points. Small, and measured on one coin, so treat it as weak evidence rather than a forecast.`);
+      lines.push(`در امتیازدهی روی تاریخچه خودِ این رمزارز، این روش در ${score.tests} آزمون مستقل، ${score.accuracyPct}٪ مواقع جهت را درست تشخیص داده است؛ در مقایسه با ${score.baselinePct}٪ برای حالتی که همیشه نتیجه رایج‌تر انتخاب شود — یعنی یک برتری ${score.edgePts} درصدی. این برتری کوچک است و فقط روی یک رمزارز سنجیده شده، بنابراین با آن به عنوان یک نشانه ضعیف برخورد کنید نه یک پیش‌بینی قطعی.`);
     } else {
       tone = 'warn';
-      lines.push(`Scored on this coin's own history the method did not earn its keep: ${score.accuracyPct}% correct over ${score.tests} independent tests, against ${score.baselinePct}% for simply always calling the more common outcome. On this coin and timeframe the shape match is a description of the past, not a usable prediction — read the picture, do not trade the percentage.`);
+      lines.push(`در امتیازدهی روی تاریخچه خودِ این رمزارز، این روش کارایی لازم را نداشته است: ${score.accuracyPct}٪ تشخیص درست در ${score.tests} آزمون مستقل، در برابر ${score.baselinePct}٪ برای انتخاب همیشگی نتیجه رایج‌تر. در این رمزارز و تایم‌فریم، تطبیق الگو صرفاً توصیفی از گذشته است نه یک پیش‌بینی قابل اتکا — تصویر را بررسی کنید، اما بر اساس درصدها معامله نکنید.`);
     }
     if (score.confidentAccuracyPct !== null) {
-      lines.push(`When the match leaned clearly one way (${score.confidentTests} of ${score.tests} cases) it was right ${score.confidentAccuracyPct}% of the time.`);
+      lines.push(`زمانی که تطبیق الگو تمایل واضحی به یک سمت داشت (${score.confidentTests} مورد از ${score.tests} آزمون)، در ${score.confidentAccuracyPct}٪ مواقع درست عمل کرد.`);
     }
     const overall = ANALOG_TESTED[interval];
     if (overall) {
-      lines.push(`For context, run across ${overall.coins} coins on the ${interval} chart this method averaged ${overall.meanAccuracy}% against a ${overall.meanBaseline}% baseline, and beat its baseline on ${overall.coinsBeatingBaseline} of ${overall.coins} coins — roughly what chance would produce. Shape matching earns its place on this page as a picture of what followed similar stretches, not as a forecast.`);
+      lines.push(`برای مقایسه کلی، اجرای این روش روی ${overall.coins} رمزارز در نمودار ${interval} به طور میانگین دقت ${overall.meanAccuracy}٪ در برابر خط مبنای ${overall.meanBaseline}٪ داشت و تنها در ${overall.coinsBeatingBaseline} رمزارز از ${overall.coins} رمزارز خط مبنا را شکست داد — تقریباً معادل شانس. تطبیق الگو جایگاه خود را در این صفحه به عنوان تصویری از اتفاقات پس از دوره‌های مشابه به دست می‌آورد، نه به عنوان یک ابزار پیش‌بینی.`);
     }
   } else if (score?.reason) {
     tone = 'warn';
-    lines.push(`${score.reason} Until it can be scored, the matches below are history, not evidence.`);
+    lines.push(`${score.reason} تا زمانی که امکان امتیازدهی وجود نداشته باشد، موارد منطبق زیر صرفاً تاریخچه هستند، نه مدرک تحلیلی.`);
   }
 
   return { headline, tone, lines };
