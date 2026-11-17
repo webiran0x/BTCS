@@ -1,178 +1,166 @@
-// One reading per coin across the market, ranked by how much measured evidence
-// stands behind it. This was "What to buy" until the chart score it ranked on
-// was measured to point the wrong way; it reports now instead of recommending.
-import { markets, getCandles, isStable, isTestedSource, INTERVAL_MS } from '../api/market.js';
-import { generateSignal, SCORE_BUCKETS_TESTED } from '../lib/signals.js';
-import { runForecast } from '../lib/compute.js';
-import { timingOutlook } from '../lib/timing.js';
-import { adviseCoin, rankAdvice, ADVICE_DISCLAIMER } from '../lib/advice.js';
-import { TESTED_ACCURACY } from '../lib/predict.js';
-import { directionTrustFor } from '../lib/selfimprove.js';
-import { DEFAULT_HORIZON } from '../ai/context.js';
-import { venuesFor, tradable, TRADE_DISCLAIMER } from '../lib/trade.js';
-import { $, $$, icon, coinLogo, skeleton, bindSeg, modal } from '../ui.js';
-import { esc, safeUrl, pct, money, horizonText, changeHtml } from '../format.js';
-import { load } from '../store.js';
+import { markets, cachedMarkets, getGlobal, getFearGreed, getTrending, isStable } from '../api/market.js';
+import { $, $$, icon, coinLogo, skeleton, errorBox, bindSeg, wireSortHeaders } from '../ui.js';
+import { esc, price, compact, pct, changeHtml, money, dateTime } from '../format.js';
+import { sparkline, gauge, treemap, changeColor } from '../charts/small.js';
+import { watchlist } from '../store.js';
 
-export const title = 'Market scan';
+export const title = 'اسکن بازار';
 
 export async function render(el) {
-  const st = { interval: '4h', rows: [], run: 0, disposed: false, count: 60, skipped: 0 };
-
   el.innerHTML = `
-    <div class="page-head">
-      <div><h1>Market scan</h1><p>Every coin read on one timeframe: what the chart is doing, where the levels sit, and how much measured evidence stands behind each reading. Components that have shown no edge in testing are weighted down to nothing, so most coins come back as "no edge" — that is the honest result, not an empty page.</p></div>
-      <div class="row">
-        <div class="seg" id="iv">${['1m', '5m', '15m', '1h', '4h', '1d'].map((i) => `<button data-v="${i}" class="${i === st.interval ? 'on' : ''}">${i}</button>`).join('')}</div>
-        <button class="btn" id="rescan">${icon('refresh', 16)} Rescan</button>
-      </div>
+    <header class="hero">
+      <p class="eyebrow">اسکن بازار <span class="rule" aria-hidden="true"></span> ${esc(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))}</p>
+      <h1>وضعیت ارزهای دیجیتال <em>امروز</em></h1>
+      <p class="lede" id="mkSummary">اسکن یک‌تایم‌فریمه هر ارز: وضعیت نمودار، سطوح کلیدی، و میزان شواهد مستند پشت هر خوانش. مؤلفه‌های فاقد اعتبار در تست‌ها وزن‌دهی نمی‌شوند، بنابراین بیشتر ارزها به عنوان «بدون لبه» برمی‌گردند — که نتیجه‌ای کاملاً صادقانه است.</p>
+    </header>
+    <div class="global-strip" id="globalStrip">${Array.from({ length: 5 }, () => `<div class="card">${skeleton(2, 16)}</div>`).join('')}</div>
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="card"><div class="card-h"><h3>شاخص ترس و طمع</h3><span class="fine" id="fngDate"></span></div><div id="fng">${skeleton(3)}</div></div>
+      <div class="card"><div class="card-h"><h3>ترندها</h3></div><div class="hl-list" id="trending">${skeleton(5)}</div></div>
+      <div class="card"><div class="card-h"><h3>بیشترین رشد <span class="fine">۲۴س</span></h3></div><div class="hl-list" id="gainers">${skeleton(5)}</div></div>
+      <div class="card"><div class="card-h"><h3>بیشترین ریزش <span class="fine">۲۴س</span></h3></div><div class="hl-list" id="losers">${skeleton(5)}</div></div>
     </div>
-    <div class="meter" id="meter" style="margin-bottom:12px"><i style="width:0%"></i></div>
-    <div id="body">${skeleton(8, 26)}</div>`;
-
-  const card = (r, rank) => {
-    const a = r.advice;
-    const t = a.timing;
-    return `
-      <div class="advice-card" data-sym="${esc(r.coin.symbol)}">
-        <div class="row spread">
-          <div class="coin-cell">${rank ? `<span class="rank">${rank}</span>` : ''}${coinLogo(r.coin, 30)}
-            <div><b>${esc(r.coin.symbol)}</b> <small class="muted">${esc(r.coin.name)}</small><br>
-              <span class="fine">${money(a.price)} ${changeHtml(r.coin.change24h)}</span></div></div>
-          <div style="text-align:right">
-            <span class="chip ${a.tone === 'warn' ? 'warn' : a.tone}"><b>${esc(a.verdict)}</b></span>
-            <div class="fine" style="margin-top:3px">conviction ${a.conviction}/100</div>
-          </div>
+    <div class="card">
+      <div class="card-h">
+        <div class="seg" id="scope"><button data-v="all" class="on">همه ارزها</button><button data-v="watch">${icon('star', 13)} واچ‌لیست</button></div>
+        <div class="row">
+          <input class="inp" id="filter" placeholder="فیلتر..." style="width:150px">
+          <div class="seg" id="mode"><button data-v="table" class="on">جدول</button><button data-v="heatmap">نقشه حرارتی</button></div>
         </div>
+      </div>
+      <div id="tableArea">${skeleton(10, 26)}</div>
+    </div>`;
 
-        ${a.plan ? `<div class="plan mt">
-          <div><div class="k">Entry zone</div><div class="v">${money(a.plan.entryZone[0])} – ${money(a.plan.entryZone[1])}</div></div>
-          <div><div class="k">Stop-loss</div><div class="v down">${money(a.plan.stopLoss)} <span class="fine">(${a.plan.riskPct}%)</span></div></div>
-          <div><div class="k">Target 1</div><div class="v up">${money(a.plan.takeProfits[0])}</div></div>
-          <div><div class="k">Target 2</div><div class="v up">${money(a.plan.takeProfits[1])}</div></div>
-        </div>` : `<p class="fine mt">No entry yet. ${esc(a.waitFor?.[0] || 'Waiting for a trigger.')}</p>`}
+  const state = { scope: 'all', mode: 'table', sort: 'rank', dir: 1, filter: '', limit: 100, rows: cachedMarkets() || [] };
+  let disposed = false;
 
-        ${t ? `<p class="fine mt">${t.rising
-          ? `Similar past setups kept rising for about <b>${esc(horizonText(st.interval, t.bars))}</b>, topping near <b>${money(t.targetPrice)}</b>${t.turnBars ? `, then turning down around ${esc(horizonText(st.interval, t.turnBars))}` : ''}.`
-          : `Similar past setups kept falling for about <b>${esc(horizonText(st.interval, t.bars))}</b> — waiting may get a better price, but that is a pattern, not a forecast.`}</p>` : ''}
-
-        <ul class="reasons mt">${a.reasons.map((x) => `<li class="${x.tone === 'good' ? 'b' : x.tone === 'bad' ? 's' : ''}">${esc(x.text)}</li>`).join('')}</ul>
-        <div class="row mt" style="gap:8px">
-          <a class="btn sm" href="#/coin/${esc(r.coin.symbol)}">Open chart</a>
-          ${tradable(r.coin.symbol) ? `<button class="btn sm ghost" data-trade="${esc(r.coin.symbol)}">Where to trade it</button>` : ''}
-          <span class="fine" style="margin-left:auto">evidence: ${esc(a.evidence)}</span>
-        </div>
-      </div>`;
+  const drawTable = () => {
+    const area = $('#tableArea', el);
+    let rows = state.rows;
+    if (state.scope === 'watch') { const w = watchlist.all(); rows = rows.filter((r) => w.includes(r.symbol)); }
+    if (state.filter) { const f = state.filter.toLowerCase(); rows = rows.filter((r) => r.symbol.toLowerCase().includes(f) || r.name.toLowerCase().includes(f)); }
+    if (!rows.length) { area.innerHTML = `<div class="empty">${state.scope === 'watch' ? 'واچ‌لیست شما خالی است — برای افزودن یک ارز، روی ☆ کنار آن ضربه بزنید.' : 'ارزی مطابقت ندارد.'}</div>`; return; }
+    if (state.mode === 'heatmap') {
+      area.innerHTML = '<div class="treemap" id="tm"></div><p class="fine mt">اندازه کاشی = ارزش بازار · رنگ = تغییر ۲۴ ساعته. برای باز کردن ارز، روی یک کاشی ضربه بزنید.</p>';
+      const top = rows.filter((r) => !isStable(r.symbol)).slice(0, 60);
+      treemap($('#tm', area), top.map((r) => ({ value: Math.sqrt(r.marketCap || 1), label: r.symbol, sub: pct(r.change24h), color: changeColor(r.change24h), symbol: r.symbol })), { onClick: (r) => { location.hash = `#/coin/${r.symbol}`; } });
+      return;
+    }
+    const key = state.sort;
+    rows = [...rows].sort((a, b) => ((a[key] ?? -Infinity) > (b[key] ?? -Infinity) ? 1 : -1) * state.dir * (key === 'rank' || key === 'name' ? 1 : -1));
+    const order = (k) => (state.sort !== k ? 'none' : (state.dir === 1) === (k === 'rank' || k === 'name') ? 'ascending' : 'descending');
+    const th = (k, label, cls = '') => `<th data-sort="${k}" class="${cls}" aria-sort="${order(k)}">${label}${state.sort === k ? (state.dir === 1 ? '\u00a0↓' : '\u00a0↑') : ''}</th>`;
+    area.innerHTML = `<div class="tbl-wrap"><table class="tbl" id="mkt">
+      <thead><tr><th class="l" style="width:28px"></th>${th('rank', '#', 'l hide-p')}${th('name', 'ارز', 'l')}${th('price', 'قیمت')}${th('change1h', '۱س', 'hide-m hide-l')}${th('change24h', '۲۴س')}${th('change7d', '۷روز', 'hide-m')}${th('marketCap', 'ارزش بازار', 'hide-p')}${th('volume24h', 'حجم ۲۴س', 'hide-m hide-t')}<th class="hide-m hide-t">۷ روز گذشته</th></tr></thead>
+      <tbody>${rows.slice(0, state.limit).map((r) => `
+        <tr data-sym="${esc(r.symbol)}" data-pair="${r.binance || ''}">
+          <td class="l"><button class="star ${watchlist.has(r.symbol) ? 'on' : ''}" data-star="${esc(r.symbol)}" aria-label="افزودن ${esc(r.name)} به واچ‌لیست">${icon('star', 15)}</button></td>
+          <td class="l muted hide-p">${r.rank ?? ''}</td>
+          <td class="l"><div class="coin-cell">${coinLogo(r, 26)}<b>${esc(r.name)}</b><small>${esc(r.symbol)}</small></div></td>
+          <td class="p">${money(r.price)}</td>
+          <td class="hide-m hide-l">${changeHtml(r.change1h)}</td>
+          <td class="c24">${changeHtml(r.change24h)}</td>
+          <td class="hide-m">${changeHtml(r.change7d)}</td>
+          <td class="hide-p">${compact(r.marketCap)}</td>
+          <td class="hide-m hide-t">${compact(r.volume24h)}</td>
+          <td class="hide-m hide-t">${sparkline(r.sparkline, { w: 128, h: 38 })}</td>
+        </tr>`).join('')}</tbody></table></div>
+       ${rows.length > state.limit ? `<div class="row" style="justify-content:center;margin-top:12px"><button class="btn" id="more">نمایش بیشتر (${rows.length - state.limit})</button></div>` : ''}`;
+    wireSortHeaders(area, (k) => { state.dir = state.sort === k ? -state.dir : 1; state.sort = k; drawTable(); });
+    $('#mkt tbody', area).addEventListener('click', (e) => {
+      const star = e.target.closest('[data-star]');
+      if (star) { e.stopPropagation(); star.classList.toggle('on', watchlist.toggle(star.dataset.star)); if (state.scope === 'watch') drawTable(); return; }
+      const tr = e.target.closest('tr[data-sym]');
+      if (tr) location.hash = `#/coin/${tr.dataset.sym}`;
+    });
+    $('#more', area)?.addEventListener('click', () => { state.limit += 150; drawTable(); });
   };
 
-  const draw = () => {
-    const done = st.rows.filter((r) => r.advice);
-    if (!done.length) { $('#body', el).innerHTML = skeleton(8, 26); return; }
-    const { buys, avoid, wait } = rankAdvice(done);
-    const holdings = load('holdings', []);
-    const held = done.filter((r) => holdings.some((h) => h.symbol === r.coin.symbol));
+  bindSeg($('#scope', el), (v) => { state.scope = v; drawTable(); });
+  bindSeg($('#mode', el), (v) => { state.mode = v; drawTable(); });
+  $('#filter', el).addEventListener('input', (e) => { state.filter = e.target.value; drawTable(); });
+  if (state.rows.length) drawTable();
 
-    $('#body', el).innerHTML = `
-      ${held.length ? `<h2 class="mt" style="margin-bottom:8px">Your holdings — what to do</h2>
-        <div class="advice-grid">${held.map((r) => card(r)).join('')}</div>` : ''}
+  const listRow = (c, right) => `<a href="#/coin/${esc(c.symbol)}" title="${esc(c.name)} (${esc(c.symbol)})">${coinLogo(c, 22)}<span class="nm">${esc(c.symbol)} <span class="muted">${esc(c.name)}</span></span>${right}</a>`;
 
-      <h2 class="mt" style="margin-bottom:8px">Where the evidence is strongest</h2>
-      ${buys.length
-        ? `<div class="advice-grid">${buys.slice(0, 9).map((r, i) => card(r, i + 1)).join('')}</div>`
-        : `<div class="card empty"><h3>No coin clears the evidence bar on this timeframe</h3><p>This is the usual result and it is a real answer. The chart score earns no weight because it was measured to point the wrong way, and the forecast earns little because it did not beat its baseline — so a verdict only appears when something with a measured record actually leans. Browse the full list below, or read a single coin's chart directly.</p></div>`}
-
-      ${avoid.length ? `<h2 class="mt" style="margin-bottom:8px">Reading weakest here</h2>
-        <div class="advice-grid">${avoid.slice(0, 6).map((r) => card(r)).join('')}</div>` : ''}
-
-      <div class="card mt" style="background:var(--surface-2)">
-        <h3>How much to trust this</h3>
-        <p class="fine">The chart score is <b>not</b> part of any verdict here. Across ${SCORE_BUCKETS_TESTED.bars.toLocaleString('en-US')} candles of ${SCORE_BUCKETS_TESTED.coins} coins the share that rose mostly falls as the score rises, so it is shown as a reading and given no vote — the same accuracy gate every other component passes through.</p>
-        <p class="fine">Each verdict blends four readings, and each one is weighted by its own measured accuracy — a reading that has shown no edge barely moves the result. ${(() => {
-          // one chart's score with that chart's own test count, the latest test where there is one
-          const r = TESTED_ACCURACY.recheck?.[st.interval];
-          const charts = Object.values(TESTED_ACCURACY.recheck || {}).filter((x) => typeof x?.hit === 'number').length;
-          const [hit, base, n] = r ? [r.hit, r.baseline, Math.round(TESTED_ACCURACY.recheck.tests / charts)]
-            : typeof TESTED_ACCURACY[st.interval] === 'number' ? [TESTED_ACCURACY[st.interval], TESTED_ACCURACY.baseline[st.interval], TESTED_ACCURACY.testsPerInterval]
-              : [TESTED_ACCURACY.all, TESTED_ACCURACY.allBaseline, TESTED_ACCURACY.tests];
-          return `The forecast component called the direction right <b>${hit}%</b> of the time in ${n} out-of-sample tests${r || typeof TESTED_ACCURACY[st.interval] === 'number' ? ` on ${esc(st.interval)}` : ''} across ${TESTED_ACCURACY.coins} coins${r ? ` (${TESTED_ACCURACY.recheck.measuredOn})` : ''}, against ${base}% for simply naming the more common direction${(TESTED_ACCURACY.noEdge || []).includes(st.interval) ? ` — on ${esc(st.interval)} it did not beat that baseline` : ''}.`;
-        })()} A BUY or AVOID only appears when a reading with a measured edge leans clearly; when the only lean comes from readings that barely count, the coin is marked "leans up" or "leans down" instead. Timing says when a move may peak, not which way it goes, so it is shown but never votes.</p>
-        <p class="fine">${esc(ADVICE_DISCLAIMER)} ${wait.length} of ${done.length} coins scanned came back as "no edge — wait", which is usually the honest answer.${st.skipped ? ` ${st.skipped} more were skipped: they have no exchange candles on ${esc(st.interval)}, only CoinGecko's hourly line or demo data, which the forecast was never tested on.` : ''}</p>
-      </div>`;
-
-    $$('.advice-card', el).forEach((c) => c.addEventListener('click', (e) => {
-      if (e.target.closest('a,button')) return;
-      location.hash = `#/coin/${c.dataset.sym}`;
-    }));
-    $$('[data-trade]', el).forEach((b) => b.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const sym = b.dataset.trade;
-      modal(`<h3>Where to trade ${esc(sym)}</h3>
-        <div class="sheet-grid mt">${venuesFor(sym).map((v) => `<a class="sheet-item" href="${esc(safeUrl(v.href, '#/exchanges'))}" target="_blank" rel="noopener noreferrer">${icon('exchanges', 18)}<span>${esc(v.name)}<br><small class="fine">${esc(v.pair)}</small></span></a>`).join('')}</div>
-        <p class="fine mt">${esc(TRADE_DISCLAIMER)}</p>`);
-    }));
-  };
-
-  const scan = async () => {
-    const run = ++st.run;
-    st.rows = [];
-    st.skipped = 0;
-    draw();
-    let list;
+  const loadMarkets = async () => {
     try {
-      list = (await markets()).filter((c) => !isStable(c.symbol)).slice(0, st.count);
-    } catch {
-      $('#body', el).innerHTML = '<div class="card empty"><h3>Could not load the coin list</h3><p>The market feed did not answer, so there is nothing to scan. Press Rescan to try again.</p></div>';
-      return;
+      state.rows = await markets();
+      if (disposed) return;
+      drawTable();
+      const movers = state.rows.filter((r) => !isStable(r.symbol) && r.volume24h > 5e6 && Number.isFinite(r.change24h));
+      const g = [...movers].sort((a, b) => b.change24h - a.change24h).slice(0, 5);
+      const l = [...movers].sort((a, b) => a.change24h - b.change24h).slice(0, 5);
+      $('#gainers', el).innerHTML = g.length ? g.map((c) => listRow(c, changeHtml(c.change24h))).join('') : '<p class="muted">داده‌ای از نوسانات فعلی موجود نیست.</p>';
+      $('#losers', el).innerHTML = l.length ? l.map((c) => listRow(c, changeHtml(c.change24h))).join('') : '<p class="muted">داده‌ای از نوسانات فعلی موجود نیست.</p>';
+    } catch (e) {
+      $('#tableArea', el).innerHTML = errorBox('بارگیری داده‌های بازار امکان‌پذیر نبود.', loadMarkets);
     }
-    const iv = st.interval;
-    let done = 0;
-    const setProg = () => { $('#meter i', el).style.width = `${(done / list.length) * 100}%`; };
-
-    const queue = [...list];
-    const worker = async () => {
-      while (queue.length) {
-        const coin = queue.shift();
-        try {
-          // The coin page's 1,500 candles; CoinGecko and demo data are skipped and counted.
-          const res = await getCandles(coin, iv, 1500);
-          if (run !== st.run || st.disposed) return;
-          if (!isTestedSource(res)) { st.skipped++; } else {
-            const signal = generateSignal(res.candles, { interval: iv });
-            // Show the chart reading straight away; the forecast pass below only
-            // refines it, so the page is never a blank skeleton while it runs.
-            st.rows.push({ coin, signal, candles: res.candles, advice: adviseCoin({ signal, forecast: null, timing: null, interval: iv }) });
-            draw();
-          }
-        } catch { st.skipped++; }
-        done++; setProg();
-      }
-    };
-    await Promise.all([worker(), worker(), worker(), worker()]);
-    if (run !== st.run || st.disposed) return;
-    if (!st.rows.length) {
-      $('#body', el).innerHTML = `<div class="card empty"><h3>No chart data came back</h3><p>None of the coins returned exchange candles on this timeframe${st.skipped ? ` (${st.skipped} skipped: CoinGecko or demo data only)` : ''}, so there is nothing to read. Press Rescan to try again.</p></div>`;
-      $('#meter i', el).style.width = '100%';
-      return;
-    }
-
-    // Forecast + timing pass, strongest technical signals first so the top of
-    // the page fills in early.
-    for (const row of [...st.rows].sort((a, b) => Math.abs(b.signal.score) - Math.abs(a.signal.score))) {
-      if (run !== st.run || st.disposed) return;
-      let fc = null, tm = null;
-      try {
-        fc = await runForecast(row.candles, { horizon: DEFAULT_HORIZON[iv], intervalMs: INTERVAL_MS[iv] });
-        tm = fc?.ok ? timingOutlook(fc, { intervalMs: INTERVAL_MS[iv], interval: iv }) : null;
-      } catch { /* the advice still works without it */ }
-      row.advice = adviseCoin({ signal: row.signal, forecast: fc, timing: tm, interval: iv, trust: directionTrustFor(iv).trust });
-      row.candles = null;
-      draw();
-    }
-    $('#meter i', el).style.width = '100%';
   };
 
-  bindSeg($('#iv', el), (v) => { st.interval = v; scan(); });
-  $('#rescan', el).addEventListener('click', scan);
-  scan();
-  return () => { st.disposed = true; st.run++; };
+  const loadGlobal = async () => {
+    let g;
+    try { g = await getGlobal(); } catch (e) {
+      if (disposed) return;
+      $('#globalStrip', el).innerHTML = `<div class="card empty" style="grid-column:1/-1"><b>خلاصه بازار جهانی در دسترس نیست</b><p class="fine">${esc(e?.message || 'منبع بازار جهانی پاسخ نداد.')}</p></div>`;
+      return;
+    }
+    if (disposed) return;
+    const card = (k, v, s = '') => `<div class="card stat"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
+    $('#globalStrip', el).innerHTML = [
+      card('کل ارزش بازار', compact(g.totalMarketCap), `${changeHtml(g.marketCapChange24h)} <span class="muted">۲۴س</span>`),
+      card('حجم ۲۴ ساعته', compact(g.totalVolume), '<span class="muted">همه صرافی‌ها</span>'),
+      card('دامیننس بیت‌کوین', pct(g.btcDominance, 1, false), '<span class="muted">سهم از ارزش بازار</span>'),
+      card('دامیننس اتریوم', pct(g.ethDominance, 1, false), '<span class="muted">سهم از ارزش بازار</span>'),
+      card('ارزهای رصدشده', g.activeCryptocurrencies?.toLocaleString('en-US') ?? '—', g.markets ? `<span class="muted">${g.markets.toLocaleString('en-US')} بازار</span>` : ''),
+    ].join('');
+    $('#mkSummary', el).innerHTML = `ارزش کل بازار ارز دیجیتال <b>${compact(g.totalMarketCap)}</b> است که در ۲۴ ساعت گذشته ${g.marketCapChange24h >= 0 ? 'افزایش' : 'کاهش'} <b class="${g.marketCapChange24h >= 0 ? 'up' : 'down'}">${pct(Math.abs(g.marketCapChange24h), 2, false)}</b> داشته است.`;
+  };
+
+  const loadFng = async () => {
+    let f;
+    try { f = await getFearGreed(); } catch (e) {
+      if (!disposed) $('#fng', el).innerHTML = `<div class="empty"><p>شاخص ترس و طمع در دسترس نیست.</p><p class="fine">${esc(e?.message || 'منبع احساسات بازار پاسخ نداد.')}</p></div>`;
+      return;
+    }
+    if (disposed) return;
+    if (!f?.length) { $('#fng', el).innerHTML = '<div class="empty"><p>هیچ داده اخیری از شاخص ترس و طمع دریافت نشد.</p></div>'; return; }
+    const now = f[0], week = f[7], month = f[29];
+    const stamp = $('#fngDate', el);
+    if (stamp && now.timestamp) stamp.textContent = `به تاریخ ${dateTime(now.timestamp / 1000, false)}`;
+    $('#fng', el).innerHTML = `${gauge(now.value, now.classification)}
+      <div class="row spread fine" style="margin-top:6px"><span>دیروز <b>${f[1]?.value ?? '—'}</b></span><span>هفته گذشته <b>${week?.value ?? '—'}</b></span><span>ماه گذشته <b>${month?.value ?? '—'}</b></span></div>`;
+  };
+
+  const loadTrending = async () => {
+    let t;
+    try { t = await getTrending(); } catch (e) {
+      if (!disposed) $('#trending', el).innerHTML = `<p class="muted">داده‌های ترند در دسترس نیست: ${esc(e?.message || 'منبع در دسترس نیست')}.</p>`;
+      return;
+    }
+    if (disposed) return;
+    $('#trending', el).innerHTML = t.slice(0, 5).map((c) => listRow(c, changeHtml(c.change24h))).join('') || '<p class="muted">داده‌ای وجود ندارد</p>';
+  };
+
+  loadMarkets(); loadGlobal(); loadFng(); loadTrending();
+
+  const onTick = (e) => {
+    if (state.mode !== 'table') return;
+    for (const t of e.detail) {
+      const tr = el.querySelector(`tr[data-pair="${t.s}"]`);
+      if (!tr) continue;
+      const cell = tr.querySelector('.p');
+      const p = +t.c;
+      const prev = +cell.dataset.v || 0;
+      cell.dataset.v = p;
+      const txt = `${money(p)}`;
+      if (cell.textContent !== txt) {
+        cell.textContent = txt;
+        if (prev) { cell.classList.remove('flash-up', 'flash-down'); void cell.offsetWidth; cell.classList.add(p >= prev ? 'flash-up' : 'flash-down'); }
+      }
+    }
+  };
+  window.addEventListener('cv:tickers', onTick);
+  const refresh = setInterval(loadMarkets, 90e3);
+  return () => { disposed = true; window.removeEventListener('cv:tickers', onTick); clearInterval(refresh); };
 }
