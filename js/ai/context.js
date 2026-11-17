@@ -27,7 +27,7 @@ export async function analyzeCoin(symbol, { interval = '4h', withForecast = true
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < 90e3 && (!withForecast || hit.forecast)) return hit;
   const coin = await findCoin(symbol);
-  if (!coin) throw new Error(`من نتوانستم ${symbol} را در بین ۲۵۰ ارز برتر پیدا کنم.`);
+  if (!coin) throw new Error(`من نتوانستم ${symbol} را در میان ۲۵۰ ارز برتر پیدا کنم.`);
   onStep?.('در حال بارگذاری داده‌های زنده نمودار…');
   const main = await getCandles(coin, interval, 1500);
   const signal = generateSignal(main.candles, { interval });
@@ -175,9 +175,9 @@ export function marketContext(rows, interval) {
 // buy?" has a different answer over the next few hours than over the next few
 // weeks, so the assistant answers all three rather than picking one for you.
 export const SCAN_FRAMES = [
-  { interval: '1h', label: 'کوتاه‌مدت' },
+  { interval: '1h', label: 'کوتاه‌مدت (یک ساعت)' },
   { interval: '4h', label: 'میان‌مدت (سوئینگ)' },
-  { interval: '1d', label: 'پوزیشن' },
+  { interval: '1d', label: 'بلندمدت (یک روز)' },
 ];
 
 export async function scanMarketMulti({ intervals = SCAN_FRAMES.map((f) => f.interval), count = 30, onStep } = {}) {
