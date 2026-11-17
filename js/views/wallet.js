@@ -8,7 +8,6 @@ import { load, save } from '../store.js';
 import { connectWallet, injectedWallet, walletLabel, onWalletChange } from '../api/connect.js';
 import { venuesFor, tradable, TRADE_DISCLAIMER } from '../lib/trade.js';
 
-// صفر نه سود است و نه زیان: یک پورتفولیوی خالی قبلاً به صورت "+$0.00" با رنگ سبز نمایش داده می‌شد.
 const signedUsd = (v) => {
   const c = Math.round(v * 100) / 100;
   return `<span class="v ${tone(c)}">${c > 0 ? '+' : c < 0 ? '−' : ''}${usd(Math.abs(c))}</span>`;
@@ -22,37 +21,134 @@ export async function render(el) {
   let disposed = false;
   const all = await markets().catch(() => []);
   el.innerHTML = `
-    <div class="page-head"><div><h1>کیف پول</h1><p>پیگیری دارایی‌ها با سود و زیان زنده، پیشنهادهای نگهداری یا خروج هوش مصنوعی و رصد آدرس‌های عمومی کیف پول.</p></div></div>
-    <div class="grid g4" id="sum"></div>
-    <div class="grid mt" style="grid-template-columns:minmax(0,1fr) 320px" id="wgrid">
-      <div class="card">
-        <div class="card-h"><h3>دارایی‌ها</h3><button class="btn sm primary" id="addBtn">${icon('plus', 14)} افزودن دارایی</button></div>
-        <form id="addForm" class="row" hidden style="margin-bottom:12px;align-items:flex-end">
-          <label class="fld">رمزارز<input class="inp" name="sym" list="wCoins" required placeholder="BTC" style="width:110px"></label>
-          <label class="fld">مقدار<input class="inp" name="amt" type="number" step="any" min="0" required placeholder="0.5" style="width:120px"></label>
-          <label class="fld"><span>میانگین قیمت خرید (<span id="buyCur">${esc(fx.code)}</span>)</span><input class="inp" name="buy" type="number" step="any" min="0" placeholder="اختیاری" style="width:150px"></label>
-          <button class="btn primary">ذخیره</button>
-        </form>
-        <div id="holdings"></div>
+    <style>
+      .ap-wallet-wrap {
+        direction: rtl;
+        text-align: right;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding-bottom: 60px;
+      }
+      .ap-hero-card {
+        background: radial-gradient(circle at top right, rgba(94, 92, 230, 0.09), transparent 50%),
+                    radial-gradient(circle at bottom left, rgba(50, 215, 75, 0.07), transparent 50%),
+                    rgba(24, 24, 29, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 28px;
+        padding: 32px;
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        margin-bottom: 24px;
+        box-shadow: 0 24px 54px rgba(0, 0, 0, 0.35);
+      }
+      .ap-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 22px;
+        padding: 24px;
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        margin-bottom: 24px;
+      }
+      .ap-card:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+      }
+      .ap-wallet-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      @media(max-width: 1000px) {
+        .ap-wallet-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      .ap-main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+      }
+      @media(max-width: 1000px) {
+        .ap-main-grid { grid-template-columns: 1fr; }
+      }
+      .ap-wallet-wrap .inp, .ap-wallet-wrap select {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 12px;
+        color: #fff;
+        padding: 10px 14px;
+        outline: none;
+        transition: all 0.2s;
+        width: 100%;
+      }
+      .ap-wallet-wrap .inp:focus, .ap-wallet-wrap select:focus {
+        border-color: rgba(94, 92, 230, 0.6);
+        box-shadow: 0 0 0 3px rgba(94, 92, 230, 0.25);
+      }
+      .ap-wallet-wrap table.tbl {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .ap-wallet-wrap table.tbl th, .ap-wallet-wrap table.tbl td {
+        padding: 12px 16px;
+        text-align: right;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 0.9rem;
+      }
+      .ap-wallet-wrap table.tbl th {
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 500;
+        font-size: 0.8rem;
+      }
+      .ap-wallet-wrap table.tbl tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+      }
+    </style>
+
+    <div class="ap-wallet-wrap" dir="rtl">
+      <div class="ap-hero-card">
+        <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">کیف پول و پورتفولیو</h1>
+        <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0;max-width:900px">پیگیری دارایی‌ها با سود و زیان زنده، پیشنهادهای نگهداری یا خروج هوش مصنوعی و رصد آدرس‌های عمومی کیف پول.</p>
       </div>
-      <div class="card"><div class="card-h"><h3>تخصیص دارایی</h3></div><div id="alloc" style="display:grid;place-items:center"></div><div id="allocLegend" class="stack mt" style="gap:6px"></div></div>
-    </div>
-    <div class="card mt">
-      <div class="card-h"><h3>کیف پول‌های فقط-خواندنی (Watch-only)</h3>
-        <div class="row" style="gap:8px"><span class="fine">فقط آدرس‌های عمومی — استعلام موجودی بدون دسترسی</span>
-        <button class="btn sm" id="connectBtn">${icon('wallet', 14)} اتصال کیف پول</button></div></div>
-      <p class="fine" id="connectMsg" style="margin-bottom:8px"></p>
-      <form id="wForm" class="row" style="margin-bottom:12px;align-items:flex-end">
-        <label class="fld">شبکه<select class="inp" name="chain">${Object.entries(CHAINS).map(([k, c]) => `<option value="${k}">${c.name}</option>`).join('')}</select></label>
-        <label class="fld" style="flex:1;min-width:220px">آدرس عمومی<input class="inp" name="addr" required placeholder="آدرس bc1… / 0x… / Solana"></label>
-        <label class="fld">برچسب<input class="inp" name="label" placeholder="کیف پول سرد" style="width:130px"></label>
-        <button class="btn primary">افزودن</button>
-      </form>
-      <div id="wallets"></div>
-      <p class="fine mt">🔒 هرگز کلید خصوصی یا عبارت بازیابی (Seed Phrase) را در هیچ بخشی از این سایت وارد نکنید — این سامانه هرگز آن‌ها را درخواست نمی‌کند. تمامی اطلاعات این بخش فقط در مرورگر خودتان ذخیره می‌شوند.</p>
+
+      <div class="ap-wallet-grid" id="sum"></div>
+
+      <div class="ap-main-grid" id="wgrid">
+        <div class="ap-card" style="margin-bottom:0">
+          <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:1.15rem;color:#fff">دارایی‌ها</h3><button class="btn sm primary" id="addBtn" style="background:#5e5ce6;color:#fff;border:0;padding:6px 14px;border-radius:10px;font-weight:500;cursor:pointer">${icon('plus', 14)} افزودن دارایی</button></div>
+          <form id="addForm" class="row" hidden style="margin-bottom:16px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+            <label class="fld" style="flex:1;min-width:120px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">رمزارز</span><input class="inp" name="sym" list="wCoins" required placeholder="BTC"></label>
+            <label class="fld" style="flex:1;min-width:120px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">مقدار</span><input class="inp" name="amt" type="number" step="any" min="0" required placeholder="0.5"></label>
+            <label class="fld" style="flex:1.5;min-width:160px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">میانگین خرید (<span id="buyCur">${esc(fx.code)}</span>)</span><input class="inp" name="buy" type="number" step="any" min="0" placeholder="اختیاری"></label>
+            <button class="btn primary" style="background:#32d74b;color:#000;border:0;padding:10px 18px;border-radius:12px;font-weight:600;cursor:pointer">ذخیره</button>
+          </form>
+          <div id="holdings"></div>
+        </div>
+        <div class="ap-card" style="margin-bottom:0">
+          <div class="card-h" style="margin-bottom:16px"><h3 style="margin:0;font-size:1.15rem;color:#fff">تخصیص دارایی</h3></div>
+          <div id="alloc" style="display:grid;place-items:center;min-height:160px"></div>
+          <div id="allocLegend" class="stack mt" style="gap:8px;margin-top:16px"></div>
+        </div>
+      </div>
+
+      <div class="ap-card mt" style="margin-top:24px">
+        <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+          <div><h3 style="margin:0 0 4px 0;font-size:1.15rem;color:#fff">کیف پول‌های فقط-خواندنی (Watch-only)</h3><span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem">استعلام موجودی بدون دسترسی مستقیم</span></div>
+          <button class="btn sm" id="connectBtn" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:6px 14px;border-radius:10px;cursor:pointer;font-weight:500">${icon('wallet', 14)} اتصال کیف پول مرورگر</button>
+        </div>
+        <p class="fine" id="connectMsg" style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-bottom:16px"></p>
+        <form id="wForm" class="row" style="margin-bottom:20px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+          <label class="fld" style="flex:1;min-width:140px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">شبکه</span><select class="inp" name="chain">${Object.entries(CHAINS).map(([k, c]) => `<option value="${k}">${c.name}</option>`).join('')}</select></label>
+          <label class="fld" style="flex:2;min-width:240px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">آدرس عمومی</span><input class="inp" name="addr" required placeholder="0x… / bc1…"></label>
+          <label class="fld" style="flex:1;min-width:130px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">برچسب</span><input class="inp" name="label" placeholder="کیف پول سرد"></label>
+          <button class="btn primary" style="background:#5e5ce6;color:#fff;border:0;padding:10px 18px;border-radius:12px;font-weight:600;cursor:pointer">افزودن</button>
+        </form>
+        <div id="wallets"></div>
+        <p class="fine mt" style="color:rgba(255,255,255,0.4);font-size:0.8rem;line-height:1.6;margin-top:16px">🔒 هرگز کلید خصوصی یا عبارت بازیابی را در هیچ سایتی وارد نکنید. تمام اطلاعات پورتفولیو صرفاً در حافظه مرورگر شما ذخیره می‌شوند.</p>
+      </div>
     </div>
     <datalist id="wCoins">${all.filter((c) => !isStable(c.symbol)).slice(0, 250).map((c) => `<option value="${esc(c.symbol)}">${esc(c.name)}</option>`).join('')}</datalist>`;
-  if (window.innerWidth < 1000) $('#wgrid', el).style.gridTemplateColumns = 'minmax(0,1fr)';
 
   const advice = new Map();
 
@@ -70,29 +166,32 @@ export async function render(el) {
     const cost = rows.reduce((s, r) => s + (r.avgBuy ? r.avgBuy * r.amount : 0), 0);
     const pnl = rows.reduce((s, r) => s + (r.pnl || 0), 0);
     const day = rows.reduce((s, r) => s + (r.ch24 !== null ? r.value - r.value / (1 + r.ch24 / 100) : 0), 0);
+    
     $('#sum', el).innerHTML = `
-      <div class="card stat"><span class="k">ارزش پورتفولیو</span><span class="v">${usd(total)}</span></div>
-      <div class="card stat"><span class="k">سود / زیان کل</span>${signedUsd(pnl)}<span class="s">${cost ? pct((pnl / cost) * 100) : ''}</span></div>
-      <div class="card stat"><span class="k">تغییرات ۲۴ ساعته</span>${signedUsd(day)}</div>
-      <div class="card stat"><span class="k">کیف پول‌های تحت نظر</span><span class="v">${usd(walletValue)}</span><span class="s muted">${wallets.length} آدرس</span></div>`;
-    $('#holdings', el).innerHTML = rows.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">رمزارز</th><th>مقدار</th><th>قیمت</th><th>ارزش</th><th>سود/زیان</th><th class="hide-m">۲۴ ساعت</th><th class="l">پیشنهاد هوش مصنوعی (۴ ساعته)</th><th></th></tr></thead><tbody>
-      ${rows.sort((a, b) => b.value - a.value).map((r) => { const a = advice.get(r.symbol); return `<tr data-sym="${esc(r.symbol)}">
-        <td class="l"><div class="coin-cell">${coinLogo(r.coin || { symbol: r.symbol }, 24)}<b>${esc(r.symbol)}</b></div></td>
+      <div class="ap-card stat" style="margin-bottom:0;padding:20px"><span class="k" style="color:rgba(255,255,255,0.5);font-size:0.85rem">ارزش پورتفولیو</span><span class="v" style="font-size:1.4rem;font-weight:700;color:#fff;display:block;margin-top:6px">${usd(total)}</span></div>
+      <div class="ap-card stat" style="margin-bottom:0;padding:20px"><span class="k" style="color:rgba(255,255,255,0.5);font-size:0.85rem">سود / زیان کل</span><div style="margin-top:6px">${signedUsd(pnl)}</div><span class="s" style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:2px;display:block">${cost ? pct((pnl / cost) * 100) : ''}</span></div>
+      <div class="ap-card stat" style="margin-bottom:0;padding:20px"><span class="k" style="color:rgba(255,255,255,0.5);font-size:0.85rem">تغییرات ۲۴ ساعته</span><div style="margin-top:6px">${signedUsd(day)}</div></div>
+      <div class="ap-card stat" style="margin-bottom:0;padding:20px"><span class="k" style="color:rgba(255,255,255,0.5);font-size:0.85rem">کیف پول‌های تحت نظر</span><span class="v" style="font-size:1.4rem;font-weight:700;color:#fff;display:block;margin-top:6px">${usd(walletValue)}</span><span class="s muted" style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:2px;display:block">${wallets.length} آدرس</span></div>`;
+    
+    $('#holdings', el).innerHTML = rows.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">رمزارز</th><th>مقدار</th><th>قیمت</th><th>ارزش</th><th>سود/زیان</th><th class="hide-m">۲۴ ساعت</th><th class="l">پیشنهاد هوش مصنوعی</th><th></th></tr></thead><tbody>
+      ${rows.sort((a, b) => b.value - a.value).map((r) => { const a = advice.get(r.symbol); return `<tr data-sym="${esc(r.symbol)}" style="cursor:pointer">
+        <td class="l"><div class="coin-cell" style="display:flex;align-items:center;gap:8px">${coinLogo(r.coin || { symbol: r.symbol }, 24)}<b>${esc(r.symbol)}</b></div></td>
         <td>${amount(r.amount)}</td><td>${money(r.price)}</td><td><b>${usd(r.value)}</b></td>
-        <td class="${(r.pnl ?? 0) >= 0 ? 'up' : 'down'}">${r.pnl !== null ? `${r.pnl >= 0 ? '+' : '−'}${usd(Math.abs(r.pnl))}<br><small>${pct(r.pnlPct)}</small>` : '<span class="muted">—</span>'}</td>
+        <td class="${(r.pnl ?? 0) >= 0 ? 'up' : 'down'}">${r.pnl !== null ? `${r.pnl >= 0 ? '+' : '−'}${usd(Math.abs(r.pnl))}<br><small style="color:rgba(255,255,255,0.4)">${pct(r.pnlPct)}</small>` : '<span class="muted">—</span>'}</td>
         <td class="hide-m">${changeHtml(r.ch24)}</td>
-        <td class="l" style="white-space:normal;min-width:170px;max-width:240px">${a ? `<span class="${a.tone === 'warn' ? 'warn' : a.tone}">${esc(a.text)}</span>` : '<span class="spinner" style="width:12px;height:12px"></span>'}</td>
-        <td><div class="row" style="gap:4px;flex-wrap:nowrap;justify-content:flex-end">
-          ${tradable(r.symbol) ? `<button class="btn sm ghost" data-trade="${esc(r.symbol)}" title="معامله ${esc(r.symbol)} در صرافی">معامله</button>` : ''}
-          <button class="icon-btn" style="width:30px;height:30px" data-del="${esc(r.symbol)}" aria-label="حذف">${icon('trash', 14)}</button></div></td></tr>`; }).join('')}
-      </tbody></table></div>` : `<div class="empty"><p>هنوز دارایی‌ای ثبت نشده است.</p><button class="btn primary" id="addFirst">${icon('plus', 14)} اولین رمزارز خود را اضافه کنید</button></div>`;
-    // کلیک درون‌خطی (inline onclick) توسط CSP صفحه مسدود شده است، بنابراین دکمه وضعیت خالی اینجا متصل می‌شود
+        <td class="l" style="white-space:normal;min-width:170px;max-width:240px">${a ? `<span class="${a.tone === 'warn' ? 'warn' : a.tone}" style="padding:2px 6px;border-radius:6px;font-size:0.8rem">${esc(a.text)}</span>` : '<span class="spinner" style="width:12px;height:12px"></span>'}</td>
+        <td><div class="row" style="gap:6px;flex-wrap:nowrap;justify-content:flex-end">
+          ${tradable(r.symbol) ? `<button class="btn sm ghost" data-trade="${esc(r.symbol)}" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:4px 10px;border-radius:8px;font-size:0.75rem;cursor:pointer">معامله</button>` : ''}
+          <button class="icon-btn" style="width:30px;height:30px;background:transparent;border:0;color:rgba(255,255,255,0.6);cursor:pointer" data-del="${esc(r.symbol)}" aria-label="حذف">${icon('trash', 14)}</button></div></td></tr>`; }).join('')}
+      </tbody></table></div>` : `<div class="empty" style="text-align:center;padding:40px"><p style="color:rgba(255,255,255,0.5);margin-bottom:16px">هنوز دارایی‌ای ثبت نشده است.</p><button class="btn primary" id="addFirst" style="background:#5e5ce6;color:#fff;border:0;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('plus', 14)} افزودن اولین رمزارز</button></div>`;
+    
     $('#addFirst', el)?.addEventListener('click', () => $('#addBtn', el)?.click());
     $$('[data-del]', el).forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); save('holdings', load('holdings', []).filter((h) => h.symbol !== b.dataset.del)); drawHoldings(); }));
     $$('#holdings tr[data-sym]', el).forEach((tr) => tr.addEventListener('click', () => { location.hash = `#/coin/${tr.dataset.sym}`; }));
+    
     const items = rows.filter((r) => r.value > 0).map((r, i) => ({ label: r.symbol, value: r.value, color: cssVar(COLORS[i % COLORS.length]) }));
-    $('#alloc', el).innerHTML = items.length ? donut(items) : '<p class="muted">برای مشاهده نمودار تخصیص، دارایی اضافه کنید.</p>';
-    $('#allocLegend', el).innerHTML = items.map((it) => `<div class="row spread"><span class="row" style="gap:8px"><i style="width:10px;height:10px;border-radius:3px;background:${it.color}"></i>${esc(it.label)}</span><b>${((it.value / total) * 100).toFixed(1)}%</b></div>`).join('');
+    $('#alloc', el).innerHTML = items.length ? donut(items) : '<p class="muted" style="color:rgba(255,255,255,0.4)">بدون دارایی</p>';
+    $('#allocLegend', el).innerHTML = items.map((it) => `<div class="row spread" style="display:flex;justify-content:space-between;align-items:center"><span class="row" style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.8)"><i style="width:10px;height:10px;border-radius:3px;background:${it.color}"></i>${esc(it.label)}</span><b style="color:#fff">${((it.value / total) * 100).toFixed(1)}%</b></div>`).join('');
   };
 
   const computeAdvice = async () => {
@@ -101,23 +200,19 @@ export async function render(el) {
       try {
         const coin = await findCoin(h.symbol);
         const res = await getCandles(coin, '4h', 300);
-        // پیشنهاد فقط از روی کندل‌های صرافی خوانده می‌شود: قیمت‌های دمو ساختگی هستند
-        // و نمونه‌های CoinGecko کندل‌هایی نیستند که سیگنال روی آن‌ها تست شده است.
-        if (!isTestedSource(res)) { advice.set(h.symbol, { text: res.source === 'demo' ? 'قیمت‌های زنده بارگیری نمی‌شوند — بدون پیشنهاد' : 'نمودار صرافی موجود نیست — بدون پیشنهاد', tone: 'flat' }); if (!disposed) drawHoldings(); continue; }
+        if (!isTestedSource(res)) { advice.set(h.symbol, { text: 'بدون پیشنهاد', tone: 'flat' }); if (!disposed) drawHoldings(); continue; }
         const { candles } = res;
         const sig = generateSignal(candles, { interval: '4h' });
         advice.set(h.symbol, adviseHolding({ signal: sig, avgBuyPrice: h.avgBuy, price: candles[candles.length - 1].c }));
-      } catch { advice.set(h.symbol, { text: 'داده نمودار موجود نیست', tone: 'flat' }); }
+      } catch { advice.set(h.symbol, { text: 'خطا', tone: 'flat' }); }
       if (!disposed) drawHoldings();
     }
   };
 
   $('#addBtn', el).addEventListener('click', () => { const f = $('#addForm', el); f.hidden = !f.hidden; if (!f.hidden) f.sym.focus(); });
-  // تمام ارقام این جدول به ارز نمایشی انتخاب‌شده نشان داده می‌شوند، بنابراین فیلدی که دلار آمریکا بخواهد
-  // باعث اشتباه در وارد کردن قیمت تمام‌شده و گزارش سود و زیان نادرست می‌شود.
-  // فیلد ارز نمایشی را دریافت کرده و هنگام ذخیره به دلار تبدیل می‌کند.
   const toUsd = (v) => (fx.rate ? v / fx.rate : v);
   $('#addForm', el).sym.addEventListener('change', (e) => { const c = all.find((m) => m.symbol === e.target.value.toUpperCase()); if (c && !e.target.form.buy.value) e.target.form.buy.placeholder = price(c.price * fx.rate); });
+  
   const onCur = () => {
     const code = $('#buyCur', el);
     if (code) code.textContent = fx.code;
@@ -125,18 +220,16 @@ export async function render(el) {
     if (form) { form.buy.value = ''; form.buy.placeholder = 'اختیاری'; }
   };
   window.addEventListener('cv:currency', onCur);
+  
   $('#addForm', el).addEventListener('submit', (e) => {
     e.preventDefault();
     const f = e.target;
     const sym = f.sym.value.trim().toUpperCase();
     const coin = all.find((m) => m.symbol === sym);
-    if (!coin) { toast(`رمزارز ${sym} در بین ۲۵۰ ارز برتر پیدا نشد`, 'down'); return; }
+    if (!coin) { toast(`رمزارز ${sym} پیدا نشد`, 'down'); return; }
     const typedBuy = parseFloat(f.buy.value);
     const amt = parseFloat(f.amt.value);
-    // مقدار صفر از بررسی فرم عبور می‌کرد و دو بار افزودن صفر باعث تقسیم ۰ بر ۰ در میانگین قیمت می‌شد.
-    if (!(amt > 0)) { toast('مقداری بیشتر از صفر وارد کنید.', 'down'); return; }
-    // بدون وارد کردن قیمت، قیمت فعلی به عنوان مبنای هزینه در نظر گرفته می‌شود که نباید قیمت ساختگی دمو باشد.
-    if (!Number.isFinite(typedBuy) && coin.source === 'demo') { toast('قیمت‌های زنده بارگیری نمی‌شوند، لطفاً قیمت خرید خود را وارد کنید.', 'down'); return; }
+    if (!(amt > 0)) { toast('مقدار نامعتبر', 'down'); return; }
     const buy = Number.isFinite(typedBuy) ? toUsd(typedBuy) : coin.price;
     const holdings = load('holdings', []);
     const ex = holdings.find((h) => h.symbol === sym);
@@ -150,13 +243,14 @@ export async function render(el) {
   const drawWallets = () => {
     const wallets = load('wallets', []);
     $('#wallets', el).innerHTML = wallets.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">کیف پول</th><th class="l">شبکه</th><th>موجودی</th><th>ارزش</th><th></th></tr></thead><tbody>
-      ${wallets.map((w, i) => { const c = all.find((m) => m.symbol === w.symbol); return `<tr style="cursor:default"><td class="l"><b>${esc(w.label || 'کیف پول')}</b><br><small class="muted mono">${esc(w.addr.slice(0, 10))}…${esc(w.addr.slice(-6))}</small></td>
+      ${wallets.map((w, i) => { const c = all.find((m) => m.symbol === w.symbol); return `<tr style="cursor:default"><td class="l"><b style="color:#fff">${esc(w.label || 'کیف پول')}</b><br><small class="muted mono" style="color:rgba(255,255,255,0.4)">${esc(w.addr.slice(0, 10))}…</small></td>
         <td class="l">${esc(CHAINS[w.chain].name)}</td><td>${w.error ? `<span class="down">${esc(w.error)}</span>` : w.balance === undefined ? '<span class="spinner" style="width:12px;height:12px"></span>' : `${amount(w.balance)} ${esc(w.symbol)}`}</td>
         <td>${w.balance !== undefined && c ? usd(w.balance * c.price) : '—'}</td>
-        <td><button class="icon-btn" style="width:30px;height:30px" data-wdel="${i}" aria-label="حذف">${icon('trash', 14)}</button></td></tr>`; }).join('')}
-      </tbody></table></div>` : '<p class="muted">هیچ کیف پولی اضافه نشده است. یک آدرس عمومی BTC، ETH، BNB Chain، Polygon یا Solana را برای پیگیری موجودی آن وارد کنید.</p>';
+        <td><button class="icon-btn" style="width:30px;height:30px;background:transparent;border:0;color:rgba(255,255,255,0.6);cursor:pointer" data-wdel="${i}" aria-label="حذف">${icon('trash', 14)}</button></td></tr>`; }).join('')}
+      </tbody></table></div>` : '<p class="muted" style="color:rgba(255,255,255,0.4);font-size:0.85rem">هیچ کیف پولی اضافه نشده است. آدرس عمومی خود را وارد کنید.</p>';
     $$('[data-wdel]', el).forEach((b) => b.addEventListener('click', () => { const ws = load('wallets', []); ws.splice(+b.dataset.wdel, 1); save('wallets', ws); drawWallets(); drawHoldings(); }));
   };
+
   const refreshWallets = async () => {
     const ws = load('wallets', []);
     await Promise.all(ws.map(async (w) => {
@@ -166,19 +260,18 @@ export async function render(el) {
     if (disposed) return;
     save('wallets', ws); drawWallets(); drawHoldings();
   };
+
   $('#wForm', el).addEventListener('submit', (e) => {
     e.preventDefault();
     const f = e.target;
     const chain = f.chain.value, addr = f.addr.value.trim();
-    if (!CHAINS[chain].pattern.test(addr)) { toast(`این آدرس برای شبکه ${CHAINS[chain].name} معتبر نیست`, 'down'); return; }
+    if (!CHAINS[chain].pattern.test(addr)) { toast('آدرس نامعتبر است', 'down'); return; }
     const ws = load('wallets', []);
     ws.push({ chain, addr, label: f.label.value.trim(), symbol: CHAINS[chain].symbol });
     save('wallets', ws);
     f.reset(); drawWallets(); refreshWallets();
   });
 
-  // اتصال به کیف پول فقط آدرس حساب را می‌پرسد و هیچ چیز دیگری — بدون امضا، بدون تراکنش، بدون کلید.
-  // این دقیقاً همان پیگیری فقط-خواندنی است که با چسباندن دستی آدرس انجام می‌شود، فقط بدون نیاز به کپی و پیست.
   const addAddresses = (addresses, chain) => {
     const ws = load('wallets', []);
     let added = 0;
@@ -194,16 +287,14 @@ export async function render(el) {
   $('#connectBtn', el).addEventListener('click', async () => {
     const msg = $('#connectMsg', el);
     if (!injectedWallet()) {
-      msg.innerHTML = 'هیچ کیف پول مرورگری شناسایی نشد. MetaMask یا هر کیف پول EVM دیگری را نصب کنید، یا آدرس عمومی خود را در کادر زیر وارد کنید — هر دو روش در اینجا فقط-خواندنی هستند.';
+      msg.innerHTML = 'کیف پول مرورگری یافت نشد.';
       return;
     }
-    msg.textContent = `در انتظار پاسخ از ${walletLabel()}…`;
+    msg.textContent = 'در حال اتصال…';
     try {
       const r = await connectWallet();
       const added = addAddresses(r.addresses, r.chain);
-      msg.innerHTML = added
-        ? `<span class="up">اتصال به ${esc(r.label)} برقرار شد — ${added} آدرس به صورت فقط-خواندنی اضافه شد. هیچ امضایی درخواست نشد و هیچ کلیدی به اشتراک گذاشته نشد.</span>`
-        : `<span class="up">اتصال به ${esc(r.label)} برقرار شد — این آدرس‌ها از قبل در حال پیگیری بودند.</span>`;
+      msg.innerHTML = added ? `<span class="up">${added} آدرس اضافه شد.</span>` : `<span class="up">آدرس‌ها از قبل موجود بودند.</span>`;
     } catch (e) {
       msg.innerHTML = `<span class="down">${esc(e.message)}</span>`;
     }
@@ -211,18 +302,16 @@ export async function render(el) {
 
   const stopWatch = onWalletChange((ev) => {
     if (disposed || ev.type !== 'accounts') return;
-    const added = addAddresses(ev.addresses || [], 'eth');
-    if (added) toast(`${added} آدرس جدید از کیف پول شما اضافه شد`, 'info');
+    addAddresses(ev.addresses || [], 'eth');
   });
 
-  // انتقال به صرافی برای خرید یا فروش یک دارایی.
   const openTrade = (symbol) => {
     const venues = venuesFor(symbol);
-    modal(`<h3>معامله ${esc(symbol)}</h3>
-      <p class="fine">بازار ${esc(symbol)} را در صرافی‌ای که از قبل استفاده می‌کنید باز می‌کند.</p>
-      <div class="sheet-grid mt">${venues.map((v) => `<a class="sheet-item" href="${esc(safeUrl(v.href, '#/exchanges'))}" target="_blank" rel="noopener noreferrer">${icon('exchanges', 18)}<span>${esc(v.name)}<br><small class="fine">${esc(v.pair)}</small></span></a>`).join('')}</div>
-      <p class="fine mt">${esc(TRADE_DISCLAIMER)}</p>`);
+    modal(`<div dir="rtl"><h3 style="color:#fff;margin-bottom:12px">معامله ${esc(symbol)}</h3>
+      <div class="sheet-grid mt" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${venues.map((v) => `<a class="sheet-item" href="${esc(safeUrl(v.href, '#/exchanges'))}" target="_blank" rel="noopener noreferrer" style="background:rgba(255,255,255,0.04);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none">${icon('exchanges', 18)}<span><b>${esc(v.name)}</b><br><small class="fine" dir="ltr" style="color:rgba(255,255,255,0.4);font-size:0.75rem">${esc(v.pair)}</small></span></a>`).join('')}</div>
+      <p class="fine mt" style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin-top:16px">${esc(TRADE_DISCLAIMER)}</p></div>`);
   };
+
   el.addEventListener('click', (e) => {
     const b = e.target.closest('[data-trade]');
     if (b) { e.stopPropagation(); openTrade(b.dataset.trade); }
