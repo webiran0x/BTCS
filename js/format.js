@@ -4,11 +4,9 @@ import { now } from './api/clock.js';
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /**
- * An address from outside the app (a news feed, CoinGecko, the backend) made
- * safe to put in href/src: only absolute https:// addresses (or an in-app #/
- * route) pass, so a feed cannot slip in javascript:, data: or a relative path
- * that resolves inside the site. Anything else becomes `fallback`. Escape the
- * result as usual: this checks the scheme, esc() still guards the attribute.
+ * آدرسی از خارج برنامه (فید خبری، CoinGecko، یا سرور) که برای قرارگیری در href/src ایمن‌سازی می‌شود:
+ * تنها آدرس‌های مطلق https:// (یا مسیرهای داخلی #/) مجاز هستند تا اسکریپت‌های مخرب مانند javascript: یا data:
+ * وارد نشوند. سایر موارد به مقدار fallback تبدیل می‌شوند.
  */
 export function safeUrl(u, fallback = '') {
   const s = String(u ?? '').trim();
@@ -20,7 +18,7 @@ export function safeUrl(u, fallback = '') {
   } catch { return fallback; }
 }
 
-/** A finite number, or `fallback` for null, NaN, Infinity and non-numeric strings. */
+/** یک عدد متناهی، یا مقدار fallback برای null، NaN، بی‌نهایت و رشته‌های غیرعددی. */
 export const finite = (v, fallback = null) => {
   if (v === null || v === undefined || v === '' || typeof v === 'boolean') return fallback;
   const n = +v;
@@ -31,51 +29,47 @@ export function price(v) {
   if (v === null || v === undefined || !Number.isFinite(+v)) return '—';
   v = +v;
   const a = Math.abs(v);
-  // Decimals follow the size of the number: cents matter on a $600 coin, but
-  // ten-thousandths do not — while on a $1.36 coin they are the whole story.
+  // تعداد اعشار بر اساس بزرگی عدد تنظیم می‌شود: در قیمت‌های بالای ۱۰۰ دلار سنت‌ها مهم هستند،
+  // اما در قیمت‌های کوچک‌تر دقت اعشار تا ۴ تا ۱۰ رقم افزایش می‌یابد.
   if (a >= 100) return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   if (a >= 1) return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
   if (a === 0) return '0.00';
   const digits = Math.min(10, Math.max(4, -Math.floor(Math.log10(a)) + 3));
   return v.toFixed(digits).replace(/(\.\d*?[1-9])0+$/, '$1');
 }
-// Money in the visitor's display currency (values come in as USD).
+
+// نمایش مبلغ در ارز انتخابی کاربر (مقادیر ورودی بر حسب دلار آمریکا هستند).
 export function money(v, { showCode = false, dp } = {}) {
   if (v === null || v === undefined || !Number.isFinite(+v)) return '—';
   const converted = +v * fx.rate;
-  // `dp` is the exchange's own tick size for this pair, so the number shown is
-  // the number the exchange quotes — no rounding of your own on top of it.
-  // An exchange's decimals are used only where they keep the price readable:
-  // BTT (about 0.00000065) once showed as 0.000000 with the six decimals of an
-  // old Binance pair while its price came from Gate.io.
+  // پارامتر dp دقت اعشار (Tick Size) صرافی برای این جفت‌ارز است تا قیمت بدون گرد کردن اضافی نمایش داده شود.
   const digits = dp === undefined || converted === 0 ? Infinity : Math.floor(Math.log10(Math.abs(converted))) + dp + 1;
   const text = dp === undefined || digits < 3
     ? price(converted)
     : converted.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
   return `${fx.symbol}${text}${showCode && fx.code !== 'USD' ? ` ${fx.code}` : ''}`;
 }
-// Kept for readability at call sites: same thing, currency-aware.
+
+// معادل money برای خوانایی بیشتر در محل فراخوانی
 export const usd = (v) => money(v);
 
 export function compact(v, prefix = '$') {
   if (v === null || v === undefined || !Number.isFinite(+v)) return '—';
-  // '$' means "this is money": convert to the display currency and use its symbol.
+  // علامت '$' به معنای مبلغ پولی است و به ارز نمایشی کاربر تبدیل می‌شود.
   const isMoney = prefix === '$';
   const value = isMoney ? +v * fx.rate : +v;
   const sign = isMoney ? fx.symbol : prefix;
   const a = Math.abs(value);
-  const f = (x, suffix) => `${sign}${x.toLocaleString('en-US', { maximumFractionDigits: x >= 100 ? 1 : 2 })}${suffix}`;
-  if (a >= 1e12) return f(value / 1e12, 'T');
-  if (a >= 1e9) return f(value / 1e9, 'B');
-  if (a >= 1e6) return f(value / 1e6, 'M');
-  if (a >= 1e3) return f(value / 1e3, 'K');
+  const f = (x, suffix) => `${sign}${x.toLocaleString('en-US', { maximumFractionDigits: x >= 100 ? 1 : 2 })} ${suffix}`;
+  if (a >= 1e12) return f(value / 1e12, 'تریلیون');
+  if (a >= 1e9) return f(value / 1e9, 'میلیارد');
+  if (a >= 1e6) return f(value / 1e6, 'میلیون');
+  if (a >= 1e3) return f(value / 1e3, 'هزار');
   return `${sign}${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 }
 
 export function pct(v, dp = 2, sign = true) {
   if (v === null || v === undefined || !Number.isFinite(+v)) return '—';
-  // A true minus, as money() uses ("−$80.06 (−3.10%)", not "(-3.10%)"), and no
-  // sign on a value that rounds to zero ("-0.00%").
   const t = Math.abs(+v).toFixed(dp);
   if (+t === 0) return `${t}%`;
   return `${v < 0 ? '−' : sign ? '+' : ''}${t}%`;
@@ -103,25 +97,49 @@ export function changeHtml(v, dp = 2) {
 
 export function dateTime(t, withTime = true) {
   const d = new Date(t);
-  return d.toLocaleString('en-US', withTime ? { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' } : { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleString('fa-IR', withTime
+    ? { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+    : { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export function ago(t) {
   const s = Math.round((now() - t) / 1000);
-  if (s < 60) return `${s}s ago`;
-  if (s < 3600) return `${Math.round(s / 60)}m ago`;
-  if (s < 86400) return `${Math.round(s / 3600)}h ago`;
-  return `${Math.round(s / 86400)}d ago`;
+  if (s < 60) return `${s} ثانیه پیش`;
+  if (s < 3600) return `${Math.round(s / 60)} دقیقه پیش`;
+  if (s < 86400) return `${Math.round(s / 3600)} ساعت پیش`;
+  return `${Math.round(s / 86400)} روز پیش`;
 }
 
-export const INTERVAL_LABEL = { '1s': '1 second', '5s': '5 seconds', '10s': '10 seconds', '1m': '1 minute', '3m': '3 minutes', '5m': '5 minutes', '15m': '15 minutes', '30m': '30 minutes', '1h': '1 hour', '2h': '2 hours', '4h': '4 hours', '6h': '6 hours', '12h': '12 hours', '1d': '1 day', '3d': '3 days', '1w': '1 week' };
+export const INTERVAL_LABEL = {
+  '1s': '۱ ثانیه',
+  '5s': '۵ ثانیه',
+  '10s': '۱۰ ثانیه',
+  '1m': '۱ دقیقه',
+  '3m': '۳ دقیقه',
+  '5m': '۵ دقیقه',
+  '15m': '۱۵ دقیقه',
+  '30m': '۳۰ دقیقه',
+  '1h': '۱ ساعت',
+  '2h': '۲ ساعت',
+  '4h': '۴ ساعت',
+  '6h': '۶ ساعت',
+  '12h': '۱۲ ساعت',
+  '1d': '۱ روز',
+  '3d': '۳ روز',
+  '1w': '۱ هفته',
+};
 
 export function horizonText(interval, bars) {
-  const ms = { '1s': 1 / 60, '5s': 5 / 60, '10s': 10 / 60, '1m': 1, '3m': 3, '5m': 5, '15m': 15, '30m': 30, '1h': 60, '2h': 120, '4h': 240, '6h': 360, '12h': 720, '1d': 1440, '3d': 4320, '1w': 10080 }[interval] * bars;
-  const unit = (v, u) => `${v} ${u}${v === 1 ? '' : 's'}`;
-  if (ms < 1) return unit(Math.round(ms * 60), 'second');
-  if (ms < 60) return unit(+ms.toFixed(ms < 10 ? 1 : 0), 'minute');
-  if (ms < 1440) return unit(+(ms / 60).toFixed(1), 'hour');
-  if (ms < 10080 * 2) return unit(+(ms / 1440).toFixed(1), 'day');
-  return unit(+(ms / 10080).toFixed(1), 'week');
+  const ms = {
+    '1s': 1 / 60, '5s': 5 / 60, '10s': 10 / 60,
+    '1m': 1, '3m': 3, '5m': 5, '15m': 15, '30m': 30,
+    '1h': 60, '2h': 120, '4h': 240, '6h': 360, '12h': 720,
+    '1d': 1440, '3d': 4320, '1w': 10080
+  }[interval] * bars;
+  const unit = (v, u) => `${v} ${u}`;
+  if (ms < 1) return unit(Math.round(ms * 60), 'ثانیه');
+  if (ms < 60) return unit(+ms.toFixed(ms < 10 ? 1 : 0), 'دقیقه');
+  if (ms < 1440) return unit(+(ms / 60).toFixed(1), 'ساعت');
+  if (ms < 10080 * 2) return unit(+(ms / 1440).toFixed(1), 'روز');
+  return unit(+(ms / 10080).toFixed(1), 'هفته');
 }
