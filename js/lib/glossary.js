@@ -1,106 +1,104 @@
-// Answers to questions that are not about a chart: greetings, "what is RSI?",
-// "how does the forecast work?", "is this coin a scam?". These used to fall
-// through to the chart reading for whichever coin was in focus, so "hello" got
-// a page of Bitcoin indicators and "what is RSI?" got today's RSI value with no
-// explanation. Each definition says how BTCS itself uses the term.
+// پاسخ به سوالاتی که ربطی به چارت ندارند: سلام و احوالپرسی، «RSI چیست؟»،
+// «پیش‌بینی چطور کار می‌کند؟»، «آیا این رمزارز کلاهبرداری است؟». این قبیل سوالات قبلاً
+// به بخش خوانش چارت مربوط به رمزارز فعلی هدایت می‌شدند، بنابراین مثلاً به کلمه «سلام»
+// پاسخ داده می‌شد با یک صفحه از اندیکاتورهای بیت‌کوین و به «RSI چیست؟» مقدار فعلی RSI
+// بدون هیچ توضیحی نشان داده می‌شد. هر تعریف توضیح می‌دهد که خود CoinVantage چگونه از اصطلاح استفاده می‌کند.
 
 import { TESTED_ACCURACY } from './predict.js';
 import { SCORE_BUCKETS_TESTED } from './signals.js';
 
-const DISCLAIMER = '_Not financial advice. Always use a stop-loss and only risk what you can afford to lose._';
+const DISCLAIMER = '_توصیه مالی نیست. همیشه از حد ضرر استفاده کنید و فقط به اندازه‌ای ریسک کنید که توان از دست دادنش را دارید._';
 
-// Order matters only for display; matching runs over every entry.
+// ترتیب اهمیت فقط برای نمایش دارد؛ انطباق روی تمام ورودی‌ها اجرا می‌شود.
 export const GLOSSARY = [
-  { id: 'rsi', title: 'RSI (Relative Strength Index)', re: /\b(rsi|relative strength)\b/i,
-    text: 'Compares the size of recent up-moves with recent down-moves over 14 candles, on a 0–100 scale. Above 70 is called overbought and below 30 oversold — that says a move is stretched, not that it must turn: in a strong trend RSI can stay above 70 for weeks.' },
-  { id: 'stochrsi', title: 'Stochastic RSI', re: /\bstoch(astic)?( ?rsi)?\b/i,
-    text: 'Shows where RSI sits within its own range of the last 14 candles, from 0 to 100. It turns faster than RSI, so it gives earlier but noisier readings.' },
-  { id: 'macd', title: 'MACD', re: /\bmacd\b/i,
-    text: 'The gap between a fast (12-candle) and a slow (26-candle) exponential moving average, with a 9-candle signal line. MACD crossing above its signal line means momentum is turning up; crossing below, turning down. The histogram is the distance between the two.' },
-  { id: 'ema', title: 'EMA (exponential moving average)', re: /\b(ema|sma|moving averages?|golden cross|death cross)\b/i,
-    text: 'An average of recent closing prices that gives more weight to the newest candles. BTCS uses the 20, 50 and 200 EMA: price above the 200 EMA is the usual definition of a long-term uptrend, and the 50 crossing above the 200 is the "golden cross" (below it, the "death cross").' },
-  { id: 'bollinger', title: 'Bollinger Bands', re: /\bbollinger\b/i,
-    text: 'A 20-candle average with bands two standard deviations above and below it. Price at the upper band is stretched up, at the lower band stretched down. Bands squeezing together mean volatility is unusually low, which often comes before a larger move in either direction.' },
-  { id: 'atr', title: 'ATR (Average True Range)', re: /\b(atr|average true range)\b/i,
-    text: 'The average size of one candle\'s full move over the last 14 candles, gaps included. BTCS spaces stop-losses with it: a stop closer than about one ATR tends to be hit by ordinary noise.' },
-  { id: 'volatility', title: 'Volatility', re: /\b(volatil(e|ity)|fluctuat(e|es|ion|ions|ing)|price swings?)\b/i,
-    text: 'How far and how fast a price swings. Crypto is far more volatile than shares — daily moves of 5–10% are common for smaller coins. BTCS measures it with ATR and the forecast\'s 50% and 80% ranges, and spaces stop-losses wider on more volatile charts so normal swings don\'t trigger them.' },
-  { id: 'adx', title: 'ADX (Average Directional Index)', re: /\b(adx|directional (index|movement))\b|[+−-]di\b/i,
-    text: 'Trend strength from 0 to 100 over 14 candles, whatever the direction. Under 20 the market is ranging; above 25 it is trending. +DI above −DI says the trend is up, −DI above +DI says down.' },
-  { id: 'supertrend', title: 'Supertrend', re: /\bsuper ?trend\b/i,
-    text: 'A line set three ATRs (10-candle) away from price that sits below price in an uptrend and above it in a downtrend. When price closes through it the line flips sides, so its level is often used as a trailing stop.' },
-  { id: 'mfi', title: 'Money Flow Index', re: /\b(mfi|money flow)\b/i,
-    text: 'RSI weighted by volume, over 14 candles. Above 80 means heavy buying, below 20 heavy selling.' },
-  { id: 'cci', title: 'CCI (Commodity Channel Index)', re: /\b(cci|commodity channel)\b/i,
-    text: 'How far price is from its 20-candle average, measured in typical deviations. Above +100 is stretched up, below −100 stretched down.' },
-  { id: 'willr', title: 'Williams %R', re: /\bwilliams\b|%r\b/i,
-    text: 'Where the close sits within the high–low range of the last 14 candles, from 0 (at the top) to −100 (at the bottom).' },
-  { id: 'donchian', title: 'Donchian channel', re: /\b(donchian|breakout levels?)\b/i,
-    text: 'The highest high and lowest low of the last 20 candles. A close above the top or below the bottom is a breakout.' },
-  { id: 'levels', title: 'Support and resistance', re: /\b(support|resistance)\b/i,
-    text: 'Support is a price area where falls have repeatedly stopped; resistance is where rises have stopped. BTCS finds them from swing highs and lows in the last 300 candles. Treat them as zones rather than exact prices — and a level that breaks often swaps roles.' },
-  { id: 'stop', title: 'Stop-loss', re: /\b(stop[- ]?loss(es)?|stops?)\b/i,
-    text: 'A price at which you sell to cap the loss if the trade goes wrong. Put it where the trade idea is proven wrong — trade plans here use a multiple of ATR or just beyond the nearest support — then size the position so that being stopped out costs only 1–2% of your account.' },
-  { id: 'tp', title: 'Take-profit', re: /\b(take[- ]?profits?|tp ?[123]?|profit targets?)\b/i,
-    text: 'A price at which you sell some or all of a position to lock in a gain. Trade plans here give up to three targets; a common approach is to sell part at the first and move the stop to the entry price, so the rest can no longer lose money.' },
-  { id: 'r', title: 'R and risk : reward', re: /\b(r[- ]?multiples?|risk[ /:-]*(to[ -])?reward|reward[ /:-]*(to[ -])?risk|\d(\.\d)?r\b|what is (an? )?r\b)/i,
-    text: 'R is the amount a trade risks: the distance from entry to stop-loss. A trade that gained 2R made twice what it risked; one stopped out lost 1R. Risk : reward compares the stop distance with the target distance — 1 : 2 means the target is twice as far away as the stop.' },
-  { id: 'size', title: 'Position size', re: /\bposition siz(e|ing)\b/i,
-    text: 'How much to buy so that hitting the stop-loss costs a fixed share of your account: size = (account × risk %) ÷ stop distance %. With $1,000, 1% risk and a stop 5% away, that is $200 of the coin. The Tools page has the calculator.' },
-  { id: 'drawdown', title: 'Drawdown', re: /\b(max(imum)? )?draw ?downs?\b/i,
-    text: 'The fall from an account\'s (or price\'s) highest point to the lowest point after it, in percent. Maximum drawdown is the worst such fall over a period — a measure of how painful a strategy was to hold.' },
-  { id: 'winrate', title: 'Win rate and profit factor', re: /\b(win ?rate|profit factor|hit rate)\b/i,
-    text: 'Win rate is the share of trades that made money; on its own it says little, because a 35% win rate is profitable when winners are three times the size of losers. Profit factor is gross profit ÷ gross loss: above 1 the strategy made money.' },
-  { id: 'funding', title: 'Funding rate', re: /\bfunding( rates?)?\b/i,
-    text: 'On perpetual futures, longs and shorts pay each other every few hours (usually 8) to keep the contract near the spot price. Positive funding means longs pay shorts, so the crowd leans long; unusually high funding often comes before a sharp shake-out. The Futures page shows it per coin.' },
-  { id: 'oi', title: 'Open interest', re: /\bopen interest\b|\boi\b/i,
-    text: 'The total value of futures contracts still open. Rising open interest with a rising price means new money is entering; falling open interest means positions are being closed. Shown on the Futures page.' },
-  { id: 'liquidation', title: 'Liquidation', re: /\bliquidat(ion|ions|ed|e)\b|\bliqs?\b/i,
-    text: 'When a leveraged position\'s losses use up its margin, the exchange closes it by force. Waves of liquidations push price further in the same direction for a short time. The Futures page streams them live.' },
-  { id: 'leverage', title: 'Leverage, long and short', re: /\b(leverage|margin trading|shorting|going (long|short)|(longs?|shorts?)(?![- ]?(term|run)))\b/i,
-    text: 'A long profits if the price rises; a short profits if it falls. Leverage borrows to make a position bigger than your money: at 10× a 10% move against you wipes the position out. The trade plans here assume no leverage.' },
-  { id: 'dca', title: 'DCA (dollar-cost averaging)', re: /\b(dca|dollar[- ]cost averag(e|ing))\b/i,
-    text: 'Buying a fixed amount on a schedule — say $50 a week — whatever the price, so you never have to time the market. The Tools page shows what regular buying would have done on past prices.' },
-  { id: 'mcap', title: 'Market cap', re: /\b(market ?cap(italization|italisation)?|mcap)\b/i,
-    text: 'Price × the number of coins in circulation. It ranks coins by size. A low price per coin does not make a coin cheap — a $0.01 coin with 100 billion coins in circulation is worth more than a $100 coin with 5 million.' },
-  { id: 'volume', title: 'Volume', re: /\bvolumes?\b/i,
-    text: 'The value traded in a period. Moves on high volume are more trustworthy than moves on thin volume; the indicator readout compares the latest candle\'s volume with its 20-candle average.' },
-  { id: 'fng', title: 'Fear & Greed index', re: /\bfear (and|&) greed\b|\bfear ?greed\b/i,
-    text: 'A 0–100 gauge of crypto market mood published by alternative.me, built from inputs including volatility, momentum and volume, social media and Bitcoin\'s share of the market. Extremes are contrarian context — extreme greed has often come before pullbacks and extreme fear before bounces — but not reliably enough to trade on alone.' },
-  { id: 'score', title: 'Chart score (indicator agreement)', re: /\b(indicator agreement|chart score|signal score|the score|score)\b/i,
-    text: `A number from −100 to +100 that adds up how far the indicators on one chart lean up or down. It describes where price sits, not where it goes next: across ${SCORE_BUCKETS_TESTED.bars.toLocaleString('en-US')} tested candles on ${SCORE_BUCKETS_TESTED.coins} coins, high readings were not followed by more rises than low ones. That is why the verdict weights every reading by how accurate it has actually been.` },
-  { id: 'verdict', title: 'Verdict and conviction', re: /\b(verdict|conviction|accumulate|no edge)\b/i,
-    text: 'The verdict (BUY, ACCUMULATE, WAIT or AVOID; for coins you hold, ADD, HOLD, TRIM or SELL; LEANS UP or LEANS DOWN when the evidence is too thin to act on) combines the chart, the forecast and history, each weighted by its measured accuracy. Conviction (0–100) is how strongly they agree after that weighting. A reading with no proven edge counts for nothing, so WAIT is the most common answer — and a fair one.' },
-  { id: 'forecastterms', title: 'Backtest, walk-forward and baseline', re: /\b(backtests?|backtesting|walk[- ]forward|baseline|out[- ]of[- ]sample|unseen data|overfit(ting)?)\b/i,
-    text: 'A backtest replays a rule on past prices. The forecast here is tested walk-forward: trained only on data from before each test point, then scored on what happened next. The baseline is always calling the more common direction — a forecast that cannot beat it has no edge, however good its accuracy sounds.' },
-  { id: 'candle', title: 'Candles and timeframes', re: /\b(candles?(sticks?)?|time ?frames?|interval)\b/i,
-    text: 'Each candle shows the open, high, low and close for one period — from 1 second to 1 week on the coin page. The timeframe changes the answer: a 15-minute chart can be falling inside a daily uptrend, which is why readings are shown on four timeframes.' },
-  { id: 'spread', title: 'Fees, spread and slippage', re: /\b(spread|slippage|trading fees?|maker|taker)\b/i,
-    text: 'The spread is the gap between the best buy and sell price; slippage is getting a worse price than expected on a fast market or a large order. Together with fees (about 0.1% a side on Binance, often more elsewhere) they are why very small moves cannot be traded at a profit.' },
-  { id: 'orders', title: 'Market and limit orders', re: /\b(limit orders?|market orders?|stop[- ]limit|oco)\b/i,
-    text: 'A market order fills immediately at the best price available; a limit order waits until the price reaches yours and may never fill. A stop order turns into a market order when its trigger price is hit — that is how a stop-loss is placed on an exchange.' },
-  { id: 'stable', title: 'Stablecoin', re: /\bstable ?coins?\b/i,
-    text: 'A token designed to stay worth $1, such as USDT or USDC. The scanner leaves them out because they barely move.' },
-  { id: 'halving', title: 'Bitcoin halving', re: /\bhalving\b/i,
-    text: 'Every 210,000 blocks — about four years — the reward for mining a Bitcoin block halves; the last halving was in April 2024. Past halvings were followed by bull markets, but four examples are far too few to treat that as a rule.' },
-  { id: 'cycle', title: 'Bull and bear market', re: /\b(bull(ish)?|bear(ish)?) (market|run|trap)s?\b|\bbull run\b/i,
-    text: 'A bull market is a long stretch of rising prices; a bear market a long fall, usually defined as 20% or more from the top. A bull or bear trap is a breakout that quickly reverses and catches traders on the wrong side.' },
-  { id: 'altcoin', title: 'Altcoin', re: /\balt ?coins?\b|\balts\b/i,
-    text: 'Any coin other than Bitcoin. Altcoins usually move more than Bitcoin in both directions and tend to fall harder when the whole market drops.' },
-  { id: 'whale', title: 'Whale', re: /\bwhales?\b/i,
-    text: 'An account holding enough of a coin that its trades can move the price. Large transfers to exchanges are watched because they can come before selling.' },
-  { id: 'fomo', title: 'FOMO and FUD', re: /\b(fomo|fud)\b/i,
-    text: 'FOMO (fear of missing out) is buying because price is already flying; FUD (fear, uncertainty and doubt) is selling on scary news. Both are emotions working against a plan — the stop-loss and position size are there so you decide before the trade, not during it.' },
-  { id: 'demo', title: 'Demo (paper) trading', re: /\b(demo|paper)\s+trad(e|ing)\b|\bsimulated (money|trading)\b/i,
-    text: 'Trading with simulated money at live prices. On the Trading page you can run a demo account yourself or let the AI trade one, with fees counted as if it were real, and see whether a strategy works before risking anything.' },
+  { id: 'rsi', title: 'RSI (شاخص مقاومت نسبی)', re: /\b(rsi|relative strength)\b/i,
+    text: 'اندازه صعودهای اخیر را با نزول‌های اخیر طی ۱۴ کندل، در مقیاس ۰ تا ۱۰۰ مقایسه می‌کند. بالای ۷۰ اشباع خرید و زیر ۳۰ اشباع فروش نامیده می‌شود — این یعنی حرکت کشیده شده است، نه اینکه حتماً باید برگردد: در یک روند قوی، RSI می‌تواند هفته‌ها بالای ۷۰ بماند.' },
+  { id: 'stochrsi', title: 'استوکاستیک RSI', re: /\bstoch(astic)?( ?rsi)?\b/i,
+    text: 'نشان می‌دهد RSI در بازه نوسانی خودش در ۱۴ کندل گذشته از ۰ تا ۱۰۰ کجا قرار دارد. این شاخص سریع‌تر از RSI برمی‌گردد، بنابراین سیگنال‌های زودتر اما با نویز بیشتری می‌دهد.' },
+  { id: 'macd', title: 'مکدی (MACD)', re: /\bmacd\b/i,
+    text: 'فاصله بین میانگین متحرک نمایی سریع (۱۲ کندلی) و کند (۲۶ کندلی) به همراه یک خط سیگنال ۹ کندلی است. عبور MACD از خط سیگنال به سمت بالا یعنی مومنتوم صعودی است؛ عبور به سمت پایین یعنی نزولی است. هیستوگرام نشان‌دهنده فاصله بین این دو خط است.' },
+  { id: 'ema', title: 'EMA (میانگین متحرک نمایی)', re: /\b(ema|sma|moving averages?|golden cross|death cross)\b/i,
+    text: 'میانگین قیمت‌های بسته شدن اخیر که به کندل‌های جدیدتر وزن بیشتری می‌دهد. CoinVantage از EMAهای ۲۰، ۵۰ و ۲۰۰ استفاده می‌کند: قرار داشتن قیمت بالای EMA ۲۰۰ تعریف معمول روند صعودی بلندمدت است، و عبور EMA ۵۰ به بالای EMA ۲۰۰ «صلیب طلایی» (و پایین‌تر از آن «صلیب مرگ») نامیده می‌شود.' },
+  { id: 'bollinger', title: 'باندهای بولینگر', re: /\bbollinger\b/i,
+    text: 'یک میانگین ۲۰ کندلی با دو باند انحراف معیار در بالا و پایین آن. قرار گرفتن قیمت در باند بالایی یعنی کشیدگی صعودی و در باند پایینی یعنی کشیدگی نزولی. فشردگی باندها یعنی نوسان به‌طور غیرعادی پایین است که اغلب پیش از یک حرکت بزرگ در هر دو جهت رخ می‌دهد.' },
+  { id: 'atr', title: 'ATR (محدوده واقعی میانگین)', re: /\b(atr|average true range)\b/i,
+    text: 'میانگین اندازه کل حرکت یک کندل در ۱۴ کندل گذشته، شامل گپ‌ها. CoinVantage حد ضررها را با این ابزار تنظیم می‌کند: حد ضرری که نزدیک‌تر از یک ATR باشد معمولاً با نویزهای عادی فعال می‌شود.' },
+  { id: 'volatility', title: 'نوسان (Volatility)', re: /\b(volatil(e|ity)|fluctuat(e|es|ion|ions|ing)|price swings?)\b/i,
+    text: 'اینکه قیمت چقدر و با چه سرعتی نوسان می‌کند. بازار کریپتو بسیار نوسانی‌تر از سهام است — نوسانات روزانه ۵ تا ۱۰ درصدی برای رمزارزهای کوچک‌تر رایج است. CoinVantage آن را با ATR و بازه‌های ۵۰٪ و ۸۰٪ پیش‌بینی اندازه‌گیری می‌کند و در چارت‌های پرنوسان‌تر حد ضررها را با فاصله بیشتری قرار می‌دهد تا نوسانات عادی آن‌ها را فعال نکنند.' },
+  { id: 'adx', title: 'ADX (شاخص جهت‌دار میانگین)', re: /\b(adx|directional (index|movement))\b|[+−-]di\b/i,
+    text: 'قدرت روند از ۰ تا ۱۰۰ طی ۱۴ کندل، فارغ از جهت آن. زیر ۲۰ بازار در حال رِنج زدن است؛ بالای ۲۵ بازار رونددار است. مثبت DI بالاتر از منفی DI یعنی روند صعودی است، منفی DI بالاتر از مثبت DI یعنی نزولی است.' },
+  { id: 'supertrend', title: 'سوپرترند (Supertrend)', re: /\bsuper ?trend\b/i,
+    text: 'خطی با فاصله سه ATR (۱۰ کندلی) از قیمت که در روند صعودی پایین قیمت و در روند نزولی بالای آن قرار می‌گیرد. وقتی قیمت آن را قطع کند، خط تغییر جهت می‌دهد، بنابراین سطح آن اغلب به عنوان حد ضرر متحرک (Trailing Stop) استفاده می‌شود.' },
+  { id: 'mfi', title: 'شاخص جریان پول (MFI)', re: /\b(mfi|money flow)\b/i,
+    text: 'RSI وزن‌دهی‌شده با حجم معاملات، طی ۱۴ کندل. بالای ۸۰ یعنی خرید سنگین، زیر ۲۰ یعنی فروش سنگین.' },
+  { id: 'cci', title: 'CCI (شاخص کانال کالا)', re: /\b(cci|commodity channel)\b/i,
+    text: 'فاصله قیمت از میانگین ۲۰ کندلی خود بر حسب انحراف‌های استاندارد. بالای مثبت ۱۰۰ کشیدگی صعودی و زیر منفی ۱۰۰ کشیدگی نزولی است.' },
+  { id: 'willr', title: 'ویلیامز درصد آر (%R)', re: /\bwilliams\b|%r\b/i,
+    text: 'موقعیت قیمت بسته شده در محدوده بالاترین-پایین‌ترین قیمت ۱۴ کندل گذشته، از ۰ (بالا) تا منفی ۱۰۰ (پایین).' },
+  { id: 'donchian', title: 'کانال دونچین (Donchian)', re: /\b(donchian|breakout levels?)\b/i,
+    text: 'بالاترین سقف و پایین‌ترین کف ۲۰ کندل گذشته. بسته شدن قیمت بالاتر از سقف یا پایین‌تر از کف یک شکست (Breakout) محسوب می‌شود.' },
+  { id: 'levels', title: 'حمایت و مقاومت', re: /\b(support|resistance)\b/i,
+    text: 'حمایت منطقه‌ای قیمتی است که کاهش‌ها بارها در آن متوقف شده‌اند؛ مقاومت جایی است که صعودها متوقف شده‌اند. CoinVantage آن‌ها را از سقف‌ها و کف‌های قیمتی ۳۰۰ کندل گذشته پیدا می‌کند. آن‌ها را به عنوان مناطق در نظر بگیرید نه قیمت‌های دقیق — و سطحی که شکسته شود اغلب نقش خود را عوض می‌کند.' },
+  { id: 'stop', title: 'حد ضرر (Stop-loss)', re: /\b(stop[- ]?loss(es)?|stops?)\b/i,
+    text: 'قیمتی که در آن می‌فروشید تا اگر معامله خلاف میل پیش رفت ضرر را محدود کنید. آن را جایی بگذارید که ایده معامله باطل می‌شود — برنامه‌های معاملاتی اینجا از چند برابر ATR یا کمی آن‌طرف‌تر از نزدیک‌ترین حمایت استفاده می‌کنند — سپس حجم پوزیشن را طوری تنظیم کنید که فعال شدن حد ضرر فقط ۱ تا ۲ درصد از حساب شما را درگیر کند.' },
+  { id: 'tp', title: 'حد سود (Take-profit)', re: /\b(take[- ]?profits?|tp ?[123]?|profit targets?)\b/i,
+    text: 'قیمتی که در آن بخشی یا تمام پوزیشن را برای تثبیت سود می‌فروشید. برنامه‌های معاملاتی اینجا تا سه هدف ارائه می‌دهند؛ روش رایج این است که بخشی را در هدف اول فروخته و حد ضرر را به نقطه ورود منتقل کنید تا بقیه معامله دیگر نتواند ضرر بدهد.' },
+  { id: 'r', title: 'نسبت R و ریسک به ریوارد', re: /\b(r[- ]?multiples?|risk[ /:-]*(to[ -])?reward|reward[ /:-]*(to[ -])?risk|\d(\.\d)?r\b|what is (an? )?r\b)/i,
+    text: 'R مقداری است که معامله روی آن ریسک می‌کند: فاصله نقطه ورود تا حد ضرر. معامله‌ای که ۲R سود کرده دو برابر مقدار ریسک‌شده به دست آورده؛ معاملاتی که حد ضررشان خورده ۱R از دست داده‌اند. ریسک به ریوارد فاصله حد ضرر را با فاصله هدف مقایسه می‌کند — یعنی ۱ به ۲ یعنی هدف دو برابر حد ضرر فاصله دارد.' },
+  { id: 'size', title: 'حجم پوزیشن (Position size)', re: /\bposition siz(e|ing)\b/i,
+    text: 'مقدار خریدی که باعث می‌شود با خوردن حد ضرر، درصد ثابتی از حساب شما کم شود: حجم = (موجودی حساب × درصد ریسک) ÷ درصد فاصله حد ضرر. با ۱۰۰۰ دلار، ریسک ۱٪ و فاصله حد ضرر ۵٪، این یعنی ۲۰۰ دلار از آن رمزارز. صفحه ابزارها ماشین‌حساب این کار را دارد.' },
+  { id: 'drawdown', title: 'دات‌داون یا افت سرمایه (Drawdown)', re: /\b(max(imum)? )?draw ?downs?\b/i,
+    text: 'افت از بالاترین نقطه حساب (یا قیمت) تا پایین‌ترین نقطه پس از آن، بر حسب درصد. حداکثر افت سرمایه بدترین افت طی یک دوره است — معیاری برای اینکه تحمل یک استراتژی چقدر دردناک بوده است.' },
+  { id: 'winrate', title: 'وین‌ریت و فاکتور سود (Win rate and profit factor)', re: /\b(win ?rate|profit factor|hit rate)\b/i,
+    text: 'وین‌ریت درصد معاملاتی است که سودآور بوده‌اند؛ این شاخص به‌خودی‌خود چیز زیادی نمی‌گوید، زیرا وین‌ریت ۳۵٪ هم زمانی که سودها سه برابر ضررها باشند سودآور است. فاکتور سود برابر است با کل سود تقسیم بر کل ضرر: بالای ۱ یعنی استراتژی سودآور بوده است.' },
+  { id: 'funding', title: 'نرخ تامین مالی (Funding rate)', re: /\bfunding( rates?)?\b/i,
+    text: 'در قراردادهای فیوچرز پرپچوال (دائم)، پوزیشن‌های خرید و فروش هر چند ساعت یک‌بار (معمولاً ۸ ساعت) به یکدیگر کارمزد پرداخت می‌کنند تا قیمت قرارداد به قیمت اسپات نزدیک بماند. فاندینگ مثبت یعنی خریداران به فروشندگان کارمزد می‌دهند، پس بازار تمایل به خرید دارد؛ فاندینگ به‌طور غیرعادی بالا اغلب پیش از یک ریزش یا تکان شدید رخ می‌دهد. صفحه فیوچرز آن را برای هر رمزارز نشان می‌دهد.' },
+  { id: 'oi', title: 'سود باز (Open interest)', re: /\bopen interest\b|\boi\b/i,
+    text: 'ارزش کل قراردادهای فیوچرز که همچنان باز هستند. افزایش سود باز همراه با افزایش قیمت یعنی پول جدید وارد بازار شده؛ کاهش سود باز یعنی پوزیشن‌ها در حال بسته شدن هستند. در صفحه فیوچرز نمایش داده می‌شود.' },
+  { id: 'liquidation', title: 'لیکوئید شدن (Liquidation)', re: /\bliquidat(ion|ions|ed|e)\b|\bliqs?\b/i,
+    text: 'وقتی ضررهای یک پوزیشن اهرمی مارجین آن را مصرف کند، صرافی به زور آن را می‌بندد. موج‌های لیکوئید شدن قیمت را برای مدت کوتاهی بیشتر در همان جهت هل می‌دهند. صفحه فیوچرز آن‌ها را به صورت زنده استریم می‌کند.' },
+  { id: 'leverage', title: 'اهرم، لانگ و شورت (Leverage, long and short)', re: /\b(leverage|margin trading|shorting|going (long|short)|(longs?|shorts?)(?![- ]?(term|run)))\b/i,
+    text: 'پوزیشن لانگ (خرید) اگر قیمت بالا برود سود می‌کند؛ شورت (فروش) اگر قیمت پایین بیاید سود می‌کند. اهرم با قرض گرفتن پول، پوزیشن را بزرگ‌تر از سرمایه شما می‌کند: با اهرم ۱۰x یک حرکت ۱۰ درصدی خلاف جهت، کل پوزیشن را نابود می‌کند. برنامه‌های معاملاتی اینجا فرض را بر عدم استفاده از اهرم می‌گذارند.' },
+  { id: 'dca', title: 'میانگین‌گیری هزینه‌ای (DCA)', re: /\b(dca|dollar[- ]cost averag(e|ing))\b/i,
+    text: 'خرید مقدار ثابتی در بازه‌های زمانی مشخص — مثلاً ۵۰ دلار در هفته — فارغ از قیمت، به‌طوری‌که نیازی به زمان‌بندی بازار نداشته باشید. صفحه ابزارها نشان می‌دهد خرید منظم روی قیمت‌های گذشته چه نتیجه‌ای می‌داد.' },
+  { id: 'mcap', title: 'ارزش بازار (Market cap)', re: /\b(market ?cap(italization|italisation)?|mcap)\b/i,
+    text: 'قیمت ضرب‌در تعداد سکه‌های در گردش. رمزارزها را بر اساس اندازه رتبه‌بندی می‌کند. پایین بودن قیمت یک رمزارز به معنای ارزان بودن آن نیست — یک توکن با قیمت ۰.۰۱ دلار و ۱۰۰ میلیارد سکه در گردش، ارزش بیشتری از یک سکه ۱۰۰ دلاری با ۵ میلیون تعداد دارد.' },
+  { id: 'volume', title: 'حجم معاملات (Volume)', re: /\bvolumes?\b/i,
+    text: 'ارزش معامله‌شده در یک بازه زمانی. حرکات با حجم بالا قابل‌اعتمادتر از حرکات با حجم کم هستند؛ خوانش اندیکاتور، حجم آخرین کندل را با میانگین ۲۰ کندلی آن مقایسه می‌کند.' },
+  { id: 'fng', title: 'شاخص ترس و طمع', re: /\bfear (and|&) greed\b|\bfear ?greed\b/i,
+    text: 'شاخصی از ۰ تا ۱۰۰ برای سنجش حال و هوای بازار کریپتو که توسط alternative.me منتشر می‌شود و از ورودی‌هایی نظیر نوسان، مومنتوم، حجم، شبکه‌های اجتماعی و سهم بیت‌کوین در بازار تشکیل شده است. حالت‌های حدی زمینه‌ساز رفتارهای مخالف بازارند — طمع شدید اغلب پیش از اصلاح‌ها و ترس شدید پیش از بازگشت‌ها رخ داده است — اما به اندازه‌ای قابل‌اعتماد نیستند که صرفاً بر اساس آن‌ها معامله کنید.' },
+  { id: 'score', title: 'امتیاز چارت (توافق اندیکاتورها)', re: /\b(indicator agreement|chart score|signal score|the score|score)\b/i,
+    text: `عددی از منفی ۱۰۰ تا مثبت ۱۰۰ که میزان تمایل صعودی یا نزولی اندیکاتورها در یک چارت را جمع می‌زند. این شاخص توصیف می‌کند قیمت کجا قرار دارد، نه اینکه بعداً کجا می‌رود: در بررسی ${SCORE_BUCKETS_TESTED.bars.toLocaleString('en-US')} کندل تست‌شده روی ${SCORE_BUCKETS_TESTED.coins} رمزارز، خوانش‌های بالا با صعودهای بیشتری نسبت به خوانش‌های پایین دنبال نشدند. به همین دلیل است که حکم نهایی، هر خوانش را بر اساس میزان دقت واقعی آن وزن‌دهی می‌کند.` },
+  { id: 'verdict', title: 'حکم و میزان قطعیت (Verdict and conviction)', re: /\b(verdict|conviction|accumulate|no edge)\b/i,
+    text: 'حکم (BUY، ACCUMULATE، WAIT یا AVOID؛ برای رمزارزهایی که دارید: ADD، HOLD، TRIM یا SELL؛ یا LEANS UP و LEANS DOWN وقتی شواهد برای اقدام خیلی ضعیف است) چارت، پیش‌بینی و تاریخچه را ترکیب می‌کند که هر کدام با دقت اندازه‌گیری‌شده‌شان وزن‌دهی شده‌اند. قطعیت (۰ تا ۱۰۰) میزان توافق آن‌ها پس از اعمال این وزن‌ها است. خوانشی که مزیت اثبات‌شده‌ای ندارد تاثیری در نتیجه ندارد، بنابراین WAIT رایج‌ترین — و عادلانه‌ترین — پاسخ است.' },
+  { id: 'forecastterms', title: 'بک‌تست، واک‌فوروارد و نرخ پایه', re: /\b(backtests?|backtesting|walk[- ]forward|baseline|out[- ]of[- ]sample|unseen data|overfit(ting)?)\b/i,
+    text: 'بک‌تست یک قانون را روی قیمت‌های گذشته بازپخش می‌کند. پیش‌بینی در اینجا به روش واک‌فوروارد (Walk-forward) تست می‌شود: فقط روی داده‌های پیش از هر نقطه تست آموزش می‌بیند، سپس روی اتفاقات بعدی امتیازدهی می‌شود. نرخ پایه همیشه پیش‌بینی رایج‌ترین جهت است — پیش‌بینی‌ای که نتواند آن را شکست دهد هیچ مزیتی ندارد، هرچند که دقت آن خوب به نظر برسد.' },
+  { id: 'candle', title: 'کندل‌ها و تایم‌فریم‌ها', re: /\b(candles?(sticks?)?|time ?frames?|interval)\b/i,
+    text: 'هر کندل قیمت باز شدن، سقف، کف و بسته شدن را برای یک دوره نشان می‌دهد — از ۱ ثانیه تا ۱ هفته در صفحه رمزارز. تایم‌فریم پاسخ را عوض می‌کند: یک چارت ۱۵ دقیقه‌ای ممکن است در دل یک روند صعودی روزانه در حال نزول باشد، به همین دلیل است که خوانش‌ها در چهار تایم‌فریم نمایش داده می‌شوند.' },
+  { id: 'spread', title: 'کارمزد، اسپرد و لغزش قیمت', re: /\b(spread|slippage|trading fees?|maker|taker)\b/i,
+    text: 'اسپرد فاصله بین بهترین قیمت خرید و فروش است؛ لغزش قیمت (Slippage) یعنی به دست آوردن قیمتی بدتر از حد انتظار در بازارهای پرسرعت یا سفارش‌های بزرگ. به همراه کارمزدها (حدود ۰.۱٪ در هر طرف در صرافی بایننس و اغلب بیشتر در جاهای دیگر)، این موارد دلیل اصلی عدم امکان معامله سودآور روی حرکات بسیار کوچک هستند.' },
+  { id: 'orders', title: 'سفارش‌های بازار و لیمیت', re: /\b(limit orders?|market orders?|stop[- ]limit|oco)\b/i,
+    text: 'سفارش بازار (Market order) فوراً با بهترین قیمت موجود پر می‌شود; سفارش لیمیت (Limit order) منتظر می‌ماند تا قیمت به قیمت شما برسد و شاید هرگز پر نشود. سفارش استاپ با رسیدن به قیمت محرک به سفارش بازار تبدیل می‌شود — حد ضرر در صرافی‌ها به این شکل گذاشته می‌شود.' },
+  { id: 'stable', title: 'استیبل‌کوین (Stablecoin)', re: /\bstable ?coins?\b/i,
+    text: 'توکنی که طراحی شده تا ارزش آن ۱ دلار بماند، مانند USDT یا USDC. اسکنر آن‌ها را کنار می‌گذارد چون نوسان خاصی ندارند.' },
+  { id: 'halving', title: 'هاوینگ بیت‌کوین (Halving)', re: /\bhalving\b/i,
+    text: 'هر ۲۱۰,۰۰۰ بلوک — حدود چهار سال — پاداش استخراج یک بلوک بیت‌کوین نصف می‌شود؛ آخرین هاوینگ در آوریل ۲۰۲۴ بود. هاوینگ‌های قبلی با بازارهای صعودی دنبال شدند، اما چهار نمونه بسیار کمتر از آن است که بتوان آن را به عنوان یک قانون قطعی در نظر گرفت.' },
+  { id: 'cycle', title: 'بازار صعودی و نزولی', re: /\b(bull(ish)?|bear(ish)?) (market|run|trap)s?\b|\bbull run\b/i,
+    text: 'بازار صعودی (Bull market) یک دوره طولانی از قیمت‌های رو به رشد است؛ بازار نزولی (Bear market) یک ریزش طولانی است که معمولاً افت ۲۰ درصدی یا بیشتر از سقف تعریف می‌شود. تله صعودی یا نزولی شکستی است که به‌سرعت برمی‌گردد و معامله‌گران را در سمت اشتباه گیر می‌اندازد.' },
+  { id: 'altcoin', title: 'آلت‌کوین (Altcoin)', re: /\balt ?coins?\b|\balts\b/i,
+    text: 'هر رمزارزی به غیر از بیت‌کوین. آلت‌کوین‌ها معمولاً در هر دو جهت نوسانات بیشتری نسبت به بیت‌کوین دارند و وقتی کل بازار ریزش می‌کند شدیدتر سقوط می‌کنند.' },
+  { id: 'whale', title: 'نهنگ (Whale)', re: /\bwhales?\b/i,
+    text: 'حسابی که به اندازه‌ای از یک رمزارز را در اختیار دارد که معاملاتش می‌تواند قیمت را جابه‌جا کند. انتقال‌های بزرگ به صرافی‌ها زیر نظر گرفته می‌شوند زیرا ممکن است پیش‌درآمدی بر فروش باشند.' },
+  { id: 'fomo', title: 'فومو و فاد (FOMO و FUD)', re: /\b(fomo|fud)\b/i,
+    text: 'فومو (ترس از جا ماندن - FOMO) یعنی خرید کردن چون قیمت در حال پرواز است؛ فاد (ترس، نامطمئنی و شک - FUD) یعنی فروش بر اساس اخبار ترسناک. هر دو احساساتی هستند که علیه برنامه معاملاتی کار می‌کنند — حد ضرر و حجم پوزیشن برای این هستند که شما پیش از معامله تصمیم بگیرید، نه در حین آن.' },
+  { id: 'demo', title: 'معامله آزمایشی (Demo / Paper trading)', re: /\b(demo|paper)\s+trad(e|ing)\b|\bsimulated (money|trading)\b/i,
+    text: 'معامله با پول شبیه‌سازی‌شده روی قیمت‌های زنده. در صفحه معامله می‌توانید یک حساب آزمایشی را شخصاً اجرا کنید یا به هوش مصنوعی اجازه دهید یکی را مدیریت کند، در حالی که کارمزدها درست مثل واقعیت محاسبه می‌شوند و قبل از ریسک کردن واقعی می‌بینید که آیا یک استراتژی جواب می‌دهد یا خیر.' },
 ];
 
 const DEFINE_CUE = /\b(what('?s| is| are| does| do)|explain|define|definition|meaning|means?|stands? for|tell me about|teach me|how (do(es)? (i|you)|to) (use|read|calculate)|difference between)\b/i;
-// "What is BTC's RSI?" or "what's the RSI now" asks for today's reading, which
-// the chart answer gives; only the bare term is a request for a definition.
 const READING_CUE = /\b(current(ly)?|now|today|right now|this (coin|chart)|on (the|this|my) chart|reading|readings|value|levels)\b/i;
 
-/** Glossary entries the question asks about, at most three. */
+/** اصطلاحات واژه‌نامه‌ای که سوال درباره آن‌هاست، حداکثر سه مورد. */
 export function termsIn(q) {
   const s = String(q || '');
   return GLOSSARY.filter((g) => g.re.test(s)).slice(0, 3);
@@ -114,25 +112,21 @@ function definitionAnswer(q, { coinNamed }) {
   const justTheTerm = terms.some((g) => bare.replace(g.re, '').trim().length <= 3);
   if (!justTheTerm && !DEFINE_CUE.test(s)) return null;
   if (coinNamed || READING_CUE.test(s)) return null;
-  // "what's the RSI" without "mean"/"indicator" is a request for the reading
   if (/\bwhat('?s| is| are) (the|its)\b/i.test(s) && !/\b(mean|meaning|indicator|index|difference|explain)\b/i.test(s)) return null;
   const body = terms.map((g) => `**${g.title}** — ${g.text}`).join('\n\n');
-  return `${body}\n\nAsk me about a coin — for example *"What is ETH's RSI?"* — to see the current reading.`;
+  return `${body}\n\nیک رمزارز از من بپرسید — مثلاً *"RSI اتریوم چقدر است؟"* — تا مقدار فعلی آن را ببینید.`;
 }
 
 const GREETING = /^(hi+|hello+|hey+|hiya|yo|howdy|hola|salam|salaam|assalam[ou]? ?alaikum|as-?salamu alaykum|good (morning|afternoon|evening|day)|greetings|what'?s up|wassup|sup)\b/i;
 const THANKS = /^(thanks?( you)?( so much| a lot)?|thank u|thx|ty|cheers|great|nice|cool|ok(ay)?|got it|perfect|awesome|appreciate it|understood)\b/i;
-// Words that can follow a greeting without making it a question.
 const FILLER = /^(there|all|guys|everyone|friend|buddy|bro|mate|bot|assistant|coin ?vantage|ai|again|sir|team|man)$/i;
 const HELP = /^(help|menu|commands|start|\?)$|\bwhat (can|do) you (do|help with|answer|know)\b|\bwho (are|r) (you|u)\b|\bwhat (are|r) (you|u)\b|\bhow (do|can|should) i use (you|this|the assistant)\b|\bwhat (can|should) i ask\b/i;
 const METHOD = /\bhow (does|do|is|are|did) (the |your |this |its |it'?s )?(forecast|prediction|predictions|model|models|ai|assistant|score|signals?|engine|analyst|verdict|scanner|scan|you|it)\b.*\b(work|works|calculated|computed|made|built|decided?|predict|forecast|know|trained|learn|chosen)\b|\bhow (do|does) (you|it|the ai|the model) (work|predict|decide|forecast|know|learn)\b|\bwhat (data|models?|sources?|indicators?) (do|does|did) (you|it|the forecast|the ai|the model|this site) use\b|\bwhere (does|do) (the |your )?(data|prices?|numbers?) come from\b|\b(are|r) (you|u) (chat ?gpt|gpt|claude|gemini|an? (ai|llm|bot|robot|human|person|real person))\b|\bwhich (ai|model|llm) (are you|is this|do you use)\b/i;
 const LEGIT = /\b(scam|scams|scammy|legit|legitimate|rug ?pull(ed)?|rugged|ponzi|pyramid scheme|fraud(ulent)?|shady)\b|\bis (this|the) (site|app|website|platform|service) (safe|real|trustworthy|reliable)\b|\bis coin ?vantage (safe|real|trustworthy|reliable)\b|\bcan i trust (this site|this app|the site|the app|coin ?vantage|you)\b/i;
-// "Is this breakout legit?" is about a chart, not about fraud.
 const CHART_WORDS = /\b(breakout|signal|setup|pump|move|rally|bounce|trend|pattern|dip|drop|candle|reading|forecast|prediction)\b/i;
 const THIS_COIN = /\b(this|that|the) (coin|token|project)\b/i;
 
 const wordsOf = (t) => t.replace(/[^\p{L}\p{N}' ]+/gu, ' ').trim().split(/\s+/).filter(Boolean);
-// The text after a leading greeting or "thanks", or null when there was none.
 function afterLead(re, q) {
   const m = re.exec(q);
   return m ? q.slice(m[0].length).replace(/^[\s,!.:;-]+/, '') : null;
@@ -140,73 +134,66 @@ function afterLead(re, q) {
 
 function greetingAnswer(symbol) {
   const sym = symbol || 'BTC';
-  return `Hi! I read live charts for any coin and tell you what the evidence says — and how reliable that evidence has been. Try:
+  return `سلام! من چارت‌های زنده هر رمزارز را می‌خوانم و به شما می‌گویم شواهد چه چیزی را نشان می‌دهند — و آن شواهد تا چه حد قابل‌اعتماد بوده‌اند. امتحان کنید:
 
-- *Will ${sym} go up or down this week?* — forecast with its measured accuracy
-- *When should I take profit on ${sym}?* — exit levels and a stop-loss
-- *I have $1,000 — how much ${sym} should I buy?* — position size from the stop
-- *Compare BTC, ETH and SOL* — side by side on the same test
-- *What should I buy right now?* — scans the market on three timeframes
-- *Review my portfolio* — hold, trim or exit for each coin you added in Wallet
-- *What is RSI?* — plain-English explanations of trading terms
+- *آیا ${sym} در این هفته صعودی است یا نزولی؟* — پیش‌بینی به همراه دقت اندازه‌گیری‌شده آن
+- *چه زمانی باید روی ${sym} سیو سود کنم؟* — سطوح خروج و حد ضرر
+- *من ۱۰۰۰ دلار دارم — چقدر ${sym} بخرم؟* — اندازه پوزیشن بر اساس حد ضرر
+- *مقایسه BTC، ETH و SOL* — بررسی پهلو به پهلو روی یک تست واحد
+- *الان چه چیزی بخرم؟* — اسکن بازار در سه تایم‌فریم
+- *بررسی پورتفوی من* — وضعیت نگهداری، کاهش یا خروج برای هر رمزارز اضافه شده در کیف پول
+- *RSI چیست؟* — توضیح اصطلاحات معاملاتی به زبان ساده
 
-I can't place trades, and nothing here is financial advice.`;
+من نمی‌توانم معامله‌ای انجام دهم و هیچ‌چیز در اینجا توصیه مالی نیست.`;
 }
 
 function methodAnswer() {
   const t = TESTED_ACCURACY;
-  return `**How the assistant answers**
+  return `**نحوه پاسخ‌دهی دستیار**
 
-1. **Live data** — candles from Binance (Gate.io, HTX or OKX for coins Binance doesn't list), coin list and market caps from CoinGecko, the Fear & Greed index from alternative.me, and recent headlines from five crypto news outlets (background only: the forecast reads prices, not news). Futures funding and open interest are on the Futures page, not in these answers.
-2. **Chart reading** — the 20, 50 and 200 EMAs, MACD, RSI, Stochastic RSI, Bollinger Bands, volume and ADX on four timeframes, summed into a score from −100 to +100. ATR sets how far away stops go, and support and resistance come from recent swing highs and lows.
-3. **Forecast** — seven models (chart-pattern matching against history, similar past moves, gradient-boosted trees, a neural network, logistic regression, nearest neighbours and a trend model), each weighted by how accurate it was on recent data it never saw. It gives a direction lean plus 50% and 80% price ranges.
-4. **History** — what this coin did after the times its chart looked like today, across years of daily data.
-5. **Verdict** — every reading is weighted by its measured accuracy, so one with no proven edge counts for nothing.
+1. **داده‌های زنده** — کندل‌ها از بایننس (یا Gate.io، HTX و OKX برای رمزارزهایی که بایننس لیست نکرده)، لیست رمزارزها و ارزش بازار از CoinGecko، شاخص ترس و طمع از alternative.me، و اخبار اخیر از پنج رسانه خبری کریپتو (فقط پس‌زمینه: پیش‌بینی قیمت‌ها را می‌خواند، نه اخبار). نرخ فاندینگ و سود باز فیوچرز در صفحه فیوچرز هستند، نه در این پاسخ‌ها.
+2. **خواندن چارت** — EMAهای ۲۰، ۵۰ و ۲۰۰، MACD، RSI، استوکاستیک RSI، باندهای بولینگر، حجم و ADX در چهار تایم‌فریم، که در یک امتیاز از منفی ۱۰۰ تا مثبت ۱۰۰ خلاصه می‌شوند. ATR مشخص می‌کند حد ضرر چقدر دور باشد، و حمایت و مقاومت از سقف و کف‌های اخیر به دست می‌آیند.
+3. **پیش‌بینی** — هفت مدل (تطبیق الگوی چارت با تاریخچه، حرکات مشابه گذشته، درخت‌های تصمیم‌گیری تقویت‌شده با گرادیان، شبکه عصبی، رگرسیون لجستیک، نزدیک‌ترین همسایگان و مدل روند)، که هر کدام بر اساس میزان دقت‌شان روی داده‌های دیده‌نشده اخیر وزن‌دهی می‌شوند. این بخش یک سمت‌وسوی جهتی به همراه بازه‌های قیمتی ۵۰٪ و ۸۰٪ ارائه می‌دهد.
+4. **تاریخچه** — رفتار این رمزارز پس از موقعیت‌هایی که چارت آن شبیه امروز بوده است، با استفاده از سال‌ها داده روزانه.
+5. **حکم نهایی** — هر خوانش بر اساس دقت اندازه‌گیری‌شده‌اش وزن‌دهی می‌شود، بنابراین مواردی که مزیت اثبات‌شده‌ای ندارند هیچ‌گونه تاثیری ندارند.
 
-The wording comes from a rule-based analyst built into the page, or from a language model that runs on your own device if you turn one on (or your own AI service if you connect one). Your questions are not sent to BTCS or to ChatGPT.
+متن‌ها از یک تحلیل‌گر مبتنی بر قوانین تعبیه‌شده در صفحه می‌آیند، یا از یک مدل زبانی که در صورت تمایل روی دستگاه خودتان اجرا می‌شود (یا سرویس هوش مصنوعی شخصی‌تان اگر متصل کنید). سوالات شما به CoinVantage یا ChatGPT فرستاده نمی‌شوند.
 
-**Honest limits:** across every timeframe tested the forecast was right ${t.all}% of the time, against ${t.allBaseline}% for always calling the more common direction — so it does **not** beat that baseline yet. Use it for ranges, levels and stop-losses, not as a crystal ball. Every figure is on the [Track record](#/track) page and on each coin page.`;
+**محدودیت‌های واقع‌بینانه:** در تمام تایم‌فریم‌های تست‌شده، پیش‌بینی در ${t.all}% مواقع درست بوده است، در مقایسه با ${t.allBaseline}% برای انتخاب همیشگی جهت رایج‌تر — بنابراین این مدل هنوز آن نرخ پایه را شکست **نمی‌دهد**. از آن برای بازه‌ها، سطوح و حد ضررها استفاده کنید، نه به عنوان گوی پیش‌بینی. تمام ارقام در صفحه [سوابق عملکرد](#/track) و در صفحه هر رمزارز موجود است.`;
 }
 
 function siteLegitAnswer() {
-  return `**What BTCS is, plainly**
+  return `**CoinVantage دقیقا چیست**
 
-- A market-data and analysis site. It never takes deposits, never holds your coins and never connects to an exchange account, so it cannot move or lose your money.
-- **Trading** runs on simulated money. The real-trade journal only records trades you place yourself on your own exchange — it never places an order or holds a key.
-- The analysis is free. Premium is an optional paid plan for alerts and tracking that run on a server while your browser is closed.
-- The forecast's accuracy is measured on data it never saw and published, including where it does **not** beat a simple baseline — see [Track record](#/track).
-- An account is optional. It keeps your watchlist, portfolio, trades, alerts and settings the same on all your devices, and lets the server send your alerts while your browser is closed.
+- یک سایت داده‌های بازار و تحلیل. این پلتفرم هرگز واریزی نمی‌پذیرد، رمزارزهای شما را نگه نمی‌دارد و به حساب صرافی شما وصل نمی‌شود، بنابراین به هیچ وجه نمی‌تواند پول شما را جابه‌جا کند یا از دست بدهد.
+- **معاملات** با پول شبیه‌سازی‌شده اجرا می‌شوند. ژورنال معاملات واقعی فقط معاملاتی را که شخصاً در صرافی خود انجام داده‌اید ثبت می‌کند — این سایت هرگز سفارشی ثبت نمی‌کند یا کلید خصوصی نگه نمی‌دارد.
+- تحلیل‌ها رایگان هستند. اشتراک پریمیوم یک طرح اختیاری پولی برای هشدارها و ردیابی‌هایی است که وقتی مرورگر شما بسته است روی سرور اجرا می‌شوند.
+- دقت پیش‌بینی روی داده‌های دیده‌نشده اندازه‌گیری و منتشر شده است، از جمله مواردی که در آن‌ها نرخ پایه ساده را شکست **نمی‌دهد** — صفحه [سوابق عملکرد](#/track) را ببینید.
+- داشتن حساب کاربری اختیاری است. این امکان را فراهم می‌کند که واچ‌لیست، پورتفوی، معاملات، هشدارها و تنظیمات شما روی همه دستگاه‌ها یکسان بماند و سرور بتواند هنگام بسته بودن مرورگر، هشدارها را برای شما ارسال کند.
 
-Treat every signal here as one input, not an instruction. Anyone promising guaranteed returns — in this site's name or any other — is running a scam.`;
+هر سیگنالی در اینجا را به عنوان یک ورودی در نظر بگیرید، نه یک دستورالعمل. هرکس سود تضمین‌شده‌ای وعده دهد — چه به نام این سایت و چه هر جای دیگری — در حال کلاهبرداری است.`;
 }
 
 function coinLegitAnswer(sym) {
-  const name = sym || 'a coin';
+  const name = sym || 'یک رمزارز';
   const major = sym === 'BTC' || sym === 'ETH'
-    ? `\n\n${sym === 'BTC' ? 'Bitcoin' : 'Ethereum'} is one of the two largest and longest-running crypto networks and trades on every major exchange; its main risk is price swings, not the project vanishing.`
+    ? `\n\n${sym === 'BTC' ? 'بیت‌کوین' : 'اتریوم'} یکی از دو شبکه بزرگ و قدیمی کریپتو است و در تمام صرافی‌های بزرگ معامله می‌شود؛ ریسک اصلی آن نوسانات قیمت است، نه محو شدن پروژه.`
     : '';
-  return `**Charts can't tell you whether ${name} is a scam** — indicators show how a price has moved, not whether a project is honest.${major}
+  return `**چارت‌ها نمی‌توانند به شما بگویند آیا ${name} کلاهبرداری است یا خیر** — اندیکاتورها نشان می‌دهند قیمت چطور حرکت کرده، نه اینکه آیا یک پروژه صادق است.${major}
 
-What to check yourself:
-- **Age and listings** — how long it has traded, and whether large regulated exchanges list it. Delistings are a warning.
-- **Liquidity** — daily volume against market cap. Thin trading makes the price easy to push around and the coin hard to sell.
-- **Who holds it** — a few wallets owning most of the supply, or large token unlocks coming up, can mean heavy selling.
-- **The pitch** — guaranteed returns, pressure to buy fast, or being paid to recruit others are classic signs of fraud.
-- **Contract and team** — for tokens, an audited contract and a public team lower the risk; an anonymous team or a contract that can mint or freeze coins raises it.
+چیزهایی که خودتان باید بررسی کنید:
+- **قدمت و لیست شدن** — مدت‌زمانی که معامله شده و اینکه آیا صرافی‌های بزرگ و معتبر آن را لیست کرده‌اند یا خیر. حذف از صرافی‌ها (Delisting) یک هشدار است.
+- **نقدشوندگی** — حجم روزانه در مقایسه با ارزش بازار. معاملات کم‌عمق باعث می‌شود دستکاری قیمت آسان و فروش رمزارز دشوار شود.
+- **چه کسانی آن را نگه داشته‌اند** — چند کیف پول که بیشتر حجم عرضه را در اختیار دارند، یا باز شدن قفل توکن‌های بزرگ در راه, می‌تواند به معنای فشار فروش سنگین باشد.
+- **نوع بازاریابی** — سودهای تضمین‌شده، فشار برای خرید سریع، یا گرفتن پول برای جذب افراد دیگر، نشانه‌های کلاسیک کلاهبرداری هستند.
+- **قرارداد هوشمند و تیم** — برای توکن‌ها، داشتن قرارداد حسابرسی‌شده (Audited) و تیم شفاف ریسک را کم می‌کند؛ تیم ناشناس یا قراردادی که می‌تواند توکن جدید مینت کند یا فریز نماید، ریسک را بالا می‌برد.
 
-${sym ? `The [${sym} page](#/coin/${sym}) shows its market cap and volume, and **Exchanges** shows where it trades.` : 'Each coin page shows market cap and volume, and **Exchanges** shows where a coin trades.'} Never send coins to anyone who promises to multiply them.`;
+${sym ? `صفحه [${sym}](#/coin/${sym}) ارزش بازار و حجم آن را نشان می‌دهد، و بخش **صرافی‌ها** نشان می‌دهد کجا معامله می‌شود.` : 'صفحه هر رمزارز ارزش بازار و حجم آن را نشان می‌دهد، و بخش صرافی‌ها مکان معامله آن را مشخص می‌کند.'} هرگز به کسی که وعده چند برابر کردن رمزارزتان را می‌دهد، چیزی نفرستید.`;
 }
 
-/**
- * A complete answer for a question that is not about a chart, or null when the
- * question needs the coin's data. `symbol` is the coin in focus; `named` lists
- * coins the question mentions.
- */
 export function conversationalAnswer(question, { symbol = null, named = [] } = {}) {
   let q = String(question || '').trim();
   if (!q) return null;
-  // "hi" or "hi there!" is a greeting; "hi, what is RSI?" is a question
-  // with a greeting in front, answered as the question.
   const afterHi = afterLead(GREETING, q);
   if (afterHi !== null) {
     if (wordsOf(afterHi).every((w) => FILLER.test(w)) || /^\?*$/.test(afterHi)) return greetingAnswer(symbol);
@@ -214,7 +201,7 @@ export function conversationalAnswer(question, { symbol = null, named = [] } = {
   }
   const afterThanks = afterLead(THANKS, q);
   if (afterThanks !== null) {
-    if (wordsOf(afterThanks).every((w) => FILLER.test(w))) return 'Glad to help. Ask about another coin any time — and keep a stop-loss on every trade.';
+    if (wordsOf(afterThanks).every((w) => FILLER.test(w))) return 'خواهش می‌کنم. هر زمان خواستید درباره رمزارز دیگری بپرسید — و در هر معامله حد ضرر بگذارید.';
     q = afterThanks.replace(/^(and|but|so|also)\b[\s,]*/i, '');
   }
   if (HELP.test(q)) return greetingAnswer(symbol);
