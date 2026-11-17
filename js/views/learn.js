@@ -1,4 +1,4 @@
-// AI learning: how the AI grades its own calls and changes its own decisions.
+// یادگیری هوش مصنوعی: نحوه امتیازدهی هوش مصنوعی به فراخوان‌های خود و تغییر تصمیماتش.
 import { $, $$, icon, toast, bindSeg } from '../ui.js';
 import { esc, dateTime, ago, horizonText } from '../format.js';
 import { load } from '../store.js';
@@ -21,45 +21,45 @@ export async function render(el) {
   const CHARTS = ['1m', '5m', '15m', '1h', '4h', '1d'];
   el.innerHTML = `
     <div class="page-head">
-      <div><h1>AI learning</h1>
-        <p>How the AI grades its own calls and changes its own decisions. Every indicator, the forecast and the trader are scored against what the market actually did. A method only gains influence when its record earns it, and only keeps it while it stays ahead. Every number here was measured, and each one shows how many calls it rests on. None of this has yet made calls on price direction better than chance in testing: the learned blend tied the forecast in the release test, and the trader's self-review changed a rule once in eight test runs.</p></div>
+      <div><h1>یادگیری هوش مصنوعی</h1>
+        <p>نحوه امتیازدهی هوش مصنوعی به پیش‌بینی‌های خود و تغییر تصمیماتش[cite: 3]. هر اندیکاتور، پیش‌بینی و معامله‌گر در مقایسه با آنچه بازار عملاً انجام داده است، ارزیابی می‌شوند[cite: 3]. یک روش تنها زمانی نفوذ به دست می‌آورد که سابقه آن چنین حقی را کسب کند و تنها تا زمانی که پیشتاز بماند آن را حفظ می‌کند[cite: 3]. هر عدد در اینجا اندازه‌گیری شده است و هر کدام نشان می‌دهد که بر روی چه تعداد پیش‌بینی بنا شده است[cite: 3]. هیچ‌کدام از این موارد هنوز نتوانسته است در تست‌ها، پیش‌بینی جهت قیمت را بهتر از شانس انجام دهد: ترکیب یادگرفته‌شده در تست انتشار با پیش‌بینی مساوی شد، و خودارزیابی معامله‌گر تنها یک قانون را در هشت بار اجرای تست تغییر داد[cite: 3].</p></div>
       <div class="row">
         <div class="seg" id="iv">${CHARTS.map((i) => `<button data-v="${i}" class="${i === st.interval ? 'on' : ''}">${i}</button>`).join('')}</div>
-        <button class="btn primary" id="pass">${icon('refresh', 16)} Refresh</button>
+        <button class="btn primary" id="pass">${icon('refresh', 16)} به‌روزرسانی</button>
       </div>
     </div>
     <details class="card learn-guide" id="guide">
-      <summary><span><b>How the testing works, in plain words</b><small class="fine">The learning loop, walk-forward tests, what counts as evidence, and what is not measured</small></span>${icon('info', 16)}</summary>
+      <summary><span><b>نحوه کارکرد تست‌ها به زبان ساده</b><small class="fine">حلقه یادگیری، تست‌های گام‌به‌گام (Walk-forward)، معیارهای سندیت، و موارد اندازه‌گیری‌نشده</small></span>${icon('info', 16)}</summary>
       <div class="seo-intro">${LEARN_GUIDE.map((x, i) => `<section aria-labelledby="lg-${i}"><h2 id="lg-${i}">${esc(x.h2)}</h2>${(x.paras || []).map((t) => `<p>${esc(t)}</p>`).join('')}${x.steps ? `<ol class="steps">${x.steps.map((t) => `<li>${esc(t)}</li>`).join('')}</ol>` : ''}${x.list ? `<ul class="steps">${x.list.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}</section>`).join('')}
-        <p class="fine">Educational, not financial advice. Every figure on this page describes the period it was measured on.</p></div>
+        <p class="fine">جنبه آموزشی دارد، نه مشاوره مالی. هر رقم در این صفحه دوره اندازه‌گیری‌شدن خود را توصیف می‌کند[cite: 3].</p></div>
     </details>
     <p class="fine" id="status" role="status" aria-live="polite"></p>
     <div id="body"></div>`;
 
-  // A call is only scored once its horizon has passed, so right after the first
-  // pass there are logged calls but nothing scored — say that, not "no calls".
-  const soon = (at) => { const m = Math.max(1, Math.round((at - Date.now()) / 60e3)); return m < 90 ? `${m} min` : `${Math.round(m / 60)} h`; };
-  // waiting: how many calls wait for their outcome, and when the first is due
+  // یک فراخوان تنها زمانی امتیاز می‌گیرد که افق زمانی آن بگذرد، بنابراین درست پس از اولین
+  // اجرای بررسی، فراخوان‌هایی ثبت شده اما چیزی امتیاز نگرفته است — این موضوع ذکر می‌شود، نه «بدون فراخوان».
+  const soon = (at) => { const m = Math.max(1, Math.round((at - Date.now()) / 60e3)); return m < 90 ? `${m} دقیقه` : `${Math.round(m / 60)} ساعت`; };
+  // waiting: چه تعداد فراخوان منتظر نتیجه خود هستند و اولین مورد چه زمانی سررسید می‌شود
   const pctTxt = (s, waiting = { n: 0, next: null }) => {
-    if (s && s.rate !== null) return `<b>${s.rate}%</b> <span class="fine">(${s.hits}/${s.n} · 95% range ${s.lo}–${s.hi}%)</span>`;
-    if (!waiting.n) return '<span class="muted">no calls logged yet</span>';
+    if (s && s.rate !== null) return `<b>${s.rate}%</b> <span class="fine">(${s.hits}/${s.n} · بازه ۹۵٪: ${s.lo}–${s.hi}٪)</span>`;
+    if (!waiting.n) return '<span class="muted">هنوز فراخوانی ثبت نشده است</span>';
     const next = waiting.next;
-    return `<span class="muted">none scored yet · ${waiting.n} waiting${Number.isFinite(next) ? ` · first result ${next > Date.now() ? `in about ${soon(next)}` : 'at the next pass'}` : ''}</span>`;
+    return `<span class="muted">هنوز نتیجه‌ای ثبت نشده · ${waiting.n} مورد در انتظار${Number.isFinite(next) ? ` · نخستین نتیجه ${next > Date.now() ? `حدود ${soon(next)} دیگر` : 'در بررسی بعدی'}` : ''}</span>`;
   };
   const waitingOf = (rows, key) => {
     const w = rows.filter((r) => !r.resolved && Number.isFinite(r[key]));
     return { n: w.length, next: w.length ? Math.min(...w.map((r) => r.horizonAt || Infinity)) : null };
   };
   const chip = (s) => {
-    if (!s || !s.n) return '<span class="chip">no data</span>';
-    if (s.weight > 0) return '<span class="chip up">earns a vote</span>';
-    if (s.weight < 0) return '<span class="chip warn">read in reverse</span>';
+    if (!s || !s.n) return '<span class="chip">بدون داده</span>';
+    if (s.weight > 0) return '<span class="chip up">دارای حق رأی</span>';
+    if (s.weight < 0) return '<span class="chip warn">خوانش معکوس</span>';
     return `<span class="chip">${esc(s.verdict)}</span>`;
   };
 
   function draw() {
-    // The cloud's record for this chart when it can be read; this browser's own
-    // learning passes only when it cannot (no backend, or offline).
+    // سابقه ابری برای این تایم‌فریم در صورت قابل خواندن بودن؛ گذرگاه‌های یادگیری
+    // این مرورگر فقط زمانی اجرا می‌شوند که امکان‌پذیر نباشد (بدون بک‌اند، یا آفلاین).
     const C = st.cloud?.[st.interval] || null;
     const L = C ? null : loadLearn();
     const live = C ? C.live : liveScores(L, st.interval);
@@ -69,9 +69,9 @@ export async function render(el) {
     const champion = (C ? C.champion : L.champion) || 'forecast';
     const waitF = C ? { n: C.waiting.forecast, next: C.waiting.nextAt } : waitingOf(L.rows, 'forecastProb');
     const waitB = C ? { n: C.waiting.blend, next: C.waiting.nextAt } : waitingOf(L.rows, 'blendProb');
-    const where = C ? `the cloud's live record on ${esc(st.interval)}` : 'this browser';
-    // the same rules the Trading page trades: its settings, the chart the
-    // account runs on, and the self-review's lessons
+    const where = C ? `سابقه ابری در ${esc(st.interval)}` : 'این مرورگر';
+    // همان قوانینی که صفحه معاملات با آن‌ها معامله می‌کند: تنظیمات آن، تایم‌فریم اجرای حساب،
+    // و درس‌های خودارزیابی
     const saved = load('traderCfg', {}) || {};
     const lessons = load('traderLessons', []) || [];
     const traderIv = load('traderState', null)?.interval || saved.interval || DEFAULT_CONFIG.interval;
@@ -80,100 +80,100 @@ export async function render(el) {
     const fl = learningStatus(ledger);
     const tested = LEARN_TESTED.byInterval[st.interval];
     const changes = [
-      ...((C ? Object.values(st.cloud).flatMap((x) => x.changes || []) : L.changes) || []).map((c) => ({ at: c.at, text: c.text, tag: c.kind === 'champion' ? `call maker · ${c.interval}` : `indicators · ${c.interval}` })),
-      ...lessons.map((l) => ({ at: l.at, text: l.text, tag: 'trader' })),
+      ...((C ? Object.values(st.cloud).flatMap((x) => x.changes || []) : L.changes) || []).map((c) => ({ at: c.at, text: c.text, tag: c.kind === 'champion' ? `سازنده سیگنال · ${c.interval}` : `اندیکاتورها · ${c.interval}` })),
+      ...lessons.map((l) => ({ at: l.at, text: l.text, tag: 'معامله‌گر' })),
     ].sort((a, b) => b.at - a.at).slice(0, 25);
     const closedOf = (key) => (load(key, null)?.closed || []);
     const accounts = [
-      { name: "The AI's trades", r: reviewTrades(closedOf('traderState')) },
-      { name: 'Your demo buys', r: reviewTrades(closedOf('myDemoState'), { includeManual: true }) },
-      { name: 'Your real trades', r: reviewTrades(closedOf('realTradeState'), { includeManual: true }) },
+      { name: 'معاملات هوش مصنوعی', r: reviewTrades(closedOf('traderState')) },
+      { name: 'خریدهای آزمایشی شما', r: reviewTrades(closedOf('myDemoState'), { includeManual: true }) },
+      { name: 'معاملات واقعی شما', r: reviewTrades(closedOf('realTradeState'), { includeManual: true }) },
     ];
     const voting = Object.entries(weights).filter(([, w]) => w).map(([k, w]) => `${INDICATORS[k].name} (${w > 0 ? '+' : ''}${w})`);
 
     $('#status', el).textContent = C
-      ? `Learning in the cloud around the clock, with every browser closed: ${C.coins} coins, every chart in turn. On ${st.interval}: last pass ${ago(C.lastPass)} · ${C.calls.toLocaleString('en-US')} calls logged · ${C.scored.toLocaleString('en-US')} scored${C.expired ? ` · ${C.expired} could not be graded (their candle was out of reach)` : ''}. The same record on every device.`
+      ? `یادگیری ابری به صورت شبانه‌روز و با بسته بودن تمام مرورگرها: ${C.coins} ارز، هر تایم‌فریم به نوبت. در ${st.interval}: آخرین بررسی در ${ago(C.lastPass)} · ${C.calls.toLocaleString('en-US')} فراخوان ثبت‌شده · ${C.scored.toLocaleString('en-US')} امتیازدهی‌شده${C.expired ? ` · ${C.expired} مورد غیرقابل ارزیابی (کندل خارج از دسترس)` : ''}. سابقه یکسان روی تمام دستگاه‌ها.`
       : st.cloud === false
-        ? (L.lastPass ? `The cloud's record could not be read, so this browser learns while the page is open. Last pass ${ago(L.lastPass)} · ${L.rows.length} calls logged · ${L.rows.filter((r) => r.resolved).length} scored.` : 'The cloud\'s record could not be read, so this browser learns while the page is open. Press Refresh to start.')
-        : st.cloud ? `The cloud has not learned on ${st.interval} yet: it takes each chart in turn every five minutes, so its first pass is due within half an hour.` : 'Reading the cloud\'s record…';
+        ? (L.lastPass ? `سابقه ابری قابل خواندن نبود، بنابراین این مرورگر هنگام باز بودن صفحه به یادگیری می‌پردازد. آخرین بررسی در ${ago(L.lastPass)} · ${L.rows.length} فراخوان ثبت‌شده · ${L.rows.filter((r) => r.resolved).length} امتیازدهی‌شده.` : 'سابقه ابری قابل خواندن نبود، بنابراین این مرورگر هنگام باز بودن صفحه به یادگیری می‌پردازد. برای شروع دکمه به‌روزرسانی را بزنید.')
+        : st.cloud ? `ابر هنوز روی ${st.interval} یادگیری نداشته است: بررسی هر تایم‌فریم هر پنج دقیقه انجام می‌شود، بنابراین نخستین بررسی ظرف نیم ساعت انجام خواهد شد.` : 'در حال خواندن سابقه ابری…';
     $('#body', el).innerHTML = `
       <div class="grid g2">
         <div class="card">
-          <div class="card-h"><h3>${icon('ai', 16)} Who makes the call right now</h3><span class="chip ${champion === 'blend' ? 'up' : ''}">${champion === 'blend' ? 'Learned blend' : 'Forecast engine'}</span></div>
-          <p class="fine" style="margin-top:0">Two methods compete. The <b>forecast engine</b> (seven models) makes the call by default. The <b>learned blend</b> adds the indicators that have earned a vote. The blend only takes over after at least ${SWITCH_MIN} scored live calls each, and only if it leads by ${SWITCH_GAP}+ points with its whole 95% range above the forecast's rate. It hands the call back as soon as it falls behind.</p>
+          <div class="card-h"><h3>${icon('ai', 16)} چه کسی در حال حاضر تصمیم می‌گیرد</h3><span class="chip ${champion === 'blend' ? 'up' : ''}">${champion === 'blend' ? 'ترکیب یادگرفته‌شده' : 'موتور پیش‌بینی'}</span></div>
+          <p class="fine" style="margin-top:0">دو روش با هم رقابت می‌کنند. <b>موتور پیش‌بینی</b> (هفت مدل) به طور پیش‌فرض تصمیم می‌گیرد. <b>ترکیب یادگرفته‌شده</b> اندیکاتورهایی را که حق رأی کسب کرده‌اند اضافه می‌کند. این ترکیب تنها پس از حداقل ${SWITCH_MIN} پیش‌بینی زنده امتیازدهی‌شده برای هرکدام، و تنها در صورتی که حداقل ${SWITCH_GAP} امتیاز جلوتر باشد و کل بازه ۹۵٪ آن بالاتر از نرخ پیش‌بینی قرار گیرد، هدایت را به دست می‌گیرد. به محض عقب افتادن، کنترل را پس می‌دهد.</p>
           <dl class="kv">
-            <dt>Forecast, live</dt><dd>${pctTxt(liveCall.forecast, waitF)}</dd>
-            <dt>Blend, live</dt><dd>${pctTxt(liveCall.blend, waitB)}</dd>
-            <dt>Release test</dt><dd>forecast ${LEARN_TESTED.forecast}% · blend ${LEARN_TESTED.blend}% <span class="fine">(${LEARN_TESTED.tests.toLocaleString()} calls${tested ? `; ${esc(st.interval)}: ${tested[0]}% vs ${tested[1]}%` : ''})</span></dd>
+            <dt>پیش‌بینی، زنده</dt><dd>${pctTxt(liveCall.forecast, waitF)}</dd>
+            <dt>ترکیب، زنده</dt><dd>${pctTxt(liveCall.blend, waitB)}</dd>
+            <dt>تست انتشار</dt><dd>پیش‌بینی ${LEARN_TESTED.forecast}٪ · ترکیب ${LEARN_TESTED.blend}٪ <span class="fine">(${LEARN_TESTED.tests.toLocaleString()} پیش‌بینی${tested ? `; ${esc(st.interval)}: ${tested[0]}٪ در برابر ${tested[1]}٪` : ''})</span></dd>
           </dl>
-          <p class="fine mt">${(() => { const by = Object.entries(LEARN_TESTED.byInterval); const better = by.filter(([, [f, b]]) => b > f).map(([k]) => k), worse = by.filter(([, [f, b]]) => b < f).map(([k]) => k); return `In the latest test (${LEARN_TESTED.tests.toLocaleString()} calls on ${LEARN_TESTED.coins} coins) the blend scored ${LEARN_TESTED.blend}% against the forecast's ${LEARN_TESTED.forecast}%${better.length ? `: better on ${better.join(', ')}` : ''}${worse.length ? `${better.length ? ', ' : ': '}worse on ${worse.join(', ')}` : ''}. That is not a reason to switch, so it starts as the challenger and has to prove itself in ${where} first.`; })()}${C?.reason ? ` ${esc(C.reason)}` : ''}</p>
+          <p class="fine mt">${(() => { const by = Object.entries(LEARN_TESTED.byInterval); const better = by.filter(([, [f, b]]) => b > f).map(([k]) => k), worse = by.filter(([, [f, b]]) => b < f).map(([k]) => k); return `در آخرین تست (${LEARN_TESTED.tests.toLocaleString()} پیش‌بینی روی ${LEARN_TESTED.coins} ارز)، ترکیب ${LEARN_TESTED.blend}٪ در برابر ${LEARN_TESTED.forecast}٪ پیش‌بینی امتیاز کسب کرد${better.length ? `: عملکرد بهتر در ${better.join(', ')}` : ''}${worse.length ? `${better.length ? '، و ' : ': '}عملکرد ضعیف‌تر در ${worse.join(', ')}` : ''}. این دلیلی برای تغییر فوری نیست، بنابراین به عنوان رقیب شروع کرده و باید ابتدا خود را در ${where} ثابت کند.`; })()}${C?.reason ? ` ${esc(C.reason)}` : ''}</p>
         </div>
         <div class="card">
-          <div class="card-h"><h3>${icon('forecast', 16)} Forecast record</h3><span class="chip">${esc(TREND_WORDS[fl.trend] || fl.trend)}</span></div>
+          <div class="card-h"><h3>${icon('forecast', 16)} سابقه پیش‌بینی</h3><span class="chip">${esc(TREND_WORDS[fl.trend] || fl.trend)}</span></div>
           <dl class="kv">
             ${(() => {
-              // the latest test first, and the older release test beside it, each dated
-              // the at-scale test only (5m–1d): 1m is not shown centred
+              // ابتدا جدیدترین تست و سپس تست انتشار قدیمی‌تر در کنار آن، هر کدام با تاریخ خود
+              // فقط تست‌های مقیاس‌پذیر (۵ دقیقه تا ۱ روز): تایم‌فریم ۱ دقیقه در حالت مرکزی نمایش داده نمی‌شود
               const big = Object.values(FORECAST_TESTED.centred).filter((x) => x.coins >= 20);
               const c80 = big.map((x) => x.band80);
               const n80 = big.reduce((a, x) => a + x.tests, 0);
               const ro = recheckOverall();
-              return `${ro ? `<dt>Direction, latest test</dt><dd>${ro.hit}% <span class="fine">vs ${ro.baseline}% baseline · ${ro.tests.toLocaleString('en-US')} tests on ${ro.coins} coins, ${esc(ro.measuredOn)}</span></dd>` : ''}
-            <dt>Direction, release test</dt><dd>${TESTED_ACCURACY.all}% <span class="fine">vs ${TESTED_ACCURACY.allBaseline}% baseline · ${TESTED_ACCURACY.tests.toLocaleString()} tests</span></dd>
-            <dt>80% range held</dt><dd>${c80.length ? `${Math.min(...c80)}–${Math.max(...c80)}%` : '—'} <span class="fine">(target 80%; by chart, centred on today's price, ${n80.toLocaleString('en-US')} tests on ${(() => { const k = big.map((x) => x.coins); const lo = Math.min(...k), hi = Math.max(...k); return lo === hi ? hi : `${lo}–${hi}`; })()} coins, ${esc(FORECAST_TESTED.centredMeasuredOn)}; ${TESTED_ACCURACY.bandsAll.band80}% in the release test)</span></dd>`;
+              return `${ro ? `<dt>جهت، آخرین تست</dt><dd>${ro.hit}٪ <span class="fine">در برابر مبنای ${ro.baseline}٪ · ${ro.tests.toLocaleString('en-US')} تست روی ${ro.coins} ارز، ${esc(ro.measuredOn)}</span></dd>` : ''}
+            <dt>جهت، تست انتشار</dt><dd>${TESTED_ACCURACY.all}٪ <span class="fine">در برابر مبنای ${TESTED_ACCURACY.allBaseline}٪ · ${TESTED_ACCURACY.tests.toLocaleString()} تست</span></dd>
+            <dt>حفظ بازه ۸۰٪</dt><dd>${c80.length ? `${Math.min(...c80)}–${Math.max(...c80)}٪` : '—'} <span class="fine">(هدف ۸۰٪؛ بر اساس تایم‌فریم، متمرکز بر قیمت امروز، ${n80.toLocaleString('en-US')} تست روی ${(() => { const k = big.map((x) => x.coins); const lo = Math.min(...k), hi = Math.max(...k); return lo === hi ? hi : `${lo}–${hi}`; })()} ارز، ${esc(FORECAST_TESTED.centredMeasuredOn)}؛ ${TESTED_ACCURACY.bandsAll.band80}٪ در تست انتشار)</span></dd>`;
             })()}
-            <dt>90% range held</dt><dd>${TESTED_ACCURACY.bandsAll.band90}% <span class="fine">(target 90%)</span></dd>
-            <dt>Your record (last 50)</dt><dd>${fl.windows[50].pct === null ? '<span class="muted">not enough yet</span>' : `${fl.windows[50].pct}% <span class="fine">(${fl.windows[50].hits}/${fl.windows[50].total})</span>`}</dd>
+            <dt>حفظ بازه ۹۰٪</dt><dd>${TESTED_ACCURACY.bandsAll.band90}٪ <span class="fine">(هدف ۹۰٪)</span></dd>
+            <dt>سابقه شما (۵۰ مورد اخیر)</dt><dd>${fl.windows[50].pct === null ? '<span class="muted">تعداد ناکافی</span>' : `${fl.windows[50].pct}٪ <span class="fine">(${fl.windows[50].hits}/${fl.windows[50].total})</span>`}</dd>
           </dl>
-          <h4 class="mt" style="margin-bottom:6px">How far its direction is trusted</h4>
-          <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">Chart</th><th>Release test</th><th>Graded for you</th><th>Used now</th></tr></thead><tbody>
+          <h4 class="mt" style="margin-bottom:6px">میزان اعتماد به جهت پیش‌بینی</h4>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">تایم‌فریم</th><th>تست انتشار</th><th>امتیازدهی‌شده برای شما</th><th>استفاده فعلی</th></tr></thead><tbody>
             ${['1m', '5m', '15m', '1h', '4h', '1d'].map((iv) => {
               const t = learnedTrust(ledger, iv);
-              return `<tr><td class="l">${iv}</td><td>${t.prior.toFixed(2)}</td><td>${t.local === null ? `<span class="muted">${t.graded} of ${MIN_GRADED_FOR_TRUST}</span>` : `${t.local.toFixed(2)} <span class="fine">(${t.graded})</span>`}</td><td><b>${t.trust.toFixed(2)}</b></td></tr>`;
+              return `<tr><td class="l">${iv}</td><td>${t.prior.toFixed(2)}</td><td>${t.local === null ? `<span class="muted">${t.graded} از ${MIN_GRADED_FOR_TRUST}</span>` : `${t.local.toFixed(2)} <span class="fine">(${t.graded})</span>`}</td><td><b>${t.trust.toFixed(2)}</b></td></tr>`;
             }).join('')}
           </tbody></table></div>
-          <p class="fine">The chance of rise on each chart is the models' raw lean shrunk by this number: 1 keeps it as is, 0 means the lean carried no information in testing, so no chance is shown there. Once a chart has ${MIN_GRADED_FOR_TRUST} of your forecasts graded (signed in, the record is kept with your account, so every device adds to it), their record adjusts the number, weighted against the release test's ${TESTED_ACCURACY.testsPerInterval} forecasts per chart. A chart the release test found nothing on stays at 0.</p>
-          <p class="fine mt">The forecast retrains all seven models on each coin's newest candles every time it runs. Once your record has enough scored calls, a weak recent record pulls the displayed confidence toward 50/50 by itself.</p>
+          <p class="fine">احتمال صعود در هر تایم‌فریم معادل تمایل خام مدل‌هاست که در این عدد ضرب شده است: عدد ۱ آن را دست‌نخورده نگه می‌دارد، و صفر به این معناست که تمایل مذکور در تست‌ها هیچ اطلاعاتی به همراه نداشته است، بنابراین هیچ احتمالی نمایش داده نمی‌شود. به محض اینکه یک تایم‌فریم ${MIN_GRADED_FOR_TRUST} پیش‌بینی امتیازدهی‌شده از شما داشته باشد (هنگام ورود به حساب، سابقه با حساب شما ذخیره می‌شود تا هر دستگاهی به آن اضافه کند)، سابقه آن‌ها عدد را تنظیم می‌کند و با ${TESTED_ACCURACY.testsPerInterval} پیش‌بینی تست انتشار به ازای هر تایم‌فریم وزن‌دهی می‌شود. تایم‌ففرمی که تست انتشار چیزی در آن نیافته روی صفر باقی می‌ماند.</p>
+          <p class="fine mt">موتور پیش‌بینی هر بار که اجرا می‌شود، تمام ۷ مدل را روی جدیدترین کندل‌های هر ارز مجدداً آموزش می‌دهد. به محض اینکه سابقه شما پیش‌بینی‌های امتیازدهی‌شده کافی داشته باشد، سابقه ضعیف اخیر به خودی خود اطمینان نمایش‌داده‌شده را به سمت ۵۰/۵۰ متمایل می‌کند.</p>
         </div>
       </div>
 
       <div class="card mt">
-        <div class="card-h"><h3>${icon('chart', 16)} Indicators, graded (${esc(st.interval)})</h3><span class="fine">${voting.length ? `voting now: ${esc(voting.join(', '))}` : 'no indicator has earned a vote on this timeframe'}</span></div>
-        <p class="fine" style="margin-top:0">Each indicator's reading is turned into a call (for example, RSI under 30 means "up"), then checked against the price ${esc(horizonText(st.interval, DEFAULT_HORIZON[st.interval] || 12))} later (the same horizon the forecast uses on ${esc(st.interval)} charts). <b>Recent history</b> is measured on the last 500 candles of ${C ? `each of the ${C.coins} coins, again each time the cloud comes back to it` : "the trader's coins during each pass"}. <b>Live</b> counts only calls ${C ? 'the cloud' : 'this browser'} logged before the outcome was known. A reading needs 30+ calls and a 95% range clear of 50% to earn a vote. Live evidence takes over from history as it builds up.</p>
-        ${hist ? `<div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">Indicator</th><th class="l hide-p">Rule</th><th>Recent history</th><th>Live</th><th class="hide-t">Tested alone</th><th>Weight now</th></tr></thead><tbody>
+        <div class="card-h"><h3>${icon('chart', 16)} اندیکاتورها، امتیازدهی‌شده (${esc(st.interval)})</h3><span class="fine">${voting.length ? `در حال رأی‌دهی: ${esc(voting.join(', '))}` : 'هیچ اندیکاتوری در این تایم‌فریم حق رأی کسب نکرده است'}</span></div>
+        <p class="fine" style="margin-top:0">خوانش هر اندیکاتور به یک پیش‌بینی تبدیل می‌شود (مثلاً RSI زیر ۳۰ به معنای «صعودی» است)، سپس ${esc(horizonText(st.interval, DEFAULT_HORIZON[st.interval] || 12))} بعد (همان افق زمانی که پیش‌بینی در تایم‌فریم‌های ${esc(st.interval)} استفاده می‌کند) با قیمت مقایسه می‌شود. <b>سابقه اخیر</b> روی ۵۰۰ کندل آخر ${C ? `از هر یک از ${C.coins} ارز، بار دیگر هر زمان که ابر بازمی‌گردد` : 'ارزهای معامله‌گر در هر بررسی'} اندازه‌گیری می‌شود. <b>زنده</b> فقط شامل مواردی است که ${C ? 'ابر' : 'این مرورگر'} پیش از مشخص شدن نتیجه ثبت کرده است. یک خوانش به ۳۰+ فراخوان و بازه ۹۵٪ دور از ۵۰٪ نیاز دارد تا حق رأی کسب کند. شواهد زنده با شکل‌گیری به مرور جایگزین سابقه می‌شوند.</p>
+        ${hist ? `<div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">اندیکاتور</th><th class="l hide-p">قانون</th><th>سابقه اخیر</th><th>زنده</th><th class="hide-t">تست به تنهایی</th><th>وزن فعلی</th></tr></thead><tbody>
           ${Object.entries(INDICATORS).map(([k, d]) => `<tr><td class="l wrap"><b>${esc(d.name)}</b><small class="show-p-block">${esc(d.rule)}</small></td><td class="l fine wrap hide-p" style="min-width:140px">${esc(d.rule)}</td>
-            <td>${hist[k] ? `${hist[k].rate ?? '—'}% <span class="fine">(${hist[k].n})</span>` : '—'}</td>
-            <td>${live[k]?.n ? `${live[k].rate}% <span class="fine">(${live[k].n})</span>` : '<span class="muted">—</span>'}</td>
-            <td class="fine hide-t">${LEARN_TESTED.indicatorsAlone[k] ?? '—'}%</td>
+            <td>${hist[k] ? `${hist[k].rate ?? '—'}٪ <span class="fine">(${hist[k].n})</span>` : '—'}</td>
+            <td>${live[k]?.n ? `${live[k].rate}٪ <span class="fine">(${live[k].n})</span>` : '<span class="muted">—</span>'}</td>
+            <td class="fine hide-t">${LEARN_TESTED.indicatorsAlone[k] ?? '—'}٪</td>
             <td>${chip({ ...(hist[k] || {}), weight: weights[k] || 0, n: (hist[k]?.n || 0) + (live[k]?.n || 0) })}</td></tr>`).join('')}
-        </tbody></table></div>` : `<p class="muted">${C || st.cloud ? 'Not graded on this chart yet: the cloud takes each chart in turn.' : 'Press Refresh to grade the indicators on this timeframe.'}</p>`}
-        <p class="fine mt">"Tested alone" is each indicator's hit rate at the 1,440 release-test points across all timeframes. None is far from 50%, which is why the page is careful about which ones get a vote.</p>
+        </tbody></table></div>` : `<p class="muted">${C || st.cloud ? 'هنوز در این تایم‌فریم امتیازدهی نشده است: ابر هر تایم‌فریم را به نوبت بررسی می‌کند.' : 'برای امتیازدهی به اندیکاتورها در این تایم‌فریم، روی به‌روزرسانی بزنید.'}</p>`}
+        <p class="fine mt">«تست به تنهایی» نرخ موفقیت هر اندیکاتور در ۱,۴۴۰ نقطه تست انتشار در تمامی تایم‌فریم‌هاست. هیچ‌کدام فاصله زیادی از ۵۰٪ ندارند، به همین دلیل صفحه در انتخاب موارد دارای حق رأی با احتیاط عمل می‌کند.</p>
       </div>
 
       <div class="card mt">
-        <div class="card-h"><h3>${icon('chart', 16)} Buy trades, graded</h3><span class="fine">what happened after each buy</span></div>
-        <p class="fine" style="margin-top:0">Every closed buy is checked against what the chart did next. Buys are grouped by the chart at the moment of buying (with or against the trend, trending or ranging, RSI stretched or not), so a pattern that keeps losing shows up here. That covers the AI's simulated trades, your own demo buys, and the real trades you recorded. Results are in R: 1R is the amount a trade risked.</p>
-        <div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">Account</th><th>Closed buys</th><th class="hide-p">Won</th><th>Average</th><th class="l">What stands out</th></tr></thead><tbody>
-          ${accounts.map((a) => `<tr><td class="l wrap"><b>${esc(a.name)}</b></td><td>${a.r.overall.n}</td><td class="hide-p">${a.r.overall.winRate === null ? '—' : a.r.overall.winRate + '%'}</td><td class="${a.r.overall.avgR > 0 ? 'up' : a.r.overall.avgR < 0 ? 'down' : ''}">${a.r.overall.avgR === null ? '—' : (a.r.overall.avgR > 0 ? '+' : '') + a.r.overall.avgR + 'R'}</td><td class="l fine wrap" style="min-width:110px">${esc(a.r.findings[0] || '—')}</td></tr>`).join('')}
+        <div class="card-h"><h3>${icon('chart', 16)} معاملات خرید، امتیازدهی‌شده</h3><span class="fine">آنچه پس از هر خرید رخ داد</span></div>
+        <p class="fine" style="margin-top:0">هر معامله خرید بسته‌شده با رفتار بعدی بازار مقایسه می‌شود. خریدها بر اساس وضعیت نمودار در لحظه خرید دسته‌بندی می‌شوند (همسو یا خلاف روند، در حال نوسان یا رونددار، RSI افراطی یا غیره)، تا الگویی که مدام ضرر می‌دهد شناسایی شود. این مورد شامل معاملات شبیه‌سازی‌شده هوش مصنوعی، خریدهای آزمایشی شخصی شما و معاملات واقعی ثبت‌شده شما می‌شود. نتایج بر حسب R هستند: ۱R مقدار ریسک‌پذیرفته‌شده در یک معامله است.</p>
+        <div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">حساب</th><th>خریدهای بسته‌شده</th><th class="hide-p">برد</th><th>میانگین</th><th class="l">نکات برجسته</th></tr></thead><tbody>
+          ${accounts.map((a) => `<tr><td class="l wrap"><b>${esc(a.name)}</b></td><td>${a.r.overall.n}</td><td class="hide-p">${a.r.overall.winRate === null ? '—' : a.r.overall.winRate + '٪'}</td><td class="${a.r.overall.avgR > 0 ? 'up' : a.r.overall.avgR < 0 ? 'down' : ''}">${a.r.overall.avgR === null ? '—' : (a.r.overall.avgR > 0 ? '+' : '') + a.r.overall.avgR + 'R'}</td><td class="l fine wrap" style="min-width:110px">${esc(a.r.findings[0] || '—')}</td></tr>`).join('')}
         </tbody></table></div>
         ${accounts.flatMap((a) => a.r.findings.slice(1).map((f) => `<p class="fine">${esc(a.name)}: ${esc(f)}</p>`)).join('')}
       </div>
 
       <div class="card mt">
-        <div class="card-h"><h3>${icon('bolt', 16)} Trading</h3><a class="btn sm" href="#/trader">Open the trader</a></div>
-        <p class="fine" style="margin-top:0">After every check the AI trader reads its own trade log. It switches on a filter when one market condition keeps losing, and switches it off again if results get worse. Its rules were picked on older candles and run on newer ones they had never seen, three times: on ${esc(cfg.interval)} they averaged ${CHART_TESTED[cfg.interval] ? (() => { const x = CHART_TESTED[cfg.interval], t = x.adopt ? x.own : x.standard; return `${t.ret}% per ${x.block} against ${x.hold}% for holding the same coins`; })() : 'an untested result'}.</p>
-        <p class="fine"><b>Rules in force:</b> ${esc((activeLessons(cfg).join(' · ')) || 'the original strategy')}.</p>
+        <div class="card-h"><h3>${icon('bolt', 16)} معاملات</h3><a class="btn sm" href="#/trader">باز کردن صفحه معامله‌گر</a></div>
+        <p class="fine" style="margin-top:0">معامله‌گر هوش مصنوعی پس از هر بررسی، گزارش معاملات خود را می‌خواند. زمانی که یک شرایط بازار مدام زیان‌ده باشد فیلتری را فعال می‌کند و اگر نتایج بدتر شوند آن را غیرفعال می‌سازد. قوانین این ربات روی کندل‌های قدیمی‌تر انتخاب شده و روی کندل‌های جدیدتری که هرگز ندیده بودند سه بار اجرا شدند: در ${esc(cfg.interval)} به طور میانگین ${CHART_TESTED[cfg.interval] ? (() => { const x = CHART_TESTED[cfg.interval], t = x.adopt ? x.own : x.standard; return `${t.ret}٪ به ازای هر ${x.block} در برابر ${x.hold}٪ برای نگهداری همان ارزها`; })() : 'نتیجه‌ای تست‌نشده'} سود داشتند.</p>
+        <p class="fine"><b>قوانین فعال:</b> ${esc((activeLessons(cfg).join(' · ')) || 'استراتژی اولیه')}.</p>
       </div>
 
       <div class="card mt">
-        <div class="card-h"><h3>${icon('info', 16)} What the AI changed, and when</h3><span class="fine">newest first</span></div>
+        <div class="card-h"><h3>${icon('info', 16)} تغییرات هوش مصنوعی و زمان آن‌ها</h3><span class="fine">جدیدترین در ابتدا</span></div>
         ${changes.length ? `<ul class="fine" style="list-style:none;padding:0;margin:0">${changes.map((c) => `<li style="padding:6px 0;border-bottom:1px solid var(--border)"><span class="muted" style="display:inline-block;min-width:150px">${dateTime(c.at)}</span><span class="chip" style="margin-right:6px">${esc(c.tag)}</span>${esc(c.text)}</li>`).join('')}</ul>`
-          : '<p class="muted">Nothing yet. Changes appear here as soon as the evidence justifies one.</p>'}
+          : '<p class="muted">هنوز موردی وجود ندارد. تغییرات به محض اینکه شواهد کافی وجود داشته باشد در اینجا ظاهر می‌شوند.</p>'}
       </div>`;
   }
 
-  // Read the cloud's record; only when it cannot be read does this browser run
-  // a learning pass of its own (and keep it here).
+  // خواندن سابقه ابری؛ فقط زمانی که قابل خواندن نباشد این مرورگر یک گذرگاه
+  // یادگیری مستقل اجرا می‌کند (و آن را اینجا نگه می‌دارد).
   async function pass({ force = false } = {}) {
     if (st.running) return;
     st.running = true;
@@ -183,15 +183,15 @@ export async function render(el) {
       if (st.disposed) return;
       if (cloud) {
         st.cloud = cloud;
-        // the cloud keeps the record now: this browser's old copy is not needed
+        // ابر اکنون سابقه را نگه می‌دارد: نسخه قدیمی این مرورگر دیگر نیاز نیست
         remove('aiLearn');
         return;
       }
       st.cloud = false;
       const r = await learningPass(st.interval, { onStep: (s) => { if (!st.disposed) b.innerHTML = `<span class="spinner"></span> ${esc(s)}`; } });
       if (st.disposed) return;
-      toast(r.changes.length ? `Learning pass done — ${r.changes.length} change${r.changes.length > 1 ? 's' : ''}.` : 'Learning pass done — nothing clear enough to change.', r.changes.length ? 'up' : 'info');
-    } catch { toast('The learning pass could not load market data. Try again in a moment.', 'down'); }
+      toast(r.changes.length ? `بررسی یادگیری انجام شد — ${r.changes.length} تغییر.` : 'بررسی یادگیری انجام شد — مدرک قانع‌کننده‌ای برای تغییر وجود ندارد.', r.changes.length ? 'up' : 'info');
+    } catch { toast('بررسی یادگیری نتوانست داده‌های بازار را بارگذاری کند. لحظاتی دیگر دوباره تلاش کنید.', 'down'); }
     finally { st.running = false; if (!st.disposed) { b.disabled = false; b.innerHTML = old; draw(); } }
   }
 
