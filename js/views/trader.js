@@ -35,19 +35,15 @@ const SESSION_KEY = 'aiSession';
 const AUTO_KEY = 'traderAutoStarted';
 const LESSONS_KEY = 'traderLessons';   // گزارش تغییرات بخش خودارزیابی
 const AUTOLEARN_KEY = 'traderAutoLearn';
+const USER_KEYS = ['startingBalance', 'riskPct', 'maxPositions', 'maxPositionPct', 'feePct', 'interval', 'strategy', 'custom', 'ownRulesOff', 'universe'];
+const LEARNED_KEYS = ['excluded', 'minScore', 'requireTrend', 'requireMarket'];
 
 export async function render(el) {
-  // prices: جدیدترین قیمت شناخته‌شده برای هر ارز. priceFrom مشخص می‌کند قیمت از کجا آمده است
-  // (تیک لحظه‌ای، یا آخرین کندل زمانی که هنوز تیکی دریافت نشده است).
   const st = { disposed: false, charts: [], prices: {}, priceFrom: {}, running: false, noExchange: [] };
-  // پس از اولین بررسی، هر بررسی بعدی فقط کندل‌های جدید را درخواست می‌کند
   const candlesFor = candleCache(getCandles, { window: 500, stepOf: (iv) => INTERVAL_MS[iv] });
-  // حداکثر تعداد کندل‌های از دست‌رفته یک ارز نگهداری‌شده که واکشی می‌شوند (در تایم‌فریم ۵ دقیقه: ۲۰ روز).
   const BACKFILL_MAX = 6000;
-  // ارزهایی که پیوسته بدون داده قیمتی برمی‌گردند (چند بررسی متوالی ناموفق در حالی که بقیه بارگذاری شده‌اند)
-  // تا صفحه یک بار این موضوع را اعلام کند و پیشنهاد حذف آن‌ها را بدهد.
   const NODATA_KEY = 'traderNoData';
-  // ماشین وضعیت رسمی نشست: آماده به کار ← در حال اجرا ← متوقف‌شده ← در حال اجرا، و بازنشانی از هر وضعیت.
+
   let session = load(SESSION_KEY, null);
   if (!session || !['idle', 'running', 'stopped'].includes(session.status)) {
     const hasState = !!load(STATE_KEY, null);
@@ -55,12 +51,9 @@ export async function render(el) {
     save(SESSION_KEY, session);
   }
   let autoOn = session.status === 'running';
-  // انتخاب‌های کاربر و مواردی که بخش خودارزیابی آموخته است
   const cfg = configFrom(load(CFG_KEY, {}));
   let state = load(STATE_KEY, null);
-  // قوانین اختصاصی هر ارز: برای حساب‌های روزانه فعال است مگر اینکه خاموش شود.
   const ownRulesOn = () => ownRulesFor(cfg, state);
-  // آنچه حساب واقعاً معامله می‌کند: تنظیمات، قوانین اندازه‌گیری‌شده نمودار و درس‌های خودارزیابی.
   const effective = (iv = state?.interval || cfg.interval) => rulesForChart(cfg, iv, load(LESSONS_KEY, []));
 
   const applySession = (event) => {
@@ -78,20 +71,17 @@ export async function render(el) {
   function syncSessionChip() {
     const chip = $('#sessionChip', el);
     if (!chip) return;
-    // فقط در صورت تغییر بازنویسی شود تا انیمیشن پالس آن مدام ری‌استارت نشود
-    const cls = `session-chip ${session.status}`, html = `<i></i>${sessionLabel(session.status)}`;
+    const cls = `ap-session-chip ${session.status}`, html = `<i></i>${sessionLabel(session.status)}`;
     if (chip.className !== cls) chip.className = cls;
     if (chip.innerHTML !== html) chip.innerHTML = html;
   }
 
   const all = await markets().catch(() => []);
-  // بهترین قیمت واقعی که این صفحه برای یک ارز در اختیار دارد: تیک زنده، آخرین کندل، یا لیست بازار.
   const priceOf = (sym) => {
     if (Number.isFinite(st.prices[sym])) return st.prices[sym];
     const c = all.find((x) => x.symbol === sym && x.source !== 'demo');
     return Number.isFinite(c?.price) && c.price > 0 ? c.price : null;
   };
-  // دریافت قیمت تازه از صرافی برای یک ارز از طریق آخرین کندل ۱ دقیقه‌ای آن.
   async function fetchPrice(sym) {
     const coin = all.find((c) => c.symbol === sym);
     if (!coin) return null;
@@ -103,7 +93,6 @@ export async function render(el) {
       return px;
     } catch { return null; }
   }
-  // قیمت‌ها برای ارزش‌گذاری تمام حساب‌ها: قیمت‌های لیست که با قیمت‌های زنده جایگزین می‌شوند.
   const marks = () => {
     const m = {};
     for (const c of all) if (c.source !== 'demo' && Number.isFinite(c.price)) m[c.symbol] = c.price;
@@ -112,28 +101,312 @@ export async function render(el) {
   const tradable = all.filter((c) => !isStable(c.symbol)).slice(0, 60);
 
   el.innerHTML = `
-    <div class="page-head">
-      <div><h1>معاملات</h1>
-        <p>سه حساب در کنار هم: معاملات آزمایشی که خودتان انجام می‌دهید، معاملاتی که واقعاً انجام داده‌اید، و هوش مصنوعی که استراتژی را به طور مستقل اجرا می‌کند. فقط حساب واقعی با پول واقعی سر و کار دارد — BTCS هرگز سفارشی ثبت نمی‌کند و هیچ کلید API را نگه نمی‌دارد.</p>
-        <div class="callout warn mt" role="note"><b>${icon('info', 14)} شبیه‌سازی، نه مسیری تضمینی برای سود</b><p>حساب‌های آزمایشی و هوش مصنوعی با پول مجازی روی قیمت‌های زنده معامله می‌کنند. سفارش‌ها با قیمت کندل و کارمزد مدل‌سازی‌شده پر می‌شوند؛ در سفارش‌های واقعی هزینه اسپرد و لغزش قیمت (Slippage) نیز وجود دارد، سفارش ممکن است ناقص پر شود یا اصلاً پر نشود و صرافی‌ها ممکن است در میانه حرکت بازار از دسترس خارج شوند. در تست‌های گام‌به‌گام (Walk-forward)، قوانین در برخی دوره‌ها ضرر داده‌اند و گاهی نگهداری ساده ارز عملکرد بهتری داشته است: ارقام زیر هر دو مورد را همراه با بیشترین افت سرمایه نشان می‌دهند. نتایج اینجا را به عنوان شواهدی درباره عملکرد قوانین در نظر بگیرید، نه بازدهی مورد انتظار. این توصیه مالی نیست. <a class="acc" href="#/learn">آموزش قوانین →</a></p></div>
-        <details class="mt"><summary class="fine" style="cursor:pointer">معنای هر حساب و استراتژی چیست</summary>
-          <dl class="defs">
-            <dt>حساب آزمایشی (Demo)</dt><dd>پول مجازی که به صورت دستی معامله می‌کنید تا بدون ریسک تمرین کنید. کارمزدها محاسبه می‌شوند اما لغزش قیمت خیر.</dd>
-            <dt>حساب هوش مصنوعی (AI)</dt><dd>پول مجازی که به صورت خودکار بر اساس قوانین انتخابی شما در تنظیمات، روی قیمت‌های زنده در مرورگر (و در صورت ورود به حساب، در فضای ابری) معامله می‌شود.</dd>
-            <dt>حساب واقعی (Real)</dt><dd>گزارشی از معاملاتی که شخصاً در صرافی انجام داده‌اید و به صورت دستی وارد یا درون‌ریزی کرده‌اید تا با همان معیارها سنجیده شوند. برنامه هرگز این سفارش‌ها را ثبت نمی‌کند.</dd>
-            <dt>استراتژی پیش‌فرض تست‌شده</dt><dd>قوانین هر نمودار که از تست گام‌به‌گام با احتساب کارمزد عبور کرده‌اند. نتیجه اندازه‌گیری‌شده آن‌ها (چه خوب و چه بد) در کنار حساب نمایش داده می‌شود.</dd>
-            <dt>استراتژی سفارشی (Custom)</dt><dd>تنظیمات شخصی شما. این موارد بخشی از تست گام‌به‌گام نبوده‌اند، بنابراین آمارهای تست‌شده درباره آن‌ها صدق نمی‌کند؛ گزینه «تست این تنظیمات» نگاهی به گذشته می‌اندازد که معمولاً عملکرد قوانین انتخاب‌شده روی همان تاریخچه را بهتر از واقعیت نشان می‌دهد.</dd>
-          </dl></details>
-        <p class="fine" id="syncNote">${syncNote()}</p></div>
-      <div class="row">
-        <span class="session-chip ${session.status}" id="sessionChip"><i></i>${sessionLabel(session.status)}</span>
-        <button class="btn" id="cfgBtn">${icon('chip', 16)} تنظیمات</button>
-        <button class="btn ghost" id="resetBtn"${state ? '' : ' hidden'}>بازنشانی</button>
-        <button class="btn ghost" id="stopBtn" hidden>${icon('close', 16)} توقف هوش مصنوعی</button>
-        <button class="btn primary" id="startBtn">${state ? icon('refresh', 16) + ' همگام‌سازی فوری' : icon('bolt', 16) + ' شروع معامله‌گر'}</button>
-      </div>
-    </div>
-    <div id="body">${state ? skeleton(6, 26) : startCard()}</div>`;
+    <!-- استایل‌های اختصاصی مدرن اپل ۲۰۲۶ -->
+    <style>
+      .ap-wrap {
+        direction: rtl;
+        text-align: right;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding-bottom: 48px;
+      }
+      .ap-hero {
+        position: relative;
+        padding: 36px 32px;
+        background: radial-gradient(circle at top right, rgba(255, 214, 10, 0.08), transparent 45%),
+                    radial-gradient(circle at bottom left, rgba(10, 132, 255, 0.07), transparent 45%),
+                    rgba(24, 24, 29, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 28px;
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        margin-bottom: 24px;
+        box-shadow: 0 24px 54px rgba(0, 0, 0, 0.35);
+      }
+      .ap-hero-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      .ap-hero h1 {
+        font-size: 2.35rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #fff;
+        margin: 0 0 10px 0;
+        background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.78) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .ap-hero-sub {
+        font-size: 1rem;
+        line-height: 1.65;
+        color: rgba(255, 255, 255, 0.72);
+        max-width: 760px;
+        margin: 0;
+      }
+      .ap-toolbar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        padding: 8px 12px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      .ap-session-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .ap-session-chip i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #8e8e93;
+        display: inline-block;
+      }
+      .ap-session-chip.running {
+        background: rgba(48, 209, 88, 0.14);
+        color: #30d158;
+        border: 1px solid rgba(48, 209, 88, 0.28);
+      }
+      .ap-session-chip.running i {
+        background: #30d158;
+        box-shadow: 0 0 10px #30d158;
+        animation: apPulse 1.8s infinite;
+      }
+      .ap-session-chip.stopped {
+        background: rgba(255, 159, 10, 0.14);
+        color: #ff9f0a;
+        border: 1px solid rgba(255, 159, 10, 0.25);
+      }
+      .ap-session-chip.stopped i { background: #ff9f0a; }
+      @keyframes apPulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.45; transform: scale(0.85); }
+      }
+      .ap-banner-warn {
+        margin-top: 20px;
+        padding: 16px 20px;
+        border-radius: 18px;
+        background: rgba(255, 159, 10, 0.08);
+        border: 1px solid rgba(255, 159, 10, 0.22);
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.9rem;
+        line-height: 1.65;
+      }
+      .ap-banner-warn b {
+        color: #ffb340;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 4px;
+      }
+      .ap-details {
+        margin-top: 14px;
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 12px 18px;
+      }
+      .ap-details summary {
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.78);
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .ap-details summary::-webkit-details-marker { display: none; }
+      .ap-details summary::after {
+        content: '⌄';
+        font-size: 1.1rem;
+        transition: transform 0.2s ease;
+      }
+      .ap-details[open] summary::after { transform: rotate(180deg); }
+      .ap-defs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .ap-defs-item {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 12px 14px;
+        border-radius: 14px;
+      }
+      .ap-defs-item dt {
+        font-weight: 600;
+        color: #fff;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+      }
+      .ap-defs-item dd {
+        margin: 0;
+        font-size: 0.84rem;
+        color: rgba(255, 255, 255, 0.62);
+        line-height: 1.55;
+      }
+      .ap-sec-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 28px 0 14px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .ap-wrap .card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 22px;
+        padding: 22px 24px;
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+      }
+      .ap-wrap .card:hover {
+        border-color: rgba(255, 255, 255, 0.14);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+      }
+      .ap-wrap .card-h {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .ap-wrap .card-h h3 {
+        font-size: 1.12rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .ap-wrap .stat {
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 18px;
+        padding: 16px 18px;
+      }
+      .ap-wrap .card > .stat {
+        background: transparent;
+        border: 0;
+        padding: 0;
+      }
+      .ap-wrap .stat .k {
+        font-size: 0.84rem;
+        color: rgba(255, 255, 255, 0.58);
+        margin-bottom: 6px;
+        display: block;
+      }
+      .ap-wrap .stat .v {
+        font-size: 1.55rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        display: block;
+      }
+      .ap-wrap .btn {
+        border-radius: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+      .ap-wrap .btn.primary {
+        background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(10, 132, 255, 0.3);
+      }
+      .ap-wrap .btn.primary:hover {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+      }
+      .ap-wrap .inp, .ap-wrap select.inp {
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 8px 12px;
+      }
+      .ap-wrap .inp:focus {
+        border-color: #0a84ff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+      }
+      .ap-wrap .tbl-wrap {
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        overflow-x: auto;
+      }
+      .ap-wrap .tbl th {
+        background: rgba(255, 255, 255, 0.03);
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.65);
+        padding: 12px 14px;
+      }
+      .ap-wrap .tbl td {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+      }
+      .ap-wrap .tbl tr:last-child td { border-bottom: 0; }
+      .ap-wrap .chip {
+        border-radius: 999px;
+        padding: 4px 11px;
+        font-weight: 500;
+      }
+    </style>
+
+    <div class="ap-wrap" dir="rtl">
+      <header class="ap-hero">
+        <div class="ap-hero-top">
+          <div>
+            <h1>معاملات هوشمند</h1>
+            <p class="ap-hero-sub">سه حساب در کنار هم: معاملات آزمایشی که خودتان انجام می‌دهید، معاملاتی که واقعاً انجام داده‌اید، و هوش مصنوعی که استراتژی را به طور مستقل اجرا می‌کند. فقط حساب واقعی با پول واقعی سر و کار دارد — BTCS هرگز سفارشی ثبت نمی‌کند و هیچ کلید API را نگه نمی‌دارد.</p>
+          </div>
+          <div class="ap-toolbar">
+            <span class="ap-session-chip ${session.status}" id="sessionChip"><i></i>${sessionLabel(session.status)}</span>
+            <button class="btn" id="cfgBtn">${icon('chip', 16)} تنظیمات</button>
+            <button class="btn ghost" id="resetBtn"${state ? '' : ' hidden'}>بازنشانی</button>
+            <button class="btn ghost" id="stopBtn" hidden>${icon('close', 16)} توقف هوش مصنوعی</button>
+            <button class="btn primary" id="startBtn">${state ? icon('refresh', 16) + ' همگام‌سازی فوری' : icon('bolt', 16) + ' شروع معامله‌گر'}</button>
+          </div>
+        </div>
+
+        <div class="ap-banner-warn" role="note">
+          <b>${icon('info', 15)} شبیه‌سازی، نه مسیری تضمینی برای سود</b>
+          <p style="margin:0">حساب‌های آزمایشی و هوش مصنوعی با پول مجازی روی قیمت‌های زنده معامله می‌کنند. سفارش‌ها با قیمت کندل و کارمزد مدل‌سازی‌شده پر می‌شوند؛ در سفارش‌های واقعی هزینه اسپرد و لغزش قیمت (Slippage) نیز وجود دارد، سفارش ممکن است ناقص پر شود یا اصلاً پر نشود و صرافی‌ها ممکن است در میانه حرکت بازار از دسترس خارج شوند. در تست‌های گام‌به‌گام (Walk-forward)، قوانین در برخی دوره‌ها ضرر داده‌اند و گاهی نگهداری ساده ارز عملکرد بهتری داشته است: ارقام زیر هر دو مورد را همراه با بیشترین افت سرمایه نشان می‌دهند. نتایج اینجا را به عنوان شواهدی درباره عملکرد قوانین در نظر بگیرید، نه بازدهی مورد انتظار. این توصیه مالی نیست. <a class="acc" href="#/learn">آموزش قوانین ←</a></p>
+        </div>
+
+        <details class="ap-details">
+          <summary>معنای هر حساب و استراتژی چیست؟</summary>
+          <dl class="ap-defs">
+            <div class="ap-defs-item"><dt>حساب آزمایشی (Demo)</dt><dd>پول مجازی که به صورت دستی معامله می‌کنید تا بدون ریسک تمرین کنید. کارمزدها محاسبه می‌شوند اما لغزش قیمت خیر.</dd></div>
+            <div class="ap-defs-item"><dt>حساب هوش مصنوعی (AI)</dt><dd>پول مجازی که به صورت خودکار بر اساس قوانین انتخابی شما در تنظیمات، روی قیمت‌های زنده در مرورگر (و در صورت ورود به حساب، در فضای ابری) معامله می‌شود.</dd></div>
+            <div class="ap-defs-item"><dt>حساب واقعی (Real)</dt><dd>گزارشی از معاملاتی که شخصاً در صرافی انجام داده‌اید و به صورت دستی وارد یا درون‌ریزی کرده‌اید تا با همان معیارها سنجیده شوند. برنامه هرگز این سفارش‌ها را ثبت نمی‌کند.</dd></div>
+            <div class="ap-defs-item"><dt>استراتژی پیش‌فرض تست‌شده</dt><dd>قوانین هر نمودار که از تست گام‌به‌گام با احتساب کارمزد عبور کرده‌اند. نتیجه اندازه‌گیری‌شده آن‌ها (چه خوب و چه بد) در کنار حساب نمایش داده می‌شود.</dd></div>
+            <div class="ap-defs-item"><dt>استراتژی سفارشی (Custom)</dt><dd>تنظیمات شخصی شما. این موارد بخشی از تست گام‌به‌گام نبوده‌اند، بنابراین آمارهای تست‌شده درباره آن‌ها صدق نمی‌کند؛ گزینه «تست این تنظیمات» نگاهی به گذشته می‌اندازد که معمولاً عملکرد قوانین انتخاب‌شده روی همان تاریخچه را بهتر از واقعیت نشان می‌دهد.</dd></div>
+          </dl>
+        </details>
+        <p class="fine" id="syncNote" style="margin:12px 0 0 0">${syncNote()}</p>
+      </header>
+      <div id="body">${state ? skeleton(6, 26) : startCard()}</div>
+    </div>`;
 
   // نتیجه اندازه‌گیری‌شده که پیش از شروع نمایش داده می‌شود.
   function verdictCard() {
@@ -141,7 +414,7 @@ export async function render(el) {
     const w = CHART_TESTED[iv];
     const TFS = ['15m', '1h', '4h', '1d'];
     if (!w) {
-      return `<div class="card" style="border-color:var(--warn)">
+      return `<div class="card" style="border-color:rgba(255,159,10,0.35)">
       <div class="card-h"><h3>${icon('info', 16)} روی نمودار ${esc(iv)} تست نشده است</h3></div>
       <p class="fine">این استراتژی روی نمودارهای ${TFS.join('، ')} اندازه‌گیری شده است. در تایم‌فریم ${esc(iv)} با ${cfg.strategy === 'custom' ? 'قوانین شخصی شما' : 'قوانین استاندارد'} معامله می‌کند و نتیجه اندازه‌گیری‌شده‌ای برای انتظار وجود ندارد؛ گزینه «تست این تنظیمات» در بخش تنظیمات عملکرد آن‌ها را روی کندل‌های اخیر نشان می‌دهد. قوانین فعال: ${esc(rulesText(effective(iv)))}</p>
     </div>`;
@@ -151,11 +424,11 @@ export async function render(el) {
     const pickVerdict = (x) => (x.cleared ? `در این اجرا به اندازه کافی بهتر از قوانین استاندارد عمل کرد اما در اجرای قبلی (${esc(x.previous?.measuredOn || '')}) خیر، و قوانین تنها زمانی تغییر می‌کنند که دو اجرای متوالی هم‌نظر باشند` : `به اندازه کافی بهتر عمل نکرد${x.previous?.cleared ? ` (در اجرای قبلی در تاریخ ${esc(x.previous.measuredOn)} بهتر بود)` : ''}`);
     const r = traded(w);
     const e = effective(iv);
-    return `<div class="card" style="border-color:var(--warn)">
+    return `<div class="card" style="border-color:rgba(255,159,10,0.3)">
       <div class="card-h"><h3>${icon('info', 16)} عملکرد واقعی این استراتژی هنگام تست</h3><span class="fine">اندازه‌گیری‌شده در ${esc(CHART_TESTED.measuredOn)}، نه تخمینی</span></div>
-      <p>اجرا شده کندل به کندل روی ${w.coins ?? CHART_TESTED.coins} ارز در یک حساب با احتساب کارمزد، در ${CHART_TESTED.blocks} دوره متوالی حدوداً ${esc(w.block)} (${esc(w.from)} ← ${esc(w.to)}). ${w.adopt ? `پیش از هر دوره، قوانین از میان ${CHART_TESTED.configs} مجموعه قانون بر اساس تاریخچه قبلی انتخاب و سپس روی دوره‌ای که هرگز ندیده بودند اجرا شدند.` : `قوانین استاندارد در هر سه دوره اجرا شدند؛ در کنار آن‌ها، انتخابی از میان ${CHART_TESTED.configs} مجموعه قانون بر اساس تاریخچه قبلی نیز اجرا شد که ${pickVerdict(w)}.`} ${cfg.strategy === 'custom' ? `<b>شما با قوانین شخصی خود معامله می‌کنید که بخشی از این تست نبوده‌اند</b>، بنابراین این آمارها درباره آن‌ها صدق نمی‌کند؛ برای بررسی گذشته از «تست این تنظیمات» در تنظیمات استفاده کنید. برای مقایسه، قوانین تست‌شده برای ${esc(iv)} به طور میانگین <b class="${r.ret >= 0 ? 'up' : 'down'}">${sign(r.ret)}</b> در هر دوره سود داشتند در حالی که نگهداری همان ارزها <b class="${w.hold >= 0 ? 'up' : 'down'}">${sign(w.hold)}</b> بازدهی داشت.` : `در تایم‌فریم ${esc(iv)}، قوانینی که معامله می‌کند به طور میانگین <b class="${r.ret >= 0 ? 'up' : 'down'}">${sign(r.ret)}</b> در هر دوره با میانگین بیشترین افت سرمایه ${r.dd}% کسب کردند، در حالی که نگهداری همان ارزها به طور میانگین <b class="${w.hold >= 0 ? 'up' : 'down'}">${sign(w.hold)}</b> بازدهی و ${w.holdDrop}% افت سرمایه داشت. ${r.ret > w.hold ? 'در این نمودار طی سه دوره بهتر از نگهداری عمل کرد؛ این یک مدرک است نه تضمین.' : 'در این نمودار نگهداری ساده سود بیشتری داشت.'}${w.previous && !w.adopt && Math.abs(w.previous.ret - r.ret) >= 2 ? ` اجرای قبلی در تاریخ ${esc(w.previous.measuredOn)} روی کندل‌های تقریباً مشابه، ${sign(w.previous.ret)} در هر دوره نتیجه داد: میانگین هر اجرا را تقریبی در نظر بگیرید.` : ''}${r.dd < w.holdDrop - 5 ? (r.ret > w.hold ? ' همچنین افت سرمایه بسیار کمتری داشت.' : ' اما افت سرمایه بسیار کمتری را تجربه کرد.') : ''} بیشترین افت سرمایه با احتساب معاملات باز در بسته شدن هر کندل محاسبه شده است.${w.fillCost ? ` در تست، تمام سفارش‌ها با قیمت کندل پر شده‌اند؛ با فرض پر شدن سفارش‌ها ۰.۰۵٪ بدتر در هر طرف (اسپرد و لغزش)، سود هر دوره حدود ${w.fillCost} واحد درصد کمتر می‌شد.` : ''}`}</p>
+      <p style="line-height:1.7">اجرا شده کندل به کندل روی ${w.coins ?? CHART_TESTED.coins} ارز در یک حساب با احتساب کارمزد، در ${CHART_TESTED.blocks} دوره متوالی حدوداً ${esc(w.block)} (${esc(w.from)} ← ${esc(w.to)}). ${w.adopt ? `پیش از هر دوره، قوانین از میان ${CHART_TESTED.configs} مجموعه قانون بر اساس تاریخچه قبلی انتخاب و سپس روی دوره‌ای که هرگز ندیده بودند اجرا شدند.` : `قوانین استاندارد در هر سه دوره اجرا شدند؛ در کنار آن‌ها، انتخابی از میان ${CHART_TESTED.configs} مجموعه قانون بر اساس تاریخچه قبلی نیز اجرا شد که ${pickVerdict(w)}.`} ${cfg.strategy === 'custom' ? `<b>شما با قوانین شخصی خود معامله می‌کنید که بخشی از این تست نبوده‌اند</b>، بنابراین این آمارها درباره آن‌ها صدق نمی‌کند؛ برای بررسی گذشته از «تست این تنظیمات» در تنظیمات استفاده کنید. برای مقایسه، قوانین تست‌شده برای ${esc(iv)} به طور میانگین <b class="${r.ret >= 0 ? 'up' : 'down'}">${sign(r.ret)}</b> در هر دوره سود داشتند در حالی که نگهداری همان ارزها <b class="${w.hold >= 0 ? 'up' : 'down'}">${sign(w.hold)}</b> بازدهی داشت.` : `در تایم‌فریم ${esc(iv)}، قوانینی که معامله می‌کند به طور میانگین <b class="${r.ret >= 0 ? 'up' : 'down'}">${sign(r.ret)}</b> در هر دوره با میانگین بیشترین افت سرمایه ${r.dd}% کسب کردند، در حالی که نگهداری همان ارزها به طور میانگین <b class="${w.hold >= 0 ? 'up' : 'down'}">${sign(w.hold)}</b> بازدهی و ${w.holdDrop}% افت سرمایه داشت. ${r.ret > w.hold ? 'در این نمودار طی سه دوره بهتر از نگهداری عمل کرد؛ این یک مدرک است نه تضمین.' : 'در این نمودار نگهداری ساده سود بیشتری داشت.'}${w.previous && !w.adopt && Math.abs(w.previous.ret - r.ret) >= 2 ? ` اجرای قبلی در تاریخ ${esc(w.previous.measuredOn)} روی کندل‌های تقریباً مشابه، ${sign(w.previous.ret)} در هر دوره نتیجه داد: میانگین هر اجرا را تقریبی در نظر بگیرید.` : ''}${r.dd < w.holdDrop - 5 ? (r.ret > w.hold ? ' همچنین افت سرمایه بسیار کمتری داشت.' : ' اما افت سرمایه بسیار کمتری را تجربه کرد.') : ''} بیشترین افت سرمایه با احتساب معاملات باز در بسته شدن هر کندل محاسبه شده است.${w.fillCost ? ` در تست، تمام سفارش‌ها با قیمت کندل پر شده‌اند؛ با فرض پر شدن سفارش‌ها ۰.۰۵٪ بدتر در هر طرف (اسپرد و لغزش)، سود هر دوره حدود ${w.fillCost} واحد درصد کمتر می‌شد.` : ''}`}</p>
       <div class="tbl-wrap mt"><table class="tbl fit"><thead><tr><th class="l">نمودار</th><th class="hide-p">بازه تست</th><th class="hide-p">قوانین</th><th>نتیجه هر دوره</th><th>بیشترین افت</th><th class="hide-p">قوانین استاندارد</th><th>نگهداری ساده</th><th class="hide-p">افت نگهداری ساده</th><th class="hide-p">معاملات</th></tr></thead><tbody>
-        ${TFS.map((k) => { const x = CHART_TESTED[k], t = traded(x); return `<tr${k === iv ? ' style="font-weight:600"' : ''}><td class="l">${k}</td><td class="fine wrap hide-p" style="min-width:96px">${esc(x.from)} ← ${esc(x.to)}</td><td class="fine hide-p">${x.adopt ? 'اختصاصی' : 'استاندارد'}</td><td class="${t.ret >= 0 ? 'up' : 'down'}">${sign(t.ret)}</td><td class="down">−${t.dd}%</td><td class="hide-p ${x.standard.ret >= 0 ? 'up' : 'down'}">${sign(x.standard.ret)}</td><td class="${x.hold >= 0 ? 'up' : 'down'}">${sign(x.hold)}</td><td class="down hide-p">−${x.holdDrop}%</td><td class="hide-p">${t.trades}</td></tr>`; }).join('')}
+        ${TFS.map((k) => { const x = CHART_TESTED[k], t = traded(x); return `<tr${k === iv ? ' style="font-weight:600;background:rgba(255,255,255,0.03)"' : ''}><td class="l">${k}</td><td class="fine wrap hide-p" style="min-width:96px">${esc(x.from)} ← ${esc(x.to)}</td><td class="fine hide-p">${x.adopt ? 'اختصاصی' : 'استاندارد'}</td><td class="${t.ret >= 0 ? 'up' : 'down'}">${sign(t.ret)}</td><td class="down">−${t.dd}%</td><td class="hide-p ${x.standard.ret >= 0 ? 'up' : 'down'}">${sign(x.standard.ret)}</td><td class="${x.hold >= 0 ? 'up' : 'down'}">${sign(x.hold)}</td><td class="down hide-p">−${x.holdDrop}%</td><td class="hide-p">${t.trades}</td></tr>`; }).join('')}
       </tbody></table></div>
       <p class="fine mt">قوانین فعال در ${esc(iv)}: ${esc(rulesText(e))} ${cfg.strategy === 'custom' ? 'این‌ها قوانین شخصی شما هستند که در تنظیمات تعیین شده‌اند.' : w.adopt ? `این‌ها انتخاب اختصاصی این نمودار هستند: در تست، انتخاب قوانین برای نمودار در ${w.better} دوره از ${CHART_TESTED.blocks} دوره قوانین استاندارد را شکست داد (${sign(w.own.ret)} در برابر ${sign(w.standard.ret)} در هر دوره، و بیشترین افت ${w.own.dd}% در برابر ${w.standard.dd}%).` : `انتخاب اختصاصی نمودار ${w.cleared ? `در این اجرا قوانین استاندارد را شکست داد (بهتر در ${w.better} دوره از ${CHART_TESTED.blocks} دوره، ${sign(w.own.ret)} در برابر ${sign(w.standard.ret)}) اما در اجرای قبلی خیر، بنابراین نمودار تا زمانی که دو اجرای متوالی توافق نکنند قوانین استاندارد را حفظ می‌کند.` : `به اندازه کافی بهتر از قوانین استاندارد عمل نکرد (بهتر در ${w.better} دوره از ${CHART_TESTED.blocks} دوره${w.previous?.cleared ? `؛ در اجرای قبلی در تاریخ ${esc(w.previous.measuredOn)} بهتر بود` : ''})، بنابراین قوانین استاندارد حفظ می‌شوند.`}`} کارمزدها معادل ${r.fees}% از موجودی در هر دوره بود و ${r.win}% معاملات با سود بسته شدند.${iv === '15m' ? ' هر دوره در تایم‌فریم ۱۵ دقیقه فقط ده روز است، بنابراین این اعداد بین اجراهای مختلف نوسان زیادی دارند.' : ''}${ownRulesText()}${ownRulesOn() ? ` تست‌شده روی ${PER_COIN_RULES.coins} ارز در بازه ${esc(PER_COIN_RULES.tested.from)} ← ${esc(PER_COIN_RULES.tested.to)} با انتخاب قوانین بر اساس سال‌های قبل: ${sign(PER_COIN_RULES.tested.own.ret)} با بیشترین افت ${PER_COIN_RULES.tested.own.dd}%، در برابر ${sign(PER_COIN_RULES.tested.standard.ret)} و ${PER_COIN_RULES.tested.standard.dd}% برای قوانین روزانه به تنهایی، و ${sign(PER_COIN_RULES.tested.hold)} برای نگهداری ساده ارزها (بیشترین افت ${PER_COIN_RULES.tested.holdDrop}%).${PER_COIN_RULES.tested.previousRun ? ` اجرای قبلی روی ${PER_COIN_RULES.tested.previousRun.coins} ارز، ${sign(PER_COIN_RULES.tested.previousRun.own)} در برابر ${sign(PER_COIN_RULES.tested.previousRun.standard)} سود داد: تست‌های طولانی به ارزها و تاریخ شروع حساس هستند، پس میزان سود را تقریبی بدانید.` : ''} می‌توانید این گزینه را در تنظیمات خاموش کنید.` : ''}</p>
       ${ownRulesOn() ? coinRulesTable(e) : ''}
@@ -189,9 +462,9 @@ export async function render(el) {
     return `<div class="card mt" id="earnCard">
       <div class="card-h"><h3>${icon('chart', 16)} میزان بازدهی احتمالی: ساعتی، روزانه، هفتگی و ماهانه</h3><span class="fine">با ریسک ${rows[0].risk}% در هر معامله، روی موجودی ${money(bal)}</span></div>
       <div class="tbl-wrap hide-p"><table class="tbl fine fit"><thead><tr><th class="l">نمودار</th><th>در ساعت</th><th>در روز</th><th>در هفته</th><th>در ماه</th><th class="hide-p">بدترین دوره تست</th><th class="hide-t">نگهداری ارزها (ماهانه)</th><th class="hide-t">معاملات در ماه</th></tr></thead><tbody>
-        ${rows.map((r) => { const tags = [r.chart === iv ? 'انتخاب شما' : '', top && r.chart === top.iv ? 'پیشنهادی' : ''].filter(Boolean); return `<tr${r.chart === iv ? ' style="font-weight:600"' : ''}><td class="l"><b>${esc(r.chart)}</b>${tags.length ? `<small>${tags.join(' · ')}</small>` : ''}</td>
+        ${rows.map((r) => { const tags = [r.chart === iv ? 'انتخاب شما' : '', top && r.chart === top.iv ? 'پیشنهادی' : ''].filter(Boolean); return `<tr${r.chart === iv ? ' style="font-weight:600;background:rgba(255,255,255,0.03)"' : ''}><td class="l"><b>${esc(r.chart)}</b>${tags.length ? ` <small class="chip">${tags.join(' · ')}</small>` : ''}</td>
           <td>${cell(r.per.hour)}</td><td>${cell(r.per.day)}</td><td>${cell(r.per.week)}</td><td>${cell(r.per.month)}</td>
-          <td class="hide-p ${r.worst >= 0 ? 'up' : 'down'}">${pct(r.worst, 2)}<small>در ${esc(r.block)}</small></td>
+          <td class="hide-p ${r.worst >= 0 ? 'up' : 'down'}">${pct(r.worst, 2)}<br><small>در ${esc(r.block)}</small></td>
           <td class="hide-t ${r.holdPer.month >= 0 ? 'up' : 'down'}">${pct(r.holdPer.month, 2)}</td><td class="hide-t">${r.tradesPerMonth}</td></tr>`; }).join('')}
         ${live ? `<tr><td class="l"><b>حساب شما تا این لحظه</b><br><small>${live.early ? `${live.hours} ساعت معامله` : `${Math.round(live.days)} روز، زنده`}</small></td>${live.early ? '<td colspan="7" class="l muted">هنوز برای قضاوت زود است: حداقل یک روز کامل معامله برای نمایش نرخ لازم است</td>' : `<td>${cell(live.hour)}</td><td>${cell(live.day)}</td><td>${live.week === null ? notYet(7) : cell(live.week)}</td><td>${live.month === null ? notYet(30) : cell(live.month)}</td><td class="l muted hide-p">سابقه واقعی حساب</td><td colspan="2" class="hide-t"></td>`}</tr>` : ''}
       </tbody></table></div>
@@ -215,9 +488,9 @@ export async function render(el) {
       return `<tr><td class="l"><b>${esc(sym)}</b>${own ? '' : ' <small class="fine">قوانین روزانه</small>'}</td><td class="l fine wrap">${esc(buys(r))}</td><td>${r.atrStop} ATR</td><td class="l fine wrap">${esc(sells(r))}</td></tr>`;
     }).join('');
     const n = cfg.universe.filter((sym) => PER_COIN_RULES.rules[sym]).length;
-    return `<details class="mt"><summary class="fine" style="cursor:pointer">قوانین هر ارز در این نمودار (${n} از ${cfg.universe.length} ارز قانون اختصاصی دارند)</summary>
+    return `<details class="ap-details mt"><summary>قوانین هر ارز در این نمودار (${n} از ${cfg.universe.length} ارز قانون اختصاصی دارند)</summary>
       <div class="tbl-wrap mt"><table class="tbl"><thead><tr><th class="l">ارز</th><th class="l">شرایط خرید</th><th>حد ضرر</th><th class="l">شرایط فروش</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <p class="fine">بر اساس تاریخچه روزانه هر ارز انتخاب شده است؛ ارزهایی که قانون اختصاصی ندارند از قوانین روزانه عمومی پیروی می‌کنند. می‌توانید این بخش را در تنظیمات خاموش کنید.</p>
+      <p class="fine mt">بر اساس تاریخچه روزانه هر ارز انتخاب شده است؛ ارزهایی که قانون اختصاصی ندارند از قوانین روزانه عمومی پیروی می‌کنند. می‌توانید این بخش را در تنظیمات خاموش کنید.</p>
     </details>`;
   }
 
@@ -257,17 +530,15 @@ export async function render(el) {
     </div>`;
   }
 
-  // اطلاع‌رسانی درباره محل نگهداری معاملات.
   function syncNote() {
     if (auth.user) {
       const cloud = [...(state?.log || [])].reverse().find((e) => e.kind === 'check' && e.by === 'cloud');
       return `ذخیره‌شده در حساب کاربری شما: هر دستگاهی که با آن وارد شوید همین معاملات را نشان می‌دهد. تا زمانی که هوش مصنوعی روشن است، سرور ابری با بسته شدن هر کندل جدید ${esc(state?.interval || cfg.interval)} حتی زمانی که این صفحه بسته است معامله می‌کند${cloud ? ` (آخرین بررسی ابری: ${ago(cloud.t)})` : ''}.`;
     }
-    if (backendEnabled()) return 'فقط در همین مرورگر ذخیره شده و تنها زمانی که این صفحه باز است معامله می‌کند. <a href="#" id="syncSignIn">وارد شوید</a> تا معامله در فضای ابری و هنگام بسته بودن صفحه ادامه یابد و معاملات را در همه دستگاه‌ها ببینید.';
+    if (backendEnabled()) return 'فقط در همین مرورگر ذخیره شده و تنها زمانی که این صفحه باز است معامله می‌کند. <a href="#" id="syncSignIn" class="acc">وارد شوید</a> تا معامله در فضای ابری و هنگام بسته بودن صفحه ادامه یابد و معاملات را در همه دستگاه‌ها ببینید.';
     return 'فقط در همین مرورگر ذخیره شده است.';
   }
 
-  // معاملات این دستگاه که در نسخه ابری نبوده‌اند و کنار گذاشته شده‌اند.
   function backupCard() {
     const b = auth.user ? backupFor(load, auth.user.id) : null;
     if (!b) return '';
@@ -276,7 +547,7 @@ export async function render(el) {
       .map(([k, n]) => `${n} معامله در ${NAMES[k]}`);
     if (!parts.length) return '';
     const list = parts.length > 1 ? `${parts.slice(0, -1).join('، ')} و ${parts[parts.length - 1]}` : parts[0];
-    return `<div class="card" id="backupCard" style="border-color:var(--warn)">
+    return `<div class="card mb" id="backupCard" style="border-color:rgba(255,159,10,0.4);margin-bottom:16px">
       <div class="card-h"><h3>${icon('info', 16)} معاملات این دستگاه کنار گذاشته شدند</h3><span class="fine">${dateTime(b.at, false)}</span></div>
       <p class="fine">دستگاه دیگری پیش از این دستگاه، نسخه متفاوتی از معاملات شما را ذخیره کرده است. نسخه ذخیره‌شده در اینجا و سایر دستگاه‌های شما نمایش داده می‌شود. نسخه این دستگاه دارای ${esc(list)} است که در نسخه ذخیره‌شده وجود ندارد.</p>
       <p class="fine">می‌توانید نسخه این دستگاه را جایگزین نسخه ذخیره‌شده در همه‌جا کنید، یا نسخه ذخیره‌شده را نگه دارید و این مورد را حذف کنید.</p>
@@ -300,10 +571,10 @@ export async function render(el) {
     const e = effective();
     const w = CHART_TESTED[e.interval];
     const r = w && (w.adopt ? w.own : w.standard);
-    return `<div class="card empty">
-      <h3>اجرای استراتژی با پول شبیه‌سازی‌شده</h3>
-      <p style="max-width:620px">این ربات ${cfg.universe.length} ارز را در تایم‌فریم ${esc(e.interval)} زیر نظر می‌گیرد. ${rulesText(e)} حجم هر معامله را طوری تنظیم می‌کند که فعال شدن حد ضرر حداکثر ${cfg.riskPct}% از موجودی را کم کند، بیش از ${cfg.maxPositionPct}% از سرمایه در یک ارز قرار نگیرد و هرگز بیش از پول نقد موجود معامله نشود.${ownRulesText()} هر معامله همراه با کارمزد فرضی آن ثبت می‌شود.</p>
-      <p class="fine" style="max-width:620px">موجودی اولیه ${money(cfg.startingBalance)}. پیش از شروع، نتیجه تست‌شده در بالا را بخوانید${r ? ` — در این نمودار ${r.ret > w.hold ? 'در آن تست بهتر از نگهداری ساده ارزها عمل کرد که البته تضمینی برای تکرار آن نیست' : 'نگهداری ساده ارزها سود بیشتری داشت'}` : ''}. هر زمان که بخواهید می‌توانید بدون بازنشانی حساب، آن را متوقف کنید.</p>
+    return `<div class="card empty mt" style="text-align:right">
+      <h3 style="margin-top:0">اجرای استراتژی با پول شبیه‌سازی‌شده</h3>
+      <p style="max-width:680px;line-height:1.7">این ربات ${cfg.universe.length} ارز را در تایم‌فریم ${esc(e.interval)} زیر نظر می‌گیرد. ${rulesText(e)} حجم هر معامله را طوری تنظیم می‌کند که فعال شدن حد ضرر حداکثر ${cfg.riskPct}% از موجودی را کم کند، بیش از ${cfg.maxPositionPct}% از سرمایه در یک ارز قرار نگیرد و هرگز بیش از پول نقد موجود معامله نشود.${ownRulesText()} هر معامله همراه با کارمزد فرضی آن ثبت می‌شود.</p>
+      <p class="fine" style="max-width:680px;line-height:1.65">موجودی اولیه ${money(cfg.startingBalance)}. پیش از شروع، نتیجه تست‌شده در بالا را بخوانید${r ? ` — در این نمودار ${r.ret > w.hold ? 'در آن تست بهتر از نگهداری ساده ارزها عمل کرد که البته تضمینی برای تکرار آن نیست' : 'نگهداری ساده ارزها سود بیشتری داشت'}` : ''}. هر زمان که بخواهید می‌توانید بدون بازنشانی حساب، آن را متوقف کنید.</p>
     </div>${learningCard()}`;
   }
 
@@ -397,7 +668,6 @@ export async function render(el) {
     cloudLearning().then((c) => (c?.[runCfg.interval] ? null : learningPass(runCfg.interval, { candlesBySymbol: Object.fromEntries(forecastInputs.map((x) => [x.sym, x.candles])) }))).catch(() => {});
   }
 
-  // خودبهبودی: امتیازدهی به پیش‌بینی‌هایی که زمان آن‌ها به پایان رسیده است.
   async function learnFrom(inputs, interval) {
     if (st.learning || !inputs.length) return;
     st.learning = true;
@@ -419,7 +689,6 @@ export async function render(el) {
     } finally { st.learning = false; }
   }
 
-  // گزارش فعالیت‌های هوش مصنوعی (از جدیدترین به قدیمی‌ترین).
   function activityCard() {
     const step = INTERVAL_MS[state.interval] || 0;
     const liveSince = state.startedAt;
@@ -450,7 +719,7 @@ export async function render(el) {
     return `<div class="card mt">
       <div class="card-h"><h3>${icon('ai', 16)} فعالیت‌های هوش مصنوعی</h3><span class="fine">${autoOn ? 'در حال اجرا · بررسی هر ۵ دقیقه' : session.status === 'stopped' ? 'متوقف‌شده · برای ادامه دکمه از سرگیری را بزنید' : 'آماده به کار'}${st.lastRun ? ` · آخرین بررسی ${ago(st.lastRun)}` : ''}</span></div>
       ${replayed ? `<p class="fine" style="margin-top:0">موارد دارای برچسب <span class="chip">بازپخش‌شده</span> روی کندل‌های پیش از شروع زنده این حساب در تاریخ ${dateTime(liveSince)} اجرا شده‌اند — همان قوانین روی قیمت‌های گذشته اجرا شدند تا سابقه حساب خالی نباشد. تمام موارد پس از آن به صورت زنده تصمیم‌گیری شده‌اند.</p>` : ''}
-      ${ev.length ? `<ul class="fine" style="list-style:none;padding:0;margin:0">${ev.slice(0, 30).map((e) => `<li style="padding:6px 0;border-bottom:1px solid var(--border)"><span class="muted" style="display:inline-block;min-width:150px">${dateTime(e.t)}</span>${!['check', 'review', 'settings'].includes(e.kind) && e.t < liveSince ? '<span class="chip" style="margin-right:6px">بازپخش‌شده</span>' : ''}${line(e)}</li>`).join('')}</ul>`
+      ${ev.length ? `<ul class="fine" style="list-style:none;padding:0;margin:0">${ev.slice(0, 30).map((e) => `<li style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span class="muted" style="display:inline-block;min-width:155px">${dateTime(e.t)}</span>${!['check', 'review', 'settings'].includes(e.kind) && e.t < liveSince ? '<span class="chip" style="margin-left:8px">بازپخش‌شده</span>' : ''}${line(e)}</li>`).join('')}</ul>`
         : `<p class="muted">${autoOn ? 'هنوز معامله‌ای انجام نشده — هوش مصنوعی منتظر موقعیتی مطابق با قوانین است.' : `هنوز معامله‌ای انجام نشده. هوش مصنوعی در حال حاضر ${session.status === 'stopped' ? 'متوقف است' : 'فعال نیست'}، بنابراین به دنبال موقعیت نمی‌گردد — برای شروع دکمه ${session.status === 'stopped' ? 'ادامه هوش مصنوعی' : 'شروع معامله‌گر'} را بزنید.`}</p>`}
     </div>`;
   }
@@ -478,7 +747,7 @@ export async function render(el) {
     const o = review.overall;
     return `<div class="card mt" id="reviewCard">
       <div class="card-h"><h3>${icon('ai', 16)} خودارزیابی تاریخچه معاملات</h3>
-        <div class="row" style="gap:8px"><label class="fine" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="autoLearn" ${autoLearn ? 'checked' : ''}> یادگیری خودکار</label>
+        <div class="row" style="gap:10px"><label class="fine" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="autoLearn" ${autoLearn ? 'checked' : ''}> یادگیری خودکار</label>
         <button class="btn sm" id="reviewNow">${icon('refresh', 14)} بررسی معاملات اکنون</button></div></div>
       <p class="fine" style="margin-top:0">پس از هر بررسی، هوش مصنوعی معاملات بسته‌شده خود را می‌خواند، آن‌ها را بر اساس شرایط بازار در زمان خرید دسته‌بندی می‌کند و زمانی که یک وضعیت پیوسته ضرر می‌دهد فیلتری را برای اجتناب از آن فعال می‌کند — یا اگر فیلتری نتایج را بدتر کرده باشد، آن را خاموش می‌کند. پیش از ایجاد هر تغییری به حداقل ${MIN_TRADES} معامله بسته‌شده نیاز دارد و تمام تغییرات همراه با آمار پشتوانه در زیر فهرست می‌شوند.</p>
       <div class="grid g4 mt">
@@ -490,7 +759,7 @@ export async function render(el) {
       ${review.findings.length ? `<ul class="reasons mt">${review.findings.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
       ${(() => { const d = diagnose(state.closed, { startingBalance: state.startingBalance, fmt: (v) => `${v < 0 ? '−' : ''}${money(Math.abs(v))}` }); return d.length ? `<div class="mt"><div class="fine" style="margin-bottom:4px"><b>عوامل مؤثر در نتیجه</b></div><ul class="reasons">${d.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''; })()}
       <p class="fine mt"><b>قوانین فعال فعلی:</b> ${active.length ? esc(active.join(' · ')) : 'هنوز تغییری اعمال نشده — استراتژی اولیه'}.</p>
-      ${lessons.length ? `<div class="mt"><div class="fine" style="margin-bottom:4px"><b>تغییرات اعمال‌شده و زمان آن‌ها</b></div><ul class="fine" style="list-style:none;padding:0;margin:0">${[...lessons].reverse().slice(0, 12).map((l) => `<li style="padding:4px 0;border-bottom:1px solid var(--border)"><span class="muted" style="display:inline-block;min-width:150px">${dateTime(l.at)}</span>${esc(l.text)}${l.undone ? ' <span class="chip">بعداً لغو شد</span>' : ''}</li>`).join('')}</ul></div>` : ''}
+      ${lessons.length ? `<div class="mt"><div class="fine" style="margin-bottom:4px"><b>تغییرات اعمال‌شده و زمان آن‌ها</b></div><ul class="fine" style="list-style:none;padding:0;margin:0">${[...lessons].reverse().slice(0, 12).map((l) => `<li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span class="muted" style="display:inline-block;min-width:155px">${dateTime(l.at)}</span>${esc(l.text)}${l.undone ? ' <span class="chip">بعداً لغو شد</span>' : ''}</li>`).join('')}</ul></div>` : ''}
     </div>`;
   }
 
@@ -529,13 +798,13 @@ export async function render(el) {
       </div>` : ''}
       <p class="fine" id="csvMsg" hidden></p>
 
-      <form id="rf" class="row mt" style="gap:8px;align-items:flex-end;flex-wrap:wrap">
+      <form id="rf" class="row mt" style="gap:10px;align-items:flex-end;flex-wrap:wrap;background:rgba(255,255,255,0.02);padding:14px;border-radius:16px;border:1px solid rgba(255,255,255,0.05)">
         <label class="fld">ارز<select class="inp" name="sym">${tradable.slice(0, 60).map((c) => `<option value="${esc(c.symbol)}">${esc(c.symbol)}</option>`).join('')}</select></label>
         <label class="fld">جهت<select class="inp" name="side"><option value="long">خرید (Long)</option><option value="short">فروش استقراضی (Short)</option></select></label>
-        <label class="fld">مقدار<input class="inp" name="qty" type="number" step="any" min="0" placeholder="0.05" style="width:100px" required></label>
-        <label class="fld">قیمت ورود (${esc(fx.code)})<input class="inp" name="entry" type="number" step="any" min="0" placeholder="${esc(price(60000 * fx.rate))}" style="width:130px" required></label>
-        <label class="fld">قیمت خروج (${esc(fx.code)})<input class="inp" name="exit" type="number" step="any" min="0" placeholder="هنوز باز است" style="width:130px"></label>
-        <label class="fld">کارمزد (${esc(fx.code)})<input class="inp" name="fee" type="number" step="any" min="0" placeholder="0" style="width:100px"></label>
+        <label class="fld">مقدار<input class="inp" name="qty" type="number" step="any" min="0" placeholder="0.05" style="width:105px" required></label>
+        <label class="fld">قیمت ورود (${esc(fx.code)})<input class="inp" name="entry" type="number" step="any" min="0" placeholder="${esc(price(60000 * fx.rate))}" style="width:135px" required></label>
+        <label class="fld">قیمت خروج (${esc(fx.code)})<input class="inp" name="exit" type="number" step="any" min="0" placeholder="هنوز باز است" style="width:135px"></label>
+        <label class="fld">کارمزد (${esc(fx.code)})<input class="inp" name="fee" type="number" step="any" min="0" placeholder="0" style="width:105px"></label>
         <button class="btn primary">ثبت معامله</button>
       </form>
       <p class="fine down" id="rfErr" hidden></p>
@@ -560,7 +829,7 @@ export async function render(el) {
         ${closed.map((t) => `<tr><td class="l"><b>${esc(t.symbol)}</b>${t.side === 'short' ? ' <small class="muted">شورت</small>' : ''}</td><td class="l fine">${dateTime(t.exitAt, false)}</td><td>${money(t.entry)}</td><td>${money(t.exit)}</td>
           <td class="${t.pnl >= 0 ? 'up' : 'down'}"><b>${t.pnl >= 0 ? '+' : '−'}${money(Math.abs(t.pnl))}</b> <small>${pct(t.pnlPct)}</small></td></tr>`).join('')}
       </tbody></table></div>` : '<p class="fine mt">هنوز معامله واقعی ثبت نشده است.</p>'}
-      ${has && rs.equityCurve.length > 2 ? `<div class="mt"><div class="card-h" style="margin-bottom:6px"><h3 style="font-size:14px">روند سرمایه شما در طول زمان</h3><span class="fine">در مقایسه با نگهداری ساده بیت‌کوین</span></div><div id="realChart"></div><p class="fine" id="realChartNote"></p></div>` : ''}
+      ${has && rs.equityCurve.length > 2 ? `<div class="mt"><div class="card-h" style="margin-bottom:6px"><h3 style="font-size:15px">روند سرمایه شما در طول زمان</h3><span class="fine">در مقایسه با نگهداری ساده بیت‌کوین</span></div><div id="realChart"></div><p class="fine" id="realChartNote"></p></div>` : ''}
     </div>`;
   }
 
@@ -697,14 +966,14 @@ export async function render(el) {
     $$('[data-realclose]', el).forEach((b) => b.addEventListener('click', async () => {
       const sym = b.dataset.realclose;
       const now = priceOf(sym) ?? await fetchPrice(sym);
-      const m = modal(`<h3>ثبت فروش ${esc(sym)}</h3>
+      const m = modal(`<div dir="rtl" style="text-align:right"><h3>ثبت فروش ${esc(sym)}</h3>
         <p class="fine">قیمتی که در صرافی فروخته‌اید را وارد کنید. BTCS فقط آن را ثبت می‌کند و سفارشی ارسال نمی‌شود.</p>
         <form class="stack mt" style="gap:10px" id="rcf">
           <label class="fld">قیمت فروش (${esc(fx.code)})<input class="inp" name="px" type="number" step="any" min="0" required value="${now === null ? '' : esc(String(+(now * (fx.rate || 1)).toPrecision(8)))}"></label>
           <label class="fld">کارمزد پرداخت‌شده در فروش (${esc(fx.code)})<input class="inp" name="fee" type="number" step="any" min="0" value="${now === null ? '0' : esc(String(+(now * (realState()?.open[sym]?.qty || 0) * (cfg.feePct / 100) * (fx.rate || 1)).toPrecision(4)))}"><small class="fine">بر اساس نرخ معمول ${cfg.feePct}% پر شده است؛ آن را با کارمزد واقعی صرافی خود تغییر دهید.</small></label>
           <p class="fine down" id="rcfErr" hidden></p>
           <button class="btn primary">ثبت فروش</button>
-        </form>`);
+        </form></div>`);
       $('#rcf', m.el).addEventListener('submit', (e) => {
         e.preventDefault();
         const f = e.target;
@@ -736,7 +1005,7 @@ export async function render(el) {
     const ms = myState();
     if (!ms || (!Object.keys(ms.open).length && !ms.closed.length)) {
       return `<div class="card"><div class="card-h"><h3>معاملات آزمایشی شخصی شما</h3><span class="chip">حساب مجزا</span></div>
-        <p class="fine">هنوز موردی وجود ندارد. وارد صفحه هر ارزی شوید، دکمه <b>معامله</b> را بزنید و از گزینه <b>خرید (آزمایشی)</b> برای ثبت معامله با قیمت زنده استفاده کنید. این حساب از حساب هوش مصنوعی جدا نگه داشته می‌شود تا آزمایش‌های شما سابقه استراتژی را تغییر ندهد.</p></div>`;
+        <p class="fine" style="margin:0">هنوز موردی وجود ندارد. وارد صفحه هر ارزی شوید، دکمه <b>معامله</b> را بزنید و از گزینه <b>خرید (آزمایشی)</b> برای ثبت معامله با قیمت زنده استفاده کنید. این حساب از حساب هوش مصنوعی جدا نگه داشته می‌شود تا آزمایش‌های شما سابقه استراتژی را تغییر ندهد.</p></div>`;
     }
     const s2 = stats(ms, marks());
     const open = Object.entries(ms.open);
@@ -799,9 +1068,9 @@ export async function render(el) {
   function settingsCard() {
     const w = settingsWarnings({ ...cfg, interval: state?.interval || cfg.interval });
     if (!w.length) return '';
-    return `<div class="card" style="border-color:var(--warn);margin-bottom:14px" id="settingsWarn">
+    return `<div class="card" style="border-color:rgba(255,159,10,0.4);margin-bottom:16px" id="settingsWarn">
       <p style="margin:0"><b>تنظیمات شما با تنظیمات تست‌شده متفاوت است، بنابراین نتایج تست‌شده درباره این حساب صدق نمی‌کند.</b></p>
-      <ul class="fine" style="margin:6px 0 0;padding-left:18px">${w.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+      <ul class="fine" style="margin:8px 0 0;padding-right:18px">${w.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
       <button class="btn sm mt" type="button" id="warnUseBest">استفاده از بهترین تنظیمات تست‌شده</button>
     </div>`;
   }
@@ -810,7 +1079,7 @@ export async function render(el) {
     const u = untradable();
     if (!u.all.length) return '';
     const n = u.all.length;
-    return `<div class="card" style="border-color:var(--warn)" id="untradable">
+    return `<div class="card mb" style="border-color:rgba(255,159,10,0.4);margin-bottom:16px" id="untradable">
       <p style="margin:0"><b>${n} ارز در لیست هوش مصنوعی قابل معامله نیست و در هر بررسی نادیده گرفته می‌شود.</b>
       ${u.noData.length ? `${esc(u.noData.join('، '))}: داده‌ای از صرافی‌های تحت پوشش (Binance, Gate.io, HTX, OKX) دریافت نشد. ` : ''}${u.sparse.length ? `${esc(u.sparse.join('، '))}: فقط قیمت‌های پراکنده CoinGecko موجود است که برای معامله کافی نیست. ` : ''}بقیه لیست بدون مشکل است.</p>
       <button class="btn sm mt" type="button" id="dropUntradable">حذف از لیست</button>
@@ -838,12 +1107,12 @@ export async function render(el) {
       ${backupCard()}
       ${myDemoCard()}
       ${realCard()}
-      <h3 class="mt" style="margin-bottom:8px">حساب اختصاصی هوش مصنوعی</h3>
+      <h2 class="ap-sec-title">${icon('ai', 20)} حساب اختصاصی هوش مصنوعی</h2>
       ${settingsCard()}
       ${untradableCard()}
       ${verdictCard()}
       ${earningsCard()}
-      <div class="grid g4">
+      <div class="grid g4 mt">
         <div class="card"><div class="stat"><span class="k">موجودی فعلی</span><span class="v ${s.returnPct >= 0 ? 'up' : 'down'}">${money(s.equity)}</span><span class="s fine">شروع با ${money(s.startingBalance)}</span></div></div>
         <div class="card"><div class="stat"><span class="k">بازدهی</span><span class="v ${s.returnPct >= 0 ? 'up' : 'down'}">${pct(s.returnPct)}</span><span class="s fine">از ${dateTime(s.since, false)}${s.since < s.liveSince - 60e3 ? ` · بازپخش‌شده تا ${dateTime(s.liveSince)}` : ''}</span></div></div>
         <div class="card"><div class="stat"><span class="k">نرخ برد</span><span class="v">${s.winRate === null ? '—' : `${s.winRate}%`}</span><span class="s fine">${s.wins} برد / ${s.losses} باخت${s.profitFactor ? ` · ضریب سود ${s.profitFactor}` : ''}</span></div></div>
@@ -873,7 +1142,7 @@ export async function render(el) {
               <td class="${pnl >= 0 ? 'up' : 'down'}"><b>${pnl >= 0 ? '+' : '−'}${money(Math.abs(pnl))}</b><br><small>${pct((px / p.entry - 1) * 100)}</small></td>
               <td class="l fine hide-t">${dateTime(p.openedAt + (INTERVAL_MS[state.interval] || 0))}<br><small>${ago(p.openedAt + (INTERVAL_MS[state.interval] || 0))}</small></td></tr>`;
           }).join('')}
-        </tbody></table></div>` : `<p class="muted">${autoOn ? 'در حال حاضر موقعیت بازی وجود ندارد — هوش مصنوعی منتظر موقعیت مناسب است.' : 'موقعیت بازی وجود ندارد. هوش مصنوعی غیرفعال است، پس تا زمان شروع معامله‌ای باز نخواهد شد.'}</p>`}
+        </tbody></table></div>` : `<p class="muted" style="margin:0">${autoOn ? 'در حال حاضر موقعیت بازی وجود ندارد — هوش مصنوعی منتظر موقعیت مناسب است.' : 'موقعیت بازی وجود ندارد. هوش مصنوعی غیرفعال است، پس تا زمان شروع معامله‌ای باز نخواهد شد.'}</p>`}
       </div>
 
       ${activityCard()}
@@ -890,13 +1159,13 @@ export async function render(el) {
             <td class="hide-p">${money(t.entry)}</td><td class="hide-p">${money(t.exit)}</td>
             <td class="${t.pnl >= 0 ? 'up' : 'down'}"><b>${t.pnl >= 0 ? '+' : '−'}${money(Math.abs(t.pnl))}</b> <small>${pct(t.pnlPct)}</small></td>
             <td class="l"><span class="chip ${t.reason === 'target' ? 'up' : t.reason === 'stop-loss' ? 'down' : ''}">${esc(t.reason)}</span></td></tr>`).join('')}
-        </tbody></table></div>` : '<p class="muted">هنوز معامله بسته‌شده‌ای وجود ندارد.</p>'}
+        </tbody></table></div>` : '<p class="muted" style="margin:0">هنوز معامله بسته‌شده‌ای وجود ندارد.</p>'}
       </div>
 
-      <div class="card mt" style="background:var(--surface-2)">
-        <h3>این ابزار چیست و چه چیزی نیست</h3>
+      <div class="card mt" style="background:rgba(255,255,255,0.02)">
+        <h3 style="margin-top:0">این ابزار چیست و چه چیزی نیست</h3>
         <p class="fine">${esc(PAPER_NOTICE)} نتایج شامل ${cfg.feePct}% کارمزد در هر طرف معامله هستند و فرض می‌کنند هرگاه یک کندل همزمان هم حد ضرر و هم حد سود را لمس کند، ابتدا حد ضرر فعال شده است — بنابراین محاسبات به ضرر استراتژی (بدبینانه) انجام می‌شود نه به نفع آن.</p>
-        <p class="fine">شبیه‌سازی نمی‌تواند لغزش قیمت، عمق کم دفتر سفارش‌ها یا قطعی صرافی در میانه حرکت بازار را بازسازی کند. اجرای موفق در اینجا را نشانه‌ای از منطقی بودن قوانین بدانید، نه تضمین بازدهی.</p>
+        <p class="fine" style="margin-bottom:0">شبیه‌سازی نمی‌تواند لغزش قیمت، عمق کم دفتر سفارش‌ها یا قطعی صرافی در میانه حرکت بازار را بازسازی کند. اجرای موفق در اینجا را نشانه‌ای از منطقی بودن قوانین بدانید، نه تضمین بازدهی.</p>
       </div>
       ${learningCard()}`;
 
@@ -947,7 +1216,7 @@ export async function render(el) {
       <p class="fine" style="margin:6px 0 0">به طور میانگین حدود <b class="${y.ret >= 0 ? 'up' : 'down'}">${sign(y.ret)}</b> در هر ${esc(y.block)} (${cash(y.ret)} روی ${money(c.startingBalance)}): ${sign(y.lo)} در بدترین دوره از ${y.periods} دوره تست، ${sign(y.hi)} در بهترین دوره، و سوددهی در ${y.up} دوره از ${y.periods} دوره. بیشترین افت سرمایه حدود ${y.dd}% با احتساب معاملات باز؛ حدود ${y.trades} معامله در هر دوره. نگهداری ساده همان ارزها ${sign(y.hold)} در هر دوره سود داشت${y.holdDrop ? ` و تا ${y.holdDrop}% افت را تجربه کرد` : ''}.${y.fillCost ? ` پر شدن سفارش‌ها با ۰.۰۵٪ قیمت بدتر (اسپرد و لغزش) حدود ${y.fillCost} واحد درصد از بازدهی هر دوره کم می‌کند.` : ''}</p>
       <p class="fine" style="margin:6px 0 0">اندازه‌گیری‌شده روی ${y.coins} ارز در یک حساب${n && n < y.coins ? `؛ با ${n} ارز انتظار معاملات کمتری را داشته باشید` : ''}.${VOL_SCALE.charts.includes(c.interval) && c.strategy !== 'custom' ? ` این ارقام مربوط به پیش از زمانی است که ${esc(c.interval)} هنگام نوسان شدید ارز حجم خرید را کاهش دهد؛ در تست روی همان دوره‌ها، این قابلیت ${VOL_SCALE.tested[c.interval].ret >= 0 ? '+' : '−'}${Math.abs(VOL_SCALE.tested[c.interval].ret)} واحد درصد به سود اضافه کرد و بیشترین افت سرمایه را ${Math.abs(VOL_SCALE.tested[c.interval].dd)} واحد درصد کاهش داد.` : ''}${y.capsDiffer ? ' سقف معاملات باز یا سهم هر ارز در تنظیمات شما با تست (۵ معامله باز، ۲۵٪ در هر ارز) متفاوت است، پس اعداد را تقریبی بدانید.' : ''}${own ? ` با فعال بودن قوانین اختصاصی هر ارز، یک تست مجزا در بازه ${PER_COIN_RULES.tested.from.slice(0, 4)}–${PER_COIN_RULES.tested.to.slice(0, 4)} بازدهی ${sign(PER_COIN_RULES.tested.own.ret)} در برابر ${sign(PER_COIN_RULES.tested.standard.ret)} بدون آن‌ها داشت.` : ''} این برآوردی از گذشته است، نه تضمین آینده.</p>
       ${y.levels.length ? `<div class="tbl-wrap mt"><table class="tbl fine fit"><thead><tr><th class="l">ریسک هر معامله</th><th>میانگین هر دوره</th><th>بدترین ← بهترین دوره</th><th>بیشترین افت</th><th class="hide-p">دوره‌های مثبت</th></tr></thead><tbody>
-        ${y.levels.map((l) => `<tr${l.risk === y.risk ? ' style="font-weight:700"' : ''}><td class="l">${l.risk}%${l.risk === y.risk ? '<small>انتخاب شما</small>' : ''}</td><td class="${l.ret >= 0 ? 'up' : 'down'}">${sign(l.ret)}</td><td class="range">${sign(l.lo)} → ${sign(l.hi)}</td><td>${l.dd}%</td><td class="hide-p">${l.up} از ${y.periods}</td></tr>`).join('')}
+        ${y.levels.map((l) => `<tr${l.risk === y.risk ? ' style="font-weight:700"' : ''}><td class="l">${l.risk}%${l.risk === y.risk ? ' <small class="chip">انتخاب شما</small>' : ''}</td><td class="${l.ret >= 0 ? 'up' : 'down'}">${sign(l.ret)}</td><td class="range">${sign(l.lo)} → ${sign(l.hi)}</td><td>${l.dd}%</td><td class="hide-p">${l.up} از ${y.periods}</td></tr>`).join('')}
       </tbody></table></div>
       <p class="fine" style="margin:6px 0 0">هر ردیف همان تست را با آن سطح ریسک نشان می‌دهد${y.levels.some((l) => l.risk === y.risk) ? '' : `؛ ریسک شما (${y.risk}%) بین دو ردیف نزدیک برآورد می‌شود`}. بهترین میانگین در ریسک ${top.risk}% به دست آمده است${top.risk < y.levels[y.levels.length - 1].risk ? ' و مقادیر بالاتر سود بیشتری نداشتند: با سقف ۲۵٪ سرمایه در یک ارز، افزایش بیشتر ریسک عملاً حجم معاملات را بزرگ‌تر نمی‌کند' : `، با بیشترین افت ${top.dd}% در برابر ${y.levels[0].dd}% در ریسک ${y.levels[0].risk}% و بدترین دوره ${sign(top.lo)}`}. این اعداد از دوره‌های گذشته استخراج شده‌اند و راهنما هستند نه تضمین.</p>` : ''}`;
   }
@@ -974,12 +1243,12 @@ export async function render(el) {
       const t = x.adopt ? x.own : x.standard;
       return `${i} — تست‌شده ${pct(t.ret, 2)} در هر ${x.block} (نگهداری ساده ${pct(x.hold, 2)})`;
     };
-    const m = modal(`<h3>تنظیمات معامله‌گر</h3>
-      <div class="card mt" style="padding:12px" id="todo"><b>پیشنهاد بهینه</b>
+    const m = modal(`<div dir="rtl" style="text-align:right"><h3>تنظیمات معامله‌گر</h3>
+      <div class="card mt" style="padding:14px;border-radius:18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08)" id="todo"><b>پیشنهاد بهینه</b>
         <p class="fine" style="margin:6px 0 0">بهترین ترکیب تست‌شده: نمودار <b>${esc(best.iv)}</b> همراه با قوانین تست‌شده. پس از کسر هزینه پر شدن واقعی سفارش‌ها (۰.۰۵٪ بدتر در هر طرف)، به طور میانگین ${pct(best.net, 2)} در هر ${esc(best.block)} (حدود ${pct(best.month, 1)} در ماه) با بیشترین افت ${best.dd}% بازدهی داشته است؛ نگهداری ساده همین ارزها ${pct(best.hold, 2)} در هر دوره بازدهی داشت و بدترین دوره آن ${best.worstNet >= 0 ? 'همچنان سودده بود' : `${Math.abs(best.worstNet)}% ضرر داد`}. ریسک را روی ۱ تا ۲ درصد نگه دارید، حداقل پنج ارز انتخاب کنید و خودارزیابی را روشن بگذارید. هیچ‌کدام از این‌ها تضمین نیست: تست‌ها به گذشته نگاه می‌کنند و بازار به سمت آینده می‌رود.</p>
         <button class="btn sm mt" type="button" id="useBest">اعمال بهترین ترکیب تست‌شده</button>
         <div id="todoLive"></div></div>
-      <form class="stack mt" style="gap:12px" id="cf" novalidate>
+      <form class="stack mt" style="gap:14px" id="cf" novalidate>
         <fieldset class="stack" style="gap:8px;border:0;padding:0;margin:0;min-width:0"><legend class="fine"><b>حساب و مدیریت ریسک</b></legend>
           <div class="row" style="gap:8px;flex-wrap:wrap">
             <label class="fld">موجودی اولیه${fx.code === 'USD' ? '' : ` (${esc(fx.code)})`}<input class="inp" name="startingBalance" type="number" min="${Math.ceil(100 * fx.rate)}" step="any" value="${Math.round(cfg.startingBalance * fx.rate)}" style="width:150px"></label>
@@ -996,9 +1265,9 @@ export async function render(el) {
         </fieldset>
         <fieldset class="stack" style="gap:8px;border:0;padding:0;margin:0;min-width:0"><legend class="fine"><b>استراتژی</b></legend>
           <label class="row" style="gap:8px"><input type="radio" name="strategy" value="tested" ${cfg.strategy === 'custom' ? '' : 'checked'}><span>قوانین تست‌شده برای نمودار <span class="fine">(پیشنهادی)</span></span></label>
-          <label class="row" style="gap:8px;align-items:flex-start;margin-left:24px" id="ownRow"><input type="checkbox" name="ownRules" ${cfg.ownRulesOff ? '' : 'checked'} style="margin-top:3px"><span class="fine">در نمودار روزانه، هر ارز با قوانین انتخاب‌شده بر اساس تاریخچه خودش معامله شود (${PER_COIN_RULES.coins} ارز دارای قانون اختصاصی هستند). تست‌شده در ${PER_COIN_RULES.tested.from.slice(0, 4)}–${PER_COIN_RULES.tested.to.slice(0, 4)}: بازدهی ${pct(PER_COIN_RULES.tested.own.ret, 2)} در برابر ${pct(PER_COIN_RULES.tested.standard.ret, 2)} برای قوانین روزانه عمومی، با بیشترین افت ${PER_COIN_RULES.tested.own.dd}% در برابر ${PER_COIN_RULES.tested.standard.dd}%.${(() => { const w = PER_COIN_RULES.tested.walkForward; return w && w.own < w.shared ? ` اما در بررسی ارز به ارز طی ${w.periods} دوره گام‌به‌گام، عملکردی ضعیف‌تر از قوانین مشترک داشتند (${pct(w.own, 2)} در برابر ${pct(w.shared, 2)} در هر دوره، بهتر در ${w.better} دوره از ${w.periods})، بنابراین نتیجه کل حساب متکی به چند ارز خاص است: خاموش کردن این گزینه انتخاب منطقی است.` : ''; })()}</span></label>
+          <label class="row" style="gap:8px;align-items:flex-start;margin-right:24px" id="ownRow"><input type="checkbox" name="ownRules" ${cfg.ownRulesOff ? '' : 'checked'} style="margin-top:3px"><span class="fine">در نمودار روزانه، هر ارز با قوانین انتخاب‌شده بر اساس تاریخچه خودش معامله شود (${PER_COIN_RULES.coins} ارز دارای قانون اختصاصی هستند). تست‌شده در ${PER_COIN_RULES.tested.from.slice(0, 4)}–${PER_COIN_RULES.tested.to.slice(0, 4)}: بازدهی ${pct(PER_COIN_RULES.tested.own.ret, 2)} در برابر ${pct(PER_COIN_RULES.tested.standard.ret, 2)} برای قوانین روزانه عمومی، با بیشترین افت ${PER_COIN_RULES.tested.own.dd}% در برابر ${PER_COIN_RULES.tested.standard.dd}%.${(() => { const w = PER_COIN_RULES.tested.walkForward; return w && w.own < w.shared ? ` اما در بررسی ارز به ارز طی ${w.periods} دوره گام‌به‌گام، عملکردی ضعیف‌تر از قوانین مشترک داشتند (${pct(w.own, 2)} در برابر ${pct(w.shared, 2)} در هر دوره، بهتر در ${w.better} دوره از ${w.periods})، بنابراین نتیجه کل حساب متکی به چند ارز خاص است: خاموش کردن این گزینه انتخاب منطقی است.` : ''; })()}</span></label>
           <label class="row" style="gap:8px"><input type="radio" name="strategy" value="custom" ${cfg.strategy === 'custom' ? 'checked' : ''}><span>قوانین شخصی من <span class="fine">(بدون تست منتشرشده)</span></span></label>
-          <div class="stack" id="customBox" style="gap:8px;margin-left:24px">
+          <div class="stack" id="customBox" style="gap:8px;margin-right:24px">
             <div class="row" style="gap:8px;flex-wrap:wrap">
               <label class="fld">زمان خرید<select class="inp" name="entryMode">${[['trend', 'قوی بودن امتیاز روند'], ['breakout', 'شکست سقف ۲۰ کندلی'], ['pullback', 'اصلاح قیمتی در روند صعودی']].map(([v, t]) => `<option value="${v}" ${own.entryMode === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
               <label class="fld">حد ضرر<select class="inp" name="atrStop">${[1.5, 2, 3].map((v) => `<option value="${v}" ${own.atrStop === v ? 'selected' : ''}>${v} ATR پایین‌تر از ورود</option>`).join('')}</select></label>
@@ -1021,7 +1290,7 @@ export async function render(el) {
         </fieldset>
         <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="testCfg">${icon('chart', 16)} تست این تنظیمات</button><button class="btn primary">ذخیره تنظیمات</button></div>
         <div id="testOut"></div>
-      </form>`, { wide: true });
+      </form></div>`, { wide: true });
     const f = $('#cf', m.el);
     pool(coins.filter((c) => knownVenue(c) === undefined), 3, async (c) => {
       const v = await findVenue(c);
@@ -1056,8 +1325,8 @@ export async function render(el) {
       $('#switchRow', m.el).hidden = !(hasTrades && next.interval !== (state?.interval || cfg.interval));
       $('#coinCount', m.el).textContent = `· ${next.universe.length} انتخاب‌شده${next.universe.length > MAX_COINS ? ` — فقط ${MAX_COINS} ارز قابل معامله هستند` : ''}`;
       const warn = settingsWarnings({ ...cfg, ...next });
-      $('#todoLive', m.el).innerHTML = `<div class="mt" style="border-top:1px solid var(--border);padding-top:8px">${yieldHtml({ ...cfg, ...next })}</div>
-        ${warn.length ? `<ul class="fine" style="margin:8px 0 0;padding-left:18px">${warn.map((w) => `<li class="down">${esc(w)}</li>`).join('')}</ul>` : '<p class="fine up" style="margin:8px 0 0">هیچ موردی در این تنظیمات نیاز به هشدار ندارد.</p>'}`;
+      $('#todoLive', m.el).innerHTML = `<div class="mt" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:8px">${yieldHtml({ ...cfg, ...next })}</div>
+        ${warn.length ? `<ul class="fine" style="margin:8px 0 0;padding-right:18px">${warn.map((w) => `<li class="down">${esc(w)}</li>`).join('')}</ul>` : '<p class="fine up" style="margin:8px 0 0">هیچ موردی در این تنظیمات نیاز به هشدار ندارد.</p>'}`;
     };
     $('#useBest', m.el).addEventListener('click', () => {
       f.interval.value = best.iv;
@@ -1100,7 +1369,7 @@ export async function render(el) {
       const res = backtestSettings({ ...rules, perCoin: next.strategy !== 'custom' && !next.ownRulesOff && next.interval === PER_COIN_RULES.interval ? PER_COIN_RULES.rules : null }, by);
       if (!res.coins) { out.innerHTML = '<p class="fine down">هیچ‌یک از این ارزها کندل صرافی کافی در این نمودار برای تست نداشتند.</p>'; return; }
       const sign = (v) => pct(v, 2);
-      out.innerHTML = `<div class="card" style="padding:12px"><b>عملکرد این تنظیمات روی کندل‌های اخیر</b>
+      out.innerHTML = `<div class="card" style="padding:14px;border-radius:16px"><b>عملکرد این تنظیمات روی کندل‌های اخیر</b>
         <p class="fine" style="margin:6px 0 0">${res.coins} ارز، از ${esc(new Date(res.from).toISOString().slice(0, 10))} تا ${esc(new Date(res.to).toISOString().slice(0, 10))}، با احتساب کارمزد: <b class="${res.ret >= 0 ? 'up' : 'down'}">${sign(res.ret)}</b> در برابر <b>${sign(res.hold)}</b> برای نگهداری ساده همان ارزها. ${res.trades} معامله بسته‌شده${res.trades ? `، ${res.winRate}% برد` : ''}، بیشترین افت ${res.dd}%، و ${res.open} معامله همچنان باز. ${Object.keys(by).length < syms.length ? `${syms.length - Object.keys(by).length} ارز کندل صرافی نداشتند و کنار گذاشته شدند.` : ''}</p>
         <p class="fine" style="margin:6px 0 0">این نگاهی به گذشته است نه تضمین آینده. ${next.strategy === 'custom' ? 'قوانینی که تا حد خوب به نظر رسیدن روی گذشته تنظیم شوند، معمولاً در بازار زنده ضعیف‌تر عمل می‌کنند.' : 'قوانین تست‌شده بر اساس تاریخچه‌ای شامل همین کندل‌ها انتخاب شده‌اند، بنابراین در اینجا بهتر از اجرای زنده به نظر می‌رسند؛ نتیجه تست گام‌به‌گام معیار واقعی‌تری است.'}</p></div>`;
     });
@@ -1159,8 +1428,8 @@ export async function render(el) {
   });
 
   $('#resetBtn', el)?.addEventListener('click', () => {
-    const m = modal(`<h3>بازنشانی حساب هوش مصنوعی؟</h3><p>این کار موجودی شبیه‌سازی‌شده و کل تاریخچه معاملات را پاک می‌کند و از نو با ${money(cfg.startingBalance)} روی تایم‌فریم ${cfg.interval} شروع می‌کند. ${autoOn ? 'هوش مصنوعی به کار خود ادامه می‌دهد' : 'هوش مصنوعی تا زمان شروع مجدد متوقف می‌ماند'} و از این لحظه به بعد فقط کندل‌هایی را معامله می‌کند که پس از بازنشانی باز شوند — هیچ داده‌ای از گذشته بازپخش نخواهد شد. این عمل قابل بازگشت نیست.</p>
-      <div class="row mt" style="gap:8px"><button class="btn" id="no">نگه دار</button><button class="btn primary" id="yes">بازنشانی</button></div>`);
+    const m = modal(`<div dir="rtl" style="text-align:right"><h3>بازنشانی حساب هوش مصنوعی؟</h3><p>این کار موجودی شبیه‌سازی‌شده و کل تاریخچه معاملات را پاک می‌کند و از نو با ${money(cfg.startingBalance)} روی تایم‌فریم ${cfg.interval} شروع می‌کند. ${autoOn ? 'هوش مصنوعی به کار خود ادامه می‌دهد' : 'هوش مصنوعی تا زمان شروع مجدد متوقف می‌ماند'} و از این لحظه به بعد فقط کندل‌هایی را معامله می‌کند که پس از بازنشانی باز شوند — هیچ داده‌ای از گذشته بازپخش نخواهد شد. این عمل قابل بازگشت نیست.</p>
+      <div class="row mt" style="gap:8px"><button class="btn" id="no">نگه دار</button><button class="btn primary" id="yes">بازنشانی</button></div></div>`);
     $('#no', m.el).addEventListener('click', m.close);
     $('#yes', m.el).addEventListener('click', () => {
       const wasRunning = resetAccount();
