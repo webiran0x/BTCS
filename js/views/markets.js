@@ -216,7 +216,15 @@ export async function render(el) {
     if (!f?.length) { $('#fng', el).innerHTML = '<div class="empty"><p>هیچ داده اخیری از شاخص ترس و طمع دریافت نشد.</p></div>'; return; }
     const now = f[0], week = f[7], month = f[29];
     const stamp = $('#fngDate', el);
-    if (stamp && now.timestamp) stamp.textContent = `به تاریخ ${dateTime(now.timestamp / 1000, false)}`;
+    if (stamp && now.timestamp) {
+    stamp.textContent = `به تاریخ ${new Intl.DateTimeFormat('fa-IR', {
+        calendar: 'persian',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'Asia/Tehran'
+    }).format(new Date(Number(now.timestamp) * 1000))}`;
+}
     $('#fng', el).innerHTML = `${gauge(now.value, now.classification)}
       <div class="row spread fine" style="margin-top:10px"><span>دیروز <b>${f[1]?.value ?? '—'}</b></span><span>هفته گذشته <b>${week?.value ?? '—'}</b></span><span>ماه گذشته <b>${month?.value ?? '—'}</b></span></div>`;
   };
