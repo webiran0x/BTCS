@@ -27,11 +27,11 @@ export async function analyzeCoin(symbol, { interval = '4h', withForecast = true
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < 90e3 && (!withForecast || hit.forecast)) return hit;
   const coin = await findCoin(symbol);
-  if (!coin) throw new Error(`I couldn't find ${symbol} in the top 250 coins.`);
-  onStep?.('Loading live chart data…');
+  if (!coin) throw new Error(`من نتوانستم ${symbol} را در بین ۲۵۰ ارز برتر پیدا کنم.`);
+  onStep?.('در حال بارگذاری داده‌های زنده نمودار…');
   const main = await getCandles(coin, interval, 1500);
   const signal = generateSignal(main.candles, { interval });
-  onStep?.('Checking other timeframes…');
+  onStep?.('در حال بررسی سایر تایم‌فریم‌ها…');
   const others = ['15m', '1h', '4h', '1d'].filter((iv) => iv !== interval);
   const mtf = { [interval]: signal };
   await Promise.all(others.map(async (iv) => {
@@ -42,7 +42,7 @@ export async function analyzeCoin(symbol, { interval = '4h', withForecast = true
   let forecast = hit?.forecast || null;
   const horizon = DEFAULT_HORIZON[interval] || 12;
   if (withForecast && !forecast) {
-    onStep?.('Running AI forecast (pattern matching + ML models)…');
+    onStep?.('در حال اجرای پیش‌بینی هوش مصنوعی (تطبیق الگو + مدل‌های یادگیری ماشین)…');
     // the timeframe is passed, not guessed from the spacing of the last two candles
     forecast = await runForecast(main.candles, { horizon, intervalMs: INTERVAL_MS[interval] });
   }
@@ -50,7 +50,7 @@ export async function analyzeCoin(symbol, { interval = '4h', withForecast = true
   // looked like today, plus this coin's seasonality. Never blocks the answer.
   let history = hit?.history || null;
   if (!history) {
-    onStep?.('Comparing today with previous years…');
+    onStep?.('در حال مقایسه امروز با سال‌های گذشته…');
     history = await getCandles(coin, '1d', 2000)
       .then((d) => runHistory(d.candles, { window: 45, horizons: [7, 30, 90], horizon: 30 }))
       .catch(() => null);
@@ -97,7 +97,7 @@ export async function scanMarket({ interval = '4h', count = 40, onStep } = {}) {
         if (isTestedSource(res)) rows.push({ coin, signal: generateSignal(res.candles, { interval }), candles: res.candles, ai });
         else skipped++;
       } catch { skipped++; }
-      onStep?.(`Scanning the market… ${++done}/${list.length}`);
+      onStep?.(`در حال اسکن بازار… ${++done}/${list.length}`);
     }
   };
   await Promise.all([worker(), worker(), worker(), worker()]);
@@ -117,7 +117,7 @@ export async function scanMarket({ interval = '4h', count = 40, onStep } = {}) {
       row.forecast = fc;
       row.timing = fc?.ok ? timingOutlook(fc, { intervalMs: INTERVAL_MS[interval], interval }) : null;
     } catch { /* advice still works from the signal alone */ }
-    onStep?.(`Forecasting… ${++forecasted}/${shortlist.length}`);
+    onStep?.(`در حال پیش‌بینی… ${++forecasted}/${shortlist.length}`);
   }));
   for (const row of rows) {
     row.advice = adviseCoin({ signal: row.signal, forecast: row.forecast, timing: row.timing, interval: row.interval || interval, trust: directionTrustFor(row.interval || interval).trust });
@@ -175,17 +175,17 @@ export function marketContext(rows, interval) {
 // buy?" has a different answer over the next few hours than over the next few
 // weeks, so the assistant answers all three rather than picking one for you.
 export const SCAN_FRAMES = [
-  { interval: '1h', label: 'Short term' },
-  { interval: '4h', label: 'Swing' },
-  { interval: '1d', label: 'Position' },
+  { interval: '1h', label: 'کوتاه‌مدت' },
+  { interval: '4h', label: 'میان‌مدت (سوئینگ)' },
+  { interval: '1d', label: 'پوزیشن' },
 ];
 
 export async function scanMarketMulti({ intervals = SCAN_FRAMES.map((f) => f.interval), count = 30, onStep } = {}) {
   // The charts are read side by side; the worker pool shares the forecasts out.
   const byInterval = {};
-  onStep?.(`Scanning the market on the ${intervals.join(', ')} charts…`);
+  onStep?.(`در حال اسکن بازار در تایم‌فریم‌های ${intervals.join(', ')}…`);
   await Promise.all(intervals.map(async (interval) => {
-    byInterval[interval] = await scanMarket({ interval, count, onStep: (t) => onStep?.(`${interval}: ${t.replace('Scanning the market… ', '')}`) });
+    byInterval[interval] = await scanMarket({ interval, count, onStep: (t) => onStep?.(`${interval}: ${t.replace('در حال اسکن بازار… ', '')}`) });
   }));
   return byInterval;
 }
@@ -230,7 +230,7 @@ export async function compareCoins(symbols, { interval = '4h', onStep } = {}) {
   const list = await markets().catch(() => []);
   const rows = [];
   for (const sym of symbols.slice(0, 4)) {
-    onStep?.(`Reading ${sym}…`);
+    onStep?.(`در حال خواندن ${sym}…`);
     try {
       const coin = await findCoin(sym);
       if (!coin) continue;
@@ -255,7 +255,7 @@ export async function compareCoins(symbols, { interval = '4h', onStep } = {}) {
         signalText: signal.ok ? signal.text : null,
         score: signal.ok ? signal.score : null,
         probUpPct: f ? f.probUpPct : null,
-        forecastNote: isTestedSource(res) ? null : 'No forecast: only CoinGecko or demo candles for this coin, which the forecast was never tested on.',
+        forecastNote: isTestedSource(res) ? null : 'بدون پیش‌بینی: فقط کندل‌های کوین‌گکو یا نسخه نمایشی برای این ارز موجود است که پیش‌بینی هرگز روی آن‌ها آزمایش نشده است.',
         accuracyPct: f ? f.testedDirectionPct : null,
         change24h: live?.change24h ?? coin.change24h ?? null,
         buyBetween: advice.plan ? advice.plan.entryZone : null,
@@ -292,7 +292,7 @@ export function analystContext(a, portfolio) {
     forecast: forecastFacts(a.forecast, a.interval, directionTrustFor(a.interval).trust),
     timing: summarizeTiming(a.timing),
     timingSentence: a.timing?.ok && a.timing.shaped
-      ? timingText(a.timing, (bars) => horizonText(a.interval, bars), (v) => v.toLocaleString('en-US', { maximumFractionDigits: 2 }))
+      ? timingText(a.timing, (bars) => horizonText(a.interval, bars), (v) => v.toLocaleString('fa-IR', { maximumFractionDigits: 2 }))
       : null,
     news: (a.news || []).slice(0, 5).map((n) => ({ title: n.title, source: n.source, at: n.published_at })),
     history: a.history?.ok ? { ...a.history.summary, verdictText: a.history.verdict.text, seasonMonth: a.history.season?.current || null } : null,
