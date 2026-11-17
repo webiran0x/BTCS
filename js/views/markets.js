@@ -8,20 +8,20 @@ export const title = 'بازارها';
 
 export async function render(el) {
   el.innerHTML = `
-    <header class="hero">
-      <p class="eyebrow">بازارهای زنده <span class="rule" aria-hidden="true"></span> ${esc(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))}</p>
+    <header class="hero" dir="rtl">
+      <p class="eyebrow">بازارهای زنده <span class="rule" aria-hidden="true"></span> ${esc(new Date().toLocaleDateString('fa-IR', { day: 'numeric', month: 'long', year: 'numeric' }))}</p>
       <h1>قیمت ارزهای دیجیتال <em>امروز</em></h1>
       <p class="lede" id="mkSummary">قیمت‌های زنده، ارزش بازار و روند ۷ روزه برای ۲۵۰ ارز برتر.</p>
       <p class="key-hint">پشت قیمت‌ها: ۷۲ ساعت گذشته بیت‌کوین به شکل نمودار کندل سه‌بعدی، جدیدترین کندل آن با قیمت زنده حرکت می‌کند، و بزرگ‌ترین ارزها به عنوان توکن نمایش داده می‌شوند. هرچه توکن بزرگ‌تر باشد، ارزش بازار آن بیشتر است؛ لبه آن برای صعود در ۲۴ ساعت گذشته یشمی و برای ریزش مرجانی است. روی یک توکن اشاره کنید تا نام آن نمایش داده شود؛ برای باز کردن نمودارش کلیک کنید.</p>
     </header>
-    <div class="global-strip" id="globalStrip">${Array.from({ length: 5 }, () => `<div class="card">${skeleton(2, 16)}</div>`).join('')}</div>
-    <div class="grid g4" style="margin-bottom:14px">
+    <div class="global-strip" id="globalStrip" dir="rtl">${Array.from({ length: 5 }, () => `<div class="card">${skeleton(2, 16)}</div>`).join('')}</div>
+    <div class="grid g4" style="margin-bottom:14px" dir="rtl">
       <div class="card"><div class="card-h"><h3>شاخص ترس و طمع</h3><span class="fine" id="fngDate"></span></div><div id="fng">${skeleton(3)}</div></div>
       <div class="card"><div class="card-h"><h3>ترندها</h3></div><div class="hl-list" id="trending">${skeleton(5)}</div></div>
       <div class="card"><div class="card-h"><h3>بیشترین رشد <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="gainers">${skeleton(5)}</div></div>
       <div class="card"><div class="card-h"><h3>بیشترین ریزش <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="losers">${skeleton(5)}</div></div>
     </div>
-    <div class="card">
+    <div class="card" dir="rtl">
       <div class="card-h">
         <div class="seg" id="scope"><button data-v="all" class="on">همه ارزها</button><button data-v="watch">${icon('star', 13)} واچ‌لیست</button></div>
         <div class="row">
@@ -117,7 +117,7 @@ export async function render(el) {
       card('حجم ۲۴ ساعته', compact(g.totalVolume), '<span class="muted">همه صرافی‌ها</span>'),
       card('دامیننس بیت‌کوین', pct(g.btcDominance, 1, false), '<span class="muted">سهم از ارزش بازار</span>'),
       card('دامیننس اتریوم', pct(g.ethDominance, 1, false), '<span class="muted">سهم از ارزش بازار</span>'),
-      card('ارزهای رصدشده', g.activeCryptocurrencies?.toLocaleString('en-US') ?? '—', g.markets ? `<span class="muted">${g.markets.toLocaleString('en-US')} بازار</span>` : ''),
+      card('ارزهای رصدشده', g.activeCryptocurrencies?.toLocaleString('fa-IR') ?? '—', g.markets ? `<span class="muted">${g.markets.toLocaleString('fa-IR')} بازار</span>` : ''),
     ].join('');
     $('#mkSummary', el).innerHTML = `ارزش کل بازار ارز دیجیتال <b>${compact(g.totalMarketCap)}</b> است که در ۲۴ ساعت گذشته ${g.marketCapChange24h >= 0 ? 'افزایش' : 'کاهش'} <b class="${g.marketCapChange24h >= 0 ? 'up' : 'down'}">${pct(Math.abs(g.marketCapChange24h), 2, false)}</b> داشته است.`;
   };
@@ -131,8 +131,6 @@ export async function render(el) {
     if (disposed) return;
     if (!f?.length) { $('#fng', el).innerHTML = '<div class="empty"><p>هیچ داده اخیری از شاخص ترس و طمع دریافت نشد.</p></div>'; return; }
     const now = f[0], week = f[7], month = f[29];
-    // The header had an empty slot reserved for this and nothing ever filled it,
-    // so the card gave no clue how fresh the reading was.
     const stamp = $('#fngDate', el);
     if (stamp && now.timestamp) stamp.textContent = `به تاریخ ${dateTime(now.timestamp / 1000, false)}`;
     $('#fng', el).innerHTML = `${gauge(now.value, now.classification)}
@@ -141,7 +139,7 @@ export async function render(el) {
 
   const loadTrending = async () => {
     let t;
-    try { t = await getTrending(); } catch (e) {
+    try { t = awaitgetTrending(); } catch (e) {
       if (!disposed) $('#trending', el).innerHTML = `<p class="muted">داده‌های ترند در دسترس نیست: ${esc(e?.message || 'منبع در دسترس نیست')}.</p>`;
       return;
     }
