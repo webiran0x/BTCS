@@ -5,36 +5,27 @@ import { esc } from '../format.js';
 import { auth, sb, isPremium, isAdmin, getAppSettings, cachedAppSettings, getPosts, callFn } from '../api/backend.js';
 import { openAuth } from './auth.js';
 
-export const title = 'Premium';
+export const title = 'اشتراک ویژه';
 
-// Two of these described things the app no longer claims to do. "Buy / sell
-// signals" was sold as a feature after the score behind it was measured to
-// point the wrong way, and "VIP trade ideas" promised a curated tier that does
-// not exist — the levels are the same ones every visitor sees. Selling either
-// would be charging for a claim the testing does not support.
 const FREE = [
-  'Live prices from 10 exchanges, Binance included',
-  'Candlestick charts with 12 indicators',
-  'Chart readings with entry zone, stop-loss and targets',
-  'AI forecast published next to the baseline it has to beat',
-  'History & cycles: past-pattern comparison',
-  'Portfolio, watch-only wallets and watchlist sync',
-  '3 server-side price alerts',
+  'قیمت‌های لحظه‌ای از ۱۰ صرافی شامل بایننس',
+  'نمودارهای شمعی با ۱۲ اندیکاتور',
+  'تحلیل‌های نمودار با منطقه ورود، حد ضرر و اهداف',
+  'پیش‌بینی هوش مصنوعی در کنار مبنایی که باید آن را شکست دهد',
+  'تاریخچه و چرخه‌ها: مقایسه الگوی گذشته',
+  'همگام‌سازی سبد دارایی، کیف پول‌های فقط-تماشا و لیست پیگیری',
+  '۳ هشدار قیمتی سمت سرور',
 ];
 const PAID = [
-  'Everything in Free',
-  'Up to 50 server-side alerts (e-mail + Telegram)',
-  'Signal alerts delivered by e-mail and Telegram with the browser closed',
-  'Full track record with per-coin breakdown and CSV export',
-  'Priority access to new features',
+  'همه امکانات نسخه رایگان',
+  'تا ۵۰ هشدار سمت سرور (ایمیل + تلگرام)',
+  'هشدارهای سیگنال ارسالی از طریق ایمیل و تلگرام در زمان بسته بودن مرورگر',
+  'سوابق کامل به تفکیک هر ارز و خروجی CSV',
+  'دسترسی اولویت‌دار به قابلیت‌های جدید',
 ];
 
 export async function render(el) {
   await sb();
-  // The page used to stay blank until two requests had come back, which on a
-  // slow connection was seconds of nothing. It is now drawn at once from the
-  // settings this browser last saw (or the defaults), and drawn again only if
-  // the server's answer, or the list of trade ideas, turns out to differ.
   let drawn = null;
   const draw = (settings, posts) => {
     const key = JSON.stringify([settings.premium || null, settings.site?.contact || null, posts]);
@@ -46,55 +37,55 @@ export async function render(el) {
     const ideas = posts.filter((x) => x.kind === 'idea');
 
     el.innerHTML = `
-      <div class="page-head"><div><h1>Premium</h1><p>The analysis stays free. Premium pays for the parts that run on a server while your browser is closed — alerts and tracking.</p></div></div>
+      <div class="page-head" dir="rtl"><div><h1>اشتراک ویژه</h1><p>تحلیل‌ها رایگان می‌مانند. اشتراک ویژه هزینه بخش‌هایی را پرداخت می‌کند که در زمان بسته بودن مرورگر روی سرور اجرا می‌شوند — مانند هشدارها و پیگیری.</p></div></div>
 
       ${isAdmin()
-        ? '<div class="card" style="border-color:var(--accent)"><div class="row spread"><div><h3>You own this site — Premium is free for you</h3><p class="fine">Your admin account has every Premium feature permanently, at no cost. This page is what your visitors see.</p></div><span class="chip warn">Owner</span></div></div>'
-        : already ? '<div class="card" style="border-color:var(--up)"><div class="row spread"><div><h3>Premium is active on your account</h3><p class="fine">Manage it on the <a href="#/account">account page</a>.</p></div><span class="chip up">Active</span></div></div>' : ''}
+        ? '<div class="card" style="border-color:var(--accent)" dir="rtl"><div class="row spread"><div><h3>شما مالک این سایت هستید — اشتراک ویژه برای شما رایگان است</h3><p class="fine">حساب مدیریتی شما به صورت دائم و رایگان به تمامی قابلیت‌های ویژه دسترسی دارد. این صفحه همان چیزی است که بازدیدکنندگان شما می‌بینند.</p></div><span class="chip warn">مدیر</span></div></div>'
+        : already ? '<div class="card" style="border-color:var(--up)" dir="rtl"><div class="row spread"><div><h3>اشتراک ویژه روی حساب شما فعال است</h3><p class="fine">آن را در <a href="#/account">صفحه حساب کاربری</a> مدیریت کنید.</p></div><span class="chip up">فعال</span></div></div>' : ''}
 
-      <div class="price-grid mt">
+      <div class="price-grid mt" dir="rtl">
         <div class="plan-card">
-          <h2>Free</h2>
-          <div class="amt">$0</div>
-          <p class="fine">Forever. No card, no sign-up needed to browse.</p>
+          <h2>رایگان</h2>
+          <div class="amt">۰ تومان</div>
+          <p class="fine">برای همیشه. بدون نیاز به کارت بانکی یا ثبت‌نام برای مرور.</p>
           <ul class="feat">${FREE.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
         </div>
         <div class="plan-card hero">
-          <div class="row spread"><h2>Premium</h2><span class="chip warn">${icon('star', 12)} Most popular</span></div>
-          <div class="amt">${esc(p.currency === 'USD' ? '$' : '')}${esc(String(p.price ?? 19))}${p.currency !== 'USD' ? ` ${esc(p.currency)}` : ''} <small class="fine">/ ${esc(String(p.period_days || 30))} days</small></div>
-          <p class="fine">One-off payment, no auto-renewal. Extend whenever you want.</p>
+          <div class="row spread"><h2>اشتراک ویژه</h2><span class="chip warn">${icon('star', 12)} محبوب‌ترین</span></div>
+          <div class="amt">${esc(p.currency === 'USD' ? '$' : '')}${esc(String(p.price ?? 19))}${p.currency !== 'USD' ? ` ${esc(p.currency)}` : ''} <small class="fine">/ ${esc(String(p.period_days || 30))} روز</small></div>
+          <p class="fine">پرداخت یک‌باره، بدون تمدید خودکار. هر زمان که خواستید تمدید کنید.</p>
           <ul class="feat">${PAID.map((f) => `<li>${esc(f)}</li>`).join('')}${(p.perks || []).filter((x) => !PAID.includes(x)).map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
           <div class="stack mt" style="gap:8px">
-            <button class="btn primary" id="buy">${already ? 'Extend Premium' : 'Get Premium'}</button>
+            <button class="btn primary" id="buy">${already ? 'تمدید اشتراک ویژه' : 'خرید اشتراک ویژه'}</button>
             <p class="fine" id="buyMsg"></p>
           </div>
         </div>
       </div>
 
-      ${ideas.length ? `<div class="card mt"><div class="card-h"><h3>Latest trade ideas</h3><span class="fine">${already ? 'Full details unlocked' : 'Entry, stop and targets are Premium'}</span></div>
+      ${ideas.length ? `<div class="card mt" dir="rtl"><div class="card-h"><h3>آخرین ایده‌های معاملاتی</h3><span class="fine">${already ? 'جزئیات کامل باز شد' : 'نقطه ورود، حد ضرر و اهداف مخصوص اعضای ویژه است'}</span></div>
         <div class="stack" style="gap:10px">${ideas.map((i) => `
           <div style="padding:12px;border-radius:10px;background:var(--surface-2)">
             <div class="row spread"><b>${esc(i.title)}</b><span class="chip ${i.side === 'long' ? 'up' : i.side === 'short' ? 'down' : ''}">${esc(i.symbol || '')} ${esc(i.side || '')}</span></div>
             ${i.locked
-              ? '<p class="fine warn" style="margin:6px 0 0">🔒 The reasoning, entry, stop-loss and targets are Premium-only.</p>'
+              ? '<p class="fine warn" style="margin:6px 0 0">🔒 استدلال، نقطه ورود، حد ضرر و اهداف فقط برای اعضای ویژه است.</p>'
               : `<p class="fine" style="margin:6px 0 0">${esc((i.body || '').slice(0, 220))}${(i.body || '').length > 220 ? '…' : ''}</p>
-                 <p class="fine" style="margin:6px 0 0">Entry ${esc(String(i.entry ?? '—'))} · Stop ${esc(String(i.stop_loss ?? '—'))} · Targets ${esc((i.targets || []).join(', ') || '—')}</p>`}
+                 <p class="fine" style="margin:6px 0 0">ورود ${esc(String(i.entry ?? '—'))} · حد ضرر ${esc(String(i.stop_loss ?? '—'))} · اهداف ${esc((i.targets || []).join(', ') || '—')}</p>`}
           </div>`).join('')}</div></div>` : ''}
 
-      <div class="card mt">
-        <h3>What Premium is not</h3>
-        <p class="fine">It is not a guarantee, a managed account or a trading bot. ${esc('BTCS')} never places trades and never asks for exchange API keys, private keys or seed phrases. Signals and forecasts are estimates from public market data, and the measured accuracy is published on the <a href="#/track">track record</a> page — read it before paying for anything.</p>
-        ${site.contact ? `<p class="fine">Questions: <b>${esc(site.contact)}</b></p>` : ''}
+      <div class="card mt" dir="rtl">
+        <h3>اشتراک ویژه چه چیزی نیست</h3>
+        <p class="fine">این یک تضمین، حساب مدیریت‌شده یا ربات معاملاتی نیست. ${esc('BTCS')} هرگز معامله‌ای انجام نمی‌دهد و هرگز کلیدهای API صرافی، کلیدهای خصوصی یا عبارات بازیابی (Seed) را درخواست نمی‌کند. سیگنال‌ها و پیش‌بینی‌ها برآوردهایی از داده‌های عمومی بازار هستند و دقت اندازه‌گیری‌شده در صفحه <a href="#/track">سوابق</a> منتشر شده است — قبل از پرداخت هر هزینه‌ای آن را مطالعه کنید.</p>
+        ${site.contact ? `<p class="fine">سؤالات: <b>${esc(site.contact)}</b></p>` : ''}
       </div>`;
 
     $('#buy', el).addEventListener('click', async () => {
       if (!auth.user) { openAuth('up'); return; }
       const msg = $('#buyMsg', el);
       if (!p.stripe_enabled) {
-        msg.innerHTML = esc(p.manual_payment_text || 'Card payments are not enabled yet — contact the site owner to activate Premium manually.');
+        msg.innerHTML = esc(p.manual_payment_text || 'پرداخت با کارت هنوز فعال نشده است — برای فعال‌سازی دستی اشتراک ویژه با مالک سایت تماس بگیرید.');
         return;
       }
-      msg.textContent = 'Opening secure checkout…';
+      msg.textContent = 'در حال باز کردن درگاه پرداخت امن...';
       try {
         const r = await callFn('account', { action: 'checkout', return_url: location.href });
         location.href = r.url;
