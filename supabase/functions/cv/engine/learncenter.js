@@ -1,44 +1,44 @@
-// AI learning center: one place where the app learns from its own calls.
+// مرکز یادگیری هوش مصنوعی: مکانی که در آن برنامه از فراخوان‌های خود یاد می‌گیرد.
 //
-// Three things are scored against what the market actually did:
-//   1. every indicator's reading (RSI oversold → expects up, Supertrend down →
-//      expects down, …),
-//   2. the forecast engine's direction,
-//   3. a "learned blend" that combines the forecast with only those indicators
-//      that have earned it on this device.
-// The blend's weights come from the scores, so the system changes its own
-// decisions as evidence arrives — and it is scored itself, so if learning
-// does not help, the page says so.
+// سه مورد در مقایسه با عملکرد واقعی بازار امتیازدهی می‌شوند:
+//   ۱. خوانش هر اندیکاتور (اشباع فروش RSI → انتظار صعود، ابر فوق‌العاده نزولی →
+//      انتظار نزول، …)،
+//   ۲. جهت پیش‌بینی موتور پیش‌بینی،
+//   ۳. «ترکیب یادگرفته‌شده» که پیش‌بینی را تنها با آن دسته از اندیکاتورهایی ترکیب می‌کند
+//      که اعتبار خود را روی این دستگاه اثبات کرده‌اند.
+// وزن‌های این ترکیب از امتیازها به دست می‌آیند، بنابراین سیستم با دریافت شواهد،
+// تصمیمات خود را تغییر می‌دهد — و خود این سیستم نیز امتیازدهی می‌شود، بنابراین اگر یادگیری
+// کمکی نکند، صفحه آن را اعلام می‌کند.
 //
-// Honesty rules: every rate ships with its sample size and a 95% range; a
-// reading only gets a vote when that range sits clearly above (or below) a
-// coin flip; nothing here is ever rounded up or invented. "Recent history"
-// numbers are measured on past candles right now; "live" numbers are calls
-// this device logged BEFORE their outcome was known.
+// قوانین صداقت: هر نرخ با اندازه نمونه و بازه ۹۵٪ آن ارائه می‌شود؛ یک
+// خوانش تنها زمانی حق رأی دریافت می‌کند که بازه مذکور به وضوح بالاتر (یا پایین‌تر) از
+// احتمال یک پرتاب سکه باشد؛ هیچ‌چیز در اینجا گرد یا ابداع نمی‌شود. اعداد «سابقه اخیر»
+// همین حالا روی کندل‌های گذشته اندازه‌گیری می‌شوند؛ اعداد «زنده» فراخوان‌هایی هستند که این
+// دستگاه پیش از مشخص شدن نتیجه ثبت کرده است.
 
 import { computeAll } from './indicators.js';
 
 export const LEARN_VERSION = 1;
-const CAP = 2000;          // max rows kept on device (localStorage is small)
-const MIN_N = 30;          // calls before a reading may earn a vote
+const CAP = 2000;          // حداکثر رکوردهای نگهداری‌شده روی دستگاه (حافظه محلی کوچک است)
+const MIN_N = 30;          // حداقل تعداد فراخوان پیش از اینکه یک خوانش حق رأی کسب کند
 
-/** Human names and what each vote means, for the page. */
+/** نام‌های انسانی و معنای هر رأی برای صفحه. */
 export const INDICATORS = {
-  rsi: { name: 'RSI(14) extremes', rule: 'under 30 → up · over 70 → down' },
-  macd: { name: 'MACD histogram', rule: 'above zero → up · below → down' },
-  ema200: { name: 'Price vs 200 EMA', rule: 'above → up · below → down' },
-  emaCross: { name: 'EMA 20 vs 50', rule: '20 above 50 → up · below → down' },
-  supertrend: { name: 'Supertrend', rule: 'trend up → up · down → down' },
-  stoch: { name: 'Stochastic RSI', rule: 'K under 20 → up · over 80 → down' },
-  mfi: { name: 'Money Flow Index', rule: 'under 20 → up · over 80 → down' },
-  cci: { name: 'CCI(20)', rule: 'under −100 → up · over 100 → down' },
-  willr: { name: 'Williams %R', rule: 'under −80 → up · over −20 → down' },
-  bollinger: { name: 'Bollinger bands', rule: 'close under lower → up · over upper → down' },
-  donchian: { name: 'Donchian breakout', rule: 'new 20-bar high → up · new low → down' },
-  adx: { name: 'ADX + DI (trending only)', rule: 'ADX 25+: +DI leads → up · −DI leads → down' },
+  rsi: { name: 'RSI(14) extremes', rule: 'زیر ۳۰ → صعود · بالای ۷۰ → نزول' },
+  macd: { name: 'MACD histogram', rule: 'بالای صفر → صعود · پایین صفر → نزول' },
+  ema200: { name: 'Price vs 200 EMA', rule: 'بالا → صعود · پایین → نزول' },
+  emaCross: { name: 'EMA 20 vs 50', rule: 'میانگین ۲۰ بالای ۵۰ → صعود · پایین‌تر → نزول' },
+  supertrend: { name: 'Supertrend', rule: 'روند صعودی → صعود · نزولی → نزول' },
+  stoch: { name: 'Stochastic RSI', rule: 'K زیر ۲۰ → صعود · بالای ۸۰ → نزول' },
+  mfi: { name: 'Money Flow Index', rule: 'زیر ۲۰ → صعود · بالای ۸۰ → نزول' },
+  cci: { name: 'CCI(20)', rule: 'زیر ۱۰۰- → صعود · بالای ۱۰۰ → نزول' },
+  willr: { name: 'Williams %R', rule: 'زیر ۸۰- → صعود · بالای ۲۰- → نزول' },
+  bollinger: { name: 'Bollinger bands', rule: 'قیمت بسته شده زیر باند پایینی → صعود · بالای بالایی → نزول' },
+  donchian: { name: 'Donchian breakout', rule: 'سقف جدید ۲۰ کندلی → صعود · کف جدید → نزول' },
+  adx: { name: 'ADX + DI (فقط در حال روند)', rule: 'ADX بالای ۲۵: پیشتازی DI+ → صعود · پیشتازی DI- → نزول' },
 };
 
-/** Each indicator's call on bar i: +1 expects up, -1 expects down, 0 no call. */
+/** رأی هر اندیکاتور در کندل i: مثبت ۱ انتظار صعود، منفی ۱ انتظار نزول، صفر بدون رأی. */
 export function indicatorVotes(candles, ind, i) {
   const c = candles[i]?.c;
   const v = {};
@@ -59,7 +59,7 @@ export function indicatorVotes(candles, ind, i) {
   return v;
 }
 
-/** Wilson 95% interval for a hit rate. */
+/** بازه ویلسون ۹۵٪ برای نرخ برد. */
 export function wilson(hits, n) {
   if (!n) return [0, 1];
   const z = 1.96, p = hits / n, d = 1 + (z * z) / n;
@@ -70,23 +70,23 @@ export function wilson(hits, n) {
 function summarise(hits, n) {
   const [lo, hi] = wilson(hits, n);
   const rate = n ? hits / n : null;
-  // A reading earns a vote only with enough calls AND a 95% range clear of 50%.
-  const verdict = n < MIN_N ? 'too few calls' : lo > 0.5 ? 'right more often than not' : hi < 0.5 ? 'wrong more often than not' : 'no better than a coin flip';
-  const weight = n >= MIN_N && (lo > 0.5 || hi < 0.5) ? +(((rate - 0.5) * 4)).toFixed(3) : 0; // wrong-way readings get a negative weight: their call is inverted
+  // یک خوانش تنها زمانی حق رأی می‌گیرد که تعداد فراخوان‌ها کافی AND بازه ۹۵٪ آن کاملاً دور از ۵۰٪ باشد.
+  const verdict = n < MIN_N ? 'تعداد فراخوان ناکافی' : lo > 0.5 ? 'درست در بیشتر اوقات' : hi < 0.5 ? 'نادرست در بیشتر اوقات' : 'عملکردی نه بهتر از پرتاب سکه';
+  const weight = n >= MIN_N && (lo > 0.5 || hi < 0.5) ? +(((rate - 0.5) * 4)).toFixed(3) : 0; // خوانش‌های اشتباه وزن منفی می‌گیرند: فراخوان آن‌ها معکوس خوانده می‌شود
   return { n, hits, rate: rate === null ? null : +(rate * 100).toFixed(1), lo: +(lo * 100).toFixed(1), hi: +(hi * 100).toFixed(1), verdict, weight };
 }
 
 /**
- * Measure every indicator on past candles right now: for each bar, did the
- * reading's direction match the close `horizon` bars later?
+ * اندازه‌گیری هر اندیکاتور روی کندل‌های گذشته در حال حاضر: برای هر کندل، آیا
+ * جهت خوانش با قیمت بسته شده در `horizon` کندل بعد مطابقت داشته است؟
  */
 export function measureOnHistory(candles, horizon) {
   if (!candles || candles.length < 260) return null;
   const ind = computeAll(candles);
   const tally = {};
   for (const key of Object.keys(INDICATORS)) tally[key] = { hits: 0, n: 0 };
-  // Calls never overlap: with half-overlapping windows one move was counted
-  // twice, the 95% range came out too narrow, and pure noise earned votes.
+  // فراخوان‌ها هرگز همپوشانی ندارند: با پنجره‌های نیمه‌همپوشان، یک حرکت دو بار شمرده می‌شود،
+  // بازه ۹۵٪ بیش از حد باریک می‌شود و نویز خالص حق رأی کسب می‌کند.
   const step = Math.max(1, horizon);
   for (let i = 210; i < candles.length - horizon; i += step) {
     const up = candles[i + horizon].c > candles[i].c ? 1 : -1;
@@ -96,17 +96,17 @@ export function measureOnHistory(candles, horizon) {
   return Object.fromEntries(Object.entries(tally).map(([k, t]) => [k, summarise(t.hits, t.n)]));
 }
 
-/** Merge several coins' history measurements into one table. */
+/** ادغام اندازه‌گیری‌های تاریخچه چند ارز در یک جدول واحد. */
 export function mergeMeasures(list) {
   const t = {};
   for (const m of list.filter(Boolean)) for (const [k, s] of Object.entries(m)) { (t[k] ||= { hits: 0, n: 0 }); t[k].hits += s.hits; t[k].n += s.n; }
   return Object.fromEntries(Object.entries(t).map(([k, x]) => [k, summarise(x.hits, x.n)]));
 }
 
-// ---------------------------------------------------------------- live ledger
+// ---------------------------------------------------------------- دفتر کل زنده
 export function newLearnLedger() { return { v: LEARN_VERSION, rows: [], changes: [], weights: {}, createdAt: Date.now() }; }
 
-/** Log this bar's calls before the outcome is known. One row per coin/timeframe/bar. */
+/** ثبت فراخوان‌های این کندل پیش از مشخص شدن نتیجه. یک سطر به ازای هر ارز/تایم‌فریم/کندل. */
 export function recordCalls(ledger, { symbol, interval, t, price, horizonAt, votes, forecastProb = null, blendProb = null }) {
   const L = ledger?.rows ? ledger : newLearnLedger();
   const id = `${symbol}:${interval}:${t}`;
@@ -116,7 +116,7 @@ export function recordCalls(ledger, { symbol, interval, t, price, horizonAt, vot
   return { ...L, rows };
 }
 
-/** Score rows whose horizon has passed, using closes the caller has. */
+/** امتیازدهی به سطرهایی که افق زمانی آن‌ها گذشته است، با استفاده از قیمت‌های بسته‌شده در اختیار فراخوان‌کننده. */
 export function resolveCalls(ledger, candles, { symbol, interval }) {
   if (!ledger?.rows?.length || !candles?.length) return ledger;
   const lastT = candles[candles.length - 1].t;
@@ -132,7 +132,7 @@ export function resolveCalls(ledger, candles, { symbol, interval }) {
   return changed ? { ...ledger, rows } : ledger;
 }
 
-/** Live scores on this device: every indicator, the forecast, and the learned blend. */
+/** امتیازهای زنده روی این دستگاه: هر اندیکاتور، پیش‌بینی، و ترکیب یادگرفته‌شده. */
 export function liveScores(ledger, interval = null) {
   const tally = { forecast: { hits: 0, n: 0 }, blend: { hits: 0, n: 0 } };
   for (const key of Object.keys(INDICATORS)) tally[key] = { hits: 0, n: 0 };
@@ -146,9 +146,9 @@ export function liveScores(ledger, interval = null) {
 }
 
 /**
- * The weights the blend uses. Live evidence on this device takes over from
- * the history measurement as it accumulates (each is weighted by its sample
- * size); a reading with no clear record gets 0.
+ * وزن‌هایی که ترکیب از آن‌ها استفاده می‌کند. شواهد زنده روی این دستگاه با جمع‌آوری داده‌ها،
+ * جایگزین اندازه‌گیری تاریخچه می‌شوند (هرکدام بر اساس اندازه نمونه خود وزن‌دهی می‌شوند)؛
+ * خوانشی که سابقه روشنی نداشته باشد وزن صفر می‌گیرد.
  */
 export function learnedWeights(history, live) {
   const w = {};
@@ -160,7 +160,7 @@ export function learnedWeights(history, live) {
   return w;
 }
 
-/** Combine the forecast with the indicators that earned a vote. Returns P(up). */
+/** ترکیب پیش‌بینی با اندیکاتورهایی که حق رأی کسب کرده‌اند. بازگرداندن P(up) (احتمال صعود). */
 export function blend(forecastProb, votes, weights) {
   let s = Number.isFinite(forecastProb) ? (forecastProb - 0.5) * 2 : 0;
   let wsum = Number.isFinite(forecastProb) ? 1 : 0;
@@ -169,28 +169,28 @@ export function blend(forecastProb, votes, weights) {
   return Math.min(0.95, Math.max(0.05, 0.5 + (s / Math.max(wsum, 1)) / 2));
 }
 
-/** Note what changed in the weights, so the page can show the system deciding. */
+/** یادداشت تغییرات ایجادشده در وزن‌ها، تا صفحه بتواند روند تصمیم‌گیری سیستم را نمایش دهد. */
 export function diffWeights(before = {}, after = {}) {
   const out = [];
   for (const k of Object.keys(INDICATORS)) {
     const a = before[k] || 0, b = after[k] || 0;
-    if (!a && b) out.push(`${INDICATORS[k].name} earned a vote (weight ${b > 0 ? '+' : ''}${b})${b < 0 ? ' — it has been wrong more often than right, so its call is now read in reverse' : ''}`);
-    else if (a && !b) out.push(`${INDICATORS[k].name} lost its vote — its record fell back to coin-flip range`);
-    else if (a && b && Math.abs(a - b) >= 0.1) out.push(`${INDICATORS[k].name} weight ${a > 0 ? '+' : ''}${a} → ${b > 0 ? '+' : ''}${b}`);
+    if (!a && b) out.push(`${INDICATORS[k].name} حق رأی کسب کرد (وزن ${b > 0 ? '+' : ''}${b})${b < 0 ? ' — عملکرد این اندیکاتور بیشتر نادرست بوده تا درست، بنابراین سیگنال آن اکنون به طور معکوس خوانده می‌شود' : ''}`);
+    else if (a && !b) out.push(`${INDICATORS[k].name} حق رأی خود را از دست داد — سابقه آن به محدوده پرتاب سکه بازگشت`);
+    else if (a && b && Math.abs(a - b) >= 0.1) out.push(`وزن ${INDICATORS[k].name} از ${a > 0 ? '+' : ''}${a} به ${b > 0 ? '+' : ''}${b} تغییر کرد`);
   }
   return out;
 }
 
-// ---------------------------------------------------------------- champion / challenger
+// ---------------------------------------------------------------- قهرمان / رقیب (champion / challenger)
 /**
- * The blend is tested walk-forward (tools/evaluate-learning.mjs, on the same
- * forecasts as the latest forecast re-check, weights learned only from
- * candles before each forecast). 2026-09-26, 1,440 forecasts on 12 coins: it
- * tied the plain forecast (53.9% each). 2026-10-15, 5,710 forecasts on 106
- * coins: 49.5% against 49.6%, better only on 4h. Neither is a reason to
- * switch, so the forecast starts as the champion and the blend has to beat it
- * on this device's own live record first. `indicatorsAlone`: each indicator's
- * own call at the same test points, where it made one.
+ * ترکیب به صورت گام‌به‌گام (Walk-forward) تست شده است (در tools/evaluate-learning.mjs، روی همان
+ * پیش‌بینی‌های آخرین بازبینی پیش‌بینی، با وزن‌هایی که صرفاً از کندل‌های
+ * پیش از هر پیش‌بینی یاد گرفته شده‌اند). تاریخ 2026-09-26، تعداد ۱,۴۴۰ پیش‌بینی روی ۱۲ ارز:
+ * مساوی با پیش‌بینی ساده (هرکدام ۵۳.۹٪). تاریخ 2026-10-15، تعداد ۵,۷۱۰ پیش‌بینی روی ۱۰۶
+ * ارز: ۴۹.۵٪ در برابر ۴۹.۶٪، و عملکرد بهتر تنها در تایم‌فریم ۴ ساعته. هیچ‌کدام دلیلی برای تغییر
+ * نیستند، بنابراین پیش‌بینی به عنوان قهرمان شروع می‌کند و ترکیب باید ابتدا آن را
+ * روی سابقه زنده خود دستگاه شکست دهد. `indicatorsAlone`: فراخوان خود اندیکاتور
+ * در همان نقاط تست، در صورت وجود.
  */
 export const LEARN_TESTED = {
   tests: 5710, coins: 106, forecast: 49.6, blend: 49.5,
@@ -199,15 +199,15 @@ export const LEARN_TESTED = {
   measuredOn: '2026-10-15',
 };
 
-export const SWITCH_MIN = 100;   // resolved live calls before a switch is considered
-export const SWITCH_GAP = 3;     // points the challenger must lead by
+export const SWITCH_MIN = 100;   // حداقل فراخوان‌های زنده تعیین‌تکلیف‌شده پیش از بررسی تعویض
+export const SWITCH_GAP = 3;     // اختلاف امتیازی که رقیب باید جلوتر باشد
 
-/** Which method should make the call, given the live record. */
+/** تعیین اینکه کدام روش با توجه به سابقه زنده باید تصمیم‌گیری کند. */
 export function decideChampion(live, current = 'forecast') {
   const f = live?.forecast, b = live?.blend;
-  if (!f || !b || f.n < SWITCH_MIN || b.n < SWITCH_MIN) return { champion: current, reason: `Needs ${SWITCH_MIN} resolved calls from each method before it can switch (forecast ${f?.n || 0}, blend ${b?.n || 0}).` };
+  if (!f || !b || f.n < SWITCH_MIN || b.n < SWITCH_MIN) return { champion: current, reason: `نیاز به حداقل ${SWITCH_MIN} فراخوان تعیین‌تکلیف‌شده از هر روش پیش از امکان تغییر (پیش‌بینی ${f?.n || 0}، ترکیب ${b?.n || 0}).` };
   const lead = (x, y) => x.rate - y.rate >= SWITCH_GAP && x.lo > y.rate;
-  if (current === 'forecast' && lead(b, f)) return { champion: 'blend', switched: true, reason: `The learned blend was right ${b.rate}% of the time against ${f.rate}% for the forecast over ${b.n} live calls, and its 95% range (${b.lo}–${b.hi}%) sits above the forecast's rate.` };
-  if (current === 'blend' && !(b.rate >= f.rate)) return { champion: 'forecast', switched: true, reason: `The learned blend fell back to ${b.rate}% against the forecast's ${f.rate}%, so the forecast makes the call again.` };
-  return { champion: current, reason: current === 'forecast' ? `The blend is at ${b.rate}% and the forecast at ${f.rate}% — not a clear enough lead to switch.` : `The blend is still ahead (${b.rate}% vs ${f.rate}%).` };
+  if (current === 'forecast' && lead(b, f)) return { champion: 'blend', switched: true, reason: `ترکیب یادگرفته‌شده در ${b.n} فراخوان زنده با نرخ ${b.rate}٪ در برابر ${f.rate}٪ پیش‌بینی موفق بوده و بازه ۹۵٪ آن (${b.lo}–${b.hi}٪) بالاتر از نرخ پیش‌بینی قرار دارد.` };
+  if (current === 'blend' && !(b.rate >= f.rate)) return { champion: 'forecast', switched: true, reason: `نرخ ترکیب یادگرفته‌شده به ${b.rate}٪ در برابر ${f.rate}٪ پیش‌بینی کاهش یافت، بنابراین موتور پیش‌بینی مجدداً هدایت را به دست می‌گیرد.` };
+  return { champion: current, reason: current === 'forecast' ? `ترکیب دارای نرخ ${b.rate}٪ و پیش‌بینی دارای ${f.rate}٪ است — این اختلاف برای جابجایی کافی نیست.` : `ترکیب همچنان پیشتاز است (${b.rate}٪ در برابر ${f.rate}٪).` };
 }
