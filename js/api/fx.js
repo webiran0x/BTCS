@@ -1,6 +1,4 @@
 // Display currency: everything is priced in USD upstream and converted here.
-
-// /Users/work/Downloads/BTCSir/js/api/fx.js
 import { CONFIG } from '../config.js';
 import { settings } from '../store.js';
 
@@ -18,7 +16,7 @@ export function rates() {
 
       let ratesData = { USD: 1 };
 
-      // ۱. دریافت نرخ ارزهای جهانی (دلار، یورو و غیره)
+      // ۱. دریافت نرخ ارزهای جهانی
       try {
         const r = await fetch('https://open.er-api.com/v6/latest/USD').then((x) => x.json());
         if (r.result === 'success' && r.rates) {
@@ -36,23 +34,18 @@ export function rates() {
         } catch { /* آفلاین */ }
       }
 
-      // ۲. دریافت نرخ دقیق تومان و ریال از API عمومی نوبیتکس (بر اساس قیمت تتر در بازار تومان)
+      // ۲. دریافت نرخ دقیق تومان و ریال از API عمومی نوبیتکس (بر اساس قیمت تتر)
       try {
-        // مطابق مستندات نوبیتکس، اطلاعات عمومی بازار (مانند تتر به تومان: usdtirt) نیاز به کلید و امضا ندارد
         const nobitexRes = await fetch('https://api.nobitex.ir/v2/orderbook/USDTIRT').then((x) => x.json());
-        
         if (nobitexRes && nobitexRes.status === 'ok' && nobitexRes.lastTradePrice) {
-          // قیمت آخرین معامله تتر به تومان در نوبیتکس
           const usdtToman = parseFloat(nobitexRes.lastTradePrice);
-          
           if (usdtToman > 0) {
-            // از آنجایی که پایه سیستم USD است، نرخ IRT برابر با قیمت یک دلار/تتر به تومان خواهد بود
             ratesData['IRT'] = usdtToman;
-            ratesData['IRR'] = usdtToman * 10; // هر تومان معادل ۱۰ ریال است
+            ratesData['IRR'] = usdtToman * 10;
           }
         }
-      } catch (err) {
-        // اگر ارتباط با نوبیتکس برقرار نشد یا خطا داد، از مقدار ذخیره‌شده قبلی یا مقدار پیش‌فرض استفاده می‌کنیم
+      } catch {
+        // حالت پشتیبان در صورت عدم دسترسی به نوبیتکس
         ratesData['IRT'] = cached?.rates?.IRT || 70000;
         ratesData['IRR'] = cached?.rates?.IRR || 700000;
       }
