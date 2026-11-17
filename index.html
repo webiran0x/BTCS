@@ -46,7 +46,7 @@
   <link rel="modulepreload" href="js/config.js">
   <link rel="modulepreload" href="js/deps.js">
   <link rel="modulepreload" href="js/format.js">
-  <link rel="modulepreload, href="js/i18n.js">
+  <link rel="modulepreload" href="js/i18n.js">
   <link rel="modulepreload" href="js/lib/barrier.js">
   <link rel="modulepreload" href="js/lib/cloudlearn.js">
   <link rel="modulepreload" href="js/lib/cloudsync.js">
@@ -58,6 +58,41 @@
   <link rel="modulepreload" href="js/lib/signals.js">
   <link rel="modulepreload" href="js/store.js">
   <link rel="modulepreload" href="js/ui.js">
+
+  <style>
+    /* قرارگیری سایدبار در سمت راست و محتوای اصلی در سمت چپ */
+    .app {
+      display: flex;
+      flex-direction: row;
+      direction: rtl;
+    }
+
+    @media (min-width: 900px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        right: 0 !important;
+        left: auto !important;
+        width: 260px;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: none !important;
+      }
+
+      .main {
+        margin-right: 260px !important;
+        margin-left: 0 !important;
+        width: calc(100% - 260px);
+      }
+    }
+
+    /* قرارگیری دکمه و پنجره چت سریع در سمت چپ پایین */
+    .chat-fab,
+    .chat-panel {
+      left: 20px !important;
+      right: auto !important;
+    }
+  </style>
 </head>
 <body>
   <a class="skip-link" href="#view">پرش به محتوا</a>
