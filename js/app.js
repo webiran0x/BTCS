@@ -15,13 +15,16 @@ import { auth, sb, backendEnabled, isAdmin, signOut, pullUserData, pushUserData,
 import { createSync, SYNCED_KEYS, TRADING_KEYS } from './lib/cloudsync.js';
 import { DEPS } from './deps.js';
 
-// Clickjacking guard. GitHub Pages cannot send a frame-ancestors header and
-// browsers ignore that directive in a <meta> CSP, so a page inside another
-// site's frame hides itself. Same-origin frames (the portfolio on the same
-// github.io host) are allowed: reading top.location only works for them.
+// تنظیم اجباری جهت راست‌به‌چین و زبان فارسی در سند اصلی
+if (typeof document !== 'undefined') {
+  document.documentElement.dir = 'rtl';
+  document.documentElement.lang = 'fa';
+}
+
+// محافظت در برابر Clickjacking
 if (typeof window !== 'undefined' && window.top !== window.self) {
   let sameOrigin = false;
-  try { sameOrigin = window.top.location.origin === window.location.origin; } catch { /* another site */ }
+  try { sameOrigin = window.top.location.origin === window.location.origin; } catch { /* دامنه دیگر */ }
   if (!sameOrigin) document.documentElement.style.visibility = 'hidden';
 }
 
@@ -43,11 +46,9 @@ const NAV = [
   { path: 'premium', label: 'اشتراک ویژه', icon: 'star', short: 'ویژه' },
 ];
 const ADMIN_NAV = { path: 'admin', label: 'مدیریت', icon: 'chip', short: 'مدیریت' };
-// Four destinations plus "More" — five cells, which is what fits a phone row.
 const MOBILE = ['', 'advice', 'ai', 'wallet'];
 
-
-// Route name → page module in js/views/.
+// نگاشت مسیرها به ماژول‌های صفحه در js/views/
 const VIEWS = {
   '': 'markets',
   coin: 'coin',
@@ -91,19 +92,20 @@ function renderNav() {
 function openMore() {
   const cur = location.hash.replace(/^#\/?/, '').split('/')[0];
   const rest = navItems().filter((n) => !MOBILE.includes(n.path));
-  const m = modal(`<h3>${esc(t('منو'))}</h3>
-    <div class="sheet-grid">${rest.map((n) => `<a href="#/${n.path}" class="sheet-item ${cur === n.path ? 'on' : ''}">${icon(n.icon, 20)}<span>${esc(t(n.label))}</span></a>`).join('')}</div>
-    <div class="sheet-grid mt">
-      <a href="#/account" class="sheet-item">${icon('wallet', 20)}<span>${esc(t('حساب کاربری'))}</span></a>
-      <a href="#/legal/terms" class="sheet-item">${icon('info', 20)}<span>${esc(t('شرایط استفاده'))}</span></a>
-      <a href="#/legal/privacy" class="sheet-item">${icon('info', 20)}<span>${esc(t('سیاست حفظ حریم خصوصی'))}</span></a>
-      <a href="#/legal/risk" class="sheet-item">${icon('info', 20)}<span>${esc(t('بیانیه ریسک'))}</span></a>
+  const m = modal(`
+    <div dir="rtl" style="text-align:right">
+      <h3>${esc(t('منو'))}</h3>
+      <div class="sheet-grid">${rest.map((n) => `<a href="#/${n.path}" class="sheet-item ${cur === n.path ? 'on' : ''}">${icon(n.icon, 20)}<span>${esc(t(n.label))}</span></a>`).join('')}</div>
+      <div class="sheet-grid mt">
+        <a href="#/account" class="sheet-item">${icon('wallet', 20)}<span>${esc(t('حساب کاربری'))}</span></a>
+        <a href="#/legal/terms" class="sheet-item">${icon('info', 20)}<span>${esc(t('شرایط استفاده'))}</span></a>
+        <a href="#/legal/privacy" class="sheet-item">${icon('info', 20)}<span>${esc(t('سیاست حفظ حریم خصوصی'))}</span></a>
+        <a href="#/legal/risk" class="sheet-item">${icon('info', 20)}<span>${esc(t('بیانیه ریسک'))}</span></a>
+      </div>
     </div>`);
   $$('a', m.el).forEach((a) => a.addEventListener('click', () => m.close()));
 }
 
-// Ask for every module a page needs at once, rather than letting the browser
-// discover them one import level at a time.
 function preloadDeps(file) {
   for (const f of [file, ...(DEPS[file] || [])]) {
     const href = new URL(`./${f}`, import.meta.url).href;
@@ -115,13 +117,11 @@ function preloadDeps(file) {
   }
 }
 
-// `keepScroll` redraws the page in place (after a sync) instead of opening it at the top.
 async function route(opts) {
   const seq = ++routeSeq;
   const keep = opts?.keepScroll === true ? window.scrollY : null;
   const [name = '', ...params] = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
   const file = `views/${VIEWS[name] || VIEWS['']}.js`;
-  // the 3D world behind the page turns to each page's own view of the ring
   document.documentElement.dataset.page = VIEWS[name] ? name || 'markets' : 'markets';
   window.dispatchEvent(new CustomEvent('cv:route', { detail: { name: document.documentElement.dataset.page, params } }));
   preloadDeps(file);
@@ -129,10 +129,8 @@ async function route(opts) {
   if (typeof cleanup === 'function') { try { cleanup(); } catch (e) { console.error(e); } }
   cleanup = null;
   const view = $('#view');
-  // An address that names no page used to open Markets as if it were that page.
-  // (A sign-in token in the address, which contains "=", is not a page name.)
   if (name && !VIEWS[name] && !name.includes('=')) {
-    view.innerHTML = `<div class="card empty"><h3>صفحه پیدا نشد</h3><p>صفحه‌ای در مسیر <code>#/${esc(name)}</code> وجود ندارد. ممکن است لینک قدیمی باشد یا اشتباه تایپ شده باشد.</p><a class="btn primary" href="#/">بازگشت به بازارها</a></div>`;
+    view.innerHTML = `<div class="card empty" dir="rtl"><h3>صفحه پیدا نشد</h3><p>صفحه‌ای در مسیر <code dir="ltr">#/${esc(name)}</code> وجود ندارد. ممکن است لینک قدیمی باشد یا اشتباه تایپ شده باشد.</p><a class="btn primary" href="#/">بازگشت به بازارها</a></div>`;
     document.title = `صفحه پیدا نشد · ${CONFIG.APP_NAME}`;
     window.scrollTo({ top: 0 });
     return;
@@ -141,9 +139,8 @@ async function route(opts) {
   try {
     const mod = await import(`./${file}`);
     if (seq !== routeSeq) return;
-    // Each route renders into its own container, so a slow page that finishes
-    // after the user has navigated away writes into a detached node, not the new page.
     const host = document.createElement('div');
+    host.dir = 'rtl';
     view.replaceChildren(host);
     const done = await mod.render(host, params);
     if (seq !== routeSeq) { if (typeof done === 'function') done(); return; }
@@ -152,9 +149,7 @@ async function route(opts) {
   } catch (err) {
     console.error(err);
     if (seq === routeSeq) {
-      // inline onclick is blocked by the page CSP — this is the error screen, so
-      // a Reload button that silently does nothing is the worst place for it
-      view.innerHTML = `<div class="card empty"><h3>خطایی رخ داد</h3><p>${esc(err.message)}</p><button class="btn" id="errReload">بارگذاری مجدد</button></div>`;
+      view.innerHTML = `<div class="card empty" dir="rtl"><h3>خطایی رخ داد</h3><p>${esc(err.message)}</p><button class="btn" id="errReload">بارگذاری مجدد</button></div>`;
       document.getElementById('errReload')?.addEventListener('click', () => location.reload());
     }
   }
@@ -163,13 +158,9 @@ async function route(opts) {
   trackPageView(location.hash || '#/');
 }
 
-// The skip link's "#view" would be read by the hash router as a page name and
-// open Markets; it moves focus to the page content instead.
 document.querySelector('.skip-link')?.addEventListener('click', (e) => { e.preventDefault(); $('#view').focus(); });
 
 // ---------------------------------------------------------------- theme
-// One theme, the portfolio's: obsidian, ivory and champagne gold (css/app.css).
-// A theme saved by an older version is ignored.
 function applyTheme() {
   document.documentElement.dataset.theme = 'dark';
 }
@@ -177,9 +168,8 @@ function applyTheme() {
 // ---------------------------------------------------------------- search
 function initSearch() {
   const input = $('#searchInput'), box = $('#searchResults');
-  // The full hint was cut to "Search coi" on a phone.
   const narrow = matchMedia('(max-width: 600px)');
-  const hint = () => { input.placeholder = narrow.matches ? 'جستجو' : 'جستجوی رمزارز (BTC, Ethereum…)'; };
+  const hint = () => { input.placeholder = narrow.matches ? 'جستجو' : 'جستجوی رمزارز (BTC، اتریوم…)'; };
   hint();
   narrow.addEventListener('change', hint);
   let items = [], active = -1, seq = 0, timer = null;
@@ -190,14 +180,14 @@ function initSearch() {
   input.setAttribute('aria-expanded', 'false');
   box.setAttribute('role', 'listbox');
   box.setAttribute('aria-label', 'رمزارزهای منطبق');
+  box.setAttribute('dir', 'rtl');
   const draw = () => {
     box.hidden = !items.length;
     input.setAttribute('aria-expanded', String(!!items.length));
-    box.innerHTML = items.map((c, i) => `<a href="#/coin/${encodeURIComponent(c.symbol)}" id="sr-${i}" role="option" aria-selected="${i === active}" class="${i === active ? 'on' : ''}">${coinLogo(c, 22)}<b>${esc(c.name)}</b><span class="muted">${esc(c.symbol)}</span><span style="margin-left:auto">${money(c.price)}</span></a>`).join('');
+    // اصلاح margin-right:auto برای تراز صحیح قیمت در چیدمان راست‌به‌چین
+    box.innerHTML = items.map((c, i) => `<a href="#/coin/${encodeURIComponent(c.symbol)}" id="sr-${i}" role="option" aria-selected="${i === active}" class="${i === active ? 'on' : ''}">${coinLogo(c, 22)}<b>${esc(c.name)}</b><span class="muted">${esc(c.symbol)}</span><span style="margin-right:auto;direction:ltr">${money(c.price)}</span></a>`).join('');
     if (active >= 0) input.setAttribute('aria-activedescendant', `sr-${active}`); else input.removeAttribute('aria-activedescendant');
   };
-  // Debounced, and only the newest query may draw: a slow answer for "BT"
-  // used to land after the one for "BTC" and replace it.
   input.addEventListener('input', () => {
     clearTimeout(timer);
     const q = input.value.trim();
@@ -221,10 +211,6 @@ function initSearch() {
 }
 
 // ---------------------------------------------------------------- currency
-// The language switcher lived here. It translated the navigation and nothing
-// else — no view imports t() — so choosing Urdu left every page body in English
-// and the site half-translated. Removed rather than shipped in that state; the
-// dictionary in i18n.js is kept for when the content is actually translated.
 async function initSelectors() {
   const cur = $('#curSel');
   cur.innerHTML = CONFIG.CURRENCIES.map(([c, s]) => `<option value="${c}">${c} ${s}</option>`).join('');
@@ -253,13 +239,16 @@ function initAccount() {
   btn.addEventListener('click', async () => {
     if (!auth.user) { (await import('./views/auth.js')).openAuth(); return; }
     const p = auth.profile;
-    const m = modal(`<h3>${esc(p?.display_name || auth.user.email)}</h3>
-      <p class="muted" style="margin-top:-6px">${esc(t('وارد شده با حساب'))} ${esc(auth.user.email)}${p?.is_admin ? ' · <b>مدیر</b>' : ''}</p>
-      <div class="stack mt" style="gap:8px">
-        <a class="btn" href="#/account">${esc(t('حساب کاربری'))}</a>
-        <a class="btn" href="#/premium">${esc(t('اشتراک ویژه'))}</a>
-        ${p?.is_admin ? `<a class="btn" href="#/admin">${esc(t('مدیریت'))}</a>` : ''}
-        <button class="btn ghost" id="so">${esc(t('خروج از حساب'))}</button>
+    const m = modal(`
+      <div dir="rtl" style="text-align:right">
+        <h3>${esc(p?.display_name || auth.user.email)}</h3>
+        <p class="muted" style="margin-top:-6px">${esc(t('وارد شده با حساب'))} <span dir="ltr">${esc(auth.user.email)}</span>${p?.is_admin ? ' · <b>مدیر</b>' : ''}</p>
+        <div class="stack mt" style="gap:8px">
+          <a class="btn" href="#/account">${esc(t('حساب کاربری'))}</a>
+          <a class="btn" href="#/premium">${esc(t('اشتراک ویژه'))}</a>
+          ${p?.is_admin ? `<a class="btn" href="#/admin">${esc(t('مدیریت'))}</a>` : ''}
+          <button class="btn ghost" id="so">${esc(t('خروج از حساب'))}</button>
+        </div>
       </div>`);
     $$('a', m.el).forEach((a) => a.addEventListener('click', () => m.close()));
     $('#so', m.el).addEventListener('click', async () => { m.close(); await signOut(); toast('با موفقیت خارج شدید.', 'info'); });
@@ -270,10 +259,6 @@ function initAccount() {
 }
 
 // ---------------------------------------------------------------- cloud sync
-// What a signed-in user keeps (watchlist, portfolio, wallets, drawings, the
-// settings that follow the account, and the Trading page's three accounts)
-// merges with their account key by key; lib/cloudsync.js holds the rules.
-// Which pages show each piece, so a sync redraws only the page it changed.
 const SHOWN_ON = {
   '': ['watchlist'],
   coin: ['watchlist', 'drawings'],
@@ -293,7 +278,6 @@ const cloudSync = createSync({
     const s = settings.get();
     if (keys.includes('settings')) {
       applyTheme(s.theme || 'dark');
-      // A currency picked on another device: load its rate, then redraw in it.
       if (s.currency && s.currency !== fx.code) {
         setCurrency(s.currency).then((ok) => {
           if (!ok) return;
@@ -304,8 +288,6 @@ const cloudSync = createSync({
       }
     }
     const view = location.hash.replace(/^#\/?/, '').split('/')[0];
-    // Signing in redraws whatever is open; later syncs only redraw a page that
-    // shows what arrived, keeping the reader's place on it.
     if (redrawAll || keys.some((k) => (SHOWN_ON[view] || []).includes(k))) route({ keepScroll: !redrawAll });
     redrawAll = false;
   },
@@ -316,20 +298,16 @@ function syncNow({ signedIn = false } = {}) {
   clearTimeout(syncTimer);
   lastSyncAt = Date.now();
   if (signedIn) redrawAll = true;
-  cloudSync.sync().catch(() => { /* offline: this device's data stays as it is and goes up on the next sync */ })
+  cloudSync.sync().catch(() => { /* آفلاین: داده‌های دستگاه حفظ شده و در همگام‌سازی بعدی ارسال می‌شوند */ })
     .finally(() => { redrawAll = false; });
 }
 
-// An edit here goes up a moment later (several quick edits go up together).
 window.addEventListener('cv:store', (e) => {
   if (cloudSync.applying || !auth.user || !SYNCED_KEYS.includes(e.detail.key)) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(syncNow, 1200);
 });
 
-// Sync used to run only at sign-in, so a tab left open never saw what another
-// device changed. It now also runs on coming back to the tab, and every two
-// minutes while the tab is in view.
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && Date.now() - lastSyncAt > 20e3) syncNow();
 });
@@ -365,7 +343,7 @@ async function initTicker() {
 }
 
 function refreshTickerPrices() {
-  $('#ticker').innerHTML = tickerCoins.map((c) => `<a href="#/coin/${esc(c.symbol)}" data-pair="${c.binance}"><b>${esc(c.symbol)}</b><span class="p">${money(c.price)}</span>${changeHtml(c.change24h)}</a>`).join('');
+  $('#ticker').innerHTML = tickerCoins.map((c) => `<a href="#/coin/${esc(c.symbol)}" data-pair="${c.binance}" dir="ltr"><b>${esc(c.symbol)}</b><span class="p">${money(c.price)}</span>${changeHtml(c.change24h)}</a>`).join('');
 }
 
 function checkAlerts(pair, p) {
@@ -378,25 +356,19 @@ function checkAlerts(pair, p) {
       const dirText = a.dir === 'above' ? 'بالاتر از' : 'پایین‌تر از';
       const msg = `قیمت ${a.symbol} به ${dirText} ${money(a.price)} رسید (قیمت فعلی: ${money(p)})`;
       toast(`🔔 ${msg}`, a.dir === 'above' ? 'up' : 'down', 8000);
-      try { if (Notification.permission === 'granted') new Notification(`هشدار قیمت ${CONFIG.APP_NAME}`, { body: msg, icon: 'icon.svg' }); } catch { /* ignore */ }
+      try { if (Notification.permission === 'granted') new Notification(`هشدار قیمت ${CONFIG.APP_NAME}`, { body: msg, icon: 'icon.svg' }); } catch { /* نادیده گرفتن */ }
     }
   }
   if (changed) save('alerts', alerts);
 }
 
-// Alerts the server fired while the site was closed (e-mail / Telegram users),
-// and AI-signal alerts: the server records every firing, so they reach someone
-// with the site open (checked every two minutes) even before Telegram or
-// e-mail is set up.
-let alertsChecking = false; // sign-in and the two-minute check can overlap; one at a time, or both toast
+let alertsChecking = false;
 async function showTriggeredServerAlerts() {
   if (!auth.user || alertsChecking) return;
   alertsChecking = true;
   try {
     const [rows, ai] = await Promise.all([serverAlerts(), serverAiAlerts().catch(() => [])]);
     const seen = new Set(load('seenAlerts', []));
-    // Keyed by firing, not by alert: a repeating signal alert fires many times.
-    // Signal alerts used to come out as "BTC went null —".
     const key = (a) => `${a.id}:${a.triggered_at}`;
     const fresh = rows.filter((a) => a.triggered_at && !seen.has(key(a)) && !seen.has(a.id));
     for (const a of fresh.slice(0, 4)) {
@@ -413,16 +385,15 @@ async function showTriggeredServerAlerts() {
       const what = how === 'buy' ? 'خرید (BUY)' : how === 'sell' ? 'فروش (SELL)' : 'خرید یا فروش';
       const msg = `سیگنال هوش مصنوعی برای ${a.symbol} (نمودار ${a.interval}): پیشنهاد ${what} در قیمت ${money(+a.triggered_price)}، در تاریخ ${new Date(a.triggered_at).toLocaleString('fa-IR')}. این نتیجه بر اساس قوانین شبیه‌سازی است و پیش‌بینی قطعی نیست.`;
       toast(`🤖 ${msg}`, 'info', 10000);
-      try { if (Notification.permission === 'granted') new Notification(`سیگنال هوش مصنوعی ${CONFIG.APP_NAME}`, { body: msg, icon: 'icon.svg' }); } catch { /* ignore */ }
+      try { if (Notification.permission === 'granted') new Notification(`سیگنال هوش مصنوعی ${CONFIG.APP_NAME}`, { body: msg, icon: 'icon.svg' }); } catch { /* نادیده گرفتن */ }
       seen.add(`ai:${key(a)}`);
     }
     if (fresh.length || freshAi.length) save('seenAlerts', [...seen].slice(-200));
-  } catch { /* backend optional */ } finally { alertsChecking = false; }
+  } catch { /* بک‌اند اختیاری است */ } finally { alertsChecking = false; }
 }
 auth.addEventListener('change', showTriggeredServerAlerts);
 
 // ---------------------------------------------------------------- risk gate (shown once)
-
 function riskGate() {
   if (load('riskAck', false)) return;
 
@@ -474,7 +445,6 @@ function riskGate() {
   });
 }
 
-
 // ---------------------------------------------------------------- banners
 let demoBanner = '';
 let siteBanner = '';
@@ -482,25 +452,22 @@ const paintBanners = () => { $('#banner').innerHTML = demoBanner + siteBanner; }
 
 dataStatus.addEventListener('change', (e) => {
   demoBanner = e.detail.demo
-    ? `<div class="banner">${icon('info', 16)} APIهای زنده بازار در حال حاضر از این شبکه در دسترس نیستند، بنابراین برخی بخش‌ها <b>داده‌های آزمایشی (دمو)</b> را نمایش می‌دهند. به محض برقراری ارتباط، داده‌ها به صورت خودکار زنده می‌شوند.</div>`
+    ? `<div class="banner" dir="rtl">${icon('info', 16)} APIهای زنده بازار در حال حاضر از این شبکه در دسترس نیستند، بنابراین برخی بخش‌ها <b>داده‌های آزمایشی (دمو)</b> را نمایش می‌دهند. به محض برقراری ارتباط، داده‌ها به صورت خودکار زنده می‌شوند.</div>`
     : '';
   paintBanners();
 });
 
-// Site-wide announcement the admin can set from the admin panel.
 getAppSettings().then((s) => {
   const text = s?.site?.announcement;
   if (!text) return;
   if (load('dismissedNotice', '') === text) return;
-  siteBanner = `<div class="banner" id="siteNotice">${icon('info', 16)} ${esc(text)} <button class="icon-btn" id="noticeX" style="width:26px;height:26px;margin-left:auto" aria-label="بستن">${icon('close', 12)}</button></div>`;
+  // اصلاح margin-right:auto برای دکمه بستن بنر در چیدمان راست‌به‌چین
+  siteBanner = `<div class="banner" id="siteNotice" dir="rtl">${icon('info', 16)} ${esc(text)} <button class="icon-btn" id="noticeX" style="width:26px;height:26px;margin-right:auto" aria-label="بستن">${icon('close', 12)}</button></div>`;
   paintBanners();
   $('#noticeX')?.addEventListener('click', () => { save('dismissedNotice', text); siteBanner = ''; paintBanners(); });
-}).catch(() => { /* backend optional */ });
+}).catch(() => { /* بک‌اند اختیاری است */ });
 
 // ---------------------------------------------------------------- 3D world
-// The world behind every page (js/world/), as on the portfolio. It is fetched
-// once the first page is drawn, so it never holds the prices up; without WebGL,
-// or if three.js cannot load, the page keeps its still gold-on-obsidian background.
 function startWorld() {
   const go = () => import('./world/world.js').then((m) => m.startWorld()).catch((e) => {
     console.warn('3D world', e);
@@ -511,18 +478,11 @@ function startWorld() {
 }
 
 // ---------------------------------------------------------------- boot
-// The fonts are the site's own files (fonts/, css/app.css), as on the portfolio.
-// The pages search engines index (coin/btc/, trader/ …, tools/build-pages.mjs)
-// carry the route they stand for. Opening it moves the address to the app's
-// own (/#/coin/BTC), so every link after this stays in the page.
 { const entry = document.documentElement.dataset.route; if (entry && !location.hash) history.replaceState(null, '', entry); }
 $$('[data-app-name]').forEach((n) => { n.textContent = CONFIG.APP_NAME; });
 applyTheme(settings.get().theme || 'dark');
 applyDir();
 
-// A password-recovery link lands back on the site as `#access_token=…&type=recovery`.
-// That has to be handled before the router sees the hash, or the app just tries to
-// route to a nonsense page and the reader is stuck.
 (async () => {
   if (!location.hash.includes('type=recovery')) return;
   try {
@@ -530,14 +490,17 @@ applyDir();
     const { changePassword } = await import('./api/security.js');
     const ok = await consumeRecoveryLink();
     if (!ok) return;
-    const m = modal(`<h3>تعیین رمز عبور جدید</h3>
-      <p class="fine">شما از طریق لینک بازیابی وارد شده‌اید و اکنون می‌توانید رمز عبور جدیدی انتخاب کنید.</p>
-      <form class="stack mt" style="gap:10px" id="rp">
-        <label class="fld">رمز عبور جدید<input class="inp" name="pw" type="password" autocomplete="new-password" minlength="10" required autofocus></label>
-        <p class="fine">حداقل ۱۰ کاراکتر.</p>
-        <button class="btn primary">ذخیره رمز عبور جدید</button>
-        <p class="fine down" id="rpErr" hidden></p>
-      </form>`);
+    const m = modal(`
+      <div dir="rtl" style="text-align:right">
+        <h3>تعیین رمز عبور جدید</h3>
+        <p class="fine">شما از طریق لینک بازیابی وارد شده‌اید و اکنون می‌توانید رمز عبور جدیدی انتخاب کنید.</p>
+        <form class="stack mt" style="gap:10px" id="rp">
+          <label class="fld">رمز عبور جدید<input class="inp" name="pw" type="password" autocomplete="new-password" minlength="10" required autofocus></label>
+          <p class="fine">حداقل ۱۰ کاراکتر.</p>
+          <button class="btn primary">ذخیره رمز عبور جدید</button>
+          <p class="fine down" id="rpErr" hidden></p>
+        </form>
+      </div>`);
     const f = m.el.querySelector('#rp'), err = m.el.querySelector('#rpErr');
     f.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -550,9 +513,7 @@ applyDir();
     });
   } catch (e) { console.warn('recovery link', e); }
 })();
-// Put the app on the exchange's clock before anything is timestamped, and keep
-// it there — a device clock that drifts makes every "2m ago" and every live /
-// stale check wrong.
+
 syncExchangeClock();
 setInterval(syncExchangeClock, 6e5);
 window.addEventListener('hashchange', route);
@@ -561,9 +522,7 @@ initSelectors().then(route).catch(route).finally(startWorld);
 initTicker();
 initAccount();
 riskGate();
-// Keep as little as possible on this device: what removed features left, the
-// response cache beyond its limit, and this browser's own learning record once
-// the cloud's (which every device reads) can be read.
+
 setTimeout(() => {
   tidyStorage();
   tidyHttpCache();
@@ -571,32 +530,14 @@ setTimeout(() => {
 }, 4000);
 
 // ---------------------------------------------------------------- updates
-//
-// A browser that is still running last week's files is indistinguishable, to
-// the person using it, from a broken site: fixes appear not to have shipped and
-// sign-in seems to fail. So the app checks its own build number on every load
-// and, if the server has a newer one, clears the old copy and reloads once.
-// `version.txt` is rewritten by the deploy script, fetched with no-store so the
-// check itself can never be answered from cache, and the reload is guarded by a
-// session flag so a bad deploy cannot put the page in a refresh loop.
 export const BUILD = "20261105-185358";
-
-// A build stamp is exactly what the deploy script writes: 20260916-130124.
-// Anything else — an HTML error page, a proxy notice, an offline fallback — is
-// not a version, and acting on it used to unregister the service worker, delete
-// every cache and reload the page. Offline, that left nothing to reload into.
 const BUILD_STAMP = /^\d{8}-\d{6}$/;
 
-// The build this tab is running, in the footer, so "is this the new version?"
-// has an answer on the page itself.
 {
   const tag = document.getElementById('buildTag');
   if (tag) tag.textContent = `نسخه ${BUILD.slice(0, 4)}-${BUILD.slice(4, 6)}-${BUILD.slice(6, 8)} ${BUILD.slice(9, 11)}:${BUILD.slice(11, 13)} UTC`;
 }
 
-// A tab left open for hours checks too, every half hour (see below). Found
-// that way, the new build loads only once nobody has touched the page for two
-// minutes and nothing is being typed, so it never reloads under someone's hand.
 let lastInput = Date.now();
 for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart']) addEventListener(ev, () => { lastInput = Date.now(); }, { passive: true, capture: true });
 const idleNow = () => Date.now() - lastInput > 120e3 && !document.activeElement?.matches?.('input, textarea, select, [contenteditable="true"]');
@@ -610,46 +551,33 @@ async function checkForUpdate({ whenIdle = false } = {}) {
     if (!BUILD_STAMP.test(latest)) return;
     if (latest === BUILD) { sessionStorage.removeItem('cv:reloaded'); return; }
     if (whenIdle && !idleNow()) { setTimeout(() => checkForUpdate({ whenIdle: true }), 60e3); return; }
-    // One try per new build every ten minutes, never a loop: right after a
-    // deploy, GitHub Pages' servers can still hand out the previous files for a
-    // few minutes, and a later check then gets the new ones.
     let tried = null;
-    try { tried = JSON.parse(sessionStorage.getItem('cv:reloaded') || 'null'); } catch { /* an older plain value */ }
+    try { tried = JSON.parse(sessionStorage.getItem('cv:reloaded') || 'null'); } catch { /* مقدار قدیمی */ }
     if (tried?.v === latest && Date.now() - tried.at < 10 * 60e3) return;
     sessionStorage.setItem('cv:reloaded', JSON.stringify({ v: latest, at: Date.now() }));
-    // Every app file is fetched again past the browser's own cache before the
-    // reload. The old way — drop the service worker, then reload — let the
-    // browser serve the previous files from its HTTP cache (kept up to ten
-    // minutes), and the tab then stayed on the old build for the whole visit.
     const files = new Set(['./', 'index.html', 'css/app.css', 'js/app.js', 'js/deps.js']);
     for (const [page, deps] of Object.entries(DEPS)) for (const f of [page, ...deps]) files.add(`js/${f}`);
     await Promise.all([...files].map((f) => fetch(f, { cache: 'reload' }).catch(() => null)));
-    // a new service worker (sw.js changes with every build) takes over at once
     await (await navigator.serviceWorker?.getRegistration?.())?.update?.().catch(() => {});
-    // keep the downloaded AI model — it is large and unrelated to the app files
     for (const k of await caches.keys()) if (!k.startsWith('webllm')) await caches.delete(k);
     location.reload();
-  } catch { /* offline, or no version file — carry on with what is loaded */ }
+  } catch { /* آفلاین یا بدون فایل نسخه */ }
 }
 
-// Saving silently failing is worse than saying so: everything keeps working for
-// the session and is then gone. Told once, not on every write.
 window.addEventListener('cv:store-failed', (e) => {
   toast(`امکان ذخیره‌سازی در این دستگاه وجود ندارد — ${e.detail.reason}. واچ‌لیست، هشدارها و معاملات شما پس از بستن تب از بین خواهند رفت.`, 'down', 9000);
 });
 
 if (location.protocol === 'https:') {
   window.addEventListener('load', () => {
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => { /* offline support is optional */ });
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => { /* پشتیبانی آفلاین اختیاری است */ });
     checkForUpdate();
-    // and again whenever the tab is brought back to the front, and every half hour while it stays open
     document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForUpdate(); });
     setInterval(() => { if (!document.hidden) checkForUpdate({ whenIdle: true }); }, 30 * 60e3);
   });
 }
 
-// --- Quick chat: slash commands answered from live market data ---
-// (Not the Model Context Protocol; these are plain in-page commands.)
+// --- گفتگوی سریع: دستورات مبتنی بر داده‌های زنده بازار ---
 (async function initMagicChat() {
   const chatPanel = $('#chatPanel');
   const chatClose = $('#chatClose');
@@ -657,10 +585,11 @@ if (location.protocol === 'https:') {
   const chatInput = $('#chatInput');
   const chatSend = $('#chatSend');
 
+  if (chatPanel) chatPanel.dir = 'rtl';
+
   const chatBtn = $('#chatBtn');
   chatBtn.innerHTML = `${icon('ai', 18)}<span>گفتگوی سریع</span>`;
 
-  // Toggle chat panel (its own button; the theme button only changes the theme)
   chatInput.maxLength = 120;
   const toggleChat = () => {
     chatPanel.hidden = !chatPanel.hidden;
@@ -673,13 +602,10 @@ if (location.protocol === 'https:') {
   chatBtn.addEventListener('click', toggleChat);
   chatClose.addEventListener('click', toggleChat);
 
-  // Close on escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !chatPanel.hidden) toggleChat();
   });
 
-  // Send message
-  // one command at a time: a double press used to fetch and answer twice
   let chatBusy = false;
   const sendMessage = async (message) => {
     const trimmed = String(message || '').trim().slice(0, 120);
@@ -687,16 +613,13 @@ if (location.protocol === 'https:') {
     chatBusy = true;
     chatSend.disabled = true;
 
-    // Add user message to UI
     const userMsg = document.createElement('div');
     userMsg.className = 'chat-message user';
-    userMsg.innerHTML = `<span class="avatar">شما</span><span class="msg">${esc(trimmed)}</span>`;
+    userMsg.innerHTML = `<span class="avatar">شما</span><span class="msg" dir="auto">${esc(trimmed)}</span>`;
     chatMessages.appendChild(userMsg);
 
-    // Clear input
     chatInput.value = '';
 
-    // Show typing indicator
     const typingInd = document.createElement('div');
     typingInd.className = 'chat-message bot';
     typingInd.innerHTML = `<span class="avatar">هوش مصنوعی</span><span class="msg typing">...</span>`;
@@ -705,17 +628,15 @@ if (location.protocol === 'https:') {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
     try {
-      // Commands are answered from live data.
       const response = await generateMCPResponse(trimmed);
 
-      // Replace typing indicator with response
       const typingEl = $('#typingIndicator');
       if (typingEl) typingEl.remove();
-      if (response === null) return; // e.g. /clear (finally still runs)
+      if (response === null) return;
 
       const botMsg = document.createElement('div');
       botMsg.className = 'chat-message bot';
-      botMsg.innerHTML = `<span class="avatar">هوش مصنوعی</span><span class="msg">${esc(response)}</span>`;
+      botMsg.innerHTML = `<span class="avatar">هوش مصنوعی</span><span class="msg" style="white-space:pre-line">${esc(response)}</span>`;
       chatMessages.appendChild(botMsg);
     } catch (err) {
       const typingEl = $('#typingIndicator');
@@ -734,7 +655,6 @@ if (location.protocol === 'https:') {
     chatMessages.scrollTop = chatMessages.scrollHeight;
   };
 
-  // Command answers, all from the same live data the pages use.
   const HELP = [
     '/price BTC   قیمت زنده، تغییرات ۲۴ ساعته و ۷ روزه',
     '/signal ETH  امتیاز اندیکاتور در نمودار ۱ ساعته (آموزشی، نه سیگنال قطعی)',
@@ -788,7 +708,6 @@ if (location.protocol === 'https:') {
     return 'من به دستورات سریع بر اساس داده‌های زنده پاسخ می‌دهم. برای مشاهده آن‌ها /help را تایپ کنید، یا سوالات آزاد خود را در صفحه دستیار هوشمند (#/ai) بپرسید.';
   };
 
-  // Enter key to send
   chatInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -796,12 +715,8 @@ if (location.protocol === 'https:') {
     }
   });
 
-  // Send button
   chatSend.addEventListener('click', () => sendMessage(chatInput.value));
 
-  // The panel stays closed until the visitor opens it with the Quick chat button.
-
-  // Add some preset quick-questions as buttons
   const quickQuestions = [
     '/help',
     '/price BTC',
@@ -812,7 +727,8 @@ if (location.protocol === 'https:') {
 
   const quickBar = document.createElement('div');
   quickBar.className = 'chat-quick';
-  quickBar.innerHTML = `<span class="muted">امتحان کنید:</span>${quickQuestions.map(q => `<button class="quick-btn" type="button" data-cmd="${esc(q)}" aria-label="اجرای ${esc(q)}">${esc(q)}</button>`).join(' ')}`;
+  quickBar.dir = 'rtl';
+  quickBar.innerHTML = `<span class="muted">امتحان کنید:</span>${quickQuestions.map(q => `<button class="quick-btn" type="button" data-cmd="${esc(q)}" dir="ltr" aria-label="اجرای ${esc(q)}">${esc(q)}</button>`).join(' ')}`;
   chatMessages.parentNode.insertBefore(quickBar, chatInput.parentNode);
 
   quickBar.querySelectorAll('.quick-btn').forEach(btn => {
