@@ -27,7 +27,7 @@ echo "Engine parity verified (10 files)."
 supabase functions deploy cv --project-ref cjpljmzustvgsmueqese --no-verify-jwt
 echo
 echo "Deployed. Checking the engine answers identically on both sides:"
-curl -s "https://cjpljmzustvgsmueqese.supabase.co/functions/v1/cv/selftest"
+curl -s "https://lsokeplagodofqlsslcy.supabase.co/functions/v1/cv/selftest"
 echo
 node --input-type=module -e '
   import { generateSignal } from "./js/lib/signals.js";

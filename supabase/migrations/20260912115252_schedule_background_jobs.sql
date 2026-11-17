@@ -6,7 +6,7 @@ language plpgsql security definer set search_path = '' as $$
 declare req_id bigint;
 begin
   select net.http_post(
-    url := 'https://cjpljmzustvgsmueqese.supabase.co/functions/v1/cv/' || job,
+    url := 'https://lsokeplagodofqlsslcy.supabase.co/functions/v1/cv/' || job,
     headers := jsonb_build_object(
       'content-type', 'application/json',
       'x-cron-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret')
