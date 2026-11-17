@@ -396,7 +396,6 @@ export async function exchangeCandles(coin, interval, total = 500, only = null) 
   // صرافی‌های HTX و OKX در پاسخی که صفحه می‌تواند بخواند می‌گویند «چنین جفت‌ارزی وجود ندارد»؛
   // پاسخ Gate.io از یک صفحه وب قابل خواندن نیست، بنابراین شبیه یک اتصال قطع‌شده به نظر می‌رسد و
   // تنها زمانی به عنوان «نه» حساب می‌شود که صرافی دیگری پاسخ داده باشد. قطع اتصال قبلاً نیز به خاطر
-  پ سپرده می‌شد و نمودار ارز را برای یک ساعت پنهان می‌کرد.
   const unreached = silent.some((ex) => ex !== 'gate') || (silent.length > 0 && !answered.length);
   if (!only && !unreached) rememberVenue(sym, null);
   return null;
