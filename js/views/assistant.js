@@ -260,7 +260,7 @@ export async function render(el, [symParam]) {
         <button class="btn mt" id="startAi" style="width:100%;margin-top:10px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1;color:#fff">${icon('chip', 16)} بارگیری مدل زبانی</button></details>`;
     }
     const body = base + extra;
-    card.innerHTML = `<div class="card-h" style="margin-bottom:14px"><h3 style="margin:0;font-size:1.1rem;color:#fff">${icon('ai', 16)} هوش مصنوعی BTCS · داخلی</h3></div>${body}
+    card.innerHTML = `<div class="card-h" style="margin-bottom:14px"><h3 style="margin:0;font-size:1.1rem;color:#fff">${icon('ai', 16)} هوش مصنوعی بی تی سی اس · داخلی</h3></div>${body}
       <details class="mt" style="margin-top:14px"><summary class="fine" style="cursor:pointer;color:var(--accent)">پیشرفته: سرور هوش مصنوعی شخصی</summary>
         <form id="customForm" class="stack mt" style="gap:10px;margin-top:12px">
           <label class="fld" style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.8rem;color:rgba(255,255,255,0.6)">آدرس سازگار با OpenAI</span><input class="inp" name="url" type="url" placeholder="http://localhost:11434/v1" value="${esc(settings.get().customEndpoint)}"></label>
