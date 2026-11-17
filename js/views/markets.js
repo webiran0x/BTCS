@@ -8,24 +8,107 @@ export const title = 'بازارها';
 
 export async function render(el) {
   el.innerHTML = `
-    <header class="hero" dir="rtl">
+    <!-- استایل‌های اختصاصی مدرن اپل ۲۰۲۶ -->
+    <style>
+      .apple-hero {
+        position: relative;
+        padding: 48px 36px;
+        background: radial-gradient(circle at top right, rgba(212, 175, 55, 0.08), transparent 50%),
+                    radial-gradient(circle at bottom left, rgba(52, 199, 89, 0.05), transparent 40%),
+                    rgba(20, 20, 25, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 28px;
+        backdrop-filter: blur(25px);
+        margin-bottom: 24px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+      }
+      .apple-hero .eyebrow {
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+      .apple-hero h1 {
+        font-size: 2.75rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        color: #fff;
+        margin-bottom: 14px;
+      }
+      .apple-hero h1 em {
+        font-style: normal;
+        background: linear-gradient(135deg, #ffd700 0%, #ff9500 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .apple-hero .lede {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.75);
+        max-width: 750px;
+        line-height: 1.6;
+        margin-bottom: 16px;
+      }
+      .apple-hero .key-hint {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.45);
+        line-height: 1.5;
+        border-right: 2px solid rgba(212, 175, 55, 0.4);
+        padding-right: 12px;
+        margin-top: 16px;
+      }
+      .apple-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 22px;
+        padding: 24px;
+        backdrop-filter: blur(20px);
+        transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      }
+      .apple-card:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+      }
+      .apple-card .card-h h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: #fff;
+      }
+      /* تنظیمات جدول و بخش‌های کنترلی */
+      .apple-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+    </style>
+
+    <header class="apple-hero" dir="rtl">
       <p class="eyebrow">بازارهای زنده <span class="rule" aria-hidden="true"></span> ${esc(new Date().toLocaleDateString('fa-IR', { day: 'numeric', month: 'long', year: 'numeric' }))}</p>
       <h1>قیمت ارزهای دیجیتال <em>امروز</em></h1>
       <p class="lede" id="mkSummary">قیمت‌های زنده، ارزش بازار و روند ۷ روزه برای ۲۵۰ ارز برتر.</p>
       <p class="key-hint">پشت قیمت‌ها: ۷۲ ساعت گذشته بیت‌کوین به شکل نمودار کندل سه‌بعدی، جدیدترین کندل آن با قیمت زنده حرکت می‌کند، و بزرگ‌ترین ارزها به عنوان توکن نمایش داده می‌شوند. هرچه توکن بزرگ‌تر باشد، ارزش بازار آن بیشتر است؛ لبه آن برای صعود در ۲۴ ساعت گذشته یشمی و برای ریزش مرجانی است. روی یک توکن اشاره کنید تا نام آن نمایش داده شود؛ برای باز کردن نمودارش کلیک کنید.</p>
     </header>
-    <div class="global-strip" id="globalStrip" dir="rtl">${Array.from({ length: 5 }, () => `<div class="card">${skeleton(2, 16)}</div>`).join('')}</div>
-    <div class="grid g4" style="margin-bottom:14px" dir="rtl">
-      <div class="card"><div class="card-h"><h3>شاخص ترس و طمع</h3><span class="fine" id="fngDate"></span></div><div id="fng">${skeleton(3)}</div></div>
-      <div class="card"><div class="card-h"><h3>ترندها</h3></div><div class="hl-list" id="trending">${skeleton(5)}</div></div>
-      <div class="card"><div class="card-h"><h3>بیشترین رشد <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="gainers">${skeleton(5)}</div></div>
-      <div class="card"><div class="card-h"><h3>بیشترین ریزش <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="losers">${skeleton(5)}</div></div>
+
+    <div class="global-strip" id="globalStrip" dir="rtl">${Array.from({ length: 5 }, () => `<div class="apple-card">${skeleton(2, 16)}</div>`).join('')}</div>
+    
+    <div class="grid g4" style="margin-bottom:20px" dir="rtl">
+      <div class="apple-card"><div class="card-h"><h3>شاخص ترس و طمع</h3><span class="fine" id="fngDate"></span></div><div id="fng" style="margin-top:12px">${skeleton(3)}</div></div>
+      <div class="apple-card"><div class="card-h"><h3>ترندها</h3></div><div class="hl-list" id="trending" style="margin-top:12px">${skeleton(5)}</div></div>
+      <div class="apple-card"><div class="card-h"><h3>بیشترین رشد <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="gainers" style="margin-top:12px">${skeleton(5)}</div></div>
+      <div class="apple-card"><div class="card-h"><h3>بیشترین ریزش <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="losers" style="margin-top:12px">${skeleton(5)}</div></div>
     </div>
-    <div class="card" dir="rtl">
-      <div class="card-h">
+
+    <div class="apple-card" dir="rtl">
+      <div class="apple-controls">
         <div class="seg" id="scope"><button data-v="all" class="on">همه ارزها</button><button data-v="watch">${icon('star', 13)} واچ‌لیست</button></div>
-        <div class="row">
-          <input class="inp" id="filter" placeholder="فیلتر..." style="width:150px">
+        <div class="row" style="gap:12px">
+          <input class="inp" id="filter" placeholder="جستجوی سریع ارز..." style="width:180px; border-radius:12px;">
           <div class="seg" id="mode"><button data-v="table" class="on">جدول</button><button data-v="heatmap">نقشه حرارتی</button></div>
         </div>
       </div>
@@ -42,14 +125,13 @@ export async function render(el) {
     if (state.filter) { const f = state.filter.toLowerCase(); rows = rows.filter((r) => r.symbol.toLowerCase().includes(f) || r.name.toLowerCase().includes(f)); }
     if (!rows.length) { area.innerHTML = `<div class="empty">${state.scope === 'watch' ? 'واچ‌لیست شما خالی است — برای افزودن یک ارز، روی ☆ کنار آن ضربه بزنید.' : 'ارزی مطابقت ندارد.'}</div>`; return; }
     if (state.mode === 'heatmap') {
-      area.innerHTML = '<div class="treemap" id="tm"></div><p class="fine mt">اندازه کاشی = ارزش بازار · رنگ = تغییر ۲۴ ساعته. برای باز کردن ارز، روی یک کاشی ضربه بزنید.</p>';
+      area.innerHTML = '<div class="treemap" id="tm"></div><p class="fine mt" style="text-align:center;">اندازه کاشی = ارزش بازار · رنگ = تغییر ۲۴ ساعته. برای باز کردن ارز، روی یک کاشی ضربه بزنید.</p>';
       const top = rows.filter((r) => !isStable(r.symbol)).slice(0, 60);
       treemap($('#tm', area), top.map((r) => ({ value: Math.sqrt(r.marketCap || 1), label: r.symbol, sub: pct(r.change24h), color: changeColor(r.change24h), symbol: r.symbol })), { onClick: (r) => { location.hash = `#/coin/${r.symbol}`; } });
       return;
     }
     const key = state.sort;
     rows = [...rows].sort((a, b) => ((a[key] ?? -Infinity) > (b[key] ?? -Infinity) ? 1 : -1) * state.dir * (key === 'rank' || key === 'name' ? 1 : -1));
-    // rank and name read top-down when dir is 1; every other column reads largest first
     const order = (k) => (state.sort !== k ? 'none' : (state.dir === 1) === (k === 'rank' || k === 'name') ? 'ascending' : 'descending');
     const th = (k, label, cls = '') => `<th data-sort="${k}" class="${cls}" aria-sort="${order(k)}">${label}${state.sort === k ? (state.dir === 1 ? '\u00a0↓' : '\u00a0↑') : ''}</th>`;
     area.innerHTML = `<div class="tbl-wrap"><table class="tbl" id="mkt">
@@ -67,7 +149,7 @@ export async function render(el) {
           <td class="hide-m hide-t">${compact(r.volume24h)}</td>
           <td class="hide-m hide-t">${sparkline(r.sparkline, { w: 128, h: 38 })}</td>
         </tr>`).join('')}</tbody></table></div>
-       ${rows.length > state.limit ? `<div class="row" style="justify-content:center;margin-top:12px"><button class="btn" id="more">نمایش بیشتر (${(rows.length - state.limit).toLocaleString('fa-IR')})</button></div>` : ''}`;
+       ${rows.length > state.limit ? `<div class="row" style="justify-content:center;margin-top:16px"><button class="btn" id="more" style="border-radius:12px; padding: 10px 24px;">نمایش بیشتر (${(rows.length - state.limit).toLocaleString('fa-IR')})</button></div>` : ''}`;
     wireSortHeaders(area, (k) => { state.dir = state.sort === k ? -state.dir : 1; state.sort = k; drawTable(); });
     $('#mkt tbody', area).addEventListener('click', (e) => {
       const star = e.target.closest('[data-star]');
@@ -83,7 +165,6 @@ export async function render(el) {
   $('#filter', el).addEventListener('input', (e) => { state.filter = e.target.value; drawTable(); });
   if (state.rows.length) drawTable();
 
-  // The ticker first: when a long name has to be shortened, the symbol stays readable.
   const listRow = (c, right) => `<a href="#/coin/${esc(c.symbol)}" title="${esc(c.name)} (${esc(c.symbol)})">${coinLogo(c, 22)}<span class="nm">${esc(c.symbol)} <span class="muted">${esc(c.name)}</span></span>${right}</a>`;
 
   const loadMarkets = async () => {
@@ -101,17 +182,15 @@ export async function render(el) {
     }
   };
 
-  // Each widget fails on its own: one source being down must not leave the
-  // others (or itself) stuck on a loading skeleton forever.
   const loadGlobal = async () => {
     let g;
     try { g = await getGlobal(); } catch (e) {
       if (disposed) return;
-      $('#globalStrip', el).innerHTML = `<div class="card empty" style="grid-column:1/-1"><b>خلاصه بازار جهانی در دسترس نیست</b><p class="fine">${esc(e?.message || 'منبع بازار جهانی پاسخ نداد.')}</p></div>`;
+      $('#globalStrip', el).innerHTML = `<div class="apple-card empty" style="grid-column:1/-1"><b>خلاصه بازار جهانی در دسترس نیست</b><p class="fine">${esc(e?.message || 'منبع بازار جهانی پاسخ نداد.')}</p></div>`;
       return;
     }
     if (disposed) return;
-    const card = (k, v, s = '') => `<div class="card stat"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
+    const card = (k, v, s = '') => `<div class="apple-card stat"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
     $('#globalStrip', el).innerHTML = [
       card('کل ارزش بازار', compact(g.totalMarketCap), `${changeHtml(g.marketCapChange24h)} <span class="muted">۲۴س</span>`),
       card('حجم ۲۴ ساعته', compact(g.totalVolume), '<span class="muted">همه صرافی‌ها</span>'),
@@ -131,12 +210,10 @@ export async function render(el) {
     if (disposed) return;
     if (!f?.length) { $('#fng', el).innerHTML = '<div class="empty"><p>هیچ داده اخیری از شاخص ترس و طمع دریافت نشد.</p></div>'; return; }
     const now = f[0], week = f[7], month = f[29];
-    // The header had an empty slot reserved for this and nothing ever filled it,
-    // so the card gave no clue how fresh the reading was.
     const stamp = $('#fngDate', el);
     if (stamp && now.timestamp) stamp.textContent = `به تاریخ ${dateTime(now.timestamp / 1000, false)}`;
     $('#fng', el).innerHTML = `${gauge(now.value, now.classification)}
-      <div class="row spread fine" style="margin-top:6px"><span>دیروز <b>${f[1]?.value ?? '—'}</b></span><span>هفته گذشته <b>${week?.value ?? '—'}</b></span><span>ماه گذشته <b>${month?.value ?? '—'}</b></span></div>`;
+      <div class="row spread fine" style="margin-top:10px"><span>دیروز <b>${f[1]?.value ?? '—'}</b></span><span>هفته گذشته <b>${week?.value ?? '—'}</b></span><span>ماه گذشته <b>${month?.value ?? '—'}</b></span></div>`;
   };
 
   const loadTrending = async () => {
@@ -151,7 +228,6 @@ export async function render(el) {
 
   loadMarkets(); loadGlobal(); loadFng(); loadTrending();
 
-  // live price updates for visible rows
   const onTick = (e) => {
     if (state.mode !== 'table') return;
     for (const t of e.detail) {
