@@ -77,14 +77,19 @@ export async function render(el) {
         letter-spacing: -0.01em;
         color: #fff;
       }
-      /* تنظیمات جدول و بخش‌های کنترلی */
+      /* تنظیمات کنترل‌ها به صورت کاملاً تفکیک‌شده و زیر هم (استایل استک عمودی اپل) */
       .apple-controls {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
+        flex-direction: column;
         gap: 16px;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
+      }
+      @media (min-width: 768px) {
+        .apple-controls {
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+        }
       }
     </style>
 
@@ -107,7 +112,7 @@ export async function render(el) {
     <div class="apple-card" dir="rtl">
       <div class="apple-controls">
         <div class="seg" id="scope"><button data-v="all" class="on">همه ارزها</button><button data-v="watch">${icon('star', 13)} واچ‌لیست</button></div>
-        <div class="row" style="gap:12px">
+        <div class="row" style="gap:12px; flex-wrap: wrap;">
           <input class="inp" id="filter" placeholder="جستجوی سریع ارز..." style="width:180px; border-radius:12px;">
           <div class="seg" id="mode"><button data-v="table" class="on">جدول</button><button data-v="heatmap">نقشه حرارتی</button></div>
         </div>
