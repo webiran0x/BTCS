@@ -10,7 +10,8 @@ const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[a-z]{2,24}$/i;
 // Stripe sends the buyer back to this address after paying, so it has to be the
 // site itself (or a local copy while developing), never an address the caller
 // picked. Extra hosts, e.g. a custom domain, go in SITE_ORIGINS, comma-separated.
-const SITE_ORIGINS = (Deno.env.get('SITE_ORIGINS') || 'https://btcs.ir')
+const DenoEnv = (globalThis as unknown as { Deno?: { env: { get(name: string): string | undefined } } }).Deno?.env;
+const SITE_ORIGINS = (DenoEnv?.get('SITE_ORIGINS') || 'https://btcs.ir')
   .split(',').map((o) => o.trim()).filter(Boolean);
 
 function siteReturnUrl(raw: unknown): string {
@@ -66,8 +67,7 @@ export async function account(req: Request): Promise<Response> {
       if (!EMAIL_RE.test(email)) throw new HttpError('لطفاً یک آدرس ایمیل معتبر وارد کنید.');
       if (!(await secret('resend_api_key'))) throw new HttpError('سیستم ارسال ایمیل هنوز روی سایت تنظیم نشده است. با مدیر سایت تماس بگیرید.', 503);
       await rateLimit(`code:${email}`, 3, 900);
-      // At most 8 codes a day for one address (5 guesses each): without it a
-      // patient attacker had about 1,400 guesses a day at a 6-digit reset code.
+      // At most 8 codes a day for one address (5 guesses each)
       await rateLimit(`code-day:${email}`, 8, 86400);
       await rateLimit(`code-ip:${clientIp(req)}`, 10, 3600);
       // Don't reveal whether an account exists for password resets.
@@ -76,7 +76,12 @@ export async function account(req: Request): Promise<Response> {
         if (!data) return json({ ok: true });
       }
       const code = randomCode(6);
-      await admin.from('auth_codes').insert({ email, purpose, code_hash: await codeHash(email, code), expires_at: new Date(Date.now() + 15 * 60e3).toISOString() });
+      await admin.from('auth_codes').insert({ 
+        email, 
+        purpose, 
+        code_hash: await codeHash(email, code), 
+        expires_at: new Date(Date.now() + 15 * 60e3).toISOString() 
+      });
       const title = purpose === 'verify' ? 'تایید ایمیل شما' : 'بازیابی رمز عبور';
       await sendEmail(email, `${title} — کد: ${code}`, `<div style="font-family:Tahoma,sans-serif; direction:rtl; text-align:right;"><h2>${title}</h2><p>کد تایید شما در پلتفرم:</p><p style="font-size:28px;font-weight:800;letter-spacing:4px">${code}</p><p>این کد پس از ۱۵ دقیقه منقضی می‌شود. اگر خودتان این درخواست را نداده‌اید، این ایمیل را نادیده بگیرید.</p></div>`);
       return json({ ok: true });
@@ -107,7 +112,10 @@ export async function account(req: Request): Promise<Response> {
       const tg = await setting<{ bot_username: string | null }>('telegram');
       if (!tg?.bot_username || !(await secret('telegram_bot_token'))) throw new HttpError('هشدارهای تلگرام هنوز روی سایت تنظیم نشده‌اند.', 503);
       const code = randomCode(10, 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789');
-      await admin.from('profiles').update({ telegram_link_code: code, telegram_link_expires: new Date(Date.now() + 20 * 60e3).toISOString() }).eq('id', user.id);
+      await admin.from('profiles').update({ 
+        telegram_link_code: code, 
+        telegram_link_expires: new Date(Date.now() + 20 * 60e3).toISOString() 
+      }).eq('id', user.id);
       return json({ ok: true, bot: tg.bot_username, url: `https://t.me/${tg.bot_username}?start=${code}`, code });
     }
 
