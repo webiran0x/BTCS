@@ -1,58 +1,85 @@
-// The plain-language guide to how BTCS learns and is tested. One copy,
-// used by the Learn page in the app (js/views/learn.js) and by the page search
-// engines read before the app runs (tools/build-pages.mjs). The figures in it
-// are read from the measured records, never typed here.
+// راهنمای به زبان ساده درباره نحوه یادگیری و ارزیابی هوش مصنوعی BTCS.
+// یک نسخه واحد که هم در صفحه یادگیری برنامه (js/views/learn.js) و هم توسط موتورهای جستجو
+// پیش از اجرای برنامه (tools/build-pages.mjs) خوانده می‌شود. اعداد موجود در آن مستقیماً از سوابق اندازه‌گیری‌شده خوانده می‌شوند.
 import { FORECAST_TESTED } from './forecastview.js';
 import { TESTED_ACCURACY } from './predict.js';
 import { TESTED_COINS } from './autotrader.js';
 
 const centred = Object.values(FORECAST_TESTED.centred);
-const lo = Math.min(...centred.map((x) => x.band80)), hi = Math.max(...centred.map((x) => x.band80));
+const lo = Math.min(...centred.map((x) => x.band80));
+const hi = Math.max(...centred.map((x) => x.band80));
 const tests = Math.round(centred.reduce((a, x) => a + x.tests, 0) / 1000) * 1000;
 
-export const rangeLine = `Its price range is measured: the 80% range held ${lo === hi ? lo : `${lo}–${hi}`}% of the time across about ${tests.toLocaleString('en-US')} tests on ${TESTED_COINS.length} coins.`;
-export const directionMeasured = `Across ${TESTED_ACCURACY.tests.toLocaleString('en-US')} direction tests the models were right ${TESTED_ACCURACY.all}% of the time, against ${TESTED_ACCURACY.allBaseline}% for simply always calling the more common outcome, so direction is never shown as a buy or sell call.`;
+const toFa = (n) => Number(n).toLocaleString('fa-IR');
 
-/** Sections of { h2, paras?, steps?, list? }; plain text, escaped where drawn. */
+export const rangeLine = `بازه قیمتی آن به دقت اندازه‌گیری شده است: محدوده ۸۰٪ در حدود ${toFa(tests)} آزمون روی ${toFa(TESTED_COINS.length)} ارز، در ${lo === hi ? toFa(lo) : `${toFa(lo)} تا ${toFa(hi)}`} درصد مواقع قیمت را در خود نگه داشته است.`;
+
+export const directionMeasured = `در مجموع ${toFa(TESTED_ACCURACY.tests)} آزمون تشخیص جهت بازار، مدل‌ها در ${toFa(TESTED_ACCURACY.all)}٪ مواقع درست عمل کردند؛ در حالی که اگر همیشه گزینه رایج‌تر را انتخاب می‌کردیم به دقت ${toFa(TESTED_ACCURACY.allBaseline)}٪ می‌رسیدیم. به همین دلیل، تشخیص جهت هرگز به عنوان سیگنال قطعی خرید یا فروش نمایش داده نمی‌شود.`;
+
+/** بخش‌های تشکیل‌شده از { h2, paras?, steps?, list? } به زبان ساده و راست‌چین */
 export const LEARN_GUIDE = [
-  { h2: 'The learning loop', steps: [
-    'Record. Live prices, volume and volatility come from public exchange feeds. Each indicator reading, forecast and trade is written down with the time it was made.',
-    'Wait. Nothing is graded until the forecast horizon has passed, so the answer cannot leak into the call.',
-    'Grade. The call is compared with what price actually did, and with a simple baseline, such as always calling the more common outcome.',
-    'Re-weight. A method that beats the baseline over many calls gains weight; one that does not loses it, however clever it sounds.',
-    'Repeat. The window moves forward and the grading never stops, so the record always includes the newest market.',
-  ] },
-  { h2: 'How signals are scored', paras: [
-    'Each indicator reading (trend, momentum, RSI, MACD, Bollinger, Stoch RSI, volume, ADX) is stored with its score and then checked against the move that followed. A reading counts as useful only if it is right more often than the baseline over a large number of cases.',
-    'This has produced uncomfortable results, and they are shown as they are: across 106 coins the strongest readings were followed by a rise least often, so the scanner describes how stretched a move is rather than predicting the next one.',
-  ] },
-  { h2: 'How the forecast is tested', paras: [
-    'The forecast is a price range, not a single target. An 80% range should contain the later price about 80% of the time; if it held 95% of the time it would be too wide to be useful, and at 60% it would be overconfident.',
-    `${rangeLine} Direction is graded separately. ${directionMeasured}`,
-  ] },
-  { h2: 'Walk-forward validation, in plain words', paras: [
-    'Think of a practice exam and a real exam. The rules are chosen using only the history before a period, then run on that period, which they have never seen. Then the window moves forward and it happens again.',
-    'Fees are charged on every trade, and a second run makes fills worse to stand in for spread and slippage. A result that only appears when the test can peek at the answers is not counted.',
-  ] },
-  { h2: 'What counts as evidence', list: [
-    'The call was logged before its outcome was known.',
-    'It was tested on data the method was not tuned on.',
-    'It beat a plain baseline (always calling the more common outcome, or simply holding the coins).',
-    'It held up over many cases and more than one period, not a lucky streak.',
-    'For the AI trader: a new pick must pass in two runs in a row before it is traded.',
-  ] },
-  { h2: 'What is measured, and what is not', list: [
-    'Measured: how often forecast ranges held; direction hit rate against a baseline; trading return after fees and modelled fill costs; worst drop; number of trades; what holding did.',
-    'Not measured: news and events before they happen; how your own order would fill in a thin market; exchange outages; taxes; your own timing and discipline.',
-  ] },
-  { h2: 'What gets discarded or demoted', list: [
-    'Direction calls that do not beat the baseline are never shown as buy or sell signals.',
-    'Rule sets that lose to their baseline in the walk-forward test are not adopted, and one that passes once must pass again first.',
-    'Charts that leave too little data to test on are dropped: the weekly chart is not offered to the trader for this reason.',
-    'Models inside the forecast are weighted by their measured accuracy, so one that stops working fades out on its own.',
-  ] },
-  { h2: 'Feedback loops and changing markets', paras: [
-    'Markets move between regimes: steady trends, choppy ranges, quiet spells and violent ones. A rule tuned to one regime can fail in the next, and a pattern that many traders act on tends to fade as they do. Neither can be tested away.',
-    'So nothing here is treated as settled. The tests are repeated on new data, the live record keeps grading in the cloud, and when a method gets worse the page says so instead of quietly keeping its old figure. That is the point of measuring: it is how you find out a model has stopped working before you rely on it.',
-  ] },
+  {
+    h2: 'چرخه یادگیری هوش مصنوعی',
+    steps: [
+      'ثبت داده‌ها: قیمت‌های زنده، حجم معاملات و نوسانات از فیدهای عمومی صرافی‌ها دریافت می‌شوند. هر خوانش اندیکاتور، پیش‌بینی و معامله همراه با زمان دقیق ثبت می‌شود.',
+      'صبر تا سررسید: هیچ پیش‌بینی پیش از به پایان رسیدن افق زمانی‌اش امتیازدهی نمی‌شود تا اطلاعات آینده به تصمیم فعلی نشت نکند.',
+      'امتیازدهی و مقایسه: پیش‌بینی ثبت‌شده با حرکت واقعی قیمت و همچنین با یک معیار پایه ساده (مثل انتخاب همیشگی گزینه پرتکرارتر) مقایسه می‌شود.',
+      'تغییر وزن و اعتبار: روشی که در طول آزمون‌های متعدد عملکردی بهتر از معیار پایه داشته باشد وزن بیشتری می‌گیرد و روشی که ضعیف عمل کند اعتبارش را از دست می‌دهد؛ مهم نیست چقدر هوشمندانه به نظر برسد.',
+      'تکرار مداوم: پنجره زمانی مدام به جلو حرکت می‌کند و امتیازدهی هرگز متوقف نمی‌شود تا سوابق همیشه شامل جدیدترین رفتار بازار باشند.',
+    ],
+  },
+  {
+    h2: 'نحوه امتیازدهی به سیگنال‌ها',
+    paras: [
+      'خوانش هر اندیکاتور (روند، مومنتوم، RSI، MACD، باندهای بولینگر، Stoch RSI، حجم و ADX) همراه با امتیاز آن ذخیره شده و سپس با حرکت بعدی بازار سنجیده می‌شود. یک خوانش تنها زمانی مفید تلقی می‌شود که در تعداد زیادی از موقعیت‌ها، نرخ موفقیت بالاتری نسبت به معیار پایه داشته باشد.',
+      'این فرآیند گاهی به نتایج غیرمنتظره‌ای منجر شده که بدون سانسور نمایش داده می‌شوند: برای مثال، در بررسی ۱۰۶ ارز، قوی‌ترین خوانش‌های صعودی کمترین احتمال رشد بعدی را داشتند؛ بنابراین اسکنر میزان کشیدگی حرکت فعلی را توصیف می‌کند، نه پیش‌بینی حرکت بعدی را.',
+    ],
+  },
+  {
+    h2: 'نحوه ارزیابی و تست پیش‌بینی‌ها',
+    paras: [
+      'پیش‌بینی به جای یک عدد تک‌نقطه‌ای، یک محدوده قیمتی ارائه می‌دهد. یک بازه ۸۰ درصدی باید حدود ۸۰٪ مواقع قیمت آینده را در بر بگیرد؛ اگر ۹۵٪ مواقع درست باشد بیش از حد گشاد و بی‌فایده است و اگر ۶۰٪ باشد بیش از حد خوش‌بینانه و پرریسک خواهد بود.',
+      `${rangeLine} تشخیص جهت بازار به صورت جداگانه امتیازدهی می‌شود. ${directionMeasured}`,
+    ],
+  },
+  {
+    h2: 'اعتبارسنجی گام‌به‌گام (Walk-Forward) به زبان ساده',
+    paras: [
+      'این روش را مانند تفاوت بین آزمون آزمایشی و امتحان نهایی در نظر بگیرید. قوانین تنها با استفاده از داده‌های تاریخی پیش از یک دوره انتخاب می‌شوند و سپس روی دوره‌ای اجرا می‌شوند که سیستم هرگز قبلاً ندیده است. پس از آن، پنجره زمانی جلوتر می‌رود و این چرخه دوباره تکرار می‌شود.',
+      'کارمزد در تمام معاملات لحاظ می‌شود و در یک اجرای دوم، قیمت پر شدن سفارش‌ها بدتر در نظر گرفته می‌شود تا اسپرد و لغزش قیمت (Slippage) شبیه‌سازی شوند. هر نتیجه‌ای که تنها با سرک کشیدن به پاسخ‌های آینده به دست آمده باشد، کاملاً از محاسبات کنار گذاشته می‌شود.',
+    ],
+  },
+  {
+    h2: 'چه چیزی به عنوان سند معتبر پذیرفته می‌شود؟',
+    list: [
+      'پیش‌بینی پیش از مشخص شدن نتیجه نهایی در سیستم ثبت شده باشد.',
+      'روی داده‌هایی آزمایش شده باشد که مدل روی آن‌ها تنظیم و بهینه‌سازی نشده است.',
+      'عملکردی بهتر از معیار پایه ساده (مثل انتخاب همیشگی گزینه غالب یا نگهداری ساده ارزها) داشته باشد.',
+      'در طول موقعیت‌های متعدد و بیش از یک دوره زمانی دوام آورده باشد، نه اینکه صرفاً حاصل یک شانس مقطعی باشد.',
+      'در معامله‌گر هوش مصنوعی: هر انتخاب جدید باید در دو اجرای متوالی موفق شود تا اجازه معامله پیدا کند.',
+    ],
+  },
+  {
+    h2: 'چه مواردی اندازه‌گیری می‌شوند و چه مواردی خیر؟',
+    list: [
+      'اندازه‌گیری‌شده: درصد تحقق بازه‌های پیش‌بینی؛ نرخ موفقیت تشخیص جهت در برابر معیار پایه؛ بازدهی معاملات پس از کسر کارمزد و هزینه لغزش؛ بیشترین افت سرمایه (Drawdown)؛ تعداد معاملات؛ و بازدهی نگهداری ساده ارزها.',
+      'اندازه‌گیری‌نشده: اخبار و رویدادهای غیرمنتظره پیش از وقوع؛ نحوه پر شدن سفارش شما در بازارهای کم‌عمق؛ قطعی صرافی‌ها؛ مالیات؛ و زمان‌بندی و انضباط شخصی شما.',
+    ],
+  },
+  {
+    h2: 'چه مواردی کنار گذاشته یا تضعیف می‌شوند؟',
+    list: [
+      'تشخیص‌های جهتی که عملکردی بهتر از معیار پایه ندارند، هرگز به عنوان سیگنال خرید یا فروش نمایش داده نمی‌شوند.',
+      'مجموعه قوانینی که در تست گام‌به‌گام از معیار پایه شکست بخورند پذیرفته نمی‌شوند؛ و قانونی که یک بار موفق شود باید در اجرای بعدی نیز موفقیت خود را تکرار کند.',
+      'نمودارهایی که داده کافی برای تست نداشته باشند حذف می‌شوند؛ به همین دلیل نمودار هفتگی در اختیار معامله‌گر قرار نمی‌گیرد.',
+      'مدل‌های داخلی سیستم پیش‌بینی بر اساس دقت اندازه‌گیری‌شده‌شان وزن‌دهی می‌شوند، بنابراین مدلی که کارایی خود را از دست بدهد به صورت خودکار کنار می‌رود.',
+    ],
+  },
+  {
+    h2: 'حلقه‌های بازخورد و بازارهای متغیر',
+    paras: [
+      'بازارها مدام بین وضعیت‌های مختلف تغییر فاز می‌دهند: روندهای پایدار، نوسانات خنثی (رنج)، دوره‌های آرام و تلاطم‌های شدید. قانونی که برای یک وضعیت تنظیم شده ممکن است در وضعیت بعدی شکست بخورد، و الگویی که معامله‌گران زیادی از آن استفاده کنند به مرور اثر خود را از دست می‌دهد. هیچ‌کدام از این موارد را نمی‌توان با تست‌های گذشته به طور کامل حذف کرد.',
+      'به همین دلیل هیچ عددی در اینجا قطعی و همیشگی فرض نمی‌شود. آزمون‌ها مدام روی داده‌های جدید تکرار می‌شوند، سوابق زنده در فضای ابری امتیازدهی می‌شوند و هر زمان روشی ضعیف عمل کند، صفحه به جای پنهان‌کاری و نگه داشتن اعداد قدیمی، افت عملکرد را صریحاً اعلام می‌کند. هدف اصلی از اندازه‌گیری همین است: اینکه پیش از تکیه بر یک مدل، متوجه شوید چه زمانی از کار افتاده است.',
+    ],
+  },
 ];
