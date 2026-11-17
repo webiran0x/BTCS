@@ -195,8 +195,8 @@ function page(p) {
   html = swap(html, /<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${url}">`, 'canonical');
   html = swap(html, /<!-- ld:start -->[\s\S]*?<!-- ld:end -->/, `<!-- ld:start -->\n${ld.map((x) => `  <script type="application/ld+json">${JSON.stringify(x)}</script>`).join('\n')}\n  <!-- ld:end -->`, 'structured data');
   const links = p.coin
-    ? `<a class="btn primary" href="${p.route}">مشاهده نمودار زنده ${esc(p.coin)}</a> <a class="btn" href="#/trader">شبیه‌ساز معاملات هوش مصنوعی</a> <a class="btn" href="#/learn">نحوه تست</a>`
-    : `<a class="btn primary" href="${p.route}">مشاهده ${esc(p.h1.charAt(0).toLowerCase() + p.h1.slice(1))}</a>${p.route === '#/learn' ? '' : ' <a class="btn" href="#/learn">نحوه تست</a>'}`;
+    ? `<a class="btn primary" href="${p.route}">مشاهده نمودار زنده ${esc(p.coin)}</a> <a class="btn" href="#/trader">شبیه‌ساز معاملات هوش مصنوعی</a> <a class="btn" href="#/learn">آموزش</a>`
+    : `<a class="btn primary" href="${p.route}">مشاهده ${esc(p.h1.charAt(0).toLowerCase() + p.h1.slice(1))}</a>${p.route === '#/learn' ? '' : ' <a class="btn" href="#/learn">آموزش</a>'}`;
   const n = (t) => `\n          ${t}`;
   const more = p.more ? n(`<ul class="facts" aria-label="در یک نگاه">${[['عملکرد', p.more.does], ['معیارهای اندازه‌گیری', p.more.measures], ['مواردی که انجام نمی‌دهد', p.more.not], ['محدودیت‌ها', p.more.limits]].map(([k, v]) => `<li><b>${k}</b><p>${esc(v)}</p></li>`).join('')}</ul>`) : '';
   const sections = (p.sections || []).map((x, i) => {
