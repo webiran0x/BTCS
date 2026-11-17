@@ -125,7 +125,7 @@ export async function render(el) {
           <div class="apple-amount">
             <span>۰</span> <span class="currency-unit">تومان</span>
           </div>
-          <p class="fine">برای همیشه. بدون نیاز به کارت بانکی یا ثبت‌نام برای مرور.</p>
+          <p class="fine">همیشه رایگان. بدون نیاز به کارت بانکی و عضویت.</p>
           <ul class="apple-features">${FREE.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
         </div>
 
