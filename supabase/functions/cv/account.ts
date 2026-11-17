@@ -10,7 +10,7 @@ const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[a-z]{2,24}$/i;
 // Stripe sends the buyer back to this address after paying, so it has to be the
 // site itself (or a local copy while developing), never an address the caller
 // picked. Extra hosts, e.g. a custom domain, go in SITE_ORIGINS, comma-separated.
-const SITE_ORIGINS = (Deno.env.get('SITE_ORIGINS') || 'https://umer-78.github.io')
+const SITE_ORIGINS = (Demo.env.get('SITE_ORIGINS') || 'https://btcs.ir')
   .split(',').map((o) => o.trim()).filter(Boolean);
 
 function siteReturnUrl(raw: unknown): string {
