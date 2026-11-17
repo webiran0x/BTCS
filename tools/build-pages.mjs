@@ -1,18 +1,18 @@
-// Writes the pages search engines can index, sitemap.xml and robots.txt.
+// فایل‌های جستجوگرپذیر موتورهای جستجو یعنی sitemap.xml و robots.txt را می‌نویسد.
 //
-// The app routes with #/… addresses, and search engines treat every #/…
-// address as the home page, so the old sitemap of #/ links gave them one page.
-// Each page worth finding now gets a real address (coin/btc/, trader/, …): a
-// copy of index.html with its own title, description, canonical link,
-// structured data and a short text of what the page holds, plus the route it
-// opens (<html data-route>). The app boots from it exactly as from index.html
-// and moves the address to /#/… (js/app.js), so links inside it stay in the page.
+// برنامه با آدرس‌های #/… مسیریابی می‌کند، و موتورهای جستجو هر آدرس #/… را
+// به عنوان صفحه اصلی در نظر می‌گیرند، بنابراین نقشه سایت قدیمی لینک‌های #/ تنها یک صفحه به آن‌ها می‌داد.
+// اکنون هر صفحه‌ای که ارزش پیدا شدن داشته باشد یک آدرس واقعی دریافت می‌کند (coin/btc/, trader/, …):
+// کپی از index.html با عنوان، توضیحات، لینک کانونیکال (canonical)،
+// داده‌های ساختاریافته و متن کوتاهی از محتوای صفحه، به همراه مسیری که باز می‌کند (<html data-route>).
+// برنامه دقیقاً مانند index.html از آن بوت می‌شود و آدرس را به /#/… (js/app.js) منتقل می‌کند،
+// بنابراین لینک‌های درون آن در صفحه باقی می‌مانند.
 //
-// Facts in the texts are read from the tested records in js/lib, never typed
-// here, so a re-measure that changes them changes the pages on the next build.
+// اطلاعات موجود در متن‌ها از رکوردهای تست‌شده در js/lib خوانده می‌شوند و هرگز در اینجا هاردکد نمی‌شوند،
+// بنابراین اندازه‌گیری مجدد که آن‌ها را تغییر دهد، صفحات را در بیلد بعدی تغییر خواهد داد.
 //
-// usage: node tools/build-pages.mjs [--site=https://user.github.io/repo/]   write everything
-//        node tools/build-pages.mjs --check  exit 1 if anything on disk is stale
+// نحوه استفاده: node tools/build-pages.mjs [--site=https://user.github.io/repo/]   نوشتن همه موارد
+//        node tools/build-pages.mjs --check  اگر هر فایلی روی دیسک قدیمی باشد با کد 1 خارج شود
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,13 +24,13 @@ const TESTED_CHARTS = Object.keys(CHART_TESTED).filter((k) => CHART_TESTED[k]?.s
 const holdBeat = TESTED_CHARTS.filter((k) => { const x = CHART_TESTED[k]; return x.hold > (x.adopt ? x.own : x.standard).ret; }).length;
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-// the site's address; a copy deployed elsewhere passes its own (--site=https://…/)
+// آدرس سایت؛ یک نسخه مستقر در جای دیگر آدرس خودش را ارسال می‌کند (--site=https://…/)
 const arg = process.argv.find((a) => a.startsWith('--site='));
 export const SITE = (arg ? arg.slice(7) : 'https://umer-78.github.io/coinvantage/').replace(/\/?$/, '/');
 const BASE = new URL(SITE).pathname; // '/coinvantage/'
 const check = process.argv.includes('--check');
 
-// Names only where there is no doubt; every other coin is titled by its ticker.
+// نام‌ها فقط در مواردی که هیچ شکی وجود ندارد؛ سایر ارزها با نمادشان نام‌گذاری می‌شوند.
 const NAMES = {
   BTC: 'Bitcoin', ETH: 'Ethereum', BNB: 'BNB', XRP: 'XRP', SOL: 'Solana', TRX: 'TRON', ZEC: 'Zcash', DOGE: 'Dogecoin',
   XMR: 'Monero', LINK: 'Chainlink', ADA: 'Cardano', NEAR: 'NEAR Protocol', XLM: 'Stellar', BCH: 'Bitcoin Cash',
@@ -48,7 +48,7 @@ const VENUE = { binance: 'Binance', gate: 'Gate.io', htx: 'HTX', okx: 'OKX' };
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const span = (xs) => { const lo = Math.min(...xs), hi = Math.max(...xs); return lo === hi ? `${lo}` : `${lo}–${hi}`; };
 
-// ---------------------------------------------------------------- measured facts
+// ---------------------------------------------------------------- حقایق اندازه‌گیری‌شده
 const centred = Object.values(FORECAST_TESTED.centred);
 const rangeTests = centred.reduce((a, x) => a + x.tests, 0);
 const facts = {
@@ -58,104 +58,92 @@ const facts = {
   recheckTests: TESTED_ACCURACY.recheck?.tests,
 };
 const holdLoss = TESTED_CHARTS.filter((k) => { const x = CHART_TESTED[k]; return (x.adopt ? x.own : x.standard).ret < 0; }).length;
-const traderMeasured = `In the latest walk-forward test (${CHART_TESTED.measuredOn}, ${CHART_TESTED.coins} coins, fees included) the rules lost money on ${holdLoss === TESTED_CHARTS.length ? 'every one' : `${holdLoss}`} of the ${TESTED_CHARTS.length} charts tested, and holding the same coins did better on ${holdBeat === TESTED_CHARTS.length ? 'every chart' : `${holdBeat} of them`}.`;
-const directionLine = 'No model has beaten chance at calling which way price goes next, so the page never presents a direction as a buy or sell call.';
+const traderMeasured = `در آخرین تست گام‌به‌گام (${CHART_TESTED.measuredOn}، ${CHART_TESTED.coins} ارز، با احتساب کارمزدها)، قوانین در ${holdLoss === TESTED_CHARTS.length ? 'هر یک' : `${holdLoss}`} مورد از ${TESTED_CHARTS.length} نمودار تست‌شده پول از دست دادند و نگهداری ساده همان ارزها در ${holdBeat === TESTED_CHARTS.length ? 'همه نمودارها' : `${holdBeat} مورد از آن‌ها`} عملکرد بهتری داشت.`;
+const directionLine = 'هیچ مدلی نتوانسته است در پیش‌بینی جهت بعدی حرکت قیمت عملکردی بهتر از شانس داشته باشد، بنابراین این صفحه هرگز جهت خاصی را به عنوان سیگنال خرید یا فروش معرفی نمی‌کند.';
 
-// ---------------------------------------------------------------- pages
+// ---------------------------------------------------------------- صفحات
 const SECTIONS = [
   { route: '#/', path: '', title: 'CoinVantage — Live Crypto Prices, Charts, Tested AI Forecasts & AI Trading Simulator',
     desc: `Live prices and candlestick charts for the top crypto coins, price-range forecasts tested on ${facts.coins} coins, an AI paper-trading simulator and a public track record. Every figure is measured, not promised. Not financial advice.`,
-    h1: 'Live crypto prices, charts and tested AI forecasts',
-    body: [`Prices and charts for the largest coins, from the exchange each one trades on (Binance first, then Gate.io and HTX). Open any coin for its chart, 13 indicators, a price-range forecast and the AI trader's signal.`, rangeLine, directionLine],
+    h1: 'قیمت‌های زنده ارزهای دیجیتال، نمودارها و پیش‌بینی‌های تست‌شده هوش مصنوعی',
+    body: [`قیمت‌ها و نمودارهای بزرگ‌ترین ارزهای دیجیتال، از صرافی‌ای که هر کدام در آن معامله می‌شوند (ابتدا بایننس، سپس Gate.io و HTX). هر ارزی را برای مشاهده نمودار آن، ۱۳ اندیکاتور، پیش‌بینی بازه قیمتی و سیگنال معامله‌گر هوش مصنوعی باز کنید.`, rangeLine, directionLine],
     more: {
-      does: 'Shows live prices and charts, scores indicators, forecasts a price range, answers questions from that data and runs a paper-trading simulator.',
-      measures: 'How often each forecast range held, how often direction calls were right against a simple baseline, and what the trading rules made after fees against holding.',
-      not: 'It does not place orders, hold funds or keys, or tell you what to buy. It is an educational tool, not financial advice.',
-      limits: 'Measured results describe the past. Markets change, data feeds can lag or fail, and a forecast range will be wrong about one time in five by design.',
+      does: 'قیمت‌ها و نمودارهای زنده را نمایش می‌دهد، اندیکاتورها را امتیازدهی می‌کند، بازه قیمتی را پیش‌بینی می‌کند، به سوالات بر اساس آن داده‌ها پاسخ می‌دهد و یک شبیه‌ساز معاملات کاغذی را اجرا می‌کند.',
+      measures: 'اینکه هر بازه پیش‌بینی چقدر اعتبار داشته، پیش‌بینی‌های جهت حرکت چقدر نسبت به یک مبنای ساده درست بوده‌اند، و قوانین معاملاتی پس از کسر کارمزد در مقایسه با نگهداری ساده چه نتیجه‌ای داشته‌اند.',
+      not: 'این ابزار سفارشی ثبت نمی‌کند، دارایی یا کلیدی را نگهداری نمی‌کند و به شما نمی‌گوید چه چیزی بخرید. این یک ابزار آموزشی است، نه مشاوره مالی.',
+      limits: 'نتایج اندازه‌گیری‌شده گذشته را توصیف می‌کنند. بازارها تغییر می‌کنند، فیدهای داده ممکن است با تأخیر مواجه شوند یا خطا بدهند، و بازه پیش‌بینی به طور طراحی‌شده از هر پنج بار حدود یک بار اشتباه خواهد بود.',
     } },
   { route: '#/scanner', path: 'scanner/', title: 'Crypto Scanner — Indicator Scores for the Top Coins | CoinVantage',
     desc: 'Ranks the top 20 to 50 coins by how strongly their indicators agree, with the same forecast and AI signal as each coin page. Filters for rising, falling, oversold and overbought.',
-    h1: 'Crypto scanner', body: ['Ranks the top coins by how strongly trend, momentum, RSI, MACD, Bollinger, Stoch RSI, volume and ADX agree right now.', 'Tested on 1.58 million candles across 106 coins, the highest readings were followed by a rise least often on every chart: the score describes the move so far, it does not predict the next one.'],
+    h1: 'اسکنر ارزهای دیجیتال', body: ['رتبه‌بندی ۲۰ تا ۵۰ ارز برتر بر اساس میزان توافق قوی اندیکاتورهای آن‌ها، همراه با همان پیش‌بینی و سیگنال هوش مصنوعی در صفحه هر ارز. دارای فیلترهای صعودی، نزولی، اشباع فروش و اشباع خرید.'],
     more: {
-      does: 'Reads eight indicators for each of the top coins on the chart you pick and ranks them by how strongly the readings agree.',
-      measures: 'What price did after each score level, on every chart, so you can see which readings carried information and which did not.',
-      not: 'A high score is not a buy signal and a low one is not a sell signal; the test showed the opposite tendency at the extremes.',
-      limits: 'Indicators are built from past prices only. They say nothing about news, liquidity or events that have not happened yet.',
+      does: 'هشت اندیکاتور را برای هر یک از ارزهای برتر در نمودار انتخابی شما می‌خواند و آن‌ها را بر اساس میزان توافق خوانش‌ها رتبه‌بندی می‌کند.',
+      measures: 'عملکرد قیمت پس از هر سطح امتیاز، در هر نمودار، تا بتوانید ببینید کدام خوانش‌ها حاوی اطلاعات بوده‌اند و کدام‌یک خیر.',
+      not: 'امتیاز بالا سیگنال خرید نیست و امتیاز پایین سیگنال فروش نیست؛ تست‌ها تمایل معکوسی را در نقاط افراطی نشان دادند.',
+      limits: 'اندیکاتورها صرفاً بر اساس قیمت‌های گذشته ساخته شده‌اند. آن‌ها هیچ چیزی درباره اخبار، نقدینگی یا رویدادهایی که هنوز رخ نداده‌اند نمی‌گویند.',
     } },
   { route: '#/trader', path: 'trader/', title: 'AI Crypto Trading Simulator — Paper Trading with Tested Rules | CoinVantage',
     desc: `An AI trader that runs tested rules on live prices with simulated money, plus a demo account and a record of your real trades. Walk-forward results on ${facts.coins} coins are shown next to it. No orders are ever placed.`,
-    h1: 'AI trading simulator',
-    body: ['An AI trader that buys and sells with simulated money on live prices, using rules tested walk-forward on every coin it can trade, fees included. It places no orders on any exchange.', `On each chart the page shows what the same rules made in the test, the worst drop, and what simply holding the coins made. ${traderMeasured} The page shows both, each with its worst drop.`],
+    h1: 'شبیه‌ساز معاملات هوش مصنوعی',
+    body: ['یک معامله‌گر هوش مصنوعی که با پول شبیه‌سازی‌شده روی قیمت‌های زنده و با استفاده از قوانین تست‌شده گام‌به‌گام روی هر ارز قابل معامله (با احتساب کارمزد) خرید و فروش می‌کند. این ربات هیچ سفارشی در هیچ صرافی ثبت نمی‌کند.', `در هر نمودار، صفحه نشان می‌دهد که همان قوانین در تست چه نتیجه‌ای کسب کرده‌اند، بیشترین افت سرمایه چقدر بوده و نگهداری ساده ارزها چه بازدهی داشته است. ${traderMeasured} صفحه هر دو مورد را به همراه بیشترین افت سرمایه نشان می‌دهد.`],
     more: {
-      does: 'Runs a demo account you trade by hand, an AI account that follows rules automatically, and a record of real trades you placed elsewhere, all measured the same way.',
-      measures: 'Return after fees, worst drop (open trades included), number of trades and win rate, next to what holding the same coins did over the same periods.',
-      not: 'It never places a real order, holds no funds or exchange keys, and is not a path to profit. Simulated results are not real results.',
-      limits: 'Simulated orders fill at the candle price. Real orders pay spread and slippage, can fill partly or not at all, and exchanges can halt. Custom rules were not part of the test.',
+      does: 'یک حساب آزمایشی برای معامله دستی، یک حساب هوش مصنوعی که به‌طور خودکار از قوانین پیروی می‌کند، و سابقه معاملات واقعی شما در سایر صرافی‌ها را اجرا می‌کند که همگی به یک روش سنجیده می‌شوند.',
+      measures: 'بازدهی پس از کسر کارمزد، بیشترین افت سرمایه (با احتساب معاملات باز)، تعداد معاملات و نرخ برد، در مقایسه با عملکرد نگهداری ساده همان ارزها در دوره‌های مشابه.',
+      not: 'هرگز سفارش واقعی ثبت نمی‌کند، هیچ دارایی یا کلید صرافی را نگه نمی‌دارد و راهی تضمینی برای سود نیست. نتایج شبیه‌سازی‌شده نتایج واقعی نیستند.',
+      limits: 'سفارش‌های شبیه‌سازی‌شده با قیمت کندل پر می‌شوند. سفارش‌های واقعی مشمول اسپرد و لغزش قیمت می‌شوند، ممکن است به صورت جزئی یا کلی پر نشوند، و صرافی‌ها ممکن است متوقف شوند. قوانین سفارشی بخشی از تست نبوده‌اند.',
     },
     sections: [
-      { h2: 'Accounts and strategies, explained', list: [
-        'Demo account: simulated money you trade by hand, to practise without risk.',
-        'AI account: simulated money traded by the rules you choose, on live prices, in your browser and in the cloud when you are signed in.',
-        'Real account: a record of trades you placed yourself on an exchange, entered by hand or imported. The app does not place them.',
-        'Tested default strategy: the rules for each chart that went through the walk-forward test with fees and fill costs counted. Their result is shown whether it is good or bad.',
-        'Custom strategy: your own settings. They were not tested, so the tested figures say nothing about them; a look back on the same history flatters them.',
+      { h2: 'توضیح حساب‌ها و استراتژی‌ها', list: [
+        'حساب آزمایشی (Demo): پول مجازی که به صورت دستی برای تمرین بدون ریسک معامله می‌کنید.',
+        'حساب هوش مصنوعی (AI): پول مجازی که بر اساس قوانین انتخابی شما، روی قیمت‌های زنده در مرورگر و در صورت ورود به حساب در فضای ابری معامله می‌شود.',
+        'حساب واقعی (Real): سوابقی از معاملاتی که شخصاً در یک صرافی انجام داده‌اید، به صورت دستی وارد یا درون‌ریزی شده‌اند. برنامه سفارشی ثبت نمی‌کند.',
+        'استراتژی پیش‌فرض تست‌شده: قوانین هر نمودار که با احتساب کارمزدها و هزینه‌های پر شدن سفارش از تست گام‌به‌گام عبور کرده‌اند. نتیجه آن‌ها چه خوب و چه بد نمایش داده می‌شود.',
+        'استراتژی سفارشی: تنظیمات شخصی شما. این موارد تست نشده‌اند، بنابراین آمارهای تست‌شده درباره آن‌ها صدق نمی‌کند؛ نگاه به گذشته روی همان تاریخچه آن‌ها را ایده‌آل جلوه می‌دهد.',
       ] },
     ] },
   { route: '#/learn', path: 'learn/', title: 'How the AI Learns and How It Is Tested | CoinVantage',
     desc: 'How every indicator, the forecast and the AI trader are graded against what the market did next: walk-forward tests, a live record kept in the cloud, and what was tried and rejected.',
-    h1: 'How the AI learns and how it is tested',
-    body: ['Every call is graded against what price did next, in the cloud, whether or not a page is open. A method only takes over when it beats the current one on that record, and it is demoted when it stops doing so.', directionMeasured, rangeLine],
+    h1: 'چگونگی یادگیری هوش مصنوعی و روش تست آن',
+    body: ['هر سیگنال در فضای ابری (صرف‌نظر از اینکه صفحه‌ای باز باشد یا خیر) بر اساس رفتار بعدی بازار ارزیابی می‌شود. یک روش تنها زمانی کنترل را به دست می‌گیرد که در آن سابقه بر روش فعلی غلبه کند، و اگر عملکرد خود را از دست دهد تنزل می‌یابد.', directionMeasured, rangeLine],
     more: {
-      does: 'Logs each signal, forecast and trade before the outcome is known, grades it when the time is up, and shifts weight toward the methods that keep earning it.',
-      measures: 'How often forecast ranges held, direction hit rates against a baseline, and trading returns after fees against simply holding.',
-      not: 'It does not learn from your personal data, does not see the future, and does not turn a method that failed into a recommendation.',
-      limits: 'Every figure describes the period it was measured on. A method that worked can stop working when the market changes, which is why the tests keep running.',
+      does: 'هر سیگنال، پیش‌بینی و معامله را پیش از مشخص شدن نتیجه ثبت می‌کند، پس از رسیدن موعد به آن امتیاز می‌دهد، و وزن را به سمت روش‌هایی که سوددهی خود را حفظ کرده‌اند منتقل می‌کند.',
+      measures: 'میزان اعتبار بازه‌های پیش‌بینی، نرخ موفقیت پیش‌بینی جهت در مقایسه با یک مبنا، و بازدهی معاملات پس از کارمزد در مقایسه با نگهداری ساده.',
+      not: 'هوش مصنوعی از داده‌های شخصی شما یاد نمی‌گیرد، آینده را نمی‌بیند، و روشی را که شکست خورده به عنوان پیشنهاد ارائه نمی‌دهد.',
+      limits: 'هر رقم بازه‌ای را که در آن اندازه‌گیری شده توصیف می‌کند. روشی که کار می‌کرده ممکن است با تغییر بازار متوقف شود، به همین دلیل تست‌ها به طور مداوم اجرا می‌شوند.',
     },
     sections: LEARN_GUIDE },
   { route: '#/track', path: 'track/', title: 'Public Track Record of Every Logged Signal | CoinVantage',
     desc: 'Every signal the server logged before the outcome was known, scored against the hit rate of always calling the more common outcome.',
-    h1: 'Public track record', body: ['Each signal is logged before its outcome is known and scored when the horizon passes, against the hit rate of always calling the more common outcome.'],
-    more: {
-      does: 'Lists the signals the server logged, when each was made, and how each turned out once its horizon passed.',
-      measures: 'Hit rate per chart and horizon, side by side with the baseline of always calling the more common outcome.',
-      not: 'It does not drop losing calls or rewrite old ones; a signal is graded exactly as it was logged.',
-      limits: 'A short record can look better or worse than it is. Read hit rates together with how many signals they cover.',
-    } },
+    h1: 'سابقه عملکرد عمومی', body: ['هر سیگنال پیش از مشخص شدن نتیجه ثبت شده و پس از گذشت افق زمانی، در مقایسه با نرخ موفقیتِ پیش‌بینیِ همیشه رایج‌ترین حالت امتیازدهی می‌شود.'] },
   { route: '#/advice', path: 'advice/', title: 'Crypto Market Scan — Where the Evidence Is Strongest | CoinVantage',
     desc: 'A scan of your holdings and the top coins across charts, weighting every reading by how accurate it has actually been.',
-    h1: 'Market scan', body: ['Reads your holdings and the top coins across several charts and weights every reading by its measured accuracy, so a reading that has never earned trust counts for little.'],
-    more: {
-      does: 'Scans your holdings and the top coins on several charts and sorts them by how much tested evidence stands behind each reading.',
-      measures: 'Each reading is weighted by its measured hit rate against a baseline, so untested or weak signals count for little.',
-      not: 'It does not tell you to buy or sell, and "no clear evidence" is a common and honest result.',
-      limits: 'Weights come from past tests. Entries, stops and targets are worked examples of risk, not predictions.',
-    } },
+    h1: 'اسکن بازار', body: ['دارایی‌ها و ارزهای برتر شما را در چند تایم‌فریم اسکن کرده و به هر خوانش بر اساس دقت اندازه‌گیری‌شده‌اش وزن می‌دهد، بنابراین خوانشی که هرگز قابل اعتماد نبوده ارزش بسیار کمی خواهد داشت.'] },
   { route: '#/compare', path: 'compare/', title: 'Compare Crypto Coins — Performance, Volatility, Drawdown & Correlation | CoinVantage',
     desc: 'Compare up to six coins: normalised performance, volatility, maximum drawdown, return against risk and a correlation matrix.',
-    h1: 'Compare coins', body: ['Up to six coins side by side: normalised performance, volatility, maximum drawdown, return against risk and how closely they move together.'] },
+    h1: 'مقایسه ارزها', body: ['مقایسه حداکثر شش ارز در کنار یکدیگر: عملکرد نرمال‌شده، نوسان، بیشترین افت سرمایه، بازدهی در برابر ریسک و میزان همبستگی حرکتی آن‌ها.'] },
   { route: '#/futures', path: 'futures/', title: 'Crypto Futures — Funding Rates and Open Interest | CoinVantage',
     desc: 'Funding rates, open interest and long/short ratios for the main crypto futures markets.',
-    h1: 'Crypto futures', body: ['Funding rates, open interest and long/short ratios for the main perpetual futures markets.'] },
-  { route: '#/news', path: 'news/', title: 'Crypto News | CoinVantage', desc: 'Recent crypto news headlines from public sources, next to live prices and charts for the coins they mention.', h1: 'Crypto news', body: ['Recent headlines from public crypto news sources.'] },
+    h1: 'معاملات آتی (Futures)', body: ['نرخ‌های تامین مالی (Funding rates)، سود باز (Open interest) و نسبت موقعیت‌های خرید به فروش در بازارهای اصلی معاملات آتی پرپچوال.'] },
+  { route: '#/news', path: 'news/', title: 'Crypto News | CoinVantage', desc: 'Recent crypto news headlines from public sources, next to live prices and charts for the coins they mention.', h1: 'اخبار ارزهای دیجیتال', body: ['سرتیتر اخبار اخیر از منابع عمومی ارزهای دیجیتال.'] },
   { route: '#/tools', path: 'tools/', title: 'Crypto Tools — Converter, DCA Backtest, Position Sizer | CoinVantage',
     desc: 'A currency converter, a dollar-cost-averaging backtest on real prices and a position sizer that keeps each trade to a set risk.',
-    h1: 'Crypto tools', body: ['A converter, a dollar-cost-averaging backtest on real prices, and a position sizer that keeps each trade to the risk you set.'] },
-  { route: '#/exchanges', path: 'exchanges/', title: 'Crypto Exchanges — Volume and Trust | CoinVantage', desc: 'The main crypto exchanges ranked by trading volume, and which of them the app reads live prices and candles from.', h1: 'Crypto exchanges', body: ['The main exchanges by trading volume.'] },
+    h1: 'ابزارهای ارز دیجیتال', body: ['یک مبدل ارزی، تست استراتژی میانگین‌گیری هزینه دلاری (DCA) روی قیمت‌های واقعی، و ابزار تعیین حجم پوزیشن که هر معامله را در ریسک تعیین‌شده نگه می‌دارد.'] },
+  { route: '#/exchanges', path: 'exchanges/', title: 'Crypto Exchanges — Volume and Trust | CoinVantage', desc: 'The main crypto exchanges ranked by trading volume, and which of them the app reads live prices and candles from.', h1: 'صرافی‌های ارز دیجیتال', body: ['صرافی‌های اصلی بر اساس حجم معاملات.'] },
   { route: '#/ai', path: 'ai/', title: 'Crypto AI Assistant — Answers from Live Data | CoinVantage',
     desc: 'Ask about any coin, the market or your AI trader. Answers come from live prices and the app\'s tested models, in your browser, and say what they are based on.',
-    h1: 'Crypto AI assistant', body: ['Ask about a coin, the market or your AI trader. The answers are built from live prices and the app\'s tested models, and every figure in them comes from that data, with nothing to download.', 'Each answer names what it used (live prices, signals, the forecast, your simulated account) and who wrote the words: the built-in analyst, or a language model that only rewords the analyst\'s answer and is checked for figures that are not in the data.'],
+    h1: 'دستیار هوش مصنوعی ارز دیجیتال', body: ['درباره هر ارز، بازار یا معامله‌گر هوش مصنوعی خود سوال کنید. پاسخ‌ها از قیمت‌های زنده و مدل‌های تست‌شده برنامه در مرورگر شما ساخته می‌شوند و مشخص می‌کنند بر چه اساسی ارائه شده‌اند.', 'هر پاسخ منبع خود را نام می‌برد (قیمت‌های زنده، سیگنال‌ها، پیش‌بینی، حساب شبیه‌سازی‌شده شما) و نویسنده متن را مشخص می‌کند: تحلیلگر داخلی یا مدل زبانی که صرفاً پاسخ تحلیلگر را بازنویسی کرده و از نظر وجود اعداد نامعتبر بررسی می‌شود.'],
     more: {
-      does: 'Answers questions about coins, the market, comparisons, risk and your paper-trading account, from live data and the measured models.',
-      measures: 'Nothing new: it reports figures the rest of the app measured, with their measured accuracy, and shows the verified data behind each answer.',
-      not: 'It does not predict prices with certainty, place trades, or invent figures. An answer quoting numbers that are not in the data is replaced by the analyst\'s own.',
-      limits: 'Where the evidence is weak it says so. Direction calls have not beaten chance in testing, and a language model can still word things badly. Not financial advice.',
+      does: 'به سوالات درباره ارزها، بازار، مقایسه‌ها، ریسک و حساب معاملات کاغذی شما بر اساس داده‌های زنده و مدل‌های اندازه‌گیری‌شده پاسخ می‌دهد.',
+      measures: 'چیز جدیدی نیست: اعدادی را که سایر بخش‌های برنامه اندازه‌گیری کرده‌اند به همراه دقت‌شان گزارش می‌کند و داده‌های تأییدشده پشت هر پاسخ را نشان می‌دهد.',
+      not: 'قیمت‌ها را با قطعیت پیش‌بینی نمی‌کند، معامله‌ای ثبت نمی‌کند و اعدادی را از خود ابداع نمی‌کند. پاسخی که اعدادی خارج از داده‌ها را نقل کند با پاسخ خود تحلیلگر جایگزین می‌شود.',
+      limits: 'در مواردی که مستندات ضعیف باشد به صراحت اعلام می‌کند. پیش‌بینی‌های جهت در تست‌ها نتوانسته اند از شانس بهتر عمل کنند، و مدل زبانی ممکن است متن را ضعیف بیان کند. این مشاوره مالی نیست.',
     } },
-  { route: '#/alerts', path: 'alerts/', title: 'Crypto Price Alerts | CoinVantage', desc: 'Set price and indicator alerts for any coin and get notified in the browser, by e-mail or on Telegram when they trigger.', h1: 'Price alerts', body: ['Set price and signal alerts for any coin.'] },
-  { route: '#/wallet', path: 'wallet/', title: 'Read-only Crypto Wallet View | CoinVantage', desc: 'See a wallet\'s balances read-only. The app never asks for keys or signatures.', h1: 'Wallet', body: ['Connect a wallet read-only to see its balances. The app never asks for private keys, seed phrases or signatures.'] },
-  { route: '#/premium', path: 'premium/', title: 'Free and Premium Plans | CoinVantage', desc: 'What the free plan of CoinVantage includes, what Premium adds, and what neither of them can promise about returns.', h1: 'Plans', body: ['What the free plan includes and what Premium adds.'] },
-  { route: '#/legal/terms', path: 'legal/terms/', title: 'Terms of Use | CoinVantage', desc: 'The terms of use for CoinVantage: an educational tool for crypto markets, not financial advice or a trading service.', h1: 'Terms of use', body: ['The terms that apply to using CoinVantage.'] },
-  { route: '#/legal/privacy', path: 'legal/privacy/', title: 'Privacy Policy | CoinVantage', desc: 'What CoinVantage stores on your device and on its server, why, for how long, and how to delete it.', h1: 'Privacy policy', body: ['What the app stores on your device and on its server, and for how long.'] },
-  { route: '#/legal/risk', path: 'legal/risk/', title: 'Risk Disclosure | CoinVantage', desc: 'The risks of trading crypto and of relying on any forecast, signal or simulation, including the ones on this site.', h1: 'Risk disclosure', body: ['Crypto is volatile. No forecast, signal or simulation on this site is financial advice, and past results are not a promise.'] },
+  { route: '#/alerts', path: 'alerts/', title: 'Crypto Price Alerts | CoinVantage', desc: 'Set price and indicator alerts for any coin and get notified in the browser, by e-mail or on Telegram when they trigger.', h1: 'هشدارهای قیمتی', body: ['تنظیم هشدارهای قیمت و سیگنال برای هر ارز دیجیتال.'] },
+  { route: '#/wallet', path: 'wallet/', title: 'Read-only Crypto Wallet View | CoinVantage', desc: 'See a wallet\'s balances read-only. The app never asks for keys or signatures.', h1: 'کیف پول', body: ['اتصال کیف پول به صورت فقط‌خواندنی برای مشاهده موجودی‌ها. برنامه هرگز کلید خصوصی، عبارت بازیابی یا امضایی درخواست نمی‌کند.'] },
+  { route: '#/premium', path: 'premium/', title: 'Free and Premium Plans | CoinVantage', desc: 'What the free plan of CoinVantage includes, what Premium adds, and what neither of them can promise about returns.', h1: 'پلن‌های اشتراکی', body: ['امکانات پلن رایگان و ویژگی‌های نسخه پریمیوم.'] },
+  { route: '#/legal/terms', path: 'legal/terms/', title: 'Terms of Use | CoinVantage', desc: 'The terms of use for CoinVantage: an educational tool for crypto markets, not financial advice or a trading service.', h1: 'شرایط استفاده', body: ['شرایط حاکم بر استفاده از CoinVantage.'] },
+  { route: '#/legal/privacy', path: 'legal/privacy/', title: 'Privacy Policy | CoinVantage', desc: 'What CoinVantage stores on your device and on its server, why, for how long, and how to delete it.', h1: 'سیاست حفظ حریم خصوصی', body: ['مواردی که برنامه روی دستگاه شما و سرور خود ذخیره می‌کند و مدت زمان نگهداری آن‌ها.'] },
+  { route: '#/legal/risk', path: 'legal/risk/', title: 'Risk Disclosure | CoinVantage', desc: 'The risks of trading crypto and of relying on any forecast, signal or simulation, including the ones on this site.', h1: 'سلب مسئولیت ریسک', body: ['بازار ارزهای دیجیتال پرنوسان است. هیچ پیش‌بینی، سیگنال یا شبیه‌سازی در این سایت مشاوره مالی نیست و نتایج گذشته تضمینی برای آینده نیستند.'] },
 ];
 
 const universe = JSON.parse(fs.readFileSync(path.join(root, 'tools/universe.json'), 'utf8'));
@@ -168,18 +156,18 @@ const COINS = universe.coins.map((c) => {
     route: `#/coin/${sym}`, path: `coin/${slug(sym)}/`, coin: sym,
     title: `${label} Price, Live Chart & Tested AI Forecast | CoinVantage`,
     desc: `Live ${sym} price and chart from ${venue}, 13 indicators, a price-range forecast tested on ${facts.coins} coins and an AI paper-trading signal with its measured record.`,
-    h1: `${label} price, chart and AI forecast`,
+    h1: `قیمت، نمودار و پیش‌بینی هوش مصنوعی ${label}`,
     more: {
-      does: `Shows the live ${sym} price and chart, 13 indicators, a price-range forecast trained on ${sym}'s own candles in your browser, and the AI trader's signal.`,
-      measures: 'How often the forecast range held across the tested coins, and the AI trader\'s walk-forward result on each chart.',
-      not: `It does not say whether to buy or sell ${sym}, place orders, or know about news before it happens.`,
-      limits: 'Direction calls have not beaten a simple baseline, and every figure describes the past. Not financial advice.',
+      does: `قیمت و نمودار زنده ${sym}، ۱۳ اندیکاتور، پیش‌بینی بازه قیمتی آموزش‌دیده روی کندل‌های خود ${sym} در مرورگر شما، و سیگنال معامله‌گر هوش مصنوعی را نمایش می‌دهد.`,
+      measures: 'اینکه بازه پیش‌بینی در بین ارزهای تست‌شده چقدر اعتبار داشته است، و نتیجه تست گام‌به‌گام معامله‌گر هوش مصنوعی در هر نمودار چگونه بوده است.',
+      not: `این ابزار نمی‌گوید که ${sym} را بخرید یا بفروشید، سفارشی ثبت نمی‌کند، و از اخبار پیش از انتشار مطلع نیست.`,
+      limits: 'پیش‌بینی‌های جهت حرکت نتوانسته‌اند از یک مبنای ساده بهتر عمل کنند، و هر رقم گذشته را توصیف می‌کند. مشاوره مالی نیست.',
     },
-    body: [`The live ${sym} price and candlestick chart come from ${venue}. When you open the page the app trains its forecast models on ${sym}'s own candles, in your browser, and shows the price range they give for the next candles, the indicators and the AI trader's signal for ${sym}.`, rangeLine, directionLine],
+    body: [`قیمت زنده و نمودار کندل‌استیک ${sym} از ${venue} دریافت می‌شود. هنگامی که صفحه را باز می‌کنید، برنامه مدل‌های پیش‌بینی خود را روی کندل‌های خود ${sym} در مرورگر شما آموزش می‌دهد و بازه قیمتی حاصل برای کندل‌های بعدی، اندیکاتورها و سیگنال معامله‌گر هوش مصنوعی برای ${sym} را نمایش می‌دهد.`, rangeLine, directionLine],
   };
 });
 
-// ---------------------------------------------------------------- render
+// ---------------------------------------------------------------- رندر کردن
 const template = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const swap = (html, re, to, what) => {
   if (!re.test(html)) throw new Error(`index.html: no ${what} to replace`);
@@ -198,7 +186,6 @@ function page(p) {
       { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: c.url })) }];
   let html = template;
   html = swap(html, /<html lang="en"[^>]*>/, `<html lang="en" data-theme="dark"${p.path ? ` data-route="${esc(p.route)}"` : ''}>`, 'html tag');
-  // one base for every relative address in the copy (assets, sw.js, version.txt)
   if (p.path) html = swap(html, /<meta charset="utf-8">/, `<meta charset="utf-8">\n  <base href="${BASE}">`, 'charset');
   html = swap(html, /<title>[^<]*<\/title>/, `<title>${esc(p.title)}</title>`, 'title');
   html = swap(html, /<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(p.desc)}">`, 'description');
@@ -208,10 +195,10 @@ function page(p) {
   html = swap(html, /<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${url}">`, 'canonical');
   html = swap(html, /<!-- ld:start -->[\s\S]*?<!-- ld:end -->/, `<!-- ld:start -->\n${ld.map((x) => `  <script type="application/ld+json">${JSON.stringify(x)}</script>`).join('\n')}\n  <!-- ld:end -->`, 'structured data');
   const links = p.coin
-    ? `<a class="btn primary" href="${p.route}">Open the live ${esc(p.coin)} chart</a> <a class="btn" href="#/trader">AI trading simulator</a> <a class="btn" href="#/learn">How it is tested</a>`
-    : `<a class="btn primary" href="${p.route}">Open the live ${esc(p.h1.charAt(0).toLowerCase() + p.h1.slice(1))}</a>${p.route === '#/learn' ? '' : ' <a class="btn" href="#/learn">How it is tested</a>'}`;
+    ? `<a class="btn primary" href="${p.route}">مشاهده نمودار زنده ${esc(p.coin)}</a> <a class="btn" href="#/trader">شبیه‌ساز معاملات هوش مصنوعی</a> <a class="btn" href="#/learn">نحوه تست</a>`
+    : `<a class="btn primary" href="${p.route}">مشاهده ${esc(p.h1.charAt(0).toLowerCase() + p.h1.slice(1))}</a>${p.route === '#/learn' ? '' : ' <a class="btn" href="#/learn">نحوه تست</a>'}`;
   const n = (t) => `\n          ${t}`;
-  const more = p.more ? n(`<ul class="facts" aria-label="At a glance">${[['What it does', p.more.does], ['What it measures', p.more.measures], ['What it does not do', p.more.not], ['Limitations', p.more.limits]].map(([k, v]) => `<li><b>${k}</b><p>${esc(v)}</p></li>`).join('')}</ul>`) : '';
+  const more = p.more ? n(`<ul class="facts" aria-label="در یک نگاه">${[['عملکرد', p.more.does], ['معیارهای اندازه‌گیری', p.more.measures], ['مواردی که انجام نمی‌دهد', p.more.not], ['محدودیت‌ها', p.more.limits]].map(([k, v]) => `<li><b>${k}</b><p>${esc(v)}</p></li>`).join('')}</ul>`) : '';
   const sections = (p.sections || []).map((x, i) => {
     const id = `${(p.path || 'home').replace(/[^a-z0-9]+/gi, '-').replace(/-$/, '')}-s${i + 1}`;
     const inner = [
@@ -221,7 +208,7 @@ function page(p) {
     ].join('');
     return n(`<section aria-labelledby="${id}"><h2 id="${id}">${esc(x.h2)}</h2>${inner}</section>`);
   }).join('');
-  const main = `<main id="view" tabindex="-1">\n        <section class="card seo-intro"><h1>${esc(p.h1)}</h1>${p.body.map((t, i) => `<p${i === 0 ? ' class="lede"' : ''}>${esc(t)}</p>`).join('')}${more}${sections}${n(`<p class="row" style="gap:8px;flex-wrap:wrap">${links}</p>`)}${n('<p class="fine">Educational, not financial advice. Forecasts, signals and simulated results describe the past and do not promise future returns. Crypto is volatile; never risk money you cannot afford to lose.</p>')}</section>\n      </main>`;
+  const main = `<main id="view" tabindex="-1">\n        <section class="card seo-intro"><h1>${esc(p.h1)}</h1>${p.body.map((t, i) => `<p${i === 0 ? ' class="lede"' : ''}>${esc(t)}</p>`).join('')}${more}${sections}${n(`<p class="row" style="gap:8px;flex-wrap:wrap">${links}</p>`)}${n('<p class="fine">جنبه آموزشی دارد، نه مشاوره مالی. پیش‌بینی‌ها، سیگنال‌ها و نتایج شبیه‌سازی‌شده گذشته را توصیف می‌کنند و بازدهی آینده را تضمین نمی‌کنند. بازار ارزهای دیجیتال پرنوسان است؛ هرگز پولی را که توان از دست دادن آن را ندارید ریسک نکنید.</p>')}</section>\n      </main>`;
   html = swap(html, /<main id="view" tabindex="-1">[\s\S]*?<\/main>/, main, 'main');
   return html;
 }
