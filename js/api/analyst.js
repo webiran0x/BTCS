@@ -1,32 +1,32 @@
-// Analyst layer: provides AI-powered market analysis, sentiment, and predictions
-// Runs locally in the visitor's browser using WebLLM — no API key required.
+// لایه تحلیل‌گر: ارائه‌دهنده تحلیل بازار، احساسات و پیش‌بینی‌های مبتنی بر هوش مصنوعی
+// به صورت محلی در مرورگر بازدیدکننده با استفاده از WebLLM اجرا می‌شود — بدون نیاز به کلید API.
 
 import { CONFIG } from '../config.js';
 import { $, icon } from '../ui.js';
 
 const ANALYST_KEY = 'BTCSAnalystCache';
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour cache
+const CACHE_TTL = 60 * 60 * 1000; // کش ۱ ساعته
 
 export async function startAnalyst() {
-  // Initialize the WebLLM analyst if not already running
+  // راه‌اندازی تحلیل‌گر WebLLM در صورتی که در حال اجرا نباشد
   if (window.BTCSAnalyst) {
     return window.BTCSAnalyst;
   }
 
   const { createWebLLM } = await import('./webllm-loader.js');
-  const modelConfig = CONFIG.WEBLLM_MODELS?.[1] || {}; // Default to recommended
+  const modelConfig = CONFIG.WEBLLM_MODELS?.[1] || {}; // پیش‌فرض روی مدل پیشنهادی
 
   window.BTCSAnalyst = createWebLLM({
     model: modelConfig.id,
     onProgress: (progress) => {
-      // Update UI with analysis progress
+      // به‌روزرسانی رابط کاربری با پیشرفت تحلیل
       const progressEl = $('#analystProgress');
       if (progressEl) {
         progressEl.style.width = `${progress * 100}%`;
       }
     },
     onToken: (token) => {
-      // Stream analysis tokens to UI
+      // ارسال تدریجی توکن‌های تحلیل به رابط کاربری
       const textEl = $('#analystText');
       if (textEl) {
         textEl.textContent += token;
@@ -38,26 +38,25 @@ export async function startAnalyst() {
 }
 
 export async function getAnalysis(query, context = {}) {
-  // Build the context for the analyst
+  // ساخت زمینه (Context) برای تحلیل‌گر
   const marketData = context.marketData || {};
   const portfolio = context.portfolio || {};
   const symbols = context.symbols || [];
 
-  const prompt = `You are a cryptocurrency market analyst for BTCS. 
-Provide a concise analysis (max 300 words) covering:
-1. Current market trend for: ${symbols.join(', ') || 'major pairs'}
-2. Recent price action and key levels
-3. Sentiment assessment (fear & greed, social signals)
-4. Potential near-term catalysts
-5. Risk considerations
+  const prompt = `شما یک تحلیل‌گر بازار ارزهای دیجیتال برای پلتفرم BTCS هستید. 
+یک تحلیل مختصر (حداکثر ۳۰۰ کلمه) شامل موارد زیر ارائه دهید:
+1. روند فعلی بازار برای: ${symbols.join(', ') || 'جفت‌ارزهای اصلی'}
+2. واکنش‌های قیمتی اخیر و سطوح کلیدی
+3. ارزیابی احساسات (شاخص ترس و طمع، سیگنال‌های اجتماعی)
+4. کاتالیزورهای بالقوه کوتاه‌مدت
+5. ملاحظات مربوط به ریسک
 
-Market data snapshot:
-- Price changes (24h): ${JSON.stringify(marketData.priceChanges || {})}
-- Fear & Greed index: ${marketData.fearGreed || 'N/A'}
-- Portfolio holdings: ${JSON.stringify(portfolio.holdings || {})}
+نمای کلی داده‌های بازار:
+- تغییرات قیمت (۲۴ ساعت): ${JSON.stringify(marketData.priceChanges || {})}
+- شاخص ترس و طمع: ${marketData.fearGreed || 'ناموجود'}
+- دارایی‌های سبد: ${JSON.stringify(portfolio.holdings || {})}
 
-Keep the analysis factual, never predictive of future prices, and include a disclaimer 
-that this is AI-generated analysis for informational purposes only.`;
+تحلیل را مبتنی بر واقعیت نگه دارید، هرگز قیمت‌های آینده را پیش‌بینی نکنید و یک سلب مسئولیت اضافه کنید که این تحلیل توسط هوش مصنوعی و صرفاً برای اهداف اطلاعاتی تولید شده است.`;
 
   try {
     const analyst = await startAnalyst();
@@ -67,30 +66,30 @@ that this is AI-generated analysis for informational purposes only.`;
       stream: true,
     });
 
-    // Cache the analysis
+    // ذخیره تحلیل در کش
     setAnalysisCache(query, analysis);
 
     return analysis;
   } catch (err) {
-    console.error('Analyst error:', err);
+    console.error('خطای تحلیل‌گر:', err);
     return generateFallbackAnalysis(query, marketData);
   }
 }
 
 function generateFallbackAnalysis(query, marketData) {
   const fng = marketData.fearGreed !== undefined ?
-    (marketData.fearGreed < 25 ? 'Extreme Fear' : marketData.fearGreed > 75 ? 'Extreme Greed' : 'Neutral') :
-    'N/A';
+    (marketData.fearGreed < 25 ? 'ترس شدید' : marketData.fearGreed > 75 ? 'طمع شدید' : 'خنثی') :
+    'ناموجود';
 
-  return `<div class="card mt analyst-card">
-    <div class="card-h"><h3>${icon('ai', 16)} Market Analysis</h3></div>
-    <p class="fine">AI analysis currently unavailable. Market conditions:</p>
+  return `<div class="card mt analyst-card" dir="rtl">
+    <div class="card-h"><h3>${icon('ai', 16)} تحلیل بازار</h3></div>
+    <p class="fine">تحلیل هوش مصنوعی در حال حاضر در دسترس نیست. شرایط بازار:</p>
     <ul>
-      <li>Fear & Greed Index: <b>${fng}</b></li>
-      <li>Market status: ${marketData.trend === 'bull' ? 'Bullish' : marketData.trend === 'bear' ? 'Bearish' : 'Sideways'}</li>
-      <li>Key observation: ${marketData.observation || 'No specific observation available'}</li>
+      <li>شاخص ترس و طمع: <b>${fng}</b></li>
+      <li>وضعیت بازار: ${marketData.trend === 'bull' ? 'صعودی (Bullish)' : marketData.trend === 'bear' ? 'نزولی (Bearish)' : 'رنج / خنثی'}</li>
+      <li>مشاهده کلیدی: ${marketData.observation || 'مشاهده خاصی در دسترس نیست'}</li>
     </ul>
-    <p class="fine mt">This is static fallback analysis. For real-time AI insights, please refresh the page or ensure WebLLM is supported in your browser.</p>
+    <p class="fine mt">این یک تحلیل جایگزین ایستا است. برای دریافت بینش‌های لحظه‌ای هوش مصنوعی، لطفاً صفحه را رفرش کنید یا از پشتیبانی مرورگر خود از WebLLM اطمینان حاصل نمایید.</p>
   </div>`;
 }
 
@@ -103,7 +102,7 @@ export function setAnalysisCache(query, analysis) {
     };
     localStorage.setItem(ANALYST_KEY, JSON.stringify(cache));
   } catch (e) {
-    // LocalStorage full or disabled - silently ignore
+    // حافظه محلی پر یا غیرفعال است - بدون صدا نادیده گرفته می‌شود
   }
 }
 
@@ -112,7 +111,7 @@ export function getAnalysisCache() {
     const cached = localStorage.getItem(ANALYST_KEY);
     if (!cached) return null;
     const data = JSON.parse(cached);
-    // Check cache TTL
+    // بررسی اعتبار زمانی کش (TTL)
     if (Date.now() - data.timestamp > CACHE_TTL) {
       localStorage.removeItem(ANALYST_KEY);
       return null;
