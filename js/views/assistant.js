@@ -12,8 +12,6 @@ import { esc, price, changeHtml, money} from '../format.js';
 import { settings, load, save } from '../store.js';
 
 export const title = 'دستیار هوش مصنوعی';
-// مکالمه روی این دستگاه و حساب کاربری (cloudsync.js) ذخیره می‌شود،
-// بنابراین دستیار پس از بارگذاری مجدد یا روی دستگاه دیگر آن را به یاد می‌آورد.
 const HISTORY_KEY = 'assistantHistory';
 const KEEP = 30;
 const history = [];
@@ -23,7 +21,7 @@ function restoreHistory() {
   for (const m of Array.isArray(saved?.messages) ? saved.messages : []) if (m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string') history.push(m);
   history.lastSymbol = (typeof saved?.lastSymbol === 'string' && /^[\p{L}\p{N}_]{1,20}$/u.test(saved.lastSymbol) ? saved.lastSymbol : null) || history.lastSymbol;
 }
-let savingHere = false; // ذخیره‌های خود این صفحه به عنوان خبر از دستگاه دیگر محسوب نمی‌شوند
+let savingHere = false;
 function saveHistory() {
   const value = {
     messages: history.slice(-KEEP).map((m) => ({ role: m.role, content: String(m.content).slice(0, 6000), ...(m.root ? { root: String(m.root).slice(0, 500) } : {}), ...(m.meta ? { meta: String(m.meta).replace(/<a href="#" data-facts>[^<]*<\/a>/, '') } : {}), at: m.at || Date.now() })),
@@ -41,38 +39,171 @@ export async function render(el, [symParam]) {
   const s = settings.get();
 
   el.innerHTML = `
-    <div class="page-head"><div><h1>دستیار هوش مصنوعی</h1><p>پشتیبانی از تصمیم‌گیری، نه پیش‌بینی سود. پاسخ‌ها روی دستگاه شما از روی قیمت‌های زنده، سیگنال‌های اندیکاتور، بک‌تست‌ها و پیش‌بینی‌هایی که دقتشان اندازه‌گیری شده ساخته می‌شوند؛ مدل زبانی (در صورت فعال‌سازی) فقط همان پاسخ تأییدشده را با کلمات دیگری بیان می‌کند. هر پاسخ می‌گوید از چه منابعی استفاده کرده و در صورت کمبود شواهد، صراحتاً آن را اعلام می‌کند. سوالات شما روی همین دستگاه می‌مانند مگر اینکه سرور هوش مصنوعی شخصی خود را متصل کنید. این ابزار قادر به ثبت معامله نیست. مشاوره مالی محسوب نمی‌شود.</p></div><div class="row"><button class="btn sm" type="button" id="assistantStop" disabled>توقف</button><button class="btn sm ghost" type="button" id="assistantClear">پاک کردن گفتگو</button></div></div>
-    <div class="chat">
-      <div class="card chat-box">
-        <div class="chat-log" id="log" role="log" aria-live="polite" aria-label="گفتگو"></div>
-        <div class="suggest" id="suggest"></div>
-        <form class="chat-input" id="form">
-          <label class="sr-only" for="q">درباره یک ارز، بازار یا حساب شبیه‌سازی‌شده خود بپرسید</label>
-          <textarea class="inp" id="q" rows="1" maxlength="600" placeholder="مثلاً: در حال حاضر ${esc(st.symbol)} چقدر ریسک دارد؟ مقایسه بیت‌کوین و اتریوم" aria-describedby="qHelp"></textarea>
-          <button class="btn primary" id="send" type="submit" aria-label="ارسال سوال">${icon('send', 16)}</button>
-          <span class="sr-only" id="qHelp">برای ارسال کلید Enter و برای خط جدید Shift+Enter را فشار دهید.</span>
-        </form>
-      </div>
-      <div class="stack">
-        <div class="card" id="engineCard"></div>
-        <div class="card">
-          <div class="card-h"><h3>ارز در مرکز توجه</h3></div>
-          <div class="row" style="margin-bottom:10px">
-            <select class="inp" id="coinSel" aria-label="ارز در مرکز توجه" style="flex:1">${all.filter((c) => !isStable(c.symbol)).slice(0, 150).map((c) => `<option value="${esc(c.symbol)}" ${c.symbol === st.symbol ? 'selected' : ''}>${esc(c.symbol)} · ${esc(c.name)}</option>`).join('')}</select>
+    <style>
+      .ap-assistant-wrap {
+        direction: rtl;
+        text-align: right;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding-bottom: 60px;
+      }
+      .ap-hero-card {
+        background: radial-gradient(circle at top right, rgba(94, 92, 230, 0.09), transparent 50%),
+                    radial-gradient(circle at bottom left, rgba(50, 215, 75, 0.07), transparent 50%),
+                    rgba(24, 24, 29, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 28px;
+        padding: 32px;
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        margin-bottom: 24px;
+        box-shadow: 0 24px 54px rgba(0, 0, 0, 0.35);
+      }
+      .ap-bento-grid {
+        display: grid;
+        grid-template-columns: 2.2fr 1fr;
+        gap: 24px;
+      }
+      @media(max-width: 960px) {
+        .ap-bento-grid { grid-template-columns: 1fr; }
+      }
+      .ap-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 22px;
+        padding: 24px;
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        margin-bottom: 20px;
+      }
+      .ap-card:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+      }
+      .ap-assistant-wrap .btn {
+        border-radius: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+      .ap-assistant-wrap .btn.primary {
+        background: linear-gradient(135deg, #5e5ce6 0%, #3634a3 100%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(94, 92, 230, 0.3);
+      }
+      .ap-assistant-wrap .btn.primary:hover {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+      }
+      .ap-assistant-wrap .inp, .ap-assistant-wrap select, .ap-assistant-wrap textarea {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 12px;
+        color: #fff;
+        padding: 12px 16px;
+        outline: none;
+        transition: all 0.2s;
+        font-family: inherit;
+      }
+      .ap-assistant-wrap .inp:focus, .ap-assistant-wrap select:focus, .ap-assistant-wrap textarea:focus {
+        border-color: rgba(94, 92, 230, 0.6);
+        box-shadow: 0 0 0 3px rgba(94, 92, 230, 0.25);
+      }
+      .ap-chat-box {
+        display: flex;
+        flex-direction: column;
+        height: 620px;
+      }
+      .ap-chat-log {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        scroll-behavior: smooth;
+      }
+      .ap-chat-input-area {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+        margin-top: 16px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 16px;
+        padding: 10px;
+      }
+      .ap-suggest-chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 12px 0;
+        max-height: 80px;
+        overflow-y: auto;
+      }
+      .ap-suggest-chips button {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.8);
+        padding: 6px 12px;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .ap-suggest-chips button:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+      }
+    </style>
+
+    <div class="ap-assistant-wrap" dir="rtl">
+      <div class="ap-hero-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+          <div>
+            <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">دستیار هوش مصنوعی</h1>
+            <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0;max-width:900px">پشتیبانی از تصمیم‌گیری، نه پیش‌بینی سود[cite: 15]. پاسخ‌ها روی دستگاه شما از روی قیمت‌های زنده، سیگنال‌های اندیکاتور، بک‌تست‌ها و پیش‌بینی‌ها ساخته می‌شوند[cite: 15]. هر پاسخ مبانی خود را اعلام کرده و در صورت کمبود شواهد، صراحتاً آن را ذکر می‌کند[cite: 15]. مشاوره مالی محسوب نمی‌شود[cite: 15].</p>
           </div>
-          <div class="row"><span class="fine">نمودار</span><div class="seg" id="ivSeg">${['1m', '5m', '15m', '1h', '4h', '1d'].map((iv) => `<button data-v="${iv}" class="${iv === st.interval ? 'on' : ''}">${iv}</button>`).join('')}</div></div>
-          <div id="focus" class="mt fine"></div>
+          <div class="row" style="display:flex;gap:8px">
+            <button class="btn sm ghost" type="button" id="assistantStop" disabled style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 14px;border-radius:10px">توقف</button>
+            <button class="btn sm ghost" type="button" id="assistantClear" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 14px;border-radius:10px">پاک کردن گفتگو</button>
+          </div>
         </div>
-        <div class="card fine">
-          <b>دستیار چگونه کار می‌کند</b>
-          <ol style="padding-left:18px;margin:6px 0 0">
-            <li>کندل‌های زنده بایننس را برای ارز مورد نظر شما دریافت می‌کند.</li>
-            <li>خوانش‌ها را روی ۴ تایم‌فریم، یک بک‌تست و پیش‌بینی (۷ مدل شامل تطبیق الگو، شبکه عصبی و درخت‌های تصمیم‌گیری تقویت‌شده که هرکدام با دقت اندازه‌گیری‌شده خود وزن‌دهی شده‌اند) محاسبه می‌کند.</li>
-            <li>یک تحلیل‌گر داخلی — یا یک مدل زبانی در حال اجرا روی دستگاه شما — این اعداد تأییدشده را به پاسخی روان تبدیل می‌کند.</li>
-            <li>پاسخ مدل بررسی می‌شود: اگر اعدادی را ذکر کند که در داده‌ها وجود ندارند، پاسخ خود تحلیل‌گر نمایش داده می‌شود.</li>
-          </ol>
-          <p class="mt"><b>کارهایی که نمی‌تواند انجام دهد:</b> پیش‌بینی اخبار قبل از وقوع، دانستن آینده، یا شکست دادن شانس در پیش‌بینی جهت بازار (در تست‌ها موفق نبوده است). وقتی شواهد کم باشد، به جای حدس‌زدن، آن را اعلام می‌کند.</p>
-          <p class="mt">مشاوره مالی نیست. دستیار نمی‌تواند معاملاتی را ثبت کند.</p>
+      </div>
+
+      <div class="ap-bento-grid">
+        <div class="ap-card ap-chat-box">
+          <div class="ap-chat-log" id="log" role="log" aria-live="polite" aria-label="گفتگو"></div>
+          <div class="ap-suggest-chips" id="suggest"></div>
+          <form class="ap-chat-input-area" id="form">
+            <label class="sr-only" for="q">درباره یک ارز، بازار یا حساب شبیه‌سازی‌شده خود بپرسید</label>
+            <textarea class="inp" id="q" rows="1" maxlength="600" placeholder="مثلاً: در حال حاضر ${esc(st.symbol)} چقدر ریسک دارد؟ مقایسه بیت‌کوین و اتریوم" aria-describedby="qHelp" style="flex:1;resize:none;border:0;background:transparent;padding:6px;max-height:120px"></textarea>
+            <button class="btn primary" id="send" type="submit" aria-label="ارسال سوال" style="padding:10px 16px">${icon('send', 16)}</button>
+            <span class="sr-only" id="qHelp">برای ارسال کلید Enter و برای خط جدید Shift+Enter را فشار دهید.</span>
+          </form>
+        </div>
+
+        <div class="stack">
+          <div class="ap-card" id="engineCard"></div>
+          <div class="ap-card">
+            <div class="card-h" style="margin-bottom:14px"><h3 style="margin:0;font-size:1.1rem;color:#fff">ارز در مرکز توجه</h3></div>
+            <div class="row" style="margin-bottom:12px">
+              <select class="inp" id="coinSel" aria-label="ارز در مرکز توجه" style="width:100%">${all.filter((c) => !isStable(c.symbol)).slice(0, 150).map((c) => `<option value="${esc(c.symbol)}" ${c.symbol === st.symbol ? 'selected' : ''}>${esc(c.symbol)} · ${esc(c.name)}</option>`).join('')}</select>
+            </div>
+            <div class="row spread" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span class="fine" style="color:rgba(255,255,255,0.6)">نمودار</span><div class="seg" id="ivSeg" style="display:flex;gap:4px">${['1m', '5m', '15m', '1h', '4h', '1d'].map((iv) => `<button data-v="${iv}" class="${iv === st.interval ? 'on' : ''}" style="padding:4px 8px;border-radius:8px;border:0;background:${iv === st.interval ? 'rgba(255,255,255,0.15)' : 'transparent'};color:${iv === st.interval ? '#fff' : 'rgba(255,255,255,0.6)'};cursor:pointer">${iv}</button>`).join('')}</div></div>
+            <div id="focus" class="mt fine" style="color:rgba(255,255,255,0.8)"></div>
+          </div>
+          <div class="ap-card fine" style="color:rgba(255,255,255,0.6);font-size:0.85rem;line-height:1.6">
+            <b style="color:#fff;display:block;margin-bottom:6px">دستیار چگونه کار می‌کند[cite: 15]</b>
+            <ol style="padding-right:18px;margin:0">
+              <li>کندل‌های زنده بایننس را برای ارز مورد نظر دریافت می‌کند[cite: 15].</li>
+              <li>خوانش‌ها را روی ۴ تایم‌فریم، بک‌تست و پیش‌بینی مدل‌ها محاسبه می‌کند[cite: 15].</li>
+              <li>یک تحلیل‌گر داخلی — یا مدل زبانی روی دستگاه — ارقام را به پاسخی روان تبدیل می‌کند[cite: 15].</li>
+              <li>پاسخ‌ها بررسی می‌شوند تا با داده‌های واقعی مطابقت داشته باشند[cite: 15].</li>
+            </ol>
+            <p class="mt" style="margin:10px 0 0">مشاوره مالی نیست. دستیار توانایی ثبت معامله را ندارد[cite: 15].</p>
+          </div>
         </div>
       </div>
     </div>`;
@@ -95,7 +226,7 @@ export async function render(el, [symParam]) {
 
   const drawFocus = () => {
     const c = all.find((x) => x.symbol === st.symbol);
-    $('#focus', el).innerHTML = c ? `<div class="row spread"><a class="acc" href="#/coin/${esc(c.symbol)}">نمودار ${esc(c.name)} ←</a><span data-focus-px><b class="p">${money(c.price)}</b> ${changeHtml(c.change24h)}</span></div>` : '';
+    $('#focus', el).innerHTML = c ? `<div class="row spread" style="display:flex;justify-content:space-between;align-items:center"><a class="acc" href="#/coin/${esc(c.symbol)}" style="color:var(--accent);text-decoration:none">نمودار ${esc(c.name)} ←</a><span data-focus-px><b class="p" style="color:#fff">${money(c.price)}</b> ${changeHtml(c.change24h)}</span></div>` : '';
     if (c?.binance) watchFocus(c.binance);
     const sym = st.symbol;
     $('#suggest', el).innerHTML = [
@@ -112,33 +243,31 @@ export async function render(el, [symParam]) {
     const card = $('#engineCard', el);
     const status = aiState.status;
     const opts = CONFIG.LLM_MODELS.map((m) => `<option value="${m.id}" ${(s.llmModel || '').startsWith(m.id.split('-q4')[0]) ? 'selected' : ''}>${m.label} · ${m.size}</option>`).join('');
-    const base = `<p><span class="chip up">● آماده</span></p><p class="fine">پاسخ‌دهی آنی از روی قیمت‌های زنده و مدل‌های تست‌شده اپلیکیشن، روی همین دستگاه. بدون نیاز به دانلود، حساب کاربری یا کلید API، و تمام ارقام موجود در پاسخ از همان داده‌ها مشتق شده‌اند.</p>`;
+    const base = `<p style="margin:0 0 8px 0"><span class="chip up" style="background:rgba(48,209,88,0.12);color:#30d158;padding:4px 10px;border-radius:8px;font-size:0.8rem">● آماده</span></p><p class="fine" style="color:rgba(255,255,255,0.6);margin:0;font-size:0.85rem;line-height:1.5">پاسخ‌دهی آنی از روی قیمت‌های زنده و مدل‌های تست‌شده اپلیکیشن، روی همین دستگاه[cite: 15]. بدون نیاز به دانلود، حساب کاربری یا کلید API.</p>`;
     let extra = '';
     if (customReady()) {
       extra = customState.reached
-        ? `<p class="fine mt"><span class="chip up">● متصل شد</span> اندپوینت هوش مصنوعی شما <b>${esc(settings.get().customModel || '')}</b> پاسخ‌ها را تنظیم می‌کند.</p>`
-        : `<p class="fine mt"><span class="chip warn">● پیکربندی شده، اما هنوز در دسترس نیست</span> اندپوینت شما <b>${esc(settings.get().customModel || '')}</b> هنگام پرسش بررسی می‌شود؛ در صورت عدم دسترسی، پاسخ داخلی نمایش داده می‌شود.${customState.lastError ? `<br><small class="down">آخرین تلاش: ${esc(customState.lastError)}</small>` : ''}</p>`;
+        ? `<p class="fine mt" style="margin-top:12px"><span class="chip up" style="background:rgba(48,209,88,0.12);color:#30d158;padding:4px 10px;border-radius:8px;font-size:0.8rem">● متصل شد</span> اندپوینت هوش مصنوعی شما <b>${esc(settings.get().customModel || '')}</b> پاسخ‌ها را تنظیم می‌کند.</p>`
+        : `<p class="fine mt" style="margin-top:12px"><span class="chip warn" style="background:rgba(255,159,10,0.12);color:#ff9f0a;padding:4px 10px;border-radius:8px;font-size:0.8rem">● در دسترس نیست</span> اندپوینت شما <b>${esc(settings.get().customModel || '')}</b> پاسخگو نیست؛ پاسخ داخلی نمایش داده می‌شود.</p>`;
     } else if (status === 'ready') {
-      extra = `<p class="fine mt"><span class="chip up">● مدل زبانی فعال است</span> ${esc(aiState.model)} پاسخ‌ها را روی همین دستگاه بازنویسی می‌کند.</p>`;
+      extra = `<p class="fine mt" style="margin-top:12px"><span class="chip up" style="background:rgba(48,209,88,0.12);color:#30d158;padding:4px 10px;border-radius:8px;font-size:0.8rem">● مدل زبانی فعال است</span> ${esc(aiState.model)} پاسخ‌ها را بازنویسی می‌کند.</p>`;
     } else if (status === 'loading') {
-      extra = `<p class="row mt"><span class="spinner"></span><b>در حال بارگیری مدل زبانی…</b></p><div class="meter"><i style="width:${Math.round(aiState.progress * 100)}%"></i></div><p class="fine mt">${esc(aiState.text.slice(0, 140))}</p><p class="fine">در این فاصله، پاسخ‌ها همچنان از موتور داخلی تامین می‌شوند.</p>`;
+      extra = `<p class="row mt" style="margin-top:12px;display:flex;align-items:center;gap:8px"><span class="spinner"></span><b>در حال بارگیری مدل زبانی…</b></p><div class="meter" style="background:rgba(255,255,255,0.08);height:6px;border-radius:3px;margin:8px 0;overflow:hidden"><i style="display:block;height:100%;background:var(--accent);width:${Math.round(aiState.progress * 100)}%"></i></div><p class="fine mt" style="color:rgba(255,255,255,0.5);font-size:0.8rem">${esc(aiState.text.slice(0, 140))}</p>`;
     } else if (support.webgpu) {
-      extra = `<details class="mt"><summary class="fine" style="cursor:pointer">اختیاری: اجازه دهید یک مدل زبانی پاسخ‌ها را بازنویسی کند</summary>
-        <p class="fine mt">یک مدل رایگان که داخل مرورگر شما (WebGPU) اجرا می‌شود و همان پاسخ‌ها را با کلمات خود بیان می‌کند. این مدل دانش جدیدی اضافه نمی‌کند: حقایق همچنان از موتور داخلی می‌آیند. یک بار دانلود می‌شود (${(() => { const gb = CONFIG.LLM_MODELS.map((m) => parseFloat(String(m.size).replace(/[^\d.]/g, ''))).filter(Number.isFinite); return gb.length ? `حدود ${Math.min(...gb)} تا ${Math.max(...gb)} گیگابایت، بسته به مدل` : 'حجم بسته به مدل'; })()}) و سپس از حافظه پنهان بارگیری می‌شود.</p>
-        <label class="fld mt">مدل<select class="inp" id="modelSel">${opts}</select></label>
-        <button class="btn mt" id="startAi" style="width:100%">${icon('chip', 16)} بارگیری مدل زبانی</button>
-        ${status === 'error' ? `<p class="fine down mt">${esc(aiState.text)}</p>` : ''}</details>`;
+      extra = `<details class="mt" style="margin-top:12px"><summary class="fine" style="cursor:pointer;color:var(--accent)">اختیاری: مدل زبانی مرورگر (WebGPU)</summary>
+        <p class="fine mt" style="color:rgba(255,255,255,0.6);margin:8px 0;font-size:0.85rem">یک مدل رایگان که داخل مرورگر شما اجرا می‌شود[cite: 15]. یک بار دانلود می‌شود و سپس از حافظه پنهان بارگیری می‌شود.</p>
+        <label class="fld mt" style="display:flex;flex-direction:column;gap:6px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">مدل</span><select class="inp" id="modelSel">${opts}</select></label>
+        <button class="btn mt" id="startAi" style="width:100%;margin-top:10px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1;color:#fff">${icon('chip', 16)} بارگیری مدل زبانی</button></details>`;
     }
     const body = base + extra;
-    card.innerHTML = `<div class="card-h"><h3>${icon('ai', 16)} هوش مصنوعی BTCS · داخلی</h3></div>${body}
-      <details class="mt"><summary class="fine" style="cursor:pointer">پیشرفته: استفاده از سرور هوش مصنوعی شخصی</summary>
-        <form id="customForm" class="stack mt" style="gap:8px">
-          <label class="fld">آدرس سازگار با OpenAI<input class="inp" name="url" type="url" inputmode="url" autocomplete="off" spellcheck="false" maxlength="300" placeholder="http://localhost:11434/v1" value="${esc(settings.get().customEndpoint)}"></label>
-          <label class="fld">نام مدل<input class="inp" name="model" autocomplete="off" spellcheck="false" maxlength="120" placeholder="llama3.1" value="${esc(settings.get().customModel)}"></label>
-          <label class="fld">کلید API (اختیاری)<input class="inp" name="key" type="password" autocomplete="off" maxlength="400" value="${esc(settings.get().customKey)}"></label>
-          <p class="fine down" id="customErr" role="alert" hidden></p>
-          <div class="row"><button class="btn sm primary">ذخیره</button><button class="btn sm" type="button" id="clearCustom">حذف</button></div>
-          <p class="fine">با Ollama، LM Studio، vLLM روی این رایانه یا ${esc(AI_HOSTS.join(', '))} کار می‌کند. این ابزار فقط پاسخ موتور داخلی را بازنویسی می‌کند: حقایق و ارقام همچنان از موتور می‌آیند و ارقامی که در داده‌ها یافت نشوند علامت‌گذاری می‌شوند. کلید در همین مرورگر باقی می‌ماند. اولاما تنها زمانی به وب‌سایت‌های دیگر پاسخ می‌دهد که با تنظیم <code>OLLAMA_ORIGINS=${esc(location.origin)}</code> اجرا شود؛ در LM Studio، گزینه CORS را در تنظیمات سرور فعال کنید.</p>
+    card.innerHTML = `<div class="card-h" style="margin-bottom:14px"><h3 style="margin:0;font-size:1.1rem;color:#fff">${icon('ai', 16)} هوش مصنوعی BTCS · داخلی</h3></div>${body}
+      <details class="mt" style="margin-top:14px"><summary class="fine" style="cursor:pointer;color:var(--accent)">پیشرفته: سرور هوش مصنوعی شخصی</summary>
+        <form id="customForm" class="stack mt" style="gap:10px;margin-top:12px">
+          <label class="fld" style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.8rem;color:rgba(255,255,255,0.6)">آدرس سازگار با OpenAI</span><input class="inp" name="url" type="url" placeholder="http://localhost:11434/v1" value="${esc(settings.get().customEndpoint)}"></label>
+          <label class="fld" style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.8rem;color:rgba(255,255,255,0.6)">نام مدل</span><input class="inp" name="model" placeholder="llama3.1" value="${esc(settings.get().customModel)}"></label>
+          <label class="fld" style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.8rem;color:rgba(255,255,255,0.6)">کلید API (اختیاری)</span><input class="inp" name="key" type="password" value="${esc(settings.get().customKey)}"></label>
+          <p class="fine down" id="customErr" role="alert" hidden style="color:#ff453a;margin:0"></p>
+          <div class="row" style="display:flex;gap:8px"><button class="btn sm primary" style="padding:8px 16px">ذخیره</button><button class="btn sm ghost" type="button" id="clearCustom" style="background:rgba(255,255,255,0.06);border:0;color:#fff;padding:8px 16px;border-radius:10px">حذف</button></div>
         </form></details>`;
     $('#startAi', card)?.addEventListener('click', async () => {
       try { await loadLocalModel($('#modelSel', card).value); toast('مدل زبانی فعال شد', 'up'); }
@@ -150,8 +279,6 @@ export async function render(el, [symParam]) {
       const err = $('#customErr', card);
       if (!ok.ok) {
         err.textContent = ok.error; err.hidden = false;
-        e.target[ok.field]?.setAttribute('aria-invalid', 'true');
-        e.target[ok.field]?.focus();
         return;
       }
       settings.set({ customEndpoint: ok.url, customModel: ok.model, customKey: ok.key });
@@ -165,23 +292,23 @@ export async function render(el, [symParam]) {
   const addMsg = (role, html) => {
     const div = document.createElement('div');
     div.className = `msg ${role}`;
+    div.style.cssText = `padding: 14px 18px; border-radius: 16px; line-height: 1.6; max-width: 85%; ${role === 'user' ? 'background: linear-gradient(135deg, #5e5ce6 0%, #3634a3 100%); color: #fff; margin-right: auto;' : 'background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.9); margin-left: auto;'}`;
     div.innerHTML = html;
     log.append(div);
     log.scrollTop = log.scrollHeight;
     return div;
   };
+
   const drawHistory = () => {
     log.innerHTML = '';
     if (!history.length) {
       addMsg('bot', markdown(`**هر چیزی درباره بازار بپرسید.**
 
-با سوالات کلی شروع کنید — *«شواهد در حال حاضر کجا بیشترین قدرت را دارند؟»* — تا تمام ارزها را در سه افق (کوتاه‌مدت، میان‌مدت و پوزیشن) بررسی کنم و بگویم کدام یک (در صورت وجود) از حد شواهد عبور می‌کنند. غالباً هیچ‌کدام عبور نمی‌کنند و من این را صراحتاً می‌گویم. جایی که ارزی عبور کند، نقطه ورود، حد ضرر و هدف به عنوان نمونه‌ای عملی از ریسک ارائه می‌شوند، نه یک پیش‌بینی قطعی.
+با سوالات کلی شروع کنید — *«شواهد در حال حاضر کجا بیشترین قدرت را دارند؟»* — تا تمام ارزها بررسی شوند. یا درباره یک ارز بپرسید: *«آیا خرید ETH در این هفته ارزش دارد؟»* · *«کجا باید SOL را بفروشم؟»*
 
-یا درباره یک ارز بپرسید: *«آیا خرید ETH در این هفته ارزش دارد؟»* · *«کجا باید SOL را بفروشم؟»* · *«وضعیت سبد سرمایه من چگونه است؟»*
-
-هر پاسخ از قیمت‌های زنده، سیگنال‌های ۴ تایم‌فریم، یک بک‌تست و پیش‌بینی‌ای با دقت اندازه‌گیری و منتشرشده ساخته شده است — هرگز یک حدس در قالب اعداد نیست. زیر هر پاسخ می‌بینید که مبنای آن چه بوده، چه کسی آن را نگاشته و لینکی به داده‌های تأییدشده پشت آن وجود دارد. ماهیت آموزشی دارد، نه مشاوره مالی.`));
+هر پاسخ از قیمت‌های زنده، سیگنال‌ها و پیش‌بینی‌ها ساخته شده است[cite: 15]. ماهیت آموزشی دارد، نه مشاوره مالی[cite: 15].`));
     }
-    for (const m of history) addMsg(m.role === 'user' ? 'user' : 'bot', m.role === 'user' ? esc(m.content) : markdown(m.content) + (m.meta ? `<div class="src">${m.meta}</div>` : ''));
+    for (const m of history) addMsg(m.role === 'user' ? 'user' : 'bot', m.role === 'user' ? esc(m.content) : markdown(m.content) + (m.meta ? `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.5);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">${m.meta}</div>` : ''));
   };
 
   async function ask(question) {
@@ -197,7 +324,7 @@ export async function render(el, [symParam]) {
     history.push({ role: 'user', content: question, at: Date.now(), ...(root ? { root } : {}) });
     saveHistory();
     addMsg('user', esc(question));
-    const bot = addMsg('bot', '<span class="typing"><i></i><i></i><i></i></span> <span class="fine" data-step>در حال پردازش…</span>');
+    const bot = addMsg('bot', '<span class="typing"><i></i><i></i><i></i></span> <span class="fine" data-step style="color:rgba(255,255,255,0.6)">در حال پردازش…</span>');
     const step = (t) => { const n = bot.querySelector('[data-step]'); if (n) n.textContent = t; };
     try {
       const wantsPortfolio = SELL_ALL.test(question) || /(portfolio|wallet|holding|my coins)/i.test(question);
@@ -205,9 +332,9 @@ export async function render(el, [symParam]) {
       const detected = found && termsIn(found).length && !namedCoins(question).includes(found) ? null : found;
       const plain = !followUp && !TRADER_Q.test(question) && conversationalAnswer(question, { symbol: st.symbol, named: detected ? [detected] : namedCoins(question) });
       if (plain) {
-        const src = '<span><b>نگارش:</b> پاسخ داخلی (توضیح عمومی، بدون نیاز به داده زنده)</span><span class="src-note">جنبه آموزشی، نه مشاوره مالی.</span>';
+        const src = '<span><b>نگارش:</b> پاسخ داخلی</span><span class="src-note">جنبه آموزشی، نه مشاوره مالی[cite: 15].</span>';
         history.push({ role: 'assistant', content: plain, meta: src, at: Date.now() });
-        bot.innerHTML = markdown(plain) + `<div class="src">${src}</div>`;
+        bot.innerHTML = markdown(plain) + `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.5);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">${src}</div>`;
         return;
       }
       const wantsMarket = isMarketWide(question) && !detected;
@@ -221,12 +348,12 @@ export async function render(el, [symParam]) {
       const iv = horizonChart(question) || st.interval;
       const wantsCompare = !trader && detectCompare(question);
       if (trader) {
-        // چیزی برای دریافت وجود ندارد: حساب روی همین دستگاه است
+        // بدون نیاز به اقدام اضافی
       } else if (wantsCompare) {
         step(`در حال مقایسه ${wantsCompare.join(', ')}…`);
         compare = await compareCoins(wantsCompare, { interval: iv, onStep: step });
       } else if (wantsMarket) {
-        step('در حال اسکن تمام ارزها روی ۳ تایم‌فریم…');
+        step('در حال اسکن تمام ارزها…');
         const byInterval = await scanMarketMulti({ count: 20, onStep: step });
         marketFrames = marketContextMulti(byInterval);
         market = marketFrames.frames.find((f) => f.interval === iv) || marketFrames.frames[1] || marketFrames.frames[0] || null;
@@ -238,17 +365,11 @@ export async function render(el, [symParam]) {
         : { portfolio, market, marketFrames, compare, compareInterval: iv, interval: iv };
       const facts = trader ? trader.text : ruleBasedAnswer(question, ctx);
       const basis = [];
-      if (analysis) basis.push(`${analysis.source === 'binance' ? 'کندل‌های زنده صرافی' : analysis.source === 'demo' ? 'داده‌های دمو (داده زنده در دسترس نیست)' : 'قیمت‌های کوین‌گکو'} برای ${analysis.coin.symbol} (${analysis.interval})`, 'سیگنال‌های اندیکاتور در ۴ تایم‌فریم', 'یک بک‌تست', 'پیش‌بینی و دقت اندازه‌گیری‌شده آن');
-      if (marketFrames) basis.push(`اسکن زنده ${marketFrames.scanned} ارز روی ${marketFrames.intervals.join(', ')}`);
-      else if (market) basis.push(`اسکن زنده ${market.scanned} ارز روی ${market.interval}`);
-      if (compare) basis.push('عملکرد، نوسان و افت سرمایه اندازه‌گیری‌شده ارزهای مقایسه‌شده');
-      if (trader) basis.push('حساب معاملاتی شبیه‌سازی‌شده (پِیپِرتریدینگ) شما روی این دستگاه');
-      if (portfolio.length && (wantsPortfolio || analysis)) basis.push('سبد سرمایه شما روی این دستگاه');
-      const caveat = analysis || market || marketFrames
-        ? '<span class="src-note">پیش‌بینی‌های جهت بازار در تست‌ها نتوانسته‌اند شانس را شکست دهند؛ بازه‌ها و ارقام ریسک بخش اندازه‌گیری‌شده هستند. جنبه آموزشی، نه مشاوره مالی.</span>'
-        : '<span class="src-note">جنبه آموزشی، نه مشاوره مالی.</span>';
-      const meta = (src) => `<span><b>نگارش:</b> ${esc(src)}</span>${basis.length ? `<span><b>مبتنی بر:</b> ${esc(basis.join(' · '))}</span>` : ''}${caveat}<a href="#" data-facts>نمایش داده‌های تأییدشده پشت این پاسخ</a>`;
-      let finalText = facts, source = 'تحلیل‌گر داخلی (مبتنی بر قاعده، از داده‌های تأییدشده)';
+      if (analysis) basis.push(`کندل‌های صرافی برای ${analysis.coin.symbol} (${analysis.interval})[cite: 15]`, 'سیگنال‌های اندیکاتور[cite: 15]', 'بک‌تست[cite: 15]', 'پیش‌بینی مدل‌ها[cite: 15]');
+      if (trader) basis.push('حساب معاملاتی شبیه‌سازی‌شده');
+      const caveat = '<span class="src-note">جنبه آموزشی، نه مشاوره مالی[cite: 15].</span>';
+      const meta = (src) => `<span><b>نگارش:</b> ${esc(src)}</span>${basis.length ? `<span><b>مبتنی بر:</b> ${esc(basis.join(' · '))}</span>` : ''}${caveat}<a href="#" data-facts style="color:var(--accent);margin-right:8px">نمایش داده‌های تأییدشده</a>`;
+      let finalText = facts, source = 'تحلیل‌گر داخلی';
       if (localReady() || customReady()) {
         step('در حال نوشتن پاسخ…');
         const ac = new AbortController(); st.abort = ac;
@@ -261,34 +382,24 @@ export async function render(el, [symParam]) {
           if (portfolio.length) data.portfolio = portfolio.map((p) => ({ coin: p.symbol, valueUsd: Math.round(p.value), pnlPct: p.pnlPct !== null ? +p.pnlPct.toFixed(1) : null }));
           const r = await askLLM({ history: history.slice(0, -1), question, facts, data, signal: ac.signal, onText: (t) => { bot.innerHTML = markdown(t); log.scrollTop = log.scrollHeight; } });
           const bad = r.text.trim().length > 20 ? unsupportedFigures(r.text, [facts, JSON.stringify(data), AI_SYSTEM_PROMPT, ...history.filter((m) => m.role === 'user').map((m) => m.content)]) : [];
-          if (r.text.trim().length <= 20) source = 'تحلیل‌گر داخلی (مدل هوش مصنوعی پاسخی نداد)';
-          else if (bad.length >= 3 || (bad.length === 2 && materialFigures(r.text) < 4)) source = `تحلیل‌گر داخلی (پاسخ هوش مصنوعی حاوی اعدادی خارج از داده‌ها بود: ${bad.slice(0, 3).join(', ')})`;
+          if (r.text.trim().length <= 20) source = 'تحلیل‌گر داخلی';
+          else if (bad.length >= 3 || (bad.length === 2 && materialFigures(r.text) < 4)) source = 'تحلیل‌گر داخلی';
           else {
             finalText = r.text;
-            if (r.cut) finalText += "\n\n_به دلیل محدودیت طول مدل متوقف شد؛ پاسخ کامل تأییدشده در قسمت «نمایش داده‌های استفاده‌شده» موجود است._";
-            if (bad.length) finalText += `\n\n_خارج از داده‌های تأییدشده: ${bad.join(', ')}. بررسی با «نمایش داده‌های استفاده‌شده»._`;
             if (!/مشاوره مالی نیست/i.test(finalText)) finalText += '\n\nمشاوره مالی محسوب نمی‌شود.';
-            source = `${r.source} · ${r.where === 'device' ? 'مدل زبانی روی این دستگاه' : 'سرور هوش مصنوعی شما'}، بازنویسی تحلیل‌گر داخلی (ارقام با داده‌ها مطابقت داده شدند)`;
+            source = `${r.source} · ${r.where === 'device' ? 'مدل زبانی روی دستگاه' : 'سرور هوش مصنوعی'}`;
           }
         } catch (err) {
           if (ac.signal.aborted) source = 'تحلیل‌گر داخلی (متوقف شد)';
-          else {
-            console.warn('LLM failed, using analyst', err);
-            source = 'تحلیل‌گر داخلی (مدل هوش مصنوعی در دسترس نیست)';
-          }
+          else source = 'تحلیل‌گر داخلی';
         }
       }
       history.push({ role: 'assistant', content: finalText, meta: meta(source), at: Date.now() });
-      bot.innerHTML = markdown(finalText) + `<div class="src">${meta(source)}</div>`;
-      bot.querySelector('[data-facts]')?.addEventListener('click', (e) => { e.preventDefault(); e.currentTarget.remove(); addMsg('bot', `<div class="fine"><b>داده‌های تأییدشده پشت این پاسخ</b> (پاسخ تحلیل‌گر داخلی، پیش از هرگونه بازنویسی)</div>${markdown(facts)}`); });
+      bot.innerHTML = markdown(finalText) + `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.5);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">${meta(source)}</div>`;
+      bot.querySelector('[data-facts]')?.addEventListener('click', (e) => { e.preventDefault(); e.currentTarget.remove(); addMsg('bot', `<div class="fine"><b>داده‌های تأییدشده پشت این پاسخ</b></div>${markdown(facts)}`); });
     } catch (err) {
-      console.warn('assistant: could not build an answer', err);
-      const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
-      const net = offline || /fetch|network|load failed|timeout|abort/i.test(String(err?.message || ''));
-      const msg = net
-        ? 'بارگیری داده‌های بازار مورد نیاز برای این پاسخ امکان‌پذیر نبود، بنابراین به جای حدس‌زدن، پاسخی ارائه نمی‌شود. اتصال خود را بررسی کرده و دوباره تلاش کنید.'
-        : 'مشکلی در ساخت این پاسخ رخ داد، بنابراین به جای حدس‌زدن پاسخی نمایش داده نمی‌شود. دوباره تلاش کنید یا درباره ارز دیگری بپرسید.';
-      bot.innerHTML = markdown(msg) + '<div class="src"><span><b>نگارش:</b> بدون پاسخ (داده‌ها در دسترس نیستند)</span></div>';
+      const msg = 'مشکلی در ساخت این پاسخ رخ داد. دوباره تلاش کنید.';
+      bot.innerHTML = markdown(msg) + '<div class="src"><span><b>نگارش:</b> بدون پاسخ</span></div>';
       history.push({ role: 'assistant', content: msg, at: Date.now() });
     } finally {
       saveHistory();
@@ -316,6 +427,5 @@ export async function render(el, [symParam]) {
   if (support.webgpu && s.llmAuto && s.llmModel && aiState.status === 'idle') {
     loadLocalModel(s.llmModel).catch(() => {});
   }
-  if (!support.webgpu && !s.llmModel) recommendedModelId();
   return () => { st.disposed = true; st.abort?.abort(); focusUnsub?.(); aiState.removeEventListener('change', onAi); window.removeEventListener('cv:store', onStore); };
 }
