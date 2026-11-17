@@ -18,47 +18,157 @@ export async function render(el) {
   const st = { interval: '4h', rows: [], run: 0, disposed: false, count: 60, skipped: 0 };
 
   el.innerHTML = `
-    <div class="page-head" dir="rtl">
-      <div><h1>اسکن بازار</h1><p>بررسی هر ارز در یک تایم‌فریم: وضعیت نمودار، محل سطوح کلیدی، و میزان شواهد مستند پشتیبان هر خوانش. مؤلفه‌های فاقد اعتبار در تست‌ها وزن‌دهی نمی‌شوند، بنابراین بیشتر ارزها به عنوان «بدون لبه» برمی‌گردند — که نتیجه‌ای کاملاً صادقانه است، نه یک صفحه خالی.</p></div>
-      <div class="row">
-        <div class="seg" id="iv" dir="ltr">${['1m', '5m', '15m', '1h', '4h', '1d'].map((i) => `<button data-v="${i}" class="${i === st.interval ? 'on' : ''}">${i}</button>`).join('')}</div>
-        <button class="btn" id="rescan">${icon('refresh', 16)} اسکن مجدد</button>
+    <style>
+      .ap-advice-wrap {
+        direction: rtl;
+        text-align: right;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding-bottom: 60px;
+      }
+      .ap-hero-card {
+        background: radial-gradient(circle at top right, rgba(94, 92, 230, 0.09), transparent 50%),
+                    radial-gradient(circle at bottom left, rgba(50, 215, 75, 0.07), transparent 50%),
+                    rgba(24, 24, 29, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 28px;
+        padding: 32px;
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        margin-bottom: 24px;
+        box-shadow: 0 24px 54px rgba(0, 0, 0, 0.35);
+      }
+      .ap-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 22px;
+        padding: 24px;
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        margin-bottom: 20px;
+      }
+      .ap-card:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+      }
+      .ap-advice-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      @media(max-width: 1100px) {
+        .ap-advice-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media(max-width: 700px) {
+        .ap-advice-grid { grid-template-columns: 1fr; }
+      }
+      .ap-advice-card {
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 20px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: all 0.25s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        cursor: pointer;
+      }
+      .ap-advice-card:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        transform: translateY(-2px);
+      }
+      .ap-advice-wrap .seg {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 4px;
+        border-radius: 12px;
+        display: inline-flex;
+        gap: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .ap-advice-wrap .seg button {
+        background: transparent;
+        border: 0;
+        color: rgba(255, 255, 255, 0.6);
+        padding: 6px 14px;
+        border-radius: 9px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .ap-advice-wrap .seg button.on {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      }
+      .ap-meter-bar {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 24px;
+      }
+      .ap-meter-bar i {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #5e5ce6, #32d74b);
+        transition: width 0.3s ease;
+      }
+    </style>
+
+    <div class="ap-advice-wrap" dir="rtl">
+      <div class="ap-hero-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px">
+        <div>
+          <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">اسکن بازار</h1>
+          <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0;max-width:850px">بررسی هر ارز در یک تایم‌فریم: وضعیت نمودار، سطوح کلیدی، و میزان شواهد مستند پشتیبان هر خوانش.</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <div class="seg" id="iv" dir="ltr">${['1m', '5m', '15m', '1h', '4h', '1d'].map((i) => `<button data-v="${i}" class="${i === st.interval ? 'on' : ''}">${i}</button>`).join('')}</div>
+          <button class="btn" id="rescan" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:8px 16px;border-radius:12px;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:6px">${icon('refresh', 16)} اسکن مجدد</button>
+        </div>
       </div>
-    </div>
-    <div class="meter" id="meter" style="margin-bottom:12px" dir="rtl"><i style="width:0%"></i></div>
-    <div id="body" dir="rtl">${skeleton(8, 26)}</div>`;
+      <div class="ap-meter-bar" id="meter"><i style="width:0%"></i></div>
+      <div id="body">${skeleton(8, 26)}</div>
+    </div>`;
 
   const card = (r, rank) => {
     const a = r.advice;
     const t = a.timing;
     return `
-      <div class="advice-card" data-sym="${esc(r.coin.symbol)}" dir="rtl">
-        <div class="row spread">
-          <div class="coin-cell">${rank ? `<span class="rank">${rank}</span>` : ''}${coinLogo(r.coin, 30)}
-            <div><b>${esc(r.coin.symbol)}</b> <small class="muted">${esc(r.coin.name)}</small><br>
-              <span class="fine">${money(a.price)} ${changeHtml(r.coin.change24h)}</span></div></div>
-          <div style="text-align:left">
-            <span class="chip ${a.tone === 'warn' ? 'warn' : a.tone}"><b>${esc(a.verdict)}</b></span>
-            <div class="fine" style="margin-top:3px">اعتماد ${a.conviction}/100</div>
+      <div class="ap-advice-card" data-sym="${esc(r.coin.symbol)}" dir="rtl">
+        <div>
+          <div class="row spread" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="coin-cell" style="display:flex;align-items:center;gap:10px">${rank ? `<span class="rank" style="background:rgba(255,255,255,0.1);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700">${rank}</span>` : ''}${coinLogo(r.coin, 30)}
+              <div><b style="color:#fff">${esc(r.coin.symbol)}</b> <small class="muted" style="color:rgba(255,255,255,0.4);font-size:0.8rem">${esc(r.coin.name)}</small><br>
+                <span class="fine" style="color:rgba(255,255,255,0.6);font-size:0.85rem">${money(a.price)} ${changeHtml(r.coin.change24h)}</span></div></div>
+            <div style="text-align:left">
+              <span class="chip ${a.tone === 'warn' ? 'warn' : a.tone}" style="padding:4px 10px;border-radius:8px;font-size:0.8rem"><b>${esc(a.verdict)}</b></span>
+              <div class="fine" style="margin-top:4px;color:rgba(255,255,255,0.4);font-size:0.75rem">اعتماد ${a.conviction}/100</div>
+            </div>
           </div>
+
+          ${a.plan ? `<div class="plan mt" style="background:rgba(255,255,255,0.02);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
+            <div><div class="k" style="color:rgba(255,255,255,0.4);font-size:0.75rem">منطقه ورود</div><div class="v" dir="ltr" style="font-size:0.85rem;font-weight:600;color:#fff">${money(a.plan.entryZone[0])} – ${money(a.plan.entryZone[1])}</div></div>
+            <div><div class="k" style="color:rgba(255,255,255,0.4);font-size:0.75rem">حد ضرر</div><div class="v down" dir="ltr" style="font-size:0.85rem;font-weight:600">${money(a.plan.stopLoss)} <span class="fine" style="font-size:0.7rem">(${a.plan.riskPct}%)</span></div></div>
+            <div><div class="k" style="color:rgba(255,255,255,0.4);font-size:0.75rem">هدف ۱</div><div class="v up" dir="ltr" style="font-size:0.85rem;font-weight:600">${money(a.plan.takeProfits[0])}</div></div>
+            <div><div class="k" style="color:rgba(255,255,255,0.4);font-size:0.75rem">هدف ۲</div><div class="v up" dir="ltr" style="font-size:0.85rem;font-weight:600">${money(a.plan.takeProfits[1])}</div></div>
+          </div>` : `<p class="fine mt" style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-bottom:12px">هنوز ورودی وجود ندارد. ${esc(a.waitFor?.[0] || 'در انتظار تریگر.')}</p>`}
+
+          ${t ? `<p class="fine mt" style="color:rgba(255,255,255,0.6);font-size:0.85rem;line-height:1.5;margin-bottom:12px">${t.rising
+            ? `الگوهای مشابه حدود <b>${esc(horizonText(st.interval, t.bars))}</b> رشد کرده و در نزدیکی <b>${money(t.targetPrice)}</b> به اوج رسیده‌اند.`
+            : `الگوهای مشابه حدود <b>${esc(horizonText(st.interval, t.bars))}</b> به ریزش ادامه داده‌اند.`}</p>` : ''}
+
+          <ul class="reasons mt" style="margin:0 0 16px 0;padding-right:18px;color:rgba(255,255,255,0.75);font-size:0.85rem">${a.reasons.map((x) => `<li style="margin-bottom:4px">${esc(x.text)}</li>`).join('')}</ul>
         </div>
 
-        ${a.plan ? `<div class="plan mt">
-          <div><div class="k">منطقه ورود</div><div class="v" dir="ltr">${money(a.plan.entryZone[0])} – ${money(a.plan.entryZone[1])}</div></div>
-          <div><div class="k">حد ضرر</div><div class="v down" dir="ltr">${money(a.plan.stopLoss)} <span class="fine">(${a.plan.riskPct}%)</span></div></div>
-          <div><div class="k">هدف ۱</div><div class="v up" dir="ltr">${money(a.plan.takeProfits[0])}</div></div>
-          <div><div class="k">هدف ۲</div><div class="v up" dir="ltr">${money(a.plan.takeProfits[1])}</div></div>
-        </div>` : `<p class="fine mt">هنوز ورودی وجود ندارد. ${esc(a.waitFor?.[0] || 'در انتظار تریگر.')}</p>`}
-
-        ${t ? `<p class="fine mt">${t.rising
-          ? `الگوهای مشابه گذشته حدود <b>${esc(horizonText(st.interval, t.bars))}</b> به رشد خود ادامه داده‌اند و در نزدیکی <b>${money(t.targetPrice)}</b> به اوج رسیده‌اند${t.turnBars ? `، سپس در حدود ${esc(horizonText(st.interval, t.turnBars))} روند نزولی به خود گرفته‌اند` : ''}.`
-          : `الگوهای مشابه گذشته حدود <b>${esc(horizonText(st.interval, t.bars))}</b> به ریزش ادامه داده‌اند — صبر کردن ممکن است قیمت بهتری به دست دهد، اما این یک الگو است، نه پیش‌بینی.`}</p>` : ''}
-
-        <ul class="reasons mt">${a.reasons.map((x) => `<li class="${x.tone === 'good' ? 'b' : x.tone === 'bad' ? 's' : ''}">${esc(x.text)}</li>`).join('')}</ul>
-        <div class="row mt" style="gap:8px">
-          <a class="btn sm" href="#/coin/${esc(r.coin.symbol)}">باز کردن نمودار</a>
-          ${tradable(r.coin.symbol) ? `<button class="btn sm ghost" data-trade="${esc(r.coin.symbol)}">محل معامله</button>` : ''}
-          <span class="fine" style="margin-right:auto">شواهد: ${esc(a.evidence)}</span>
+        <div class="row mt" style="gap:8px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px">
+          <a class="btn sm" href="#/coin/${esc(r.coin.symbol)}" style="background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:10px;color:#fff;text-decoration:none;font-size:0.8rem">نمودار</a>
+          ${tradable(r.coin.symbol) ? `<button class="btn sm ghost" data-trade="${esc(r.coin.symbol)}" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:#fff;padding:6px 12px;border-radius:10px;font-size:0.8rem;cursor:pointer">معامله</button>` : ''}
+          <span class="fine" style="margin-right:auto;color:rgba(255,255,255,0.4);font-size:0.75rem">شواهد: ${esc(a.evidence)}</span>
         </div>
       </div>`;
   };
@@ -71,41 +181,33 @@ export async function render(el) {
     const held = done.filter((r) => holdings.some((h) => h.symbol === r.coin.symbol));
 
     $('#body', el).innerHTML = `
-      ${held.length ? `<h2 class="mt" style="margin-bottom:8px">دارایی‌های شما — چه باید کرد</h2>
-        <div class="advice-grid">${held.map((r) => card(r)).join('')}</div>` : ''}
+      ${held.length ? `<h2 class="mt" style="font-size:1.25rem;color:#fff;margin:0 0 12px 0">دارایی‌های شما</h2>
+        <div class="ap-advice-grid">${held.map((r) => card(r)).join('')}</div>` : ''}
 
-      <h2 class="mt" style="margin-bottom:8px">جاهایی که شواهد قوی‌تر هستند</h2>
+      <h2 class="mt" style="font-size:1.25rem;color:#fff;margin:24px 0 12px 0">قوی‌ترین شواهد بازار</h2>
       ${buys.length
-        ? `<div class="advice-grid">${buys.slice(0, 9).map((r, i) => card(r, i + 1)).join('')}</div>`
-        : `<div class="card empty"><h3>هیچ ارزی از حد نصاب شواهد در این تایم‌فریم عبور نمی‌کند</h3><p>این نتیجه‌ای رایج و پاسخی واقعی است. امتیاز نمودار وزنی ندارد زیرا در اندازه‌گیری‌ها جهت اشتباهی را نشان داد، و پیش‌بینی نیز سهم ناچیزی دارد زیرا نتوانست مبنای خود را شکست دهد — بنابراین یک نتیجه قطعی تنها زمانی ظاهر می‌شود که موردی با سابقه اندازه‌گیری‌شده تمایل واقعی نشان دهد. لیست کامل زیر را مرور کنید یا نمودار یک ارز را مستقیماً بررسی نمایید.</p></div>`}
+        ? `<div class="ap-advice-grid">${buys.slice(0, 9).map((r, i) => card(r, i + 1)).join('')}</div>`
+        : `<div class="ap-card empty" style="text-align:center;padding:40px"><h3 style="color:#fff;margin-bottom:8px">هیچ ارزی از حد نصاب شواهد عبور نکرد</h3><p style="color:rgba(255,255,255,0.6)">این یک پاسخ کاملاً صادقانه است؛ زمانی که بازار روند قطعی نداشته باشد، سیگنالی صادر نمی‌شود.</p></div>`}
 
-      ${avoid.length ? `<h2 class="mt" style="margin-bottom:8px">ضعیف‌ترین خوانش در اینجا</h2>
-        <div class="advice-grid">${avoid.slice(0, 6).map((r) => card(r)).join('')}</div>` : ''}
+      ${avoid.length ? `<h2 class="mt" style="font-size:1.25rem;color:#fff;margin:24px 0 12px 0">ضعیف‌ترین خوانش‌ها</h2>
+        <div class="ap-advice-grid">${avoid.slice(0, 6).map((r) => card(r)).join('')}</div>` : ''}
 
-      <div class="card mt" style="background:var(--surface-2)">
-        <h3>میزان اعتماد به این نتایج</h3>
-        <p class="fine">امتیاز نمودار بخشی از نتیجه نهایی نیست. در میان ${SCORE_BUCKETS_TESTED.bars.toLocaleString('fa-IR')} کندل از ${SCORE_BUCKETS_TESTED.coins.toLocaleString('fa-IR')} ارز، سهم مواردی که رشد کرده‌اند با افزایش امتیاز عموماً کاهش می‌یابد، بنابراین به عنوان یک خوانش نمایش داده می‌شود اما رأیی ندارد — همان دروازه دقتی که سایر مؤلفه‌ها از آن عبور می‌کنند.</p>
-        <p class="fine">هر نتیجه ترکیبی از چهار خوانش است و هر کدام با دقت اندازه‌گیری‌شده خود وزن‌دهی می‌شوند — خوانشی که در تست‌ها مزیتی نداشته تأثیر کمی روی نتیجه دارد. ${(() => {
-          const r = TESTED_ACCURACY.recheck?.[st.interval];
-          const charts = Object.values(TESTED_ACCURACY.recheck || {}).filter((x) => typeof x?.hit === 'number').length;
-          const [hit, base, n] = r ? [r.hit, r.baseline, Math.round(TESTED_ACCURACY.recheck.tests / charts)]
-            : typeof TESTED_ACCURACY[st.interval] === 'number' ? [TESTED_ACCURACY[st.interval], TESTED_ACCURACY.baseline[st.interval], TESTED_ACCURACY.testsPerInterval]
-              : [TESTED_ACCURACY.all, TESTED_ACCURACY.allBaseline, TESTED_ACCURACY.tests];
-          return `مؤلفه پیش‌بینی جهت بازار را در ${hit}% مواقع در ${n.toLocaleString('fa-IR')} تست خارج از نمونه${r || typeof TESTED_ACCURACY[st.interval] === 'number' ? ` روی ${esc(st.interval)}` : ''} در سراسر ${TESTED_ACCURACY.coins.toLocaleString('fa-IR')} ارز${r ? ` (${TESTED_ACCURACY.recheck.measuredOn})` : ''} به درستی پیش‌بینی کرده است، در مقایسه با ${base}% برای حدس ساده جهت رایج‌تر${(TESTED_ACCURACY.noEdge || []).includes(st.interval) ? ` — روی ${esc(st.interval)} نتوانست بر آن مبنا غلبه کند` : ''}.`;
-        })()} برچسب خرید (BUY) یا پرهیز (AVOID) تنها زمانی ظاهر می‌شود که خوانشی با مزیت اندازه‌گیری‌شده به وضوح متمایل باشد؛ زمانی که تنها تمایل ناشی از خوانش‌های کم‌اهمیت باشد، ارز به جای آن با برچسب «تمایل صعودی» یا «تمایل نزولی» مشخص می‌شود. زمان‌بندی نشان می‌دهد چه زمانی یک حرکت ممکن است به اوج برسد، نه اینکه به کدام سمت می‌رود، بنابراین نمایش داده می‌شود اما رأیی ندارد.</p>
-        <p class="fine">${esc(ADVICE_DISCLAIMER)} ${wait.length.toLocaleString('fa-IR')} از ${done.length.toLocaleString('fa-IR')} ارز اسکن‌شده به عنوان «بدون لبه — صبر کنید» برگشتند که معمولاً پاسخی صادقانه است.${st.skipped ? ` ${st.skipped.toLocaleString('fa-IR')} مورد دیگر رد شدند: هیچ کندل صرافی روی ${esc(st.interval)} نداشتند و تنها خط ساعتی کوین‌گکو یا داده‌های دمو در دسترس بود که پیش‌بینی هرگز روی آن‌ها آزمایش نشده است.` : ''}</p>
+      <div class="ap-card mt" style="margin-top:32px">
+        <h3 style="color:#fff;margin-bottom:12px">میزان اعتماد به نتایج</h3>
+        <p class="fine" style="color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:8px">هر نتیجه ترکیبی از تحلیل‌های آماری و تست‌های خارج از نمونه است. برچسب خرید یا پرهیز تنها زمانی ظاهر می‌شود که خوانشی با مزیت اندازه‌گیری‌شده وجود داشته باشد.</p>
+        <p class="fine" style="color:rgba(255,255,255,0.5);line-height:1.6;margin:0">${esc(ADVICE_DISCLAIMER)} ${wait.length.toLocaleString('fa-IR')} از ${done.length.toLocaleString('fa-IR')} ارز به عنوان «بدون لبه» برگشتند.</p>
       </div>`;
 
-    $$('.advice-card', el).forEach((c) => c.addEventListener('click', (e) => {
+    $$('.ap-advice-card', el).forEach((c) => c.addEventListener('click', (e) => {
       if (e.target.closest('a,button')) return;
       location.hash = `#/coin/${c.dataset.sym}`;
     }));
     $$('[data-trade]', el).forEach((b) => b.addEventListener('click', (e) => {
       e.stopPropagation();
       const sym = b.dataset.trade;
-      modal(`<div dir="rtl"><h3>محل معامله ${esc(sym)}</h3>
-        <div class="sheet-grid mt">${venuesFor(sym).map((v) => `<a class="sheet-item" href="${esc(safeUrl(v.href, '#/exchanges'))}" target="_blank" rel="noopener noreferrer">${icon('exchanges', 18)}<span>${esc(v.name)}<br><small class="fine" dir="ltr">${esc(v.pair)}</small></span></a>`).join('')}</div>
-        <p class="fine mt">${esc(TRADE_DISCLAIMER)}</p></div>`);
+      modal(`<div dir="rtl"><h3 style="color:#fff;margin-bottom:12px">محل معامله ${esc(sym)}</h3>
+        <div class="sheet-grid mt" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${venuesFor(sym).map((v) => `<a class="sheet-item" href="${esc(safeUrl(v.href, '#/exchanges'))}" target="_blank" rel="noopener noreferrer" style="background:rgba(255,255,255,0.04);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none">${icon('exchanges', 18)}<span><b>${esc(v.name)}</b><br><small class="fine" dir="ltr" style="color:rgba(255,255,255,0.4);font-size:0.75rem">${esc(v.pair)}</small></span></a>`).join('')}</div>
+        <p class="fine mt" style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin-top:16px">${esc(TRADE_DISCLAIMER)}</p></div>`);
     }));
   };
 
@@ -118,7 +220,7 @@ export async function render(el) {
     try {
       list = (await markets()).filter((c) => !isStable(c.symbol)).slice(0, st.count);
     } catch {
-      $('#body', el).innerHTML = '<div class="card empty"><h3>بارگیری لیست ارزها امکان‌پذیر نبود</h3><p>فید بازار پاسخ نداد، بنابراین موردی برای اسکن وجود ندارد. برای تلاش مجدد، روی «اسکن مجدد» کلیک کنید.</p></div>';
+      $('#body', el).innerHTML = '<div class="ap-card empty" style="text-align:center;padding:40px"><h3 style="color:#fff;margin-bottom:8px">خطا در بارگیری بازار</h3><p style="color:rgba(255,255,255,0.6)">فید بازار پاسخ نداد.</p></div>';
       return;
     }
     const iv = st.interval;
@@ -144,7 +246,7 @@ export async function render(el) {
     await Promise.all([worker(), worker(), worker(), worker()]);
     if (run !== st.run || st.disposed) return;
     if (!st.rows.length) {
-      $('#body', el).innerHTML = `<div class="card empty"><h3>داده‌ای از نمودار بازنگشت</h3><p>هیچ‌کدام از ارزها کندل‌های صرافی را در این تایم‌فریم بازنگرداندند${st.skipped ? ` (${st.skipped.toLocaleString('fa-IR')} مورد رد شد: فقط کوین‌گکو یا داده دمو)` : ''}، بنابراین چیزی برای خواندن وجود ندارد. برای تلاش مجدد روی اسکن مجدد کلیک کنید.</p></div>`;
+      $('#body', el).innerHTML = `<div class="ap-card empty" style="text-align:center;padding:40px"><h3 style="color:#fff;margin-bottom:8px">داده‌ای یافت نشد</h3><p style="color:rgba(255,255,255,0.6)">هیچ کندلی برای این تایم‌فریم دریافت نشد.</p></div>`;
       $('#meter i', el).style.width = '100%';
       return;
     }
@@ -155,7 +257,7 @@ export async function render(el) {
       try {
         fc = await runForecast(row.candles, { horizon: DEFAULT_HORIZON[iv], intervalMs: INTERVAL_MS[iv] });
         tm = fc?.ok ? timingOutlook(fc, { intervalMs: INTERVAL_MS[iv], interval: iv }) : null;
-      } catch { /* مشاور بدون آن هم کار می‌کند */ }
+      } catch { /* بدون پیش‌بینی هم کار می‌کند */ }
       row.advice = adviseCoin({ signal: row.signal, forecast: fc, timing: tm, interval: iv, trust: directionTrustFor(iv).trust });
       row.candles = null;
       draw();
