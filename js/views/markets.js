@@ -18,8 +18,8 @@ export async function render(el) {
     <div class="grid g4" style="margin-bottom:14px">
       <div class="card"><div class="card-h"><h3>شاخص ترس و طمع</h3><span class="fine" id="fngDate"></span></div><div id="fng">${skeleton(3)}</div></div>
       <div class="card"><div class="card-h"><h3>ترندها</h3></div><div class="hl-list" id="trending">${skeleton(5)}</div></div>
-      <div class="card"><div class="card-h"><h3>بیشترین رشد <span class="fine">۲۴س</span></h3></div><div class="hl-list" id="gainers">${skeleton(5)}</div></div>
-      <div class="card"><div class="card-h"><h3>بیشترین ریزش <span class="fine">۲۴س</span></h3></div><div class="hl-list" id="losers">${skeleton(5)}</div></div>
+      <div class="card"><div class="card-h"><h3>بیشترین رشد <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="gainers">${skeleton(5)}</div></div>
+      <div class="card"><div class="card-h"><h3>بیشترین ریزش <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="losers">${skeleton(5)}</div></div>
     </div>
     <div class="card">
       <div class="card-h">
