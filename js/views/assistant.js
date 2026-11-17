@@ -163,7 +163,7 @@ export async function render(el, [symParam]) {
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
           <div>
             <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">دستیار هوش مصنوعی</h1>
-            <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0;max-width:900px">پشتیبانی از تصمیم‌گیری، نه پیش‌بینی سود[cite: 15]. پاسخ‌ها روی دستگاه شما از روی قیمت‌های زنده، سیگنال‌های اندیکاتور، بک‌تست‌ها و پیش‌بینی‌ها ساخته می‌شوند[cite: 15]. هر پاسخ مبانی خود را اعلام کرده و در صورت کمبود شواهد، صراحتاً آن را ذکر می‌کند[cite: 15]. مشاوره مالی محسوب نمی‌شود[cite: 15].</p>
+            <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0;max-width:900px">پشتیبانی از تصمیم‌گیری، نه پیش‌بینی سود. پاسخ‌ها روی دستگاه شما از روی قیمت‌های زنده، سیگنال‌های اندیکاتور، بک‌تست‌ها و پیش‌بینی‌ها ساخته می‌شوند. هر پاسخ مبانی خود را اعلام کرده و در صورت کمبود شواهد، صراحتاً آن را ذکر می‌کند. مشاوره مالی محسوب نمی‌شود.</p>
           </div>
           <div class="row" style="display:flex;gap:8px">
             <button class="btn sm ghost" type="button" id="assistantStop" disabled style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 14px;border-radius:10px">توقف</button>
@@ -195,14 +195,14 @@ export async function render(el, [symParam]) {
             <div id="focus" class="mt fine" style="color:rgba(255,255,255,0.8)"></div>
           </div>
           <div class="ap-card fine" style="color:rgba(255,255,255,0.6);font-size:0.85rem;line-height:1.6">
-            <b style="color:#fff;display:block;margin-bottom:6px">دستیار چگونه کار می‌کند[cite: 15]</b>
+            <b style="color:#fff;display:block;margin-bottom:6px">دستیار چگونه کار می‌کند</b>
             <ol style="padding-right:18px;margin:0">
-              <li>کندل‌های زنده بایننس را برای ارز مورد نظر دریافت می‌کند[cite: 15].</li>
-              <li>خوانش‌ها را روی ۴ تایم‌فریم، بک‌تست و پیش‌بینی مدل‌ها محاسبه می‌کند[cite: 15].</li>
-              <li>یک تحلیل‌گر داخلی — یا مدل زبانی روی دستگاه — ارقام را به پاسخی روان تبدیل می‌کند[cite: 15].</li>
-              <li>پاسخ‌ها بررسی می‌شوند تا با داده‌های واقعی مطابقت داشته باشند[cite: 15].</li>
+              <li>کندل‌های زنده بایننس را برای ارز مورد نظر دریافت می‌کند.</li>
+              <li>خوانش‌ها را روی ۴ تایم‌فریم، بک‌تست و پیش‌بینی مدل‌ها محاسبه می‌کند.</li>
+              <li>یک تحلیل‌گر داخلی — یا مدل زبانی روی دستگاه — ارقام را به پاسخی روان تبدیل می‌کند.</li>
+              <li>پاسخ‌ها بررسی می‌شوند تا با داده‌های واقعی مطابقت داشته باشند.</li>
             </ol>
-            <p class="mt" style="margin:10px 0 0">مشاوره مالی نیست. دستیار توانایی ثبت معامله را ندارد[cite: 15].</p>
+            <p class="mt" style="margin:10px 0 0">مشاوره مالی نیست. دستیار توانایی ثبت معامله را ندارد.</p>
           </div>
         </div>
       </div>
@@ -243,7 +243,7 @@ export async function render(el, [symParam]) {
     const card = $('#engineCard', el);
     const status = aiState.status;
     const opts = CONFIG.LLM_MODELS.map((m) => `<option value="${m.id}" ${(s.llmModel || '').startsWith(m.id.split('-q4')[0]) ? 'selected' : ''}>${m.label} · ${m.size}</option>`).join('');
-    const base = `<p style="margin:0 0 8px 0"><span class="chip up" style="background:rgba(48,209,88,0.12);color:#30d158;padding:4px 10px;border-radius:8px;font-size:0.8rem">● آماده</span></p><p class="fine" style="color:rgba(255,255,255,0.6);margin:0;font-size:0.85rem;line-height:1.5">پاسخ‌دهی آنی از روی قیمت‌های زنده و مدل‌های تست‌شده اپلیکیشن، روی همین دستگاه[cite: 15]. بدون نیاز به دانلود، حساب کاربری یا کلید API.</p>`;
+    const base = `<p style="margin:0 0 8px 0"><span class="chip up" style="background:rgba(48,209,88,0.12);color:#30d158;padding:4px 10px;border-radius:8px;font-size:0.8rem">● آماده</span></p><p class="fine" style="color:rgba(255,255,255,0.6);margin:0;font-size:0.85rem;line-height:1.5">پاسخ‌دهی آنی از روی قیمت‌های زنده و مدل‌های تست‌شده اپلیکیشن، روی همین دستگاه. بدون نیاز به دانلود، حساب کاربری یا کلید API.</p>`;
     let extra = '';
     if (customReady()) {
       extra = customState.reached
@@ -255,7 +255,7 @@ export async function render(el, [symParam]) {
       extra = `<p class="row mt" style="margin-top:12px;display:flex;align-items:center;gap:8px"><span class="spinner"></span><b>در حال بارگیری مدل زبانی…</b></p><div class="meter" style="background:rgba(255,255,255,0.08);height:6px;border-radius:3px;margin:8px 0;overflow:hidden"><i style="display:block;height:100%;background:var(--accent);width:${Math.round(aiState.progress * 100)}%"></i></div><p class="fine mt" style="color:rgba(255,255,255,0.5);font-size:0.8rem">${esc(aiState.text.slice(0, 140))}</p>`;
     } else if (support.webgpu) {
       extra = `<details class="mt" style="margin-top:12px"><summary class="fine" style="cursor:pointer;color:var(--accent)">اختیاری: مدل زبانی مرورگر (WebGPU)</summary>
-        <p class="fine mt" style="color:rgba(255,255,255,0.6);margin:8px 0;font-size:0.85rem">یک مدل رایگان که داخل مرورگر شما اجرا می‌شود[cite: 15]. یک بار دانلود می‌شود و سپس از حافظه پنهان بارگیری می‌شود.</p>
+        <p class="fine mt" style="color:rgba(255,255,255,0.6);margin:8px 0;font-size:0.85rem">یک مدل رایگان که داخل مرورگر شما اجرا می‌شود. یک بار دانلود می‌شود و سپس از حافظه پنهان بارگیری می‌شود.</p>
         <label class="fld mt" style="display:flex;flex-direction:column;gap:6px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">مدل</span><select class="inp" id="modelSel">${opts}</select></label>
         <button class="btn mt" id="startAi" style="width:100%;margin-top:10px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1;color:#fff">${icon('chip', 16)} بارگیری مدل زبانی</button></details>`;
     }
@@ -306,7 +306,7 @@ export async function render(el, [symParam]) {
 
 با سوالات کلی شروع کنید — *«شواهد در حال حاضر کجا بیشترین قدرت را دارند؟»* — تا تمام ارزها بررسی شوند. یا درباره یک ارز بپرسید: *«آیا خرید ETH در این هفته ارزش دارد؟»* · *«کجا باید SOL را بفروشم؟»*
 
-هر پاسخ از قیمت‌های زنده، سیگنال‌ها و پیش‌بینی‌ها ساخته شده است[cite: 15]. ماهیت آموزشی دارد، نه مشاوره مالی[cite: 15].`));
+هر پاسخ از قیمت‌های زنده، سیگنال‌ها و پیش‌بینی‌ها ساخته شده است. ماهیت آموزشی دارد، نه مشاوره مالی.`));
     }
     for (const m of history) addMsg(m.role === 'user' ? 'user' : 'bot', m.role === 'user' ? esc(m.content) : markdown(m.content) + (m.meta ? `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.5);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">${m.meta}</div>` : ''));
   };
@@ -332,7 +332,7 @@ export async function render(el, [symParam]) {
       const detected = found && termsIn(found).length && !namedCoins(question).includes(found) ? null : found;
       const plain = !followUp && !TRADER_Q.test(question) && conversationalAnswer(question, { symbol: st.symbol, named: detected ? [detected] : namedCoins(question) });
       if (plain) {
-        const src = '<span><b>نگارش:</b> پاسخ داخلی</span><span class="src-note">جنبه آموزشی، نه مشاوره مالی[cite: 15].</span>';
+        const src = '<span><b>نگارش:</b> پاسخ داخلی</span><span class="src-note">جنبه آموزشی، نه مشاوره مالی.</span>';
         history.push({ role: 'assistant', content: plain, meta: src, at: Date.now() });
         bot.innerHTML = markdown(plain) + `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.5);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">${src}</div>`;
         return;
@@ -365,9 +365,9 @@ export async function render(el, [symParam]) {
         : { portfolio, market, marketFrames, compare, compareInterval: iv, interval: iv };
       const facts = trader ? trader.text : ruleBasedAnswer(question, ctx);
       const basis = [];
-      if (analysis) basis.push(`کندل‌های صرافی برای ${analysis.coin.symbol} (${analysis.interval})[cite: 15]`, 'سیگنال‌های اندیکاتور[cite: 15]', 'بک‌تست[cite: 15]', 'پیش‌بینی مدل‌ها[cite: 15]');
+      if (analysis) basis.push(`کندل‌های صرافی برای ${analysis.coin.symbol} (${analysis.interval})`, 'سیگنال‌های اندیکاتور', 'بک‌تست', 'پیش‌بینی مدل‌ها');
       if (trader) basis.push('حساب معاملاتی شبیه‌سازی‌شده');
-      const caveat = '<span class="src-note">جنبه آموزشی، نه مشاوره مالی[cite: 15].</span>';
+      const caveat = '<span class="src-note">جنبه آموزشی، نه مشاوره مالی.</span>';
       const meta = (src) => `<span><b>نگارش:</b> ${esc(src)}</span>${basis.length ? `<span><b>مبتنی بر:</b> ${esc(basis.join(' · '))}</span>` : ''}${caveat}<a href="#" data-facts style="color:var(--accent);margin-right:8px">نمایش داده‌های تأییدشده</a>`;
       let finalText = facts, source = 'تحلیل‌گر داخلی';
       if (localReady() || customReady()) {

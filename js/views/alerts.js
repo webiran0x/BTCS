@@ -90,7 +90,7 @@ export async function render(el, [preset]) {
     <div class="ap-alerts-wrap" dir="rtl">
       <div class="ap-hero-card">
         <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">مرکز هشدارها</h1>
-        <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0">سه نوع هشدار پیشرفته وجود دارد: <b>هشدار قیمت</b> برای زیر نظر داشتن سطوح کلیدی، <b>هشدار سیگنال</b> برای دریافت نقطه ورود، حد ضرر و اهداف به محض فعال‌شدن تنظیمات موتور روی نمودار، و <b>هشدار سیگنال هوش مصنوعی</b> جهت اطلاع‌رسانی آنی هنگام خرید یا فروش ارزها توسط هوش مصنوعی[cite: 14].</p>
+        <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0">سه نوع هشدار پیشرفته وجود دارد: <b>هشدار قیمت</b> برای زیر نظر داشتن سطوح کلیدی، <b>هشدار سیگنال</b> برای دریافت نقطه ورود، حد ضرر و اهداف به محض فعال‌شدن تنظیمات موتور روی نمودار، و <b>هشدار سیگنال هوش مصنوعی</b> جهت اطلاع‌رسانی آنی هنگام خرید یا فروش ارزها توسط هوش مصنوعی.</p>
       </div>
 
       <div class="ap-card">
@@ -151,11 +151,11 @@ export async function render(el, [preset]) {
     if (!box) return;
 
     if (!backendEnabled()) {
-      box.innerHTML = '<p class="fine" style="color:rgba(255,255,255,0.6)">هشدارهای سیگنال نیاز به سرور پشتیبان دارند که در این دپلوی متصل نیست. هشدارهای قیمت در پایین همچنان هنگام باز بودن سایت کار می‌کنند[cite: 14].</p>';
+      box.innerHTML = '<p class="fine" style="color:rgba(255,255,255,0.6)">هشدارهای سیگنال نیاز به سرور پشتیبان دارند که در این دپلوی متصل نیست. هشدارهای قیمت در پایین همچنان هنگام باز بودن سایت کار می‌کنند.</p>';
       return;
     }
     if (!auth.user) {
-      box.innerHTML = `<p class="fine" style="color:rgba(255,255,255,0.6)">برای تنظیم هشدار سیگنال وارد شوید — این هشدار روی سرور اجرا می‌شود، بنابراین حتی با بسته بودن مرورگر به شما می‌رسد[cite: 14].</p>
+      box.innerHTML = `<p class="fine" style="color:rgba(255,255,255,0.6)">برای تنظیم هشدار سیگنال وارد شوید — این هشدار روی سرور اجرا می‌شود، بنابراین حتی با بسته بودن مرورگر به شما می‌رسد.</p>
         <button class="btn primary mt" id="sigSignIn" style="margin-top:12px;padding:10px 18px">${icon('bolt', 16)} ورود</button>`;
       $('#sigSignIn', box).addEventListener('click', () => openAuth('in'));
       return;
@@ -176,13 +176,13 @@ export async function render(el, [preset]) {
         <label class="fld" style="display:flex;flex-direction:column;gap:6px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">حداقل توافق اندیکاتورها</span><input class="inp" name="score" type="number" min="10" max="100" step="5" value="25" style="width:110px"></label>
         <button class="btn primary" style="padding:10px 18px">${icon('alerts', 16)} ایجاد هشدار سیگنال</button>
       </form>
-      <p class="fine mt" style="margin:12px 0;color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.5">این عدد میزان توافق قدرتمند اندیکاتورها را نشان می‌دهد، نه احتمال سودآوری معامله — تست‌ها نشان داده‌اند عدد بالاتر به معنای نتیجه بهتر نیست. این بررسی یک بار در زمان بسته شدن هر کندل روی آن نمودار انجام می‌شود و قبل از اطلاع‌رسانی مجدد، یک کندل کامل صبر می‌کند. در صورت اتصال تلگرام و ایمیل در <a href="#/account" style="color:var(--accent)">صفحه حساب کاربری</a>، اعلان‌ها به آنجا ارسال می‌شوند[cite: 14].</p>
+      <p class="fine mt" style="margin:12px 0;color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.5">این عدد میزان توافق قدرتمند اندیکاتورها را نشان می‌دهد، نه احتمال سودآوری معامله — تست‌ها نشان داده‌اند عدد بالاتر به معنای نتیجه بهتر نیست. این بررسی یک بار در زمان بسته شدن هر کندل روی آن نمودار انجام می‌شود و قبل از اطلاع‌رسانی مجدد، یک کندل کامل صبر می‌کند. در صورت اتصال تلگرام و ایمیل در <a href="#/account" style="color:var(--accent)">صفحه حساب کاربری</a>، اعلان‌ها به آنجا ارسال می‌شوند.</p>
       ${sigs.length ? `<div class="stack mt" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">${sigs.map((a) => `
         <div class="row spread" style="padding:12px 16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center">
           <div><b style="color:#fff">${esc(a.symbol)}</b> · نمودار ${esc(a.interval)} · ${esc(SIDES.find(([v]) => v === (a.side || 'any'))?.[1] || 'هر جهتی')} · توافق ≥ ${esc(String(a.min_score ?? 25))}
             <br><small class="muted" style="color:rgba(255,255,255,0.4)">${a.last_fired_at ? `آخرین فعال‌سازی ${ago(new Date(a.last_fired_at).getTime())}` : 'در انتظار تنظیمات'}</small></div>
           <button class="icon-btn" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.06);border:0;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" data-sigdel="${esc(String(a.id))}" aria-label="حذف هشدار سیگنال">${icon('trash', 14)}</button>
-        </div>`).join('')}</div>` : '<p class="fine mt" style="color:rgba(255,255,255,0.5);margin-top:12px">هنوز هیچ هشدار سیگنالی ثبت نشده است[cite: 14].</p>'}`;
+        </div>`).join('')}</div>` : '<p class="fine mt" style="color:rgba(255,255,255,0.5);margin-top:12px">هنوز هیچ هشدار سیگنالی ثبت نشده است.</p>'}`;
 
     $('#sf', box).addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -214,7 +214,7 @@ export async function render(el, [preset]) {
     if (!box) return;
     if (!backendEnabled()) { box.innerHTML = '<p class="fine" style="color:rgba(255,255,255,0.6)">هشدارهای سیگنال هوش مصنوعی نیاز به سرور پشتیبان دارند که در این دپلوی متصل نیست.</p>'; return; }
     if (!auth.user) {
-      box.innerHTML = `<p class="fine" style="color:rgba(255,255,255,0.6)">برای دریافت پیام هنگام خرید یا فروش یک ارز توسط سیگنال هوش مصنوعی وارد شوید — این هشدار روی سرور اجرا می‌شود، بنابراین حتی با بسته بودن مرورگر به شما می‌رسد[cite: 14].</p>
+      box.innerHTML = `<p class="fine" style="color:rgba(255,255,255,0.6)">برای دریافت پیام هنگام خرید یا فروش یک ارز توسط سیگنال هوش مصنوعی وارد شوید — این هشدار روی سرور اجرا می‌شود، بنابراین حتی با بسته بودن مرورگر به شما می‌رسد.</p>
         <button class="btn primary mt" id="aiSignIn" style="margin-top:12px;padding:10px 18px">${icon('bolt', 16)} ورود</button>`;
       $('#aiSignIn', box).addEventListener('click', () => openAuth('in'));
       return;
@@ -233,13 +233,13 @@ export async function render(el, [preset]) {
         <label class="fld" style="display:flex;flex-direction:column;gap:6px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">اطلاع‌رسانی درباره</span><select class="inp" name="side">${AI_SIDES.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join('')}</select></label>
         <button class="btn primary" style="padding:10px 18px">${icon('alerts', 16)} ایجاد هشدار سیگنال هوش مصنوعی</button>
       </form>
-      <p class="fine mt" style="margin:12px 0;color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.5">همان سیگنال موجود در صفحه هر ارز: قوانین معاملاتی تست‌شده نمودار، که هنگام بسته شدن کندل بررسی می‌شود. پیام اقدام انجام‌شده را اعلام می‌کند — خرید (همراه با حد ضرر) یا فروش (همراه با نتیجه پس از کسر کارمزد) — از طریق تلگرام یا ایمیل در صورت تنظیم، و روی این سایت در هر زمان که باز باشد (با اعلان مرورگر در صورت اجازه شما). در تست‌ها، خریدهایی از این دست جهت بازار را بهتر از شانس پیش‌بینی نکردند؛ صفحه ارز و سوابق عملکرد این سابقه را نشان می‌دهند. هیچ سفارشی در اینجا ثبت نمی‌شود[cite: 14].</p>
+      <p class="fine mt" style="margin:12px 0;color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.5">همان سیگنال موجود در صفحه هر ارز: قوانین معاملاتی تست‌شده نمودار، که هنگام بسته شدن کندل بررسی می‌شود. پیام اقدام انجام‌شده را اعلام می‌کند — خرید (همراه با حد ضرر) یا فروش (همراه با نتیجه پس از کسر کارمزد) — از طریق تلگرام یا ایمیل در صورت تنظیم، و روی این سایت در هر زمان که باز باشد (با اعلان مرورگر در صورت اجازه شما). در تست‌ها، خریدهایی از این دست جهت بازار را بهتر از شانس پیش‌بینی نکردند؛ صفحه ارز و سوابق عملکرد این سابقه را نشان می‌دهند. هیچ سفارشی در اینجا ثبت نمی‌شود.</p>
       ${mine.length ? `<div class="stack mt" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">${mine.map((a) => `
         <div class="row spread" style="padding:12px 16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center">
           <div><b style="color:#fff">${esc(a.symbol)}</b> · نمودار ${esc(a.interval)} · ${esc(AI_SIDES.find(([v]) => v === (a.side || 'any'))?.[1] || 'خریدها و فروش‌ها')}
             <br><small class="muted" style="color:rgba(255,255,255,0.4)">${a.last_fired_at ? `آخرین فعال‌سازی ${ago(new Date(a.last_fired_at).getTime())}` : 'در انتظار خرید یا فروش'}</small></div>
           <button class="icon-btn" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.06);border:0;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" data-aidel="${esc(String(a.id))}" aria-label="حذف هشدار سیگنال هوش مصنوعی">${icon('trash', 14)}</button>
-        </div>`).join('')}</div>` : '<p class="fine mt" style="color:rgba(255,255,255,0.5);margin-top:12px">هنوز هیچ هشدار سیگنال هوش مصنوعی ثبت نشده است[cite: 14].</p>'}`;
+        </div>`).join('')}</div>` : '<p class="fine mt" style="color:rgba(255,255,255,0.5);margin-top:12px">هنوز هیچ هشدار سیگنال هوش مصنوعی ثبت نشده است.</p>'}`;
     $('#af', box).addEventListener('submit', async (e) => {
       e.preventDefault();
       const f2 = e.currentTarget;
@@ -269,8 +269,8 @@ export async function render(el, [preset]) {
   const reach = () => {
     const r = $('#reach', el);
     if (r) r.textContent = signedIn()
-      ? 'وارد شده‌اید: سرور هشدارهای قیمت شما را نیز زیر نظر دارد و پس از اتصال در صفحه حساب کاربری، با بسته بودن سایت آن‌ها را به تلگرام یا ایمیل ارسال می‌کند[cite: 14].'
-      : 'هنگام باز بودن سایت کار می‌کند. برای دریافت هشدارهای قیمت از طریق تلگرام یا ایمیل با بسته بودن سایت نیز وارد شوید[cite: 14].';
+      ? 'وارد شده‌اید: سرور هشدارهای قیمت شما را نیز زیر نظر دارد و پس از اتصال در صفحه حساب کاربری، با بسته بودن سایت آن‌ها را به تلگرام یا ایمیل ارسال می‌کند.'
+      : 'هنگام باز بودن سایت کار می‌کند. برای دریافت هشدارهای قیمت از طریق تلگرام یا ایمیل با بسته بودن سایت نیز وارد شوید.';
   };
   let elsewhere = [];
   const row = (c, sym, dir, lvl, sub, attr) => `<div class="row spread" style="padding:12px 16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center">
@@ -286,7 +286,7 @@ export async function render(el, [preset]) {
       ...elsewhere.map((a) => row(coins.find((x) => x.symbol === a.symbol), a.symbol, a.direction, Number(a.price),
         `${a.triggered_at ? `✅ فعال‌شده ${ago(new Date(a.triggered_at).getTime())}` : 'در انتظار'} · ذخیره‌شده روی دستگاه دیگر`, `data-srv="${esc(String(a.id))}"`)),
     ];
-    $('#list', el).innerHTML = items.length ? `<div class="stack" style="display:flex;flex-direction:column;gap:8px">${items.join('')}</div>` : '<p class="muted" style="color:rgba(255,255,255,0.5)">هنوز هیچ هشداری ثبت نشده است[cite: 14].</p>';
+    $('#list', el).innerHTML = items.length ? `<div class="stack" style="display:flex;flex-direction:column;gap:8px">${items.join('')}</div>` : '<p class="muted" style="color:rgba(255,255,255,0.5)">هنوز هیچ هشداری ثبت نشده است.</p>';
     $$('[data-del]', el).forEach((b) => b.addEventListener('click', async () => {
       const al = load('alerts', []);
       const [gone] = al.splice(+b.dataset.del, 1);
