@@ -46,7 +46,7 @@ export async function newsFetch(req: Request): Promise<Response> {
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 12000);
-      const res = await fetch(url, { signal: ctrl.signal, redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 CoinVantage news reader' } });
+      const res = await fetch(url, { signal: ctrl.signal, redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 BTCS news reader' } });
       clearTimeout(t);
       const xml = await res.text();
       const items = [...xml.matchAll(/<item[\s>][\s\S]*?<\/item>/gi)].slice(0, 25);

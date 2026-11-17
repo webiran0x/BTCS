@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# One-shot GitHub Pages deploy for CoinVantage.
+# One-shot GitHub Pages deploy for BTCS.
 #
 #   1. brew install gh          (once)
 #   2. gh auth login            (once — pick GitHub.com, HTTPS, login with a browser)
-#   3. bash tools/deploy-github.sh coinvantage
+#   3. bash tools/deploy-github.sh BTCS
 #
 # It creates the repo, pushes, turns on Pages, waits for the first build,
 # writes a sitemap for the real URL and prints the live link.
 set -euo pipefail
 
-REPO="${1:-coinvantage}"
+REPO="${1:-BTCS}"
 BRANCH="main"
 cd "$(dirname "$0")/.."
 
@@ -44,7 +44,7 @@ node tools/build-deps.mjs
 node tools/build-pages.mjs --site="$SITE"
 
 git add -A
-git diff --cached --quiet || git commit -q -m "Deploy CoinVantage to GitHub Pages"
+git diff --cached --quiet || git commit -q -m "Deploy BTCS to GitHub Pages"
 
 if gh repo view "${USER_LOGIN}/${REPO}" >/dev/null 2>&1; then
   echo "Repo already exists — pushing to it."

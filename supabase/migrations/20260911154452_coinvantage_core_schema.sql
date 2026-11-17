@@ -1,4 +1,4 @@
--- ============================================================ CoinVantage core schema
+-- ============================================================ BTCS core schema
 -- Admin allow-list (who becomes admin on sign-up). Service-role only.
 create table public.admin_emails (email text primary key);
 alter table public.admin_emails enable row level security;

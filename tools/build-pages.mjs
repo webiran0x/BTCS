@@ -26,8 +26,8 @@ const holdBeat = TESTED_CHARTS.filter((k) => { const x = CHART_TESTED[k]; return
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // آدرس سایت؛ یک نسخه مستقر در جای دیگر آدرس خودش را ارسال می‌کند (--site=https://…/)
 const arg = process.argv.find((a) => a.startsWith('--site='));
-export const SITE = (arg ? arg.slice(7) : 'https://umer-78.github.io/coinvantage/').replace(/\/?$/, '/');
-const BASE = new URL(SITE).pathname; // '/coinvantage/'
+export const SITE = (arg ? arg.slice(7) : 'https://umer-78.github.io/BTCS/').replace(/\/?$/, '/');
+const BASE = new URL(SITE).pathname; // '/BTCS/'
 const check = process.argv.includes('--check');
 
 // نام‌ها فقط در مواردی که هیچ شکی وجود ندارد؛ سایر ارزها با نمادشان نام‌گذاری می‌شوند.
@@ -63,7 +63,7 @@ const directionLine = 'هیچ مدلی نتوانسته است در پیش‌ب�
 
 // ---------------------------------------------------------------- صفحات
 const SECTIONS = [
-  { route: '#/', path: '', title: 'CoinVantage — Live Crypto Prices, Charts, Tested AI Forecasts & AI Trading Simulator',
+  { route: '#/', path: '', title: 'BTCS — Live Crypto Prices, Charts, Tested AI Forecasts & AI Trading Simulator',
     desc: `Live prices and candlestick charts for the top crypto coins, price-range forecasts tested on ${facts.coins} coins, an AI paper-trading simulator and a public track record. Every figure is measured, not promised. Not financial advice.`,
     h1: 'قیمت‌های زنده ارزهای دیجیتال، نمودارها و پیش‌بینی‌های تست‌شده هوش مصنوعی',
     body: [`قیمت‌ها و نمودارهای بزرگ‌ترین ارزهای دیجیتال، از صرافی‌ای که هر کدام در آن معامله می‌شوند (ابتدا بایننس، سپس Gate.io و HTX). هر ارزی را برای مشاهده نمودار آن، ۱۳ اندیکاتور، پیش‌بینی بازه قیمتی و سیگنال معامله‌گر هوش مصنوعی باز کنید.`, rangeLine, directionLine],
@@ -73,7 +73,7 @@ const SECTIONS = [
       not: 'این ابزار سفارشی ثبت نمی‌کند، دارایی یا کلیدی را نگهداری نمی‌کند و به شما نمی‌گوید چه چیزی بخرید. این یک ابزار آموزشی است، نه مشاوره مالی.',
       limits: 'نتایج اندازه‌گیری‌شده گذشته را توصیف می‌کنند. بازارها تغییر می‌کنند، فیدهای داده ممکن است با تأخیر مواجه شوند یا خطا بدهند، و بازه پیش‌بینی به طور طراحی‌شده از هر پنج بار حدود یک بار اشتباه خواهد بود.',
     } },
-  { route: '#/scanner', path: 'scanner/', title: 'Crypto Scanner — Indicator Scores for the Top Coins | CoinVantage',
+  { route: '#/scanner', path: 'scanner/', title: 'Crypto Scanner — Indicator Scores for the Top Coins | BTCS',
     desc: 'Ranks the top 20 to 50 coins by how strongly their indicators agree, with the same forecast and AI signal as each coin page. Filters for rising, falling, oversold and overbought.',
     h1: 'اسکنر ارزهای دیجیتال', body: ['رتبه‌بندی ۲۰ تا ۵۰ ارز برتر بر اساس میزان توافق قوی اندیکاتورهای آن‌ها، همراه با همان پیش‌بینی و سیگنال هوش مصنوعی در صفحه هر ارز. دارای فیلترهای صعودی، نزولی، اشباع فروش و اشباع خرید.'],
     more: {
@@ -82,7 +82,7 @@ const SECTIONS = [
       not: 'امتیاز بالا سیگنال خرید نیست و امتیاز پایین سیگنال فروش نیست؛ تست‌ها تمایل معکوسی را در نقاط افراطی نشان دادند.',
       limits: 'اندیکاتورها صرفاً بر اساس قیمت‌های گذشته ساخته شده‌اند. آن‌ها هیچ چیزی درباره اخبار، نقدینگی یا رویدادهایی که هنوز رخ نداده‌اند نمی‌گویند.',
     } },
-  { route: '#/trader', path: 'trader/', title: 'AI Crypto Trading Simulator — Paper Trading with Tested Rules | CoinVantage',
+  { route: '#/trader', path: 'trader/', title: 'AI Crypto Trading Simulator — Paper Trading with Tested Rules | BTCS',
     desc: `An AI trader that runs tested rules on live prices with simulated money, plus a demo account and a record of your real trades. Walk-forward results on ${facts.coins} coins are shown next to it. No orders are ever placed.`,
     h1: 'شبیه‌ساز معاملات هوش مصنوعی',
     body: ['یک معامله‌گر هوش مصنوعی که با پول شبیه‌سازی‌شده روی قیمت‌های زنده و با استفاده از قوانین تست‌شده گام‌به‌گام روی هر ارز قابل معامله (با احتساب کارمزد) خرید و فروش می‌کند. این ربات هیچ سفارشی در هیچ صرافی ثبت نمی‌کند.', `در هر نمودار، صفحه نشان می‌دهد که همان قوانین در تست چه نتیجه‌ای کسب کرده‌اند، بیشترین افت سرمایه چقدر بوده و نگهداری ساده ارزها چه بازدهی داشته است. ${traderMeasured} صفحه هر دو مورد را به همراه بیشترین افت سرمایه نشان می‌دهد.`],
@@ -101,7 +101,7 @@ const SECTIONS = [
         'استراتژی سفارشی: تنظیمات شخصی شما. این موارد تست نشده‌اند، بنابراین آمارهای تست‌شده درباره آن‌ها صدق نمی‌کند؛ نگاه به گذشته روی همان تاریخچه آن‌ها را ایده‌آل جلوه می‌دهد.',
       ] },
     ] },
-  { route: '#/learn', path: 'learn/', title: 'How the AI Learns and How It Is Tested | CoinVantage',
+  { route: '#/learn', path: 'learn/', title: 'How the AI Learns and How It Is Tested | BTCS',
     desc: 'How every indicator, the forecast and the AI trader are graded against what the market did next: walk-forward tests, a live record kept in the cloud, and what was tried and rejected.',
     h1: 'چگونگی یادگیری هوش مصنوعی و روش تست آن',
     body: ['هر سیگنال در فضای ابری (صرف‌نظر از اینکه صفحه‌ای باز باشد یا خیر) بر اساس رفتار بعدی بازار ارزیابی می‌شود. یک روش تنها زمانی کنترل را به دست می‌گیرد که در آن سابقه بر روش فعلی غلبه کند، و اگر عملکرد خود را از دست دهد تنزل می‌یابد.', directionMeasured, rangeLine],
@@ -112,24 +112,24 @@ const SECTIONS = [
       limits: 'هر رقم بازه‌ای را که در آن اندازه‌گیری شده توصیف می‌کند. روشی که کار می‌کرده ممکن است با تغییر بازار متوقف شود، به همین دلیل تست‌ها به طور مداوم اجرا می‌شوند.',
     },
     sections: LEARN_GUIDE },
-  { route: '#/track', path: 'track/', title: 'Public Track Record of Every Logged Signal | CoinVantage',
+  { route: '#/track', path: 'track/', title: 'Public Track Record of Every Logged Signal | BTCS',
     desc: 'Every signal the server logged before the outcome was known, scored against the hit rate of always calling the more common outcome.',
     h1: 'سابقه عملکرد عمومی', body: ['هر سیگنال پیش از مشخص شدن نتیجه ثبت شده و پس از گذشت افق زمانی، در مقایسه با نرخ موفقیتِ پیش‌بینیِ همیشه رایج‌ترین حالت امتیازدهی می‌شود.'] },
-  { route: '#/advice', path: 'advice/', title: 'Crypto Market Scan — Where the Evidence Is Strongest | CoinVantage',
+  { route: '#/advice', path: 'advice/', title: 'Crypto Market Scan — Where the Evidence Is Strongest | BTCS',
     desc: 'A scan of your holdings and the top coins across charts, weighting every reading by how accurate it has actually been.',
     h1: 'اسکن بازار', body: ['دارایی‌ها و ارزهای برتر شما را در چند تایم‌فریم اسکن کرده و به هر خوانش بر اساس دقت اندازه‌گیری‌شده‌اش وزن می‌دهد، بنابراین خوانشی که هرگز قابل اعتماد نبوده ارزش بسیار کمی خواهد داشت.'] },
-  { route: '#/compare', path: 'compare/', title: 'Compare Crypto Coins — Performance, Volatility, Drawdown & Correlation | CoinVantage',
+  { route: '#/compare', path: 'compare/', title: 'Compare Crypto Coins — Performance, Volatility, Drawdown & Correlation | BTCS',
     desc: 'Compare up to six coins: normalised performance, volatility, maximum drawdown, return against risk and a correlation matrix.',
     h1: 'مقایسه ارزها', body: ['مقایسه حداکثر شش ارز در کنار یکدیگر: عملکرد نرمال‌شده، نوسان، بیشترین افت سرمایه، بازدهی در برابر ریسک و میزان همبستگی حرکتی آن‌ها.'] },
-  { route: '#/futures', path: 'futures/', title: 'Crypto Futures — Funding Rates and Open Interest | CoinVantage',
+  { route: '#/futures', path: 'futures/', title: 'Crypto Futures — Funding Rates and Open Interest | BTCS',
     desc: 'Funding rates, open interest and long/short ratios for the main crypto futures markets.',
     h1: 'معاملات آتی (Futures)', body: ['نرخ‌های تامین مالی (Funding rates)، سود باز (Open interest) و نسبت موقعیت‌های خرید به فروش در بازارهای اصلی معاملات آتی پرپچوال.'] },
-  { route: '#/news', path: 'news/', title: 'Crypto News | CoinVantage', desc: 'Recent crypto news headlines from public sources, next to live prices and charts for the coins they mention.', h1: 'اخبار ارزهای دیجیتال', body: ['سرتیتر اخبار اخیر از منابع عمومی ارزهای دیجیتال.'] },
-  { route: '#/tools', path: 'tools/', title: 'Crypto Tools — Converter, DCA Backtest, Position Sizer | CoinVantage',
+  { route: '#/news', path: 'news/', title: 'Crypto News | BTCS', desc: 'Recent crypto news headlines from public sources, next to live prices and charts for the coins they mention.', h1: 'اخبار ارزهای دیجیتال', body: ['سرتیتر اخبار اخیر از منابع عمومی ارزهای دیجیتال.'] },
+  { route: '#/tools', path: 'tools/', title: 'Crypto Tools — Converter, DCA Backtest, Position Sizer | BTCS',
     desc: 'A currency converter, a dollar-cost-averaging backtest on real prices and a position sizer that keeps each trade to a set risk.',
     h1: 'ابزارهای ارز دیجیتال', body: ['یک مبدل ارزی، تست استراتژی میانگین‌گیری هزینه دلاری (DCA) روی قیمت‌های واقعی، و ابزار تعیین حجم پوزیشن که هر معامله را در ریسک تعیین‌شده نگه می‌دارد.'] },
-  { route: '#/exchanges', path: 'exchanges/', title: 'Crypto Exchanges — Volume and Trust | CoinVantage', desc: 'The main crypto exchanges ranked by trading volume, and which of them the app reads live prices and candles from.', h1: 'صرافی‌های ارز دیجیتال', body: ['صرافی‌های اصلی بر اساس حجم معاملات.'] },
-  { route: '#/ai', path: 'ai/', title: 'Crypto AI Assistant — Answers from Live Data | CoinVantage',
+  { route: '#/exchanges', path: 'exchanges/', title: 'Crypto Exchanges — Volume and Trust | BTCS', desc: 'The main crypto exchanges ranked by trading volume, and which of them the app reads live prices and candles from.', h1: 'صرافی‌های ارز دیجیتال', body: ['صرافی‌های اصلی بر اساس حجم معاملات.'] },
+  { route: '#/ai', path: 'ai/', title: 'Crypto AI Assistant — Answers from Live Data | BTCS',
     desc: 'Ask about any coin, the market or your AI trader. Answers come from live prices and the app\'s tested models, in your browser, and say what they are based on.',
     h1: 'دستیار هوش مصنوعی ارز دیجیتال', body: ['درباره هر ارز، بازار یا معامله‌گر هوش مصنوعی خود سوال کنید. پاسخ‌ها از قیمت‌های زنده و مدل‌های تست‌شده برنامه در مرورگر شما ساخته می‌شوند و مشخص می‌کنند بر چه اساسی ارائه شده‌اند.', 'هر پاسخ منبع خود را نام می‌برد (قیمت‌های زنده، سیگنال‌ها، پیش‌بینی، حساب شبیه‌سازی‌شده شما) و نویسنده متن را مشخص می‌کند: تحلیلگر داخلی یا مدل زبانی که صرفاً پاسخ تحلیلگر را بازنویسی کرده و از نظر وجود اعداد نامعتبر بررسی می‌شود.'],
     more: {
@@ -138,12 +138,12 @@ const SECTIONS = [
       not: 'قیمت‌ها را با قطعیت پیش‌بینی نمی‌کند، معامله‌ای ثبت نمی‌کند و اعدادی را از خود ابداع نمی‌کند. پاسخی که اعدادی خارج از داده‌ها را نقل کند با پاسخ خود تحلیلگر جایگزین می‌شود.',
       limits: 'در مواردی که مستندات ضعیف باشد به صراحت اعلام می‌کند. پیش‌بینی‌های جهت در تست‌ها نتوانسته اند از شانس بهتر عمل کنند، و مدل زبانی ممکن است متن را ضعیف بیان کند. این مشاوره مالی نیست.',
     } },
-  { route: '#/alerts', path: 'alerts/', title: 'Crypto Price Alerts | CoinVantage', desc: 'Set price and indicator alerts for any coin and get notified in the browser, by e-mail or on Telegram when they trigger.', h1: 'هشدارهای قیمتی', body: ['تنظیم هشدارهای قیمت و سیگنال برای هر ارز دیجیتال.'] },
-  { route: '#/wallet', path: 'wallet/', title: 'Read-only Crypto Wallet View | CoinVantage', desc: 'See a wallet\'s balances read-only. The app never asks for keys or signatures.', h1: 'کیف پول', body: ['اتصال کیف پول به صورت فقط‌خواندنی برای مشاهده موجودی‌ها. برنامه هرگز کلید خصوصی، عبارت بازیابی یا امضایی درخواست نمی‌کند.'] },
-  { route: '#/premium', path: 'premium/', title: 'Free and Premium Plans | CoinVantage', desc: 'What the free plan of CoinVantage includes, what Premium adds, and what neither of them can promise about returns.', h1: 'پلن‌های اشتراکی', body: ['امکانات پلن رایگان و ویژگی‌های نسخه پریمیوم.'] },
-  { route: '#/legal/terms', path: 'legal/terms/', title: 'Terms of Use | CoinVantage', desc: 'The terms of use for CoinVantage: an educational tool for crypto markets, not financial advice or a trading service.', h1: 'شرایط استفاده', body: ['شرایط حاکم بر استفاده از CoinVantage.'] },
-  { route: '#/legal/privacy', path: 'legal/privacy/', title: 'Privacy Policy | CoinVantage', desc: 'What CoinVantage stores on your device and on its server, why, for how long, and how to delete it.', h1: 'سیاست حفظ حریم خصوصی', body: ['مواردی که برنامه روی دستگاه شما و سرور خود ذخیره می‌کند و مدت زمان نگهداری آن‌ها.'] },
-  { route: '#/legal/risk', path: 'legal/risk/', title: 'Risk Disclosure | CoinVantage', desc: 'The risks of trading crypto and of relying on any forecast, signal or simulation, including the ones on this site.', h1: 'سلب مسئولیت ریسک', body: ['بازار ارزهای دیجیتال پرنوسان است. هیچ پیش‌بینی، سیگنال یا شبیه‌سازی در این سایت مشاوره مالی نیست و نتایج گذشته تضمینی برای آینده نیستند.'] },
+  { route: '#/alerts', path: 'alerts/', title: 'Crypto Price Alerts | BTCS', desc: 'Set price and indicator alerts for any coin and get notified in the browser, by e-mail or on Telegram when they trigger.', h1: 'هشدارهای قیمتی', body: ['تنظیم هشدارهای قیمت و سیگنال برای هر ارز دیجیتال.'] },
+  { route: '#/wallet', path: 'wallet/', title: 'Read-only Crypto Wallet View | BTCS', desc: 'See a wallet\'s balances read-only. The app never asks for keys or signatures.', h1: 'کیف پول', body: ['اتصال کیف پول به صورت فقط‌خواندنی برای مشاهده موجودی‌ها. برنامه هرگز کلید خصوصی، عبارت بازیابی یا امضایی درخواست نمی‌کند.'] },
+  { route: '#/premium', path: 'premium/', title: 'Free and Premium Plans | BTCS', desc: 'What the free plan of BTCS includes, what Premium adds, and what neither of them can promise about returns.', h1: 'پلن‌های اشتراکی', body: ['امکانات پلن رایگان و ویژگی‌های نسخه پریمیوم.'] },
+  { route: '#/legal/terms', path: 'legal/terms/', title: 'Terms of Use | BTCS', desc: 'The terms of use for BTCS: an educational tool for crypto markets, not financial advice or a trading service.', h1: 'شرایط استفاده', body: ['شرایط حاکم بر استفاده از BTCS.'] },
+  { route: '#/legal/privacy', path: 'legal/privacy/', title: 'Privacy Policy | BTCS', desc: 'What BTCS stores on your device and on its server, why, for how long, and how to delete it.', h1: 'سیاست حفظ حریم خصوصی', body: ['مواردی که برنامه روی دستگاه شما و سرور خود ذخیره می‌کند و مدت زمان نگهداری آن‌ها.'] },
+  { route: '#/legal/risk', path: 'legal/risk/', title: 'Risk Disclosure | BTCS', desc: 'The risks of trading crypto and of relying on any forecast, signal or simulation, including the ones on this site.', h1: 'سلب مسئولیت ریسک', body: ['بازار ارزهای دیجیتال پرنوسان است. هیچ پیش‌بینی، سیگنال یا شبیه‌سازی در این سایت مشاوره مالی نیست و نتایج گذشته تضمینی برای آینده نیستند.'] },
 ];
 
 const universe = JSON.parse(fs.readFileSync(path.join(root, 'tools/universe.json'), 'utf8'));
@@ -154,7 +154,7 @@ const COINS = universe.coins.map((c) => {
   const venue = VENUE[c.venue] || c.venue;
   return {
     route: `#/coin/${sym}`, path: `coin/${slug(sym)}/`, coin: sym,
-    title: `${label} Price, Live Chart & Tested AI Forecast | CoinVantage`,
+    title: `${label} Price, Live Chart & Tested AI Forecast | BTCS`,
     desc: `Live ${sym} price and chart from ${venue}, 13 indicators, a price-range forecast tested on ${facts.coins} coins and an AI paper-trading signal with its measured record.`,
     h1: `قیمت، نمودار و پیش‌بینی هوش مصنوعی ${label}`,
     more: {
@@ -176,13 +176,13 @@ const swap = (html, re, to, what) => {
 
 function page(p) {
   const url = SITE + encodeURI(p.path);
-  const crumbs = [{ name: 'CoinVantage', url: SITE }];
+  const crumbs = [{ name: 'BTCS', url: SITE }];
   if (p.coin) crumbs.push({ name: 'Coins', url: SITE }, { name: p.coin, url });
   else if (p.path) crumbs.push({ name: p.h1, url });
   const ld = p.path === ''
-    ? [{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'CoinVantage', url: SITE, description: p.desc },
-      { '@context': 'https://schema.org', '@type': 'WebApplication', name: 'CoinVantage', url: SITE, applicationCategory: 'FinanceApplication', operatingSystem: 'Any (web browser)', description: p.desc }]
-    : [{ '@context': 'https://schema.org', '@type': 'WebPage', name: p.title, url, description: p.desc, isPartOf: { '@type': 'WebSite', name: 'CoinVantage', url: SITE } },
+    ? [{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'BTCS', url: SITE, description: p.desc },
+      { '@context': 'https://schema.org', '@type': 'WebApplication', name: 'BTCS', url: SITE, applicationCategory: 'FinanceApplication', operatingSystem: 'Any (web browser)', description: p.desc }]
+    : [{ '@context': 'https://schema.org', '@type': 'WebPage', name: p.title, url, description: p.desc, isPartOf: { '@type': 'WebSite', name: 'BTCS', url: SITE } },
       { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: c.url })) }];
   let html = template;
   html = swap(html, /<html lang="en"[^>]*>/, `<html lang="en" data-theme="dark"${p.path ? ` data-route="${esc(p.route)}"` : ''}>`, 'html tag');

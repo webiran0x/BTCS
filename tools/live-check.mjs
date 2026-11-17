@@ -10,7 +10,7 @@
 import { chromium } from 'playwright';
 import { appendFileSync, readFileSync } from 'node:fs';
 
-const BASE = (process.argv[2] || 'https://umer-78.github.io/coinvantage/').replace(/\/?$/, '/');
+const BASE = (process.argv[2] || 'https://umer-78.github.io/BTCS/').replace(/\/?$/, '/');
 const COINS = (process.argv[3] || 'BTC,ETH,SOL,XRP,DOGE,BNB,SHIB,PEPE,QNT,ZEC,HYPE,XMR,LEO,GT,BTT').split(',');
 const CHARTS = (process.argv[4] || '1m,5m,15m,1h,4h,1d').split(',');
 

@@ -1,4 +1,4 @@
-// Offline shell for CoinVantage.
+// Offline shell for BTCS.
 // Market data is never cached — only the app's own files, so the site opens
 // instantly and still loads on a flaky connection. Bump VERSION on each release.
 const VERSION = "cv-20261105-185358";

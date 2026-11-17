@@ -18,4 +18,4 @@ http.createServer((req, res) => {
     res.writeHead(200, { 'content-type': types[path.extname(file)] || 'application/octet-stream', 'cache-control': 'no-cache' });
     res.end(buf);
   });
-}).listen(port, () => console.log(`CoinVantage running at http://localhost:${port}`));
+}).listen(port, () => console.log(`BTCS running at http://localhost:${port}`));

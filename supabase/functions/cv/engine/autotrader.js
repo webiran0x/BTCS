@@ -1050,7 +1050,7 @@ export function recordRealTrade(state, cfg, { symbol, side = 'long', qty, entry,
   return { ok: true, trade: state.closed[state.closed.length - 1] };
 }
 
-export const REAL_NOTICE = 'CoinVantage only keeps the record: it never places an order, connects to an exchange or holds any key.';
+export const REAL_NOTICE = 'BTCS only keeps the record: it never places an order, connects to an exchange or holds any key.';
 
 /** Close a position by hand at the current price. */
 export function closeManual(state, cfg, symbol, price, at = Date.now(), reason = 'closed by you') {

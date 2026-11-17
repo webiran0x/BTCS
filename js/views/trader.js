@@ -114,7 +114,7 @@ export async function render(el) {
   el.innerHTML = `
     <div class="page-head">
       <div><h1>معاملات</h1>
-        <p>سه حساب در کنار هم: معاملات آزمایشی که خودتان انجام می‌دهید، معاملاتی که واقعاً انجام داده‌اید، و هوش مصنوعی که استراتژی را به طور مستقل اجرا می‌کند. فقط حساب واقعی با پول واقعی سر و کار دارد — CoinVantage هرگز سفارشی ثبت نمی‌کند و هیچ کلید API را نگه نمی‌دارد.</p>
+        <p>سه حساب در کنار هم: معاملات آزمایشی که خودتان انجام می‌دهید، معاملاتی که واقعاً انجام داده‌اید، و هوش مصنوعی که استراتژی را به طور مستقل اجرا می‌کند. فقط حساب واقعی با پول واقعی سر و کار دارد — BTCS هرگز سفارشی ثبت نمی‌کند و هیچ کلید API را نگه نمی‌دارد.</p>
         <div class="callout warn mt" role="note"><b>${icon('info', 14)} شبیه‌سازی، نه مسیری تضمینی برای سود</b><p>حساب‌های آزمایشی و هوش مصنوعی با پول مجازی روی قیمت‌های زنده معامله می‌کنند. سفارش‌ها با قیمت کندل و کارمزد مدل‌سازی‌شده پر می‌شوند؛ در سفارش‌های واقعی هزینه اسپرد و لغزش قیمت (Slippage) نیز وجود دارد، سفارش ممکن است ناقص پر شود یا اصلاً پر نشود و صرافی‌ها ممکن است در میانه حرکت بازار از دسترس خارج شوند. در تست‌های گام‌به‌گام (Walk-forward)، قوانین در برخی دوره‌ها ضرر داده‌اند و گاهی نگهداری ساده ارز عملکرد بهتری داشته است: ارقام زیر هر دو مورد را همراه با بیشترین افت سرمایه نشان می‌دهند. نتایج اینجا را به عنوان شواهدی درباره عملکرد قوانین در نظر بگیرید، نه بازدهی مورد انتظار. این توصیه مالی نیست. <a class="acc" href="#/learn">نحوه تست قوانین →</a></p></div>
         <details class="mt"><summary class="fine" style="cursor:pointer">معنای هر حساب و استراتژی چیست</summary>
           <dl class="defs">
@@ -610,7 +610,7 @@ export async function render(el) {
       const which = b.dataset.export;
       const src = which === 'ai-csv' ? state : realState();
       if (!src?.closed?.length) { toast('هنوز معامله بسته‌شده‌ای برای خروجی گرفتن وجود ندارد.', 'info'); return; }
-      downloadText(`coinvantage-${which === 'ai-csv' ? 'ai-trader' : 'my-trades'}-${stamp}.csv`, tradesCsv(src.closed));
+      downloadText(`BTCS-${which === 'ai-csv' ? 'ai-trader' : 'my-trades'}-${stamp}.csv`, tradesCsv(src.closed));
       toast(`${src.closed.length} معامله صادر شد.`, 'up');
     }));
     $$('[data-report]', el).forEach((b) => b.addEventListener('click', () => {
@@ -628,7 +628,7 @@ export async function render(el) {
         fmtMoney: (v) => money(v), notes,
       });
       const w = window.open('', '_blank');
-      if (!w) { downloadText(`coinvantage-report-${stamp}.html`, html, 'text/html;charset=utf-8'); toast('گزارش دانلود شد.', 'up'); return; }
+      if (!w) { downloadText(`BTCS-report-${stamp}.html`, html, 'text/html;charset=utf-8'); toast('گزارش دانلود شد.', 'up'); return; }
       w.document.write(html);
       w.document.close();
     }));
@@ -698,7 +698,7 @@ export async function render(el) {
       const sym = b.dataset.realclose;
       const now = priceOf(sym) ?? await fetchPrice(sym);
       const m = modal(`<h3>ثبت فروش ${esc(sym)}</h3>
-        <p class="fine">قیمتی که در صرافی فروخته‌اید را وارد کنید. CoinVantage فقط آن را ثبت می‌کند و سفارشی ارسال نمی‌شود.</p>
+        <p class="fine">قیمتی که در صرافی فروخته‌اید را وارد کنید. BTCS فقط آن را ثبت می‌کند و سفارشی ارسال نمی‌شود.</p>
         <form class="stack mt" style="gap:10px" id="rcf">
           <label class="fld">قیمت فروش (${esc(fx.code)})<input class="inp" name="px" type="number" step="any" min="0" required value="${now === null ? '' : esc(String(+(now * (fx.rate || 1)).toPrecision(8)))}"></label>
           <label class="fld">کارمزد پرداخت‌شده در فروش (${esc(fx.code)})<input class="inp" name="fee" type="number" step="any" min="0" value="${now === null ? '0' : esc(String(+(now * (realState()?.open[sym]?.qty || 0) * (cfg.feePct / 100) * (fx.rate || 1)).toPrecision(4)))}"><small class="fine">بر اساس نرخ معمول ${cfg.feePct}% پر شده است؛ آن را با کارمزد واقعی صرافی خود تغییر دهید.</small></label>

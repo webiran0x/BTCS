@@ -1,7 +1,7 @@
-# CoinVantage — handover / continuation notes
+# BTCS — handover / continuation notes
 
-Owner: Umer Hashmi (`umer-78`). Live site: https://umer-78.github.io/coinvantage/
-Repo: https://github.com/umer-78/coinvantage  ·  Supabase project: `cjpljmzustvgsmueqese`
+Owner: Umer Hashmi (`umer-78`). Live site: https://umer-78.github.io/BTCS/
+Repo: https://github.com/umer-78/BTCS  ·  Supabase project: `cjpljmzustvgsmueqese`
 
 A fresh session should **clone this repo, read this file, and continue from "Open work"**.
 

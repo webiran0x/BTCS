@@ -1,6 +1,6 @@
 {
-  "name": "CoinVantage — Crypto markets, signals & AI forecasts",
-  "short_name": "CoinVantage",
+  "name": "BTCS — Crypto markets, signals & AI forecasts",
+  "short_name": "BTCS",
   "description": "Live crypto prices, charts, buy/sell signals, multi-year history comparison and an AI price forecast that runs in your browser.",
   "start_url": "./",
   "scope": "./",

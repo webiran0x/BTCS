@@ -1,5 +1,5 @@
 #!/bin/bash
-# Double-click this file in Finder to publish CoinVantage.
+# Double-click this file in Finder to publish BTCS.
 #
 # It has to run on your Mac: the push needs the GitHub
 # login in your keychain, and the backend step needs the Supabase CLI — neither
@@ -18,5 +18,5 @@ bash tools/deploy-push.sh || { echo; echo "Push failed."; read -r -p "Press Retu
 echo; echo "=== Publishing the backend ==="
 bash tools/deploy-backend.sh || { echo; echo "Backend deploy failed (the site is already live)."; read -r -p "Press Return to close."; exit 1; }
 
-echo; echo "Done. Live at https://umer-78.github.io/coinvantage/"
+echo; echo "Done. Live at https://umer-78.github.io/BTCS/"
 read -r -p "Press Return to close."

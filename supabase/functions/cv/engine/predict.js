@@ -1,4 +1,4 @@
-// CoinVantage AI forecast engine — runs entirely in the browser, no API.
+// BTCS AI forecast engine — runs entirely in the browser, no API.
 //
 // It combines seven independent forecasters (see MODEL_INFO) and weights them
 // by how accurate

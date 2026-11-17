@@ -157,7 +157,7 @@ export async function render(el, [symParam]) {
     b.setAttribute('aria-label', on ? 'حذف از فهرست پیگیری' : 'افزودن به فهرست پیگیری');
   });
 
-  // انتقال به صرافی. پلتفرم CoinVantage هرگز خود1 سفارش را ثبت نمی‌کند.
+  // انتقال به صرافی. پلتفرم BTCS هرگز خود1 سفارش را ثبت نمی‌کند.
   $('#tradeBtn', el)?.addEventListener('click', () => {
     const venues = venuesFor(coin.symbol);
     const sig = st.signal;
@@ -480,7 +480,7 @@ export async function render(el, [symParam]) {
     if (!node) return;
     const text = money(p, { dp: st.dp });
     node.textContent = text;
-    document.title = `${coin.symbol} ${text} · CoinVantage`;
+    document.title = `${coin.symbol} ${text} · BTCS`;
 
     // این دو مورد در کنار قیمت زنده قرار داشتند که مقادیر زمان بارگذاری صفحه را نشان می‌دادند،
     // بنابراین ممکن بود قیمت یک ارز یک ساعت صعود کند در حالی که نشانگر کنار آن همچنان -2% را نشان می‌داد.

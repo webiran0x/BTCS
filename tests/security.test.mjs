@@ -22,7 +22,7 @@ const { CONFIG } = await import('../js/config.js');
 const policy = (html) => Object.fromEntries(html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)[1].split(';').map((d) => d.trim().split(/\s+/)).filter((d) => d[0]).map(([k, ...v]) => [k, v]));
 
 test('every page is locked to its own scripts and a list of hosts, not to any https address', () => {
-  const pages = ['index.html', ...read('sitemap.xml').match(/<loc>[^<]+<\/loc>/g).map((l) => l.replace(/<\/?loc>/g, '').replace('https://umer-78.github.io/coinvantage/', '')).filter(Boolean).map((p) => `${decodeURI(p)}index.html`)];
+  const pages = ['index.html', ...read('sitemap.xml').match(/<loc>[^<]+<\/loc>/g).map((l) => l.replace(/<\/?loc>/g, '').replace('https://umer-78.github.io/BTCS/', '')).filter(Boolean).map((p) => `${decodeURI(p)}index.html`)];
   const base = policy(read('index.html'));
   for (const f of pages) {
     const p = policy(read(f));
@@ -79,7 +79,7 @@ test('outside addresses are limited to https before they reach an href or src', 
   const { safeUrl, finite } = await import('../js/format.js');
   assert.equal(safeUrl('https://example.com/a?b=1'), 'https://example.com/a?b=1');
   assert.equal(safeUrl('#/coin/BTC'), '#/coin/BTC');
-  for (const bad of ['javascript:alert(1)', ' JavaScript:alert(1)', 'data:text/html,x', 'http://example.com', '//evil.example', '/coinvantage/x', 'https://u:p@x.com', null, undefined, 42]) {
+  for (const bad of ['javascript:alert(1)', ' JavaScript:alert(1)', 'data:text/html,x', 'http://example.com', '//evil.example', '/BTCS/x', 'https://u:p@x.com', null, undefined, 42]) {
     assert.equal(safeUrl(bad, '#'), '#', String(bad));
   }
   assert.equal(finite('1.5'), 1.5);

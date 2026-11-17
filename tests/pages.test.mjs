@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SITE = 'https://umer-78.github.io/coinvantage/';
+const SITE = 'https://umer-78.github.io/BTCS/';
 
 test('every address in the sitemap is a real page search engines can index, with its own title and canonical link', () => {
   const xml = fs.readFileSync(path.join(root, 'sitemap.xml'), 'utf8');
@@ -27,7 +27,7 @@ test('every address in the sitemap is a real page search engines can index, with
     assert.match(html, /<script type="application\/ld\+json">/, `${rel}: structured data`);
     assert.match(html, /<main id="view" tabindex="-1">\s*<section class="card seo-intro"><h1>/, `${rel}: readable text before the app runs`);
     if (rel) {
-      assert.match(html, /<base href="\/coinvantage\/">/, `${rel}: one base for the copied relative addresses`);
+      assert.match(html, /<base href="\/BTCS\/">/, `${rel}: one base for the copied relative addresses`);
       const route = html.match(/data-route="#\/([^"/]*)/)[1];
       assert.ok(views.includes(route), `${rel}: route ${route} is a page`);
     }

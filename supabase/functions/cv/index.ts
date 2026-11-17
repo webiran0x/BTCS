@@ -1,4 +1,4 @@
-// CoinVantage backend: one edge function, routed by path.
+// BTCS backend: one edge function, routed by path.
 //   /cv/account        public + signed-in user actions
 //   /cv/admin          admin panel actions
 //   /cv/alerts-check   cron (every minute)

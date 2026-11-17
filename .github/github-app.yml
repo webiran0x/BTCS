@@ -1,5 +1,5 @@
 instructions: |
-  CoinVantage is a static ES-module demo. Keep market, forecast, signal, and
+  BTCS is a static ES-module demo. Keep market, forecast, signal, and
   trading claims evidence-based and label paper/demo data clearly. Do not add
   secrets or claim live execution, guaranteed accuracy, or unsupported APIs.
 
@@ -11,7 +11,7 @@ scripts:
   - name: Start demo server
     command: node tools/serve.mjs 8080
 
-server_ready_pattern: '(?i)CoinVantage running at (https?://\S+)'
+server_ready_pattern: '(?i)BTCS running at (https?://\S+)'
 auto_open_in_browser: true
 
 automation:

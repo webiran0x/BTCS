@@ -755,7 +755,7 @@ export function recordRealTrade(state, cfg, { symbol, side = 'long', qty, entry,
   return { ok: true, trade: state.closed[state.closed.length - 1] };
 }
 
-export const REAL_NOTICE = 'CoinVantage فقط سابقه را نگه می‌دارد: هیچ‌وقت سفارشی ثبت نمی‌کند، به صرافی متصل نمی‌شود و هیچ کلیدی را نگه نمی‌دارد.';
+export const REAL_NOTICE = 'BTCS فقط سابقه را نگه می‌دارد: هیچ‌وقت سفارشی ثبت نمی‌کند، به صرافی متصل نمی‌شود و هیچ کلیدی را نگه نمی‌دارد.';
 
 /** بستن دستی پوزیشن با قیمت فعلی بازار. */
 export function closeManual(state, cfg, symbol, price, at = Date.now(), reason = 'بسته شده توسط شما') {

@@ -78,7 +78,7 @@ export async function account(req: Request): Promise<Response> {
       const code = randomCode(6);
       await admin.from('auth_codes').insert({ email, purpose, code_hash: await codeHash(email, code), expires_at: new Date(Date.now() + 15 * 60e3).toISOString() });
       const title = purpose === 'verify' ? 'Verify your e-mail' : 'Reset your password';
-      await sendEmail(email, `${title} — code ${code}`, `<div style="font-family:system-ui,sans-serif"><h2>${title}</h2><p>Your CoinVantage code is:</p><p style="font-size:28px;font-weight:800;letter-spacing:4px">${code}</p><p>It expires in 15 minutes. If you didn't request this, ignore this e-mail.</p></div>`);
+      await sendEmail(email, `${title} — code ${code}`, `<div style="font-family:system-ui,sans-serif"><h2>${title}</h2><p>Your BTCS code is:</p><p style="font-size:28px;font-weight:800;letter-spacing:4px">${code}</p><p>It expires in 15 minutes. If you didn't request this, ignore this e-mail.</p></div>`);
       return json({ ok: true });
     }
 
@@ -122,8 +122,8 @@ export async function account(req: Request): Promise<Response> {
       await rateLimit(`test:${user.id}`, 5, 600);
       const p = await getProfile(user.id);
       const results: Record<string, unknown> = {};
-      if (p?.telegram_chat_id) results.telegram = await sendTelegram(p.telegram_chat_id, '✅ <b>CoinVantage test alert</b>\nYour Telegram alerts are working.');
-      if (p?.email_verified && p?.email_alerts) results.email = await sendEmail(p.email, 'CoinVantage test alert', '<p>✅ Your e-mail alerts are working.</p>');
+      if (p?.telegram_chat_id) results.telegram = await sendTelegram(p.telegram_chat_id, '✅ <b>BTCS test alert</b>\nYour Telegram alerts are working.');
+      if (p?.email_verified && p?.email_alerts) results.email = await sendEmail(p.email, 'BTCS test alert', '<p>✅ Your e-mail alerts are working.</p>');
       if (!Object.keys(results).length) throw new HttpError('Link Telegram or verify your e-mail first.');
       return json({ ok: true, results });
     }
@@ -140,7 +140,7 @@ export async function account(req: Request): Promise<Response> {
         'line_items[0][quantity]': '1',
         'line_items[0][price_data][currency]': (premium.currency || 'USD').toLowerCase(),
         'line_items[0][price_data][unit_amount]': String(toMinor(premium.price || 19, premium.currency || 'USD')),
-        'line_items[0][price_data][product_data][name]': `CoinVantage Premium — ${premium.period_days || 30} days`,
+        'line_items[0][price_data][product_data][name]': `BTCS Premium — ${premium.period_days || 30} days`,
         client_reference_id: user.id,
         customer_email: user.email || '',
         success_url: `${origin}#/account?paid=1`,

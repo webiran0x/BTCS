@@ -55,7 +55,7 @@ jobs:
         timeout-minutes: 45
         env:
           PW_CHANNEL: chrome
-        run: node tools/live-check.mjs https://umer-78.github.io/coinvantage/
+        run: node tools/live-check.mjs https://umer-78.github.io/BTCS/
 
   trader-rules:
     if: inputs.job == 'trader-rules' || inputs.job == 'all'

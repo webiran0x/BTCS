@@ -1,12 +1,12 @@
 # If the client wants real trading: how it has to be built
 
-CoinVantage does not place orders, and the reason is architectural rather than
+BTCS does not place orders, and the reason is architectural rather than
 squeamish. This document is the design that *would* work, so the decision can be
 made on facts.
 
 ## Why the current shape cannot do it
 
-CoinVantage is static files on GitHub Pages. Its small Supabase backend runs
+BTCS is static files on GitHub Pages. Its small Supabase backend runs
 accounts, alerts and the track record, and holds no exchange credentials. Anything
 the page itself handles lives in the visitor's browser, so an exchange API key
 would live there too — in `localStorage`, readable by:
@@ -70,7 +70,7 @@ cancels open orders. Default off.
 ## The part that is not engineering
 
 In most jurisdictions, software that places trades on someone else's behalf is a
-regulated activity — the analysis and signals CoinVantage does today are not.
+regulated activity — the analysis and signals BTCS does today are not.
 Depending on where the client operates this can mean registration as an
 investment adviser or portfolio manager, capital requirements, professional
 indemnity insurance, and a named person who is accountable when it loses money.

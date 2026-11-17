@@ -1,5 +1,5 @@
 {
-  "name": "coinvantage",
+  "name": "BTCS",
   "description": "Live crypto markets web app: Binance-style charts, indicator signals, history and cycle analysis, futures data, paper trading and an AI price forecast that shows its measured accuracy. PWA + Supabase.",
   "type": "module",
   "scripts": {

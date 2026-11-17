@@ -12,7 +12,7 @@ cd "$(dirname "$0")/.."
 # described changes it did not contain.
 MSG="${1:-}"
 BRANCH="main"
-SITE="https://umer-78.github.io/coinvantage/"
+SITE="https://umer-78.github.io/BTCS/"
 
 # macOS ships git as an Xcode command-line-tools shim that refuses to run until
 # the Xcode licence is accepted. Catch that here rather than after stamping a

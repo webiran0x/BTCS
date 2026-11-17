@@ -2,7 +2,7 @@
 import { admin, secret, sendTelegram, klines, prices, escHtml, fmtPrice, setting } from './lib.ts';
 import { generateSignal } from './engine/signals.js';
 
-const HELP = `<b>CoinVantage bot</b>
+const HELP = `<b>BTCS bot</b>
 /price BTC — live price
 /signal ETH — technical signal (4h chart)
 /alerts — your active price alerts

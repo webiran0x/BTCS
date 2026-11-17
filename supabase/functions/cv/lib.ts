@@ -1,4 +1,4 @@
-// Shared helpers for CoinVantage edge functions.
+// Shared helpers for BTCS edge functions.
 import { createClient } from 'npm:@supabase/supabase-js@2.116.0';
 
 export const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -137,7 +137,7 @@ export async function telegramApi(method: string, payload: Record<string, unknow
 export async function sendEmail(to: string, subject: string, html: string) {
   const key = await secret('resend_api_key');
   if (!key) return { ok: false, error: 'Email not configured' };
-  const from = (await secret('resend_from')) || 'CoinVantage <onboarding@resend.dev>';
+  const from = (await secret('resend_from')) || 'BTCS <onboarding@resend.dev>';
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
@@ -154,7 +154,7 @@ export async function fetchJson(url: string, timeout = 10000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeout);
   try {
-    const r = await fetch(url, { signal: ctrl.signal, headers: { 'user-agent': 'Mozilla/5.0 CoinVantage' } });
+    const r = await fetch(url, { signal: ctrl.signal, headers: { 'user-agent': 'Mozilla/5.0 BTCS' } });
     if (!r.ok) throw new Error(`${new URL(url).host} ${r.status}`);
     return await r.json();
   } finally {
