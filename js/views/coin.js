@@ -435,7 +435,7 @@ export async function render(el, [symParam]) {
       const r = await getCandles(coin, iv, isSecondInterval(iv) ? (MAX_BARS[iv] || 600) : 1500);
       if (st.disposed || iv !== st.interval) return;
       st.candles = r.candles; st.source = r.source; st.tested = isTestedSource(r);
-      $('#srcChip', el).textContent = r.source === 'binance' ? `● زنده · بایننس ${pair}` : r.venue ? `● ${r.venue} · به‌روزرسانی هر ۲۰ ثانیه` : r.source === 'demo' ? 'داده‌های آزمایشی' : 'کوین‌گکو (با تاخیر)';
+      $('#srcChip', el).textContent = r.source === 'binance' ? `● زنده` : r.venue ? `● ${r.venue} · به‌روزرسانی هر ۲۰ ثانیه` : r.source === 'demo' ? 'داده‌های آزمایشی' : 'کوین‌گکو (با تاخیر)';
       $('#srcChip', el).className = `chip ${r.source === 'binance' || r.venue ? 'up' : r.source === 'demo' ? 'warn' : ''}`;
       chart.setData(r.candles);
       updateSignal();
