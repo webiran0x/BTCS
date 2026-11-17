@@ -422,19 +422,58 @@ async function showTriggeredServerAlerts() {
 auth.addEventListener('change', showTriggeredServerAlerts);
 
 // ---------------------------------------------------------------- risk gate (shown once)
+
 function riskGate() {
   if (load('riskAck', false)) return;
-  const m = modal(`<h3>پیش از شروع مطالعه کنید</h3>
-    <p><b>${esc(CONFIG.APP_NAME)} یک ابزار تحلیلی است، نه یک صرافی یا کارگزار.</b> این سامانه هرگز معامله‌ای ثبت نمی‌کند، دارایی شما را نگه نمی‌دارد و هرگز کلید صرافی، کلید خصوصی یا عبارت بازیابی (Seed Phrase) را درخواست نمی‌کند.</p>
-    <p>سیگنال‌ها، پیش‌بینی‌ها و پاسخ‌های هوش مصنوعی برآوردهای آموزشی هستند که از داده‌های عمومی بازار ساخته شده‌اند و ممکن است اشتباه باشند. بازار رمزارزها بسیار پرنوسان است و احتمال از دست دادن تمام سرمایه وجود دارد.</p>
-    <p class="fine">دقت اندازه‌گیری‌شده موتور پیش‌بینی در صفحه هر رمزارز و در بخش <a href="#/track">سابقه عملکرد</a> منتشر شده است — پیش از اتکا به داده‌ها، آن را مطالعه کنید.</p>
-    <div class="row mt" style="gap:8px">
-      <button class="btn primary" id="ok">${esc(t('متوجه شدم'))}</button>
-      <a class="btn ghost" href="#/legal/risk" id="more">${esc(t('بیانیه ریسک'))}</a>
-    </div>`, { onClose: () => save('riskAck', true) });
-  $('#ok', m.el).addEventListener('click', () => { save('riskAck', true); m.close(); });
-  $('#more', m.el).addEventListener('click', () => { save('riskAck', true); m.close(); });
+
+  const m = modal(`
+    <div dir="rtl" style="text-align:right; direction:rtl;">
+      <h3>پیش از شروع مطالعه کنید</h3>
+
+      <p>
+        <b>${esc(CONFIG.APP_NAME)} یک ابزار تحلیلی است، نه یک صرافی یا کارگزار.</b>
+        این سامانه هرگز معامله‌ای ثبت نمی‌کند، دارایی شما را نگه نمی‌دارد
+        و هرگز کلید صرافی، کلید خصوصی یا عبارت بازیابی (Seed Phrase)
+        را درخواست نمی‌کند.
+      </p>
+
+      <p>
+        سیگنال‌ها، پیش‌بینی‌ها و پاسخ‌های هوش مصنوعی برآوردهای آموزشی هستند
+        که از داده‌های عمومی بازار ساخته شده‌اند و ممکن است اشتباه باشند.
+        بازار رمزارزها بسیار پرنوسان است و احتمال از دست دادن تمام سرمایه وجود دارد.
+      </p>
+
+      <p class="fine">
+        دقت اندازه‌گیری‌شده موتور پیش‌بینی در صفحه هر رمزارز و در بخش
+        <a href="#/track">سابقه عملکرد</a>
+        منتشر شده است — پیش از اتکا به داده‌ها، آن را مطالعه کنید.
+      </p>
+
+      <div class="row mt" dir="rtl" style="gap:8px; justify-content:flex-start;">
+        <button class="btn primary" id="ok">
+          ${esc(t('متوجه شدم'))}
+        </button>
+
+        <a class="btn ghost" href="#/legal/risk" id="more">
+          ${esc(t('بیانیه ریسک'))}
+        </a>
+      </div>
+    </div>
+  `, {
+    onClose: () => save('riskAck', true)
+  });
+
+  $('#ok', m.el).addEventListener('click', () => {
+    save('riskAck', true);
+    m.close();
+  });
+
+  $('#more', m.el).addEventListener('click', () => {
+    save('riskAck', true);
+    m.close();
+  });
 }
+
 
 // ---------------------------------------------------------------- banners
 let demoBanner = '';
