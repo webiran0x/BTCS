@@ -1,70 +1,64 @@
-// Turns a signal, a forecast, a timing estimate and the other timeframes into
-// the answer a person actually came for: what to do, at what price, for how
-// long, where to get out, and what would prove it wrong.
+// یک سیگنال، یک پیش‌بینی، یک تخمین زمان‌بندی و سایر تایم‌فریم‌ها را به پاسخی تبدیل می‌کند 
+// که کاربر واقعاً به دنبال آن است: چه کاری انجام دهد، با چه قیمتی، برای چه مدتی، 
+// کجا خارج شود و چه چیزی فرضیه معامله را نقض می‌کند.
 //
-// The numbers were always on the page — entry zone, stop, targets, a score out
-// of 100 — but a reader had to assemble the meaning themselves. This module does
-// that assembly in one place so the coin page, the assistant and the advice page
-// all say the same thing in the same words.
+// اعداد همیشه در صفحه وجود داشتند — محدوده ورود، حد ضرر، اهداف قیمتی و یک امتیاز از ۱۰۰ — 
+// اما خواننده مجبور بود خودشان معنای آن‌ها را در کنار هم بچیند. این ماژول این تجمیع را 
+// در یک جا انجام می‌دهد تا صفحه رمزارز، دستیار هوشمند و صفحه مشاوره همگی یک حرف را 
+// با کلمات یکسان بزنند.
 //
-// Two things this file is deliberately careful about, both of them corrections
-// of mistakes that were shipped earlier:
+// دو نکته که این فایل عمداً در مورد آن‌ها بسیار محتاط است و هر دو اصلاح اشتباهاتی هستند 
+// که در نسخه‌های قبلی منتشر شده بودند:
 //
-//  1. Confidence is not the size of the score. Grouping bars by score and
-//     trading the best-looking band came out behind entering at random, so a
-//     big number earns no confidence on its own. The label is now built only
-//     from what was measured — tested expectancy on the timeframe, tested
-//     forecast accuracy on the timeframe, and whether the readings agree — and
-//     the summary states which of those it used. In particular a timeframe the
-//     app elsewhere admits has no measured edge can never be shown as high
-//     confidence, which is what used to happen on the daily chart.
+//  ۱. «اطمینان» (Confidence) به معنای بزرگی عدد امتیاز نیست. دسته‌بندی کندل‌ها بر اساس امتیاز 
+//     و معامله کردن روی بهترین بازه ظاهری، نتیجه‌ای بدتر از ورود تصادفی داشت؛ بنابراین یک عدد بزرگ 
+//     به‌تنهایی باعث ایجاد اطمینان نمی‌شود. برچسب اطمینان اکنون فقط از روی داده‌های اندازه‌گیری‌شده 
+//     ساخته می‌شود — امید ریاضی تست‌شده در آن تایم‌فریم، دقت تست‌شده پیش‌بینی در آن تایم‌فریم، و اینکه 
+//     آیا خوانش‌ها با هم توافق دارند یا خیر — و خلاصه دقیقاً بیان می‌کند که از کدام‌یک استفاده کرده است. 
+//     به‌طور خاص، تایم‌فریمی که برنامه در جای دیگر اعتراف می‌کند هیچ مزیت اندازه‌گیری‌شده‌ای ندارد، 
+//     هرگز نمی‌تواند با اطمینان بالا نمایش داده شود (اتفاقی که قبلاً در نمودار روزانه می‌افتاد).
 //
-//  2. A timeframe is not an opinion. Reading 1h and 1d gives two answers about
-//     two different spans of price; presenting them as rival verdicts on
-//     separate screens made the app look like it was contradicting itself.
-//     Every summary now carries the same combined view and says plainly which
-//     timeframe leads and why they differ.
+//  ۲. تایم‌فریم یک نظر شخصی نیست. خواندن نمودار ۱ ساعته و ۱ روزه دو پاسخ درباره دو بازه قیمتی 
+//     متفاوت می‌دهد؛ نمایش آن‌ها به عنوان احکام رقیب در صفحات جداگانه باعث می‌شد برنامه به نظر برسد 
+//     که با خودش تناقض دارد. اکنون هر خلاصه همان دیدگاه ترکیبی را به همراه دارد و به صراحت می‌گوید 
+//     کدام تایم‌فریم پیشرو است و چرا با هم تفاوت دارند.
 
 import { conflictCheck } from './analyst.js';
 import { edgeBand, confluence, upRateFor, SCORE_BUCKETS_TESTED, GEOMETRY_TESTED } from './signals.js';
 import { TESTED_ACCURACY } from './predict.js';
 import { FORECAST_TESTED } from './forecastview.js';
 
-// Risking r% with a stop s% away means a position worth r/s of the account. This
-// used to say "1.5/s to 2/s × your per-trade risk budget": the wrong unit, a lower
-// bound that did not match the 1% it named, and no word when the answer meant
-// borrowing.
+// ریسک کردن به میزان r% با حد ضرری به فاصله s% به معنای پوزیشنی به ارزش r/s از کل حساب است.
 export function sizeText(stopPct) {
   const share = (r) => r / stopPct;
-  const x = (v) => `${v < 1 ? v.toFixed(2) : v.toFixed(1)}×`;
-  const a = /^(8|11|18)/.test(String(stopPct)) ? 'an' : 'a';   // "an 8% stop"
+  const x = (v) => `${v < 1 ? v.toFixed(2) : v.toFixed(1)} برابر`;
   if (!(stopPct > 0)) return '';
-  if (share(2) <= 1) return `With ${a} ${stopPct}% stop, that means a position worth about ${x(share(1))} to ${x(share(2))} your account balance — not all of it.`;
-  if (share(1) <= 1) return `With ${a} ${stopPct}% stop, risking 1% means a position worth about ${x(share(1))} your account balance; 2% would take more than all of it, which means borrowing.`;
-  return `With a stop only ${stopPct}% away, even your whole balance risks less than 1% here, so the size is limited by your balance, not by the stop. Going bigger means borrowing (leverage).`;
+  if (share(2) <= 1) return `با حد ضرر ${stopPct}%، این یعنی پوزیشنی به ارزش حدود ${x(share(1))} تا ${x(share(2))} موجودی حساب شما — نه تمام آن.`;
+  if (share(1) <= 1) return `با حد ضرر ${stopPct}%، ریسک ۱٪ به معنای پوزیشنی به ارزش حدود ${x(share(1))} موجودی حساب شماست؛ ریسک ۲٪ بیشتر از کل موجودی شما نیاز دارد که به معنای قرض گرفتن (اهرم) است.`;
+  return `با حد ضرری که تنها ${stopPct}% فاصله دارد، حتی کل موجودی شما هم در اینجا کمتر از ۱٪ ریسک می‌کند؛ بنابراین حجم معامله با موجودی شما محدود می‌شود نه با حد ضرر. بزرگ‌تر کردن حجم به معنای استفاده از اهرم (قرض گرفتن) است.`;
 }
 
 const pct = (v, dp = 1) => `${v > 0 ? '+' : ''}${Number(v).toFixed(dp)}%`;
 const signed = (v) => `${v > 0 ? '+' : ''}${v}`;
 
-/** The timeframes the app reconciles against each other, shortest first. */
+/** تایم‌فریم‌هایی که برنامه با یکدیگر تطبیق می‌دهد، از کوتاه‌ترین به بلندترین. */
 export const TF_ORDER = ['15m', '1h', '4h', '1d'];
 
-/** Below this a score is not a direction, it is noise. */
+/** پایین‌تر از این مقدار، امتیاز جهت‌دار نیست و نویز محسوب می‌شود. */
 const NEUTRAL_BAND = 20;
 
 const dirOf = (score) => (score >= NEUTRAL_BAND ? 1 : score <= -NEUTRAL_BAND ? -1 : 0);
 const noEdgeOn = (iv) => (TESTED_ACCURACY.noEdge || []).includes(iv);
-// The latest test where there is one (TESTED_ACCURACY.recheck), else the
-// release test: one set of numbers on the page, not two that disagree.
+// آخرین تست در صورت وجود (TESTED_ACCURACY.recheck)، در غیر این صورت تست زمان انتشار:
+// یک مجموعه عدد واحد در صفحه، نه دو عدد متناقض.
 const latestTest = (iv) => TESTED_ACCURACY.recheck?.[iv] || null;
 const accuracyOn = (iv) => (typeof latestTest(iv)?.hit === 'number' ? latestTest(iv).hit : typeof TESTED_ACCURACY[iv] === 'number' ? TESTED_ACCURACY[iv] : null);
-// How many coins the figure for a timeframe was measured on: the latest test where there is one.
+// تعداد رمزارزهایی که رقم یک تایم‌فریم روی آن‌ها اندازه‌گیری شده است.
 const coinsOn = (iv) => latestTest(iv)?.coins ?? (latestTest(iv) ? TESTED_ACCURACY.recheck?.coins : null) ?? TESTED_ACCURACY.coins;
-// What the model had to beat on a timeframe: always naming the more common direction.
+// عددی که مدل باید در یک تایم‌فریم شکست می‌داد: همیشه نام بردن از جهت رایج‌تر.
 const baselineOn = (iv) => (typeof latestTest(iv)?.baseline === 'number' ? latestTest(iv).baseline : typeof TESTED_ACCURACY.baseline?.[iv] === 'number' ? TESTED_ACCURACY.baseline[iv] : null);
 
-/** e.g. "1m 44.6% · 5m 55% · 15m 52.5% · 1h 48.8% · 4h 43.8% · 1d 52.9%" */
+/** مثال: "15m 52.5% · 1h 48.8% · 4h 43.8% · 1d 52.9%" */
 function accuracyList() {
   return TF_ORDER.filter((iv) => accuracyOn(iv) !== null)
     .map((iv) => `${iv} ${accuracyOn(iv).toFixed(1)}%`)
@@ -72,20 +66,9 @@ function accuracyList() {
 }
 
 /**
- * Reconcile the timeframes into one view.
- *
- * The weighting is the same one the signal card shows, so the sentence in the
- * summary and the number on the card can never drift apart.
- *
- * @param {Record<string, any>} mtf signals keyed by interval
- * @param {string} interval the chart the reader is looking at
- * @returns {null | {
- *   rows: {interval: string, score: number, text: string, tone: string, dir: number,
- *          accuracyPct: number|null, noEdge: boolean}[],
- *   score: number, text: string, tone: string, dir: number,
- *   here: object|null, anchor: object, relation: 'aligned'|'against'|'quiet'|'mixed'|'outside',
- *   split: boolean, span: string
- * }}
+ * تطبیق تایم‌فریم‌ها در یک دیدگاه واحد.
+ * وزن‌دهی دقیقاً همان چیزی است که کارت سیگنال نشان می‌دهد، تا جمله خلاصه 
+ * و عدد روی کارت هرگز از هم فاصله نگیرند.
  */
 export function reconcileTimeframes(mtf, interval) {
   if (!mtf) return null;
@@ -121,23 +104,20 @@ export function reconcileTimeframes(mtf, interval) {
   else relation = 'mixed';
 
   const split = new Set(rows.map((r) => r.dir)).size > 1;
-  // Timeframes that cancel each other out are not a neutral market — they are a
-  // disagreement, and a clean directional verdict on any one of them would be
-  // reporting the loudest chart rather than the evidence.
+  // تایم‌فریم‌هایی که یکدیگر را خنثی می‌کنند بازار خنثی نیستند — بلکه یک اختلاف نظر هستند.
   if (relation === 'mixed' && split && here && here.dir !== 0) relation = 'split';
-  const span = `${rows[0].interval}–${anchor.interval}`;
+  const span = `${rows[0].interval} تا ${anchor.interval}`;
 
   return { rows, score: c.score, text: c.text, tone: c.tone, dir, here, anchor, relation, split, span };
 }
 
-/** "15m rising (+30) · 1h no clear trend (+5) · 4h rising (+33) · 1d strong rise so far (+67)" */
 function rowList(rec) {
-  return rec.rows.map((r) => `${r.interval} ${String(r.text).toLowerCase()} (${signed(r.score)})`).join(' · ');
+  return rec.rows.map((r) => `${r.interval}: ${String(r.text)} (${signed(r.score)})`).join(' · ');
 }
 
 /**
- * The two paragraphs that stop three timeframes reading as three contradictions:
- * what every timeframe says, and which one leads.
+ * دو پاراگرافی که مانع از این می‌شوند که سه تایم‌فریم به صورت سه تناقض خوانده شوند:
+ * هر تایم‌فریم چه می‌گوید و کدام‌یک پیشرو است.
  */
 export function reconcileSteps(rec, interval) {
   if (!rec) return [];
@@ -146,104 +126,92 @@ export function reconcileSteps(rec, interval) {
 
   let why;
   if (rec.relation === 'against') {
-    why = `This ${interval} chart reads ${String(rec.here.text).toLowerCase()} while the combined view across ${rec.span} is ${combined}. That is a disagreement about span, not about the coin: a short chart turning against a longer trend is usually a pullback inside it. Follow the longer timeframe for direction and treat this one as a reason to wait for a better entry, not as a second opinion of equal weight.`;
+    why = `این نمودار ${interval} وضعیت «${rec.here.text}» را نشان می‌دهد در حالی که دیدگاه ترکیبی در بازه ${rec.span} برابر با «${combined}» است. این اختلاف بر سر بازه زمانی است نه بر سر ماهیت رمزارز: چرخش یک نمودار کوتاه‌مدت در خلاف جهت یک روند بلندمدت معمولاً یک پولبک (اصلاح) درون آن روند است. برای تشخیص جهت از تایم‌فریم بلندتر پیروی کنید و این نمودار را دلیلی برای صبر کردن جهت نقطه ورود بهتر بدانید، نه یک نظر مستقل با وزن برابر.`;
   } else if (rec.relation === 'quiet') {
-    why = `This ${interval} chart has no direction of its own right now (${signed(rec.here.score)} is inside the neutral band), while the combined view across ${rec.span} is ${combined}. Nothing has triggered on this timeframe yet — the standing view is the combined one, and this chart is where you would time an entry into it.`;
+    why = `این نمودار ${interval} در حال حاضر جهت مشخصی از خود ندارد (امتیاز ${signed(rec.here.score)} در محدوده خنثی است)، در حالی که دیدگاه ترکیبی در بازه ${rec.span} برابر با «${combined}» است. هنوز ماشه‌ای در این تایم‌فریم چکانده نشده است — دیدگاه اصلی همان دیدگاه ترکیبی است و از این نمودار برای زمان‌بندی ورود به آن استفاده می‌شود.`;
   } else if (rec.relation === 'aligned') {
-    why = `This ${interval} chart and the combined view across ${rec.span} agree: ${combined}. Agreement across spans of price is the strongest form this setup takes. It still is not a prediction — it means the evidence is not pulling in two directions.`;
+    why = `این نمودار ${interval} و دیدگاه ترکیبی در بازه ${rec.span} هم‌جهت هستند: ${combined}. هم‌سویی در بازه‌های زمانی مختلف قوی‌ترین حالت این ساختار است. با این حال، این هنوز یک پیش‌بینی قطعی نیست — فقط به این معنی است که شواهد در دو جهت مخالف نمی‌کشند.`;
   } else if (rec.relation === 'split') {
-    why = `This ${interval} chart reads ${String(rec.here.text).toLowerCase()}, but the other timeframes point the other way and the weighted view across ${rec.span} cancels out to ${signed(rec.score)}. A board this split is a disagreement, not a trend — acting on the one chart that happens to be loudest is how a reader ends up on the wrong side of the move.`;
+    why = `این نمودار ${interval} وضعیت «${rec.here.text}» را نشان می‌دهد، اما سایر تایم‌فریم‌ها به جهت مخالف اشاره می‌کنند و برآیند وزن‌دار در بازه ${rec.span} به ${signed(rec.score)} می‌رسد (خنثی می‌شود). چنین وضعیتی نشانه اختلاف نظر در بازار است نه یک روند؛ اقدام کردن بر اساس یک نمودار که صرفاً پرسر‌و‌صداتر است باعث می‌شود در سمت اشتباه حرکت قرار بگیرید.`;
   } else if (rec.relation === 'outside') {
     why = ['3d', '1w', '1M'].includes(interval)
-      ? `This ${interval} chart is longer than any timeframe with a measured track record, so nothing on it has been tested. The combined view across ${rec.span} is ${combined}; read this chart as background for the long view, not as a tested signal.`
-      : `This ${interval} chart is shorter than any timeframe with a measured track record, so nothing on it has been tested. The combined view across ${rec.span} is ${combined}; use this chart for timing only.`;
+      ? `این نمودار ${interval} بلندتر از هر تایم‌فریمی است که سابقه اندازه‌گیری‌شده دارد، بنابراین هیچ‌چیز روی آن تست نشده است. دیدگاه ترکیبی در بازه ${rec.span} برابر با «${combined}» است؛ این نمودار را به عنوان پیش‌زمینه دید بلندمدت بخوانید، نه یک سیگنال تست‌شده.`
+      : `این نمودار ${interval} کوتاه‌تر از هر تایم‌فریمی است که سابقه اندازه‌گیری‌شده دارد، بنابراین هیچ‌چیز روی آن تست نشده است. دیدگاه ترکیبی در بازه ${rec.span} برابر با «${combined}» است؛ از این نمودار فقط برای زمان‌بندی دقیق ورود استفاده کنید.`;
   } else {
-    why = `The timeframes are split and the combined view comes out flat (${signed(rec.score)}). When the spans of price disagree this evenly there is no trend to trade, whatever any single chart says.`;
+    why = `تایم‌فریم‌ها دچار دوگانگی هستند و دیدگاه ترکیبی خنثی (${signed(rec.score)}) به دست آمده است. وقتی بازه‌های زمانی این‌گونه به طور مساوی با هم مخالفند، هیچ روندی برای معامله وجود ندارد، صرف‌نظر از اینکه هر نمودار به‌تنهایی چه می‌گوید.`;
   }
 
   steps.push({
-    label: 'Across timeframes',
+    label: 'وضعیت در تایم‌فریم‌های مختلف',
     text: `${rowList(rec)}. ${why}`,
   });
 
   const accs = accuracyList();
   const noEdge = TF_ORDER.filter(noEdgeOn);
-  let follow = `Longer timeframes set direction, shorter ones set timing, so where they disagree the ${rec.anchor.interval} reading leads and the shorter charts decide when to act on it.`;
+  let follow = `تایم‌فریم‌های بلندتر جهت را تعیین می‌کنند و تایم‌فریم‌های کوتاه‌تر زمان‌بندی را؛ بنابراین در جایی که اختلاف نظر دارند، خوانش ${rec.anchor.interval} پیشرو است و نمودارهای کوتاه‌تر تصمیم می‌گیرند که چه زمانی بر اساس آن اقدام شود.`;
   if (accs) {
-    follow += ` The forecast model is not equally good on all of them — measured direction accuracy on unseen data was ${accs} across ${TESTED_ACCURACY.recheck ? `up to ${TESTED_ACCURACY.recheck.coins}` : TESTED_ACCURACY.coins} coins.`;
+    follow += ` مدل پیش‌بینی در همه آن‌ها به یک اندازه خوب عمل نمی‌کند — دقت جهت اندازه‌گیری‌شده روی داده‌های دیده‌نشده در میان ${TESTED_ACCURACY.recheck ? `حداکثر ${TESTED_ACCURACY.recheck.coins}` : TESTED_ACCURACY.coins} رمزارز برابر با ${accs} بوده است.`;
   }
   if (noEdge.length) {
-    follow += ` On ${noEdge.join(', ')} it scored at or below its baseline (always naming whichever direction was more common), so a probability shown there is not evidence — on those charts read the trend structure and ignore the percentage.`;
+    follow += ` در تایم‌فریم‌های ${noEdge.join('، ')} امتیاز مدل برابر یا کمتر از نرخ پایه (حدس همیشگی جهت غالب) بوده است، بنابراین درصد احتمال نمایش‌داده‌شده در آنجا سندیت ندارد — در آن نمودارها ساختار روند را بخوانید و درصدها را نادیده بگیرید.`;
   }
-  steps.push({ label: 'Which timeframe to follow', text: follow });
+  steps.push({ label: 'از کدام تایم‌فریم پیروی کنیم', text: follow });
 
   return steps;
 }
 
 /**
- * Confidence, built only from things that were measured.
- *
- * The old rule read confidence off the size of the score, which is the one
- * quantity the band test showed carries no lift, and it never looked at the
- * per-timeframe accuracy table — so the daily chart, the timeframe with the
- * worst measured accuracy of the four, was the one shouting "high confidence".
+ * سطح اطمینان (Confidence)، که فقط از روی موارد اندازه‌گیری‌شده ساخته می‌شود.
  */
 function confidenceFor({ interval, strength, conflict, coinAcc, relation, expectancyR, geometryTested = true }) {
   const tfAcc = accuracyOn(interval);
   const reasons = [];
-  let level = 'low';
+  let level = 'پایین';
 
-  if (strength >= 25) level = 'moderate';
+  if (strength >= 25) level = 'متوسط';
 
-  // "high" has to clear every measured bar at once, not just look impressive.
-  // levels never tested on this chart carry the default geometry's number, which says nothing about it
   const geometryPays = expectancyR === null || expectancyR === undefined || !geometryTested ? null : expectancyR > 0;
   if (strength >= 45 && tfAcc !== null && tfAcc >= 55 && geometryPays === true && relation !== 'against' && !conflict) {
-    level = 'high';
+    level = 'بالا';
   }
 
-  if (conflict) { level = 'low'; reasons.push('the chart and the forecast disagree'); }
-  if (relation === 'against') { level = 'low'; reasons.push('this timeframe is pointing against the longer ones'); }
-  if (relation === 'split') { level = 'low'; reasons.push('the timeframes contradict each other and average out to no trend'); }
+  if (conflict) { level = 'پایین'; reasons.push('نمودار و مدل پیش‌بینی با هم اختلاف نظر دارند'); }
+  if (relation === 'against') { level = 'پایین'; reasons.push('این تایم‌فریم در خلاف جهت تایم‌فریم‌های بلندتر است'); }
+  if (relation === 'split') { level = 'پایین'; reasons.push('تایم‌فریم‌ها با هم تناقض دارند و برآیند آن‌ها بدون روند است'); }
   if (noEdgeOn(interval)) {
-    if (level === 'high') level = 'moderate';
-    reasons.push(`the forecast has no measured edge on ${interval} (${tfAcc !== null ? tfAcc.toFixed(1) : '—'}%)`);
+    if (level === 'بالا') level = 'متوسط';
+    reasons.push(`مدل پیش‌بینی هیچ مزیت اندازه‌گیری‌شده‌ای در ${interval} ندارد (${tfAcc !== null ? tfAcc.toFixed(1) : '—'}%)`);
   }
   if (geometryPays === false) {
-    if (level === 'high') level = 'moderate';
-    reasons.push(`these stop and target distances tested negative on ${interval}`);
+    if (level === 'بالا') level = 'متوسط';
+    reasons.push(`این فواصل حد ضرر و حد سود در تست‌های تایم‌فریم ${interval} نتیجه منفی داشته‌اند`);
   }
   if (coinAcc !== null && coinAcc !== undefined && coinAcc < 52) {
-    if (level === 'high') level = 'moderate';
-    reasons.push(`the forecast is at ${coinAcc}% on this coin`);
+    if (level === 'بالا') level = 'متوسط';
+    reasons.push(`دقت پیش‌بینی روی این رمزارز فقط ${coinAcc}% است`);
   }
-  if (strength < 25) reasons.push('the indicators barely agree');
-  // a chart nothing was measured on (the weekly, the seconds charts) has no evidence to be confident in
+  if (strength < 25) reasons.push('اندیکاتورها توافق بسیار ضعیفی دارند');
   if (tfAcc === null) {
-    level = 'low';
-    reasons.push(`nothing on the ${interval} chart was measured: neither the forecast nor these levels were tested on it`);
+    level = 'پایین';
+    reasons.push(`هیچ‌چیز روی نمودار ${interval} اندازه‌گیری نشده است: نه مدل پیش‌بینی و نه این سطوح روی آن تست نشده‌اند`);
   }
 
   const why = reasons.length
-    ? `Rated ${level} because ${reasons.join(', and ')}.`
-    : `Rated ${level}: ${['no conflict between the readings', geometryPays === true ? `these stop and target distances tested positive on ${interval}` : null, `the forecast has a measured record there (${tfAcc.toFixed(1)}%)`].filter(Boolean).join(', ')}. It is a description of the evidence, not a promise.`;
+    ? `سطح اطمینان «${level}» ارزیابی شد زیرا ${reasons.join('، و ')}.`
+    : `سطح اطمینان «${level}» ارزیابی شد: ${['عدم وجود تضاد بین خوانش‌ها', geometryPays === true ? `این فواصل حد ضرر و سود در ${interval} نتیجه مثبت داشته‌اند` : null, `مدل پیش‌بینی سابقه اندازه‌گیری‌شده موفقی در اینجا دارد (${tfAcc.toFixed(1)}%)`].filter(Boolean).join('، ')}. این توصیف شواهد است، نه یک تضمین.`;
 
   return { level, why };
 }
 
 /**
- * @returns {{
- *   verdict: string, tone: 'up'|'down'|'warn'|'flat', headline: string,
- *   steps: {label: string, text: string}[], caveats: string[],
- *   confidence: string, confidenceWhy: string, reconciled: object|null
- * }}
+ * تولید خلاصه کامل معاملاتی
  */
-export function tradeSummary({ signal, forecast, timing, interval, horizonText, mtf = null, fmt = (v) => String(v), dur = (bars) => `${bars} candle${bars === 1 ? '' : 's'}` }) {
+export function tradeSummary({ signal, forecast, timing, interval, horizonText, mtf = null, fmt = (v) => String(v), dur = (bars) => `${bars} کندل` }) {
   if (!signal?.ok) {
     return {
-      verdict: 'NO READING', tone: 'flat',
-      headline: 'Not enough price history on this timeframe to form a view.',
-      steps: [], caveats: [], confidence: 'none', confidenceWhy: '', reconciled: null,
+      verdict: 'بدون خوانش', tone: 'flat',
+      headline: 'تاریخچه قیمتی کافی در این تایم‌فریم برای شکل‌گیری دیدگاه وجود ندارد.',
+      steps: [], caveats: [], confidence: 'نامشخص', confidenceWhy: '', reconciled: null,
     };
   }
 
@@ -264,46 +232,39 @@ export function tradeSummary({ signal, forecast, timing, interval, horizonText, 
   const caveats = [];
   let verdict, tone, headline;
 
-  // The verdict is the reading, not an instruction. Sorting 1.58 million candles by
-  // score showed the highest-scoring ones were the LEAST likely to rise, so a
-  // word like "BUY" here would tell the reader the opposite of what was
-  // measured. What the engine can honestly say is how extended the indicators
-  // are, and how often a reading like this was followed by a higher price.
-  const readingText = signal.text || 'no clear trend';
-  const reading = readingText.toUpperCase();
+  const readingText = signal.text || 'بدون روند مشخص';
+  const reading = readingText;
   const measured = upRateFor(interval, score);
 
   if (conflict) {
-    verdict = 'READINGS DISAGREE';
+    verdict = 'اختلاف در خوانش‌ها';
     tone = 'warn';
-    headline = `The indicators lean ${side === 'short' ? 'down' : 'up'} while the forecast leans the other way (${conflict.probUp}% chance up). When the two disagree there is nothing here to act on.`;
-    caveats.push('Waiting for the chart and the forecast to point the same way is usually better than picking one of them.');
+    headline = `اندیکاتورها متمایل به ${side === 'short' ? 'نزول' : 'صعود'} هستند در حالی که مدل پیش‌بینی جهت مخالف را نشان می‌دهد (${conflict.probUp}% احتمال صعود). وقتی این دو با هم اختلاف دارند، موقعیتی برای اقدام وجود ندارد.`;
+    caveats.push('صبر کردن تا زمانی که نمودار و مدل پیش‌بینی به یک جهت اشاره کنند، معمولاً بهتر از انتخاب یکی از آن‌هاست.');
   } else if ((relation === 'against' || relation === 'split') && side) {
-    // The old behaviour printed a clean BUY here and left the reader to notice
-    // on another screen that the longer charts said the opposite.
-    verdict = 'WAIT — TIMEFRAMES DISAGREE';
+    verdict = 'صبر کنید — اختلاف بین تایم‌فریم‌ها';
     tone = 'warn';
     headline = relation === 'split'
-      ? `This ${interval} chart wants to ${side === 'short' ? 'sell' : 'buy'}, but the other timeframes point the other way and across ${rec.span} it all cancels out (${signed(rec.score)}). A split board is a disagreement, not a trend, and the honest call is to stay out until it resolves.`
-      : `This ${interval} chart wants to ${side === 'short' ? 'sell' : 'buy'}, but across ${rec.span} the combined reading is “${rec.text.toLowerCase()}” (${signed(rec.score)}). One chart against the rest is a pullback more often than it is a turn, so the honest call is to wait for them to line up.`;
+      ? `این نمودار ${interval} تمایل به ${side === 'short' ? 'فروش' : 'خرید'} دارد، اما سایر تایم‌فریم‌ها به جهت مخالف اشاره می‌کنند و در بازه ${rec.span} همه چیز یکدیگر را خنثی می‌کند (${signed(rec.score)}). بازار دوپاره نشانه اختلاف نظر است نه روند، و تصمیم صادقانه این است که تا روشن شدن وضعیت خارج بمانید.`
+      : `این نمودار ${interval} تمایل به ${side === 'short' ? 'فروش' : 'خرید'} دارد، اما در بازه ${rec.span} خوانش ترکیبی «${rec.text}» (${signed(rec.score)}) است. حرکت یک نمودار در خلاف جهت بقیه بیشتر نشانه اصلاح است تا تغییر روند، پس منتظر هم‌سو شدن آن‌ها بمانید.`;
   } else if (side === 'long') {
     verdict = reading;
     tone = 'warn';
     headline = measured
-      ? `The ${interval} chart reads “${readingText.toLowerCase()}”. That is a description, not a recommendation: across ${SCORE_BUCKETS_TESTED.bars.toLocaleString()} bars of ${SCORE_BUCKETS_TESTED.coins} coins, readings in this band were followed by a higher price ${measured.upRatePct}% of the time — ${measured.upRatePct < 50 ? 'slightly less often than a coin flip' : 'about as often as a coin flip'}. The levels below are the geometry of the setup if you choose to trade it for your own reasons.`
-      : `The ${interval} chart reads “${readingText.toLowerCase()}”. This timeframe has not been measured, so treat the levels below as geometry rather than as evidence.`;
+      ? `نمودار ${interval} وضعیت «${readingText}» را نشان می‌دهد. این یک توصیف است نه توصیه به خرید: در بررسی ${SCORE_BUCKETS_TESTED.bars.toLocaleString()} کندل از ${SCORE_BUCKETS_TESTED.coins} رمزارز، خوانش‌هایی در این محدوده در ${measured.upRatePct}% مواقع با قیمت بالاتر دنبال شده‌اند — ${measured.upRatePct < 50 ? 'کمی کمتر از پرتاب سکه' : 'تقریباً مشابه پرتاب سکه'}. سطوح زیر صرفاً هندسه این ستاپ هستند اگر به دلایل خودتان قصد معامله دارید.`
+      : `نمودار ${interval} وضعیت «${readingText}» را نشان می‌دهد. این تایم‌فریم اندازه‌گیری نشده است، بنابراین سطوح زیر را فقط به عنوان هندسه نمودار در نظر بگیرید نه مدرک قطعی.`;
   } else if (side === 'short') {
     verdict = reading;
     tone = 'warn';
     headline = measured
-      ? `The ${interval} chart reads “${readingText.toLowerCase()}”. Measured over ${SCORE_BUCKETS_TESTED.bars.toLocaleString()} bars, readings in this band were followed by a higher price ${measured.upRatePct}% of the time — so this is not the sell signal the old wording made it sound like. If you hold this coin, the levels below are where the chart structure sits.`
-      : `The ${interval} chart reads “${readingText.toLowerCase()}”. This timeframe has not been measured, so treat the levels below as geometry rather than as evidence.`;
+      ? `نمودار ${interval} وضعیت «${readingText}» را نشان می‌دهد. در بررسی ${SCORE_BUCKETS_TESTED.bars.toLocaleString()} کندل، خوانش‌هایی در این محدوده در ${measured.upRatePct}% مواقع با قیمت بالاتر دنبال شده‌اند — بنابراین این یک سیگنال قطعی فروش نیست. اگر این رمزارز را دارید، سطوح زیر ساختار فعلی نمودار را نشان می‌دهند.`
+      : `نمودار ${interval} وضعیت «${readingText}» را نشان می‌دهد. این تایم‌فریم اندازه‌گیری نشده است، بنابراین سطوح زیر را فقط به عنوان ساختار هندسی در نظر بگیرید.`;
   } else {
     verdict = reading;
     tone = 'flat';
     headline = rec && rec.dir !== 0
-      ? `Nothing on the ${interval} chart clears the bar to act on, though across ${rec.span} the combined reading is “${rec.text.toLowerCase()}” (${signed(rec.score)}). Sitting out is a position, and it is the right one more often than people expect.`
-      : 'Nothing here clears the bar to act on. Sitting out is a position, and it is the right one more often than people expect.';
+      ? `هیچ‌چیز در نمودار ${interval} به حد نصاب لازم برای اقدام نمی‌رسد، اگرچه در بازه ${rec.span} خوانش ترکیبی «${rec.text}» (${signed(rec.score)}) است. دست نگه داشتن خود یک پوزیشن معاملاتی است و بیشتر از آنچه مردم فکر می‌کنند تصمیم درستی است.`
+      : 'هیچ‌چیز در اینجا به حد نصاب لازم برای اقدام نمی‌رسد. دست نگه داشتن خود یک پوزیشن معاملاتی است و بیشتر از آنچه مردم فکر می‌کنند تصمیم درستی است.';
   }
 
   const planUsable = signal.plan && !conflict && relation !== 'against' && relation !== 'split';
@@ -311,117 +272,116 @@ export function tradeSummary({ signal, forecast, timing, interval, horizonText, 
   if (planUsable) {
     const buying = p.side === 'long';
     steps.push({
-      label: 'What this is',
+      label: 'این چیست',
       text: buying
-        ? `Chart geometry for ${signal.coinSymbol || 'the coin'} on the ${interval} chart — an entry zone, a stop and targets sized from this timeframe's volatility. It is not a signal to buy: the measured record for readings like this is above. If you are trading it, these are the levels.`
-        : `Chart geometry for reducing exposure, sized from this timeframe's volatility. Not an instruction to short — only a description of where the structure sits.`,
+        ? `هندسه نمودار برای ${signal.coinSymbol || 'این رمزارز'} در تایم‌فریم ${interval} — یک محدوده ورود، حد ضرر و اهداف قیمتی که بر اساس نوسان همین تایم‌فریم اندازه‌گیری شده‌اند. این سیگنال خرید نیست؛ سابقه آماری چنین خوانش‌هایی در بالا ذکر شد. اگر معامله می‌کنید، این‌ها سطوح کلیدی هستند.`
+        : `هندسه نمودار برای کاهش ریسک و حجم، اندازه‌گیری‌شده بر اساس نوسان این تایم‌فریم. دستور به فروش استقراضی (شورت) نیست — فقط توصیفی از محل قرارگیری ساختار بازار است.`,
     });
     steps.push({
-      label: buying ? 'Entry zone, if you take it' : 'Level to watch',
+      label: buying ? 'محدوده ورود (در صورت معامله)' : 'سطح زیر نظر',
       text: buying
-        ? `Inside ${fmt(p.entryZone[0])} – ${fmt(p.entryZone[1])}. Buying above that zone pays a worse price for the same risk, so if it has run away, wait for it to come back rather than chasing.`
-        : `On a close below ${fmt(p.stopLoss)}, or straight away if you are already in profit and want to protect it.`,
+        ? `بین ${fmt(p.entryZone[0])} تا ${fmt(p.entryZone[1])}. خرید بالاتر از این محدوده به معنای پرداخت قیمت بدتر برای همان میزان ریسک است؛ بنابراین اگر قیمت فرار کرده، به جای تعقیب کردن آن منتظر بازگشت بمانید.`
+        : `در صورت بسته شدن کندل زیر ${fmt(p.stopLoss)}، یا بلافاصله اگر در سود هستید و می‌خواهید از آن محافظت کنید.`,
     });
     if (buying) {
       steps.push({
-        label: 'Where to take profit',
-        text: `Take profit in pieces: ${p.takeProfits.map(fmt).join(', then ')}. A common approach is to sell a third at the first target and move your stop up to what you paid, so the rest of the trade cannot lose.`,
+        label: 'کجا سیو سود کنیم',
+        text: `سود را پله‌ای برداشت کنید: ${p.takeProfits.map(fmt).join('، و سپس ')}. یک روش رایج این است که یک‌سوم حجم را در هدف اول بفروشید و حد ضرر را به نقطه ورود منتقل کنید تا بقیه معامله بدون ریسک شود.`,
       });
     }
     steps.push({
-      label: 'Where you are wrong',
-      text: `${fmt(p.stopLoss)}. That is ${p.riskPct}% below your entry — if price closes past it, the reason for the trade is gone. Set this when you place the order, not later.`,
+      label: 'کجا تحلیل شما اشتباه است (حد ضرر)',
+      text: `${fmt(p.stopLoss)}. این سطح ${p.riskPct}% پایین‌تر از نقطه ورود شماست — اگر قیمت از آن عبور کند و بسته شود، دلیل انجام این معامله از بین رفته است. این حد ضرر را هنگام ثبت سفارش قرار دهید، نه بعداً.`,
     });
-    steps.push({ label: 'How much', text: `Risk at most 1–2% of your account on this. ${sizeText(p.riskPct)}` });
+    steps.push({ label: 'چه مقدار حجم', text: `حداکثر ۱ تا ۲ درصد از کل حساب خود را در این معامله ریسک کنید. ${sizeText(p.riskPct)}` });
   } else if (!p) {
-    const waits = signal.waitFor?.length ? signal.waitFor : ['No trigger has formed yet.'];
-    steps.push({ label: 'What to wait for', text: waits.join(' · ') });
+    const waits = signal.waitFor?.length ? signal.waitFor : ['هنوز هیچ ماشه‌ای (تریگر) شکل نگرفته است.'];
+    steps.push({ label: 'منتظر چه چیزی باشیم', text: waits.join(' · ') });
   } else if (relation === 'against' || relation === 'split') {
     steps.push({
-      label: 'What to wait for',
-      text: `The levels below still stand if you want them, but the trade only becomes worth taking when the ${rec.anchor.interval} chart agrees. Watch for the ${interval} reading to turn the same way as the combined view rather than acting on it now.`,
+      label: 'منتظر چه چیزی باشیم',
+      text: `سطوح زیر در صورت نیاز همچنان پابرجا هستند، اما معامله تنها زمانی ارزش ورود دارد که نمودار ${rec.anchor.interval} نیز موافق باشد. منتظر بمانید تا خوانش ${interval} به جای اقدام عجولانه، با دیدگاه ترکیبی هم‌جهت شود.`,
     });
   }
 
-  // `timing` is the condensed form from condenseTiming(). The coin page used
-  // to pass the raw timing model, whose fields are named differently, so this
-  // said "topping near —", gave the forecast horizon as the length of the
-  // move, and with no timing reading at all claimed weakness had typically run.
   if (timing?.bars > 0 && !conflict) {
     steps.push({
-      label: 'How long',
+      label: 'چه مدت طول می‌کشد',
       text: timing.priceless
-        ? `In similar past setups the ${timing.rising ? 'high' : 'low'} of the next ${dur(timing.horizonBars)} came about ${dur(timing.bars)} in. That is when, not which way or how far: the direction is not reliable on this chart. Use it to plan an exit, never to skip the stop.`
+        ? `در ستاپ‌های مشابه گذشته، ${timing.rising ? 'سقف' : 'کف'} در طول ${dur(timing.horizonBars)} آینده حدود ${dur(timing.bars)} بعد رخ داده است. این فقط زمان را نشان می‌دهد، نه جهت یا مقدار حرکت را؛ جهت در این نمودار قابل اعتماد نیست. از آن برای برنامه‌ریزی خروج استفاده کنید، نه برای حذف حد ضرر.`
         : timing.rising
-        ? `Strength has typically lasted about ${dur(timing.bars)} in similar past setups, topping near ${fmt(timing.targetPrice)}${timing.turnBars ? `, then turning down about ${dur(timing.turnBars)} from now` : ''}. Timing's measured edge is small — use it to plan an exit, never to skip the stop.`
-        : `Weakness has typically run about ${dur(timing.bars)} in similar setups, bottoming near ${fmt(timing.targetPrice)}; waiting may get a better price, but that is a pattern, not a forecast.`,
+        ? `قدرت حرکت در ستاپ‌های مشابه گذشته معمولاً حدود ${dur(timing.bars)} دوام آورده و در نزدیکی ${fmt(timing.targetPrice)} به اوج رسیده است${timing.turnBars ? `، و سپس حدود ${dur(timing.turnBars)} دیگر تغییر جهت داده است` : ''}. مزیت زمان‌سنجی کوچک است — از آن برای خروج استفاده کنید، هرگز حد ضرر را حذف نکنید.`
+        : `ضعف حرکت در ستاپ‌های مشابه معمولاً حدود ${dur(timing.bars)} ادامه داشته و در نزدیکی ${fmt(timing.targetPrice)} کف ساخته است؛ صبر کردن ممکن است قیمت بهتری بدهد، اما این یک الگوی تاریخی است نه پیش‌بینی قطعی.`,
     });
   }
 
   if (forecast && !conflict && forecast.directionReliable === false) {
-    const why = TESTED_ACCURACY.recheck?.[interval] ? `in a re-run of the release test on fresh candles (${TESTED_ACCURACY.recheck.measuredOn}) its calls were right ${TESTED_ACCURACY.recheck[interval].hit}% of the time against ${TESTED_ACCURACY.recheck[interval].baseline}% for always naming the commoner direction` : interval in TESTED_ACCURACY.directionTrust ? 'in the release test the model\'s leans here carried no information' : 'the model was never tested on this chart';
-    steps.push({ label: 'What the model adds', text: `No reliable direction on the ${interval} chart: ${why}, so its raw ${forecast.rawProbUpPct}% up is not a chance of anything. Its price range is the useful part: ${fmt(forecast.wideRange[0])} – ${fmt(forecast.wideRange[1])} over ${horizonText || 'the forecast horizon'}, a range of the kind that held ${FORECAST_TESTED.centred[interval]?.coins === 24 ? `${FORECAST_TESTED.centred[interval].band80}% of ${FORECAST_TESTED.centred[interval].tests.toLocaleString('en-US')} outcomes on ${interval} in testing` : `${TESTED_ACCURACY.bandsAll.band80}% of outcomes in testing`}.` });
+    const why = TESTED_ACCURACY.recheck?.[interval]
+      ? `در بازآزمایی تست انتشار روی کندل‌های جدید (${TESTED_ACCURACY.recheck.measuredOn})، پیش‌بینی‌های آن در ${TESTED_ACCURACY.recheck[interval].hit}% مواقع درست بود در مقابل ${TESTED_ACCURACY.recheck[interval].baseline}% برای انتخاب همیشگی جهت غالب`
+      : interval in TESTED_ACCURACY.directionTrust
+      ? 'در تست انتشار، تمایلات مدل در اینجا هیچ اطلاعات مفیدی نداشتند'
+      : 'مدل هرگز روی این نمودار تست نشده است';
+    steps.push({
+      label: 'مدل هوش مصنوعی چه چیزی اضافه می‌کند',
+      text: `جهت قابل اعتمادی در نمودار ${interval} وجود ندارد: ${why}، بنابراین احتمال خام ${forecast.rawProbUpPct}% صعود نشان‌دهنده شانس واقعی نیست. بخش مفید آن بازه قیمتی است: ${fmt(forecast.wideRange[0])} تا ${fmt(forecast.wideRange[1])} در طول ${horizonText || 'افق پیش‌بینی'}؛ بازه‌ای که در تست‌ها ${FORECAST_TESTED.centred[interval]?.coins === 24 ? `${FORECAST_TESTED.centred[interval].band80}% از ${FORECAST_TESTED.centred[interval].tests.toLocaleString('en-US')} نتیجه واقعی در ${interval}` : `${TESTED_ACCURACY.bandsAll.band80}% از نتایج`} را در بر گرفته است.`,
+    });
   } else if (forecast && !conflict) {
-    const dir = forecast.probUpPct >= 50 ? 'up' : 'down';
+    const dir = forecast.probUpPct >= 50 ? 'صعود' : 'نزول';
     const tfAcc = accuracyOn(interval);
-    let text = `${forecast.probUpPct}% chance of going ${dir} over ${horizonText || 'the forecast horizon'}`;
-    if (acc !== null) text += `, from a model that called direction right ${acc}% of the time on recent data it had never seen`;
+    let text = `احتمال ${forecast.probUpPct}% برای ${dir} در طول ${horizonText || 'افق پیش‌بینی'}`;
+    if (acc !== null) text += `، از مدلی که در داده‌های جدید و دیده‌نشده اخیر در ${acc}% مواقع جهت را درست تشخیص داده است`;
     text += '.';
     if (noEdgeOn(interval)) {
-      text += ` Read that number with suspicion here: across ${coinsOn(interval)} coins the model scored ${tfAcc !== null ? tfAcc.toFixed(1) : '—'}% on the ${interval} timeframe, below the ${baselineOn(interval) ?? '—'}% it would have scored by always naming the more common direction, so it is shown for completeness and is not part of the verdict above.`;
+      text += ` به این عدد با تردید نگاه کنید: در بررسی ${coinsOn(interval)} رمزارز، امتیاز مدل در تایم‌فریم ${interval} برابر با ${tfAcc !== null ? tfAcc.toFixed(1) : '—'}% بوده که پایین‌تر از نرخ پایه ${baselineOn(interval) ?? '—'}% (انتخاب همیشگی جهت غالب) است؛ بنابراین فقط برای تکمیل اطلاعات نمایش داده شده و بخشی از حکم نهایی نیست.`;
     }
-    steps.push({ label: 'What the model adds', text });
+    steps.push({ label: 'مدل هوش مصنوعی چه چیزی اضافه می‌کند', text });
   }
 
-  // Every summary carries the same cross-timeframe paragraph, so switching the
-  // chart changes the detail without changing the standing view.
   if (rec) steps.push(...reconcileSteps(rec, interval));
 
-  // What the score means, stated from the test rather than from the look of it.
-  // Grouping bars by score showed one band with apparent lift; trading that band
-  // in sequence, one position at a time, did worse than entering at random. The
-  // reader gets the second result, because it is the one that matches what they
-  // can actually do.
   const { tested } = edgeBand(interval, signal.score);
   if (tested && !conflict) {
     const r = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(3)}R`;
-    caveats.push(`What the score is: how strongly the indicators agree right now, not a prediction of profit. Trading the best-looking band on this timeframe (scores ${tested.lo}–${tested.hi}) returned ${r(tested.tradedR)} per trade over ${tested.trades.toLocaleString('en-US')} tested trades on the newer half of the data, against ${r(tested.randomR)} for entering at any candle under the same rules${tested.older ? `; on the older half it returned ${r(tested.older.tradedR)} against ${r(tested.older.randomR)}` : ''}. It did not hold across both, so a higher score does not mean a better trade.`);
+    caveats.push(`معنای واقعی امتیاز چیست: میزان توافق فعلی اندیکاتورها، نه پیش‌بینی سود. معامله روی بهترین بازه ظاهری در این تایم‌فریم (امتیازهای ${tested.lo} تا ${tested.hi}) در ${tested.trades.toLocaleString('en-US')} معامله تست‌شده روی نیمه جدیدتر داده‌ها، بازدهی ${r(tested.tradedR)} به ازای هر معامله داشت، در مقابل ${r(tested.randomR)} برای ورود تصادفی در هر کندل با قوانین یکسان${tested.older ? `؛ در نیمه قدیمی‌تر داده‌ها نیز بازدهی ${r(tested.older.tradedR)} در مقابل ${r(tested.older.randomR)} داشت` : ''}. این برتری در هر دو دوره حفظ نشد، پس امتیاز بالاتر به معنای معامله بهتر نیست.`);
   }
   if (measured) {
-    caveats.push(`Measured across ${SCORE_BUCKETS_TESTED.bars.toLocaleString()} bars of ${SCORE_BUCKETS_TESTED.coins} coins, the share of readings followed by a higher price FALLS as this score rises — on ${interval}, from ${SCORE_BUCKETS_TESTED.upRateByBucket[interval]?.extendedDown ?? '—'}% at the bottom of the scale to ${SCORE_BUCKETS_TESTED.upRateByBucket[interval]?.extendedUp ?? '—'}% at the top. A high score means the move is extended, not that it will continue. Trading the reverse does not work either: both directions were tested over a held-out half with fees and neither came out positive.`);
+    caveats.push(`در اندازه‌گیری ${SCORE_BUCKETS_TESTED.bars.toLocaleString()} کندل از ${SCORE_BUCKETS_TESTED.coins} رمزارز، سهم خوانش‌هایی که با قیمت بالاتر دنبال می‌شوند با افزایش این امتیاز «کاهش» می‌یابد — در تایم‌فریم ${interval}، از ${SCORE_BUCKETS_TESTED.upRateByBucket[interval]?.extendedDown ?? '—'}% در پایین‌ترین نقطه مقیاس به ${SCORE_BUCKETS_TESTED.upRateByBucket[interval]?.extendedUp ?? '—'}% در بالاترین نقطه می‌رسد. امتیاز بالا یعنی حرکت بیش از حد کشیده شده (اشباع)، نه اینکه ادامه خواهد یافت. معامله در جهت معکوس هم جواب نمی‌دهد: هر دو جهت با احتساب کارمزد تست شدند و هیچ‌کدام سودده نبودند.`);
   }
 
-  // The geometry's own expectancy, measured at every candle of 106 coins. If the levels
-  // themselves lose money there is no honest way to present them as a trade.
   if (p && expectancyR !== null && expectancyR !== undefined) {
     if (expectancyR <= 0) {
-      caveats.push(`Tested across ${GEOMETRY_TESTED.coins} coins${GEOMETRY_TESTED.entries[interval] ? ` (${GEOMETRY_TESTED.entries[interval].toLocaleString('en-US')} entries)` : ''}, entries on this timeframe with these stop and target distances came out at ${expectancyR.toFixed(3)}R per trade — slightly negative before you add slippage. The levels are shown for reference; on the evidence this timeframe is one to read, not to trade.`);
+      caveats.push(`در تست روی ${GEOMETRY_TESTED.coins} رمزارز${GEOMETRY_TESTED.entries[interval] ? ` (${GEOMETRY_TESTED.entries[interval].toLocaleString('en-US')} نقطه ورود)` : ''}، ورود در این تایم‌فریم با این فواصل حد ضرر و سود، نتیجه‌ای معادل ${expectancyR.toFixed(3)}R به ازای هر معامله داشت — که حتی قبل از کسر لغزش قیمت (Slippage) کمی منفی است. سطوح فقط جهت اطلاع نمایش داده شده‌اند؛ طبق شواهد، این تایم‌فریم برای خواندن و تحلیل است نه معامله کردن.`);
       tone = 'warn';
     } else if (planUsable) {
       steps.push({
-        label: 'Does this pay?',
-        text: `Measured over ${GEOMETRY_TESTED.entries[interval] ? `${GEOMETRY_TESTED.entries[interval].toLocaleString('en-US')} entries` : 'every candle'} across ${GEOMETRY_TESTED.coins} coins, this stop and target combination returned ${expectancyR > 0 ? '+' : ''}${expectancyR.toFixed(3)}R per trade after fees. Small, positive, and only true if you take the exits as written.`,
+        label: 'آیا این معامله می‌ارزد؟',
+        text: `در اندازه‌گیری ${GEOMETRY_TESTED.entries[interval] ? `${GEOMETRY_TESTED.entries[interval].toLocaleString('en-US')} نقطه ورود` : 'تمام کندل‌ها'} در میان ${GEOMETRY_TESTED.coins} رمزارز، این ترکیب حد ضرر و سود پس از کسر کارمزد بازدهی ${expectancyR > 0 ? '+' : ''}${expectancyR.toFixed(3)}R به ازای هر معامله داشته است. سودی کوچک و مثبت، که تنها در صورتی محقق می‌شود که دقیقاً طبق نقاط خروج نوشته‌شده عمل کنید.`,
       });
     }
   }
 
   if (noEdgeOn(interval)) {
-    caveats.push(`On the ${interval} chart the forecast model scored ${accuracyOn(interval).toFixed(1)}% on unseen data across ${coinsOn(interval)} coins — not above the ${baselineOn(interval) ?? '—'}% of always naming the more common direction, so it has no edge there. Nothing shown on this timeframe is presented as a confident call, whatever the score says.`);
+    caveats.push(`در نمودار ${interval} مدل پیش‌بینی روی داده‌های دیده‌نشده در ${coinsOn(interval)} رمزارز امتیاز ${accuracyOn(interval).toFixed(1)}% کسب کرد — که بالاتر از نرخ پایه ${baselineOn(interval) ?? '—'}% نیست، پس هیچ مزیتی در اینجا ندارد. هیچ‌چیز در این تایم‌فریم با اطمینان بالا ارائه نمی‌شود، صرف‌نظر از اینکه امتیاز چقدر باشد.`);
   }
-  if (acc !== null && acc < 52) caveats.push(`The forecast has no measured edge on this coin and timeframe (${acc}%), so weight the chart signal more heavily here.`);
-  if (strength < 25 && !conflict) caveats.push('This is a weak reading. A small score means the indicators barely agree, which is a reason to size down or skip it.');
-  caveats.push('This is a reading of public market data, not advice. Use a stop-loss on every trade and only risk what you can afford to lose.');
+  if (acc !== null && acc < 52) caveats.push(`مدل پیش‌بینی هیچ مزیت اندازه‌گیری‌شده‌ای روی این رمزارز و تایم‌فریم ندارد (${acc}%)، بنابراین در اینجا وزن بیشتری به سیگنال خود نمودار بدهید.`);
+  if (strength < 25 && !conflict) caveats.push('این یک خوانش ضعیف است. امتیاز کوچک یعنی اندیکاتورها به سختی با هم موافقند، که دلیلی برای کاهش حجم یا صرف‌نظر کردن از معامله است.');
+  caveats.push('این صرفاً خوانش داده‌های عمومی بازار است و توصیه مالی نیست. در هر معامله از حد ضرر استفاده کنید و فقط به اندازه‌ای ریسک کنید که توان از دست دادنش را دارید.');
 
   return { verdict, tone, headline, steps, caveats, confidence, confidenceWhy, reconciled: rec };
 }
 
-/** The same summary as plain markdown, for the assistant and for exports. */
+/** همان خلاصه در قالب مارک‌داون ساده، برای دستیار هوشمند و خروجی گرفتن. */
 export function summaryMarkdown(s) {
   if (!s || !s.steps) return '';
   const lines = [`**${s.verdict}** — ${s.headline}`, ''];
-  if (s.confidence && s.confidence !== 'none') lines.push(`_Confidence: ${s.confidence}. ${s.confidenceWhy || ''}_`.trim(), '');
+  if (s.confidence && s.confidence !== 'none' && s.confidence !== 'نامشخص') {
+    lines.push(`_سطح اطمینان: ${s.confidence}. ${s.confidenceWhy || ''}_`.trim(), '');
+  }
   for (const st of s.steps) lines.push(`- **${st.label}:** ${st.text}`);
-  if (s.caveats.length) { lines.push(''); for (const c of s.caveats) lines.push(`_${c}_`); }
+  if (s.caveats.length) {
+    lines.push('');
+    for (const c of s.caveats) lines.push(`_${c}_`);
+  }
   return lines.join('\n');
 }
 
