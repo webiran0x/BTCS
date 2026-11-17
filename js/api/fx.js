@@ -34,20 +34,27 @@ export function rates() {
         } catch { /* آفلاین */ }
       }
 
-      // ۲. دریافت نرخ دقیق تومان و ریال از API عمومی نوبیتکس (بر اساس قیمت تتر)
+      // ۲. دریافت قیمت تتر از کوین‌گکو و ضرب در ضریب 3.85 برای تومان
       try {
-        const nobitexRes = await fetch('https://api.nobitex.ir/v2/orderbook/USDTIRT').then((x) => x.json());
-        if (nobitexRes && nobitexRes.status === 'ok' && nobitexRes.lastTradePrice) {
-          const usdtToman = parseFloat(nobitexRes.lastTradePrice);
-          if (usdtToman > 0) {
-            ratesData['IRT'] = usdtToman;
-            ratesData['IRR'] = usdtToman * 10;
+        const cgRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=irr,usd').then((x) => x.json());
+        if (cgRes && cgRes.tether && cgRes.tether.irr) {
+          const tetherIrr = cgRes.tether.irr;
+          const tetherToman = (tetherIrr / 10) * 3.85; // اعمال ضریب 3.85 درخواست شده
+          
+          if (tetherToman > 0) {
+            ratesData['IRT'] = tetherToman;
+            ratesData['IRR'] = tetherToman * 10;
           }
         }
-      } catch {
-        // حالت پشتیبان در صورت عدم دسترسی به نوبیتکس
-        ratesData['IRT'] = cached?.rates?.IRT || 70000;
-        ratesData['IRR'] = cached?.rates?.IRR || 700000;
+      } catch (err) {
+        console.warn('Failed to fetch market rate, using fallback', err);
+      }
+
+      // حالت پشتیبان اگر نرخ بازار آزاد دریافت نشد
+      if (!ratesData['IRT'] || ratesData['IRT'] < 10000) {
+        const fallbackToman = 70000 * 3.85;
+        ratesData['IRT'] = cached?.rates?.IRT || fallbackToman;
+        ratesData['IRR'] = ratesData['IRT'] * 10;
       }
 
       try { 
