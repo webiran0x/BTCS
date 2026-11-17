@@ -34,7 +34,10 @@ export async function sb() {
 }
 
 async function loadProfile(client) {
-  const { data } = await client.from('profiles').select('*').eq('id', (await client.auth.getUser()).data.user.id).maybeSingle();
+  const { data: authData, error: authError } = await client.auth.getUser();
+  if (authError || !authData?.user) return null;
+  
+  const { data } = await client.from('profiles').select('*').eq('id', authData.user.id).maybeSingle();
   return data;
 }
 
