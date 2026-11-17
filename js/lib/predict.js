@@ -1,25 +1,24 @@
-// BTCS AI forecast engine — runs entirely in the browser, no API.
+// موتور پیش‌بینی هوش مصنوعی CoinVantage — به صورت کامل در مرورگر اجرا می‌شود و نیازی به API ندارد.
 //
-// It combines seven independent forecasters (see MODEL_INFO) and weights them
-// by how accurate
-// each one was on recent data it was NOT trained on (walk-forward validation):
-//   1. Pattern matching  – finds past chart shapes most similar to today's and
-//                          looks at what price did next (historical analogs)
-//   2. Neural network    – small MLP trained on 23 technical features
-//   3. Logistic model    – regularised logistic regression on the same features
-//   4. Nearest neighbours– most similar past market states (feature space)
-//   5. Trend model       – Holt double-exponential smoothing with volatility cone
-//   6. Boosted trees     – gradient-boosted decision trees on the same features
-//   7. Similar moves     – how moves like the latest one played out on this coin
+// این موتور شامل هفت پیش‌بینی‌کننده مستقل است (به MODEL_INFO مراجعه کنید) و وزن‌دهی آن‌ها 
+// بر اساس میزان دقت هر کدام روی داده‌های اخیری که روی آن‌ها آموزش ندیده‌اند (اعتبارسنجی گام‌به‌جلو) انجام می‌شود:
+//   ۱. تطبیق الگو – الگوهای قیمتی گذشته را که شبیه‌ترین به امروز هستند پیدا کرده 
+//                    و بررسی می‌کند قیمت پس از آن چگونه حرکت کرده است (آنالوگ‌های تاریخی)
+//   ۲. شبکه عصبی – یک پرسپترون چندلایه (MLP) کوچک آموزش‌دیده روی ۲۳ ویژگی فنی
+//   ۳. مدل لجستیک – رگرسیون لجستیک منظم‌شده روی همان ویژگی‌ها
+//   ۴. نزدیک‌ترین همسایگان – شبیه‌ترین وضعیت‌های گذشته بازار (فضای ویژگی‌ها)
+//   ۵. مدل روند – هموارسازی دوگانه نمایی هولت همراه با مخروط نوسان
+//   ۶. درخت‌های تقویت‌شده – درخت‌های تصمیم‌گیری تقویت‌شده با گرادیان روی همان ویژگی‌ها
+//   ۷. حرکات مشابه – بررسی نحوه عملکردهای مشابه حرکت اخیر روی این رمزارز
 //
-// Crypto prices are noisy; the engine reports its measured accuracy so users
-// can judge how much to trust a forecast. Not financial advice.
+// قیمت‌های کریپتو نویز دارند؛ این موتور دقت اندازه‌گیری‌شده خود را گزارش می‌کند تا کاربران 
+// بتوانند میزان اعتماد به پیش‌بینی را بسنجند. این توصیه مالی نیست.
 
 import { computeAll } from './indicators.js';
 import { pooledProb } from './pooled.js';
 import { tripleBarrier } from './barrier.js';
 
-// ---------------------------------------------------------------- helpers
+// ---------------------------------------------------------------- توابع کمکی
 const clip = (v, lo = -5, hi = 5) => (Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : 0);
 const sigmoid = (z) => 1 / (1 + Math.exp(-clip(z, -30, 30)));
 function mulberry32(a) {
@@ -50,13 +49,13 @@ function weightedMedian(values, weights) {
   return values[idx[idx.length - 1]] ?? 0;
 }
 
-// ---------------------------------------------------------------- features
+// ---------------------------------------------------------------- ویژگی‌ها (Features)
 export const FEATURE_NAMES = [
-  'Return 1 bar', 'Return 3 bars', 'Return 6 bars', 'Return 12 bars', 'Return 24 bars',
-  'RSI', 'MACD histogram', 'MACD line', 'Bollinger %B', 'Bollinger width',
-  'Distance to EMA20', 'Distance to EMA50', 'Distance to EMA200', 'EMA20 slope',
-  'Volume vs average', 'ADX', 'DI spread', 'Stoch RSI', 'Volatility regime',
-  'Candle body', 'Upper wick', 'Lower wick', 'Position in 50-bar range',
+  'بازده ۱ کندل', 'بازده ۳ کندل', 'بازده ۶ کندل', 'بازده ۱۲ کندل', 'بازده ۲۴ کندل',
+  'RSI', 'هیستوگرام MACD', 'خط MACD', 'درصد باندهای بولینگر %B', 'عرض باندهای بولینگر',
+  'فاصله تا EMA20', 'فاصله تا EMA50', 'فاصله تا EMA200', 'شیب EMA20',
+  'حجم در مقایسه با میانگین', 'ADX', 'اختلاف DI', 'Stoch RSI', 'رژیم نوسان',
+  'بدنه کندل', 'سایه بالایی', 'سایه پایینی', 'موقعیت در محدوده ۵۰ کندلی',
 ];
 
 export function buildFeatures(candles, ind = computeAll(candles)) {
@@ -111,7 +110,7 @@ function standardizer(rows) {
   return (r) => Float64Array.from(r, (v, j) => clip((v - mu[j]) / sd[j], -6, 6));
 }
 
-// ---------------------------------------------------------------- models
+// ---------------------------------------------------------------- مدل‌ها
 function trainLogistic(X, y, { iters = 250, lr = 0.05, l2 = 2e-3 } = {}) {
   const n = X.length, d = X[0].length;
   const w = new Float64Array(d); let b = 0;
@@ -198,11 +197,10 @@ function trainMlp(X, y, { hidden = 16, epochs = 35, lr = 0.004, l2 = 3e-4, batch
   return { predict };
 }
 
-// Gradient-boosted decision trees (logistic loss, histogram splits).
+// درخت‌های تصمیم‌گیری تقویت‌شده با گرادیان (لاگ‌ریتم خطا، تقسیم‌بندی هیستوگرام).
 function trainGbdt(X, y, { rounds = 70, depth = 3, lr = 0.08, bins = 16, minLeaf = 25, lambda = 1, subsample = 0.8, colsample = 0.8, seed = 3 } = {}) {
   const n = X.length, d = X[0].length;
   const rnd = mulberry32(seed);
-  // quantile cut points per feature
   const cuts = [];
   const binned = Array.from({ length: d }, () => new Uint8Array(n));
   for (let j = 0; j < d; j++) {
@@ -290,7 +288,7 @@ function knnModel(X, y, ret, k) {
   };
 }
 
-// Holt linear trend on log prices, evaluated for every bar in one pass.
+// روند خطی هولت روی قیمت‌های لگاریتمی، ارزیابی‌شده برای هر کندل در یک گذر.
 function holtSeries(closes, alpha = 0.25, beta = 0.04) {
   const n = closes.length;
   const level = new Float64Array(n), trend = new Float64Array(n);
@@ -312,9 +310,9 @@ function rollingSigma(closes, i, lookback = 100) {
 }
 
 /**
- * Quantiles of the coin's past H-bar log returns in units of σ√H (σ = the
- * 100-bar volatility at the start of each move), centred on their median.
- * Uses only candles before `last`, so a forecast never sees its own outcome.
+ * چارک‌های بازده‌های لگاریتمی H-کندلی گذشته رمزارز بر حسب واحدهای σ√H (σ = نوسان ۱۰۰-کندلی در ابتدای هر حرکت)،
+ * متمرکز بر روی میانه آن‌ها.
+ * فقط از کندل‌های قبل از `last` استفاده می‌کند، بنابراین پیش‌بینی هرگز نتیجه خودش را نمی‌بیند.
  */
 function empiricalBandQuantiles(closes, last, H) {
   const zs = [];
@@ -329,14 +327,14 @@ function empiricalBandQuantiles(closes, last, H) {
   return { q05: q(0.05) - med, q10: q(0.1) - med, q25: q(0.25) - med, q75: q(0.75) - med, q90: q(0.9) - med, q95: q(0.95) - med };
 }
 
-// ---------------------------------------------------------------- pattern matching
+// ---------------------------------------------------------------- تطبیق الگو (Pattern Matching)
 function znorm(arr) {
   const m = arr.reduce((s, v) => s + v, 0) / arr.length;
   const sd = Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length) || 1;
   return arr.map((v) => (v - m) / sd);
 }
 
-// Prefix sums of log prices, cached per candle array, for O(W) correlation per window.
+// جمع پیشوندی قیمت‌های لگاریتمی، کش‌شده به ازای هر آرایه کندل، برای همبستگی O(W) به ازای هر پنجره.
 const prefixCache = new WeakMap();
 function prefixes(candles) {
   let p = prefixCache.get(candles);
@@ -353,8 +351,8 @@ function prefixes(candles) {
   return p;
 }
 
-// Find past windows whose shape matches the window ending at `endIdx`,
-// using only data available up to `endIdx` (so it can be validated honestly).
+// یافتن پنجره‌های گذشته که شکل آن‌ها با پنجره ختم‌شونده به `endIdx` مطابقت دارد،
+// فقط با استفاده از داده‌های موجود تا `endIdx` (تا بتوان آن را به صورت منصفانه اعتبارسنجی کرد).
 export function findPatterns(candles, endIdx, { window = 32, horizon = 12, topK = 8, minCorr = 0.6 } = {}) {
   const W = window, H = horizon;
   if (endIdx - W < W + H + 10) return { matches: [] };
@@ -362,13 +360,13 @@ export function findPatterns(candles, endIdx, { window = 32, horizon = 12, topK 
   const cur = znorm(Array.from(logs.subarray(endIdx - W + 1, endIdx + 1)));
   const curVol = rollingSigma(raw, endIdx, W);
   const cands = [];
-  const lastStart = endIdx - W - H; // the match AND its future must be fully in the past
+  const lastStart = endIdx - W - H; // تطابق و آینده آن باید کاملاً در گذشته باشند
   for (let s = 0; s <= lastStart; s++) {
     const mean = (s1[s + W] - s1[s]) / W;
     const varc = (s2[s + W] - s2[s]) / W - mean * mean;
     if (varc <= 1e-14) continue;
     let dot = 0;
-    for (let j = 0; j < W; j++) dot += logs[s + j] * cur[j]; // cur has zero mean, so the window mean cancels
+    for (let j = 0; j < W; j++) dot += logs[s + j] * cur[j]; // cur میانگین صفر دارد، بنابراین میانگین پنجره خنثی می‌شود
     const corr = dot / (W * Math.sqrt(varc));
     if (corr >= minCorr) cands.push({ s, corr });
   }
@@ -393,7 +391,7 @@ export function findPatterns(candles, endIdx, { window = 32, horizon = 12, topK 
       futureReturnPct: future[H - 1] * 100,
       maxUpPct: Math.max(...future) * 100,
       maxDownPct: Math.min(...future) * 100,
-      series, // normalised path (window + future) with window end = 100, for overlay charts
+      series, // مسیر نرمال‌شده (پنجره + آینده) با انتهای پنجره = 100، برای نمودارهای تطبیقی
     };
   });
   if (!matches.length) return { matches };
@@ -412,9 +410,9 @@ export function findPatterns(candles, endIdx, { window = 32, horizon = 12, topK 
   };
 }
 
-// ---------------------------------------------------------------- similar-move statistics
-// "When this coin moved this far this fast before, with RSI in this zone, how often did it rise next?"
-// Empirical conditional probability from the coin's own history (smoothed toward the base rate).
+// ---------------------------------------------------------------- آمار حرکات مشابه
+// "وقتی این رمزارز در گذشته به این اندازه و سرعت حرکت کرد، در حالی که RSI در این محدوده بود، دفعه بعد چقدر احتمال صعود داشت؟"
+// احتمال شرطی تجربی از تاریخچه خود رمزارز (هموارشده به سمت نرخ پایه).
 function moveStatsModel(samples) {
   const zb = (z) => (z < -2 ? 0 : z < -1 ? 1 : z < -0.3 ? 2 : z < 0.3 ? 3 : z < 1 ? 4 : z < 2 ? 5 : 6);
   const rb = (r) => (r < 30 ? 0 : r < 45 ? 1 : r < 55 ? 2 : r < 70 ? 3 : 4);
@@ -435,35 +433,24 @@ function moveStatsModel(samples) {
   };
 }
 
-// ---------------------------------------------------------------- main
-// The models that get a vote. A cross-coin model was built, trained on 25k
-// pooled rows per timeframe and measured on the same 672-forecast harness: it
-// scored 53.7% against this roster's 54.0%, with a worse Brier score, so it is
-// not in the list. Re-tested on all 106 coins (tools/evaluate-pooled.mjs, two
-// runs, 2026-10-15/16: about 75,000-240,000 training rows a chart, tested on the
-// later 40% of every coin), no cross-coin model beat simply naming the
-// direction that was commoner in the training part by more than 1.3 points on
-// any chart (second run: 15m 52.1% vs 51.7%, 1h 51.3% vs 50.0%, 4h 52.2% vs
-// 51.9%, 1d 55.1% vs 55.6%), so it stays out. tools/train-pooled.mjs and
-// js/lib/pooled.js are kept so the experiment can be repeated rather than
-// guessed at — see docs/HANDOVER.md.
+// ---------------------------------------------------------------- تابع اصلی (Main)
 export const MODEL_INFO = {
-  gbdt: 'Gradient-boosted trees',
-  mlp: 'Neural network',
-  logistic: 'Logistic regression',
-  knn: 'Nearest neighbours',
-  moves: 'Similar past moves',
-  pattern: 'Chart pattern matching',
-  trend: 'Trend model (Holt)',
+  gbdt: 'درخت‌های تقویت‌شده با گرادیان',
+  mlp: 'شبکه عصبی',
+  logistic: 'رگرسیون لجستیک',
+  knn: 'نزدیک‌ترین همسایگان',
+  moves: 'حرکات مشابه گذشته',
+  pattern: 'تطبیق الگوی نمودار',
+  trend: 'مدل روند (هولت)',
 };
 
-// Candle spacing → the timeframe key the pooled model was trained under.
+// فاصله کندل‌ها -> کلید تایم‌فریم که مدل تجمیعی روی آن آموزش دیده است.
 const INTERVAL_FOR_MS = { 9e5: '15m', 36e5: '1h', 144e5: '4h', 864e5: '1d' };
 
 export function forecast(candles, { horizon = 12, window = 40, fast = false, intervalMs = null, folds = 3, interval = null, labelMode = 'direction', barrierUp = 2, barrierDown = 1 } = {}) {
   const n = candles.length;
   const H = horizon;
-  if (n < 200) return { ok: false, reason: 'Need at least 200 candles of history for the AI forecast.' };
+  if (n < 200) return { ok: false, reason: 'برای پیش‌بینی هوش مصنوعی حداقل به ۲۰۰ کندل تاریخچه نیاز است.' };
   const now = () => (typeof performance !== 'undefined' ? performance : Date).now();
   const stepMs = intervalMs || (n > 1 ? candles[n - 1].t - candles[n - 2].t : null);
   const intervalKey = interval || (stepMs ? INTERVAL_FOR_MS[stepMs] : null);
@@ -474,17 +461,8 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
 
   const idx = [];
   for (let i = 0; i < n - H; i++) if (feats[i]) idx.push(i);
-  if (idx.length < 150) return { ok: false, reason: 'Not enough clean history to train the models.' };
-  // What the models are trained to predict.
-  //
-  // 'direction' is the original question — is the close higher H bars later?
-  // It counts a +0.01% drift as a win and ignores the path, which is most of
-  // why it scores near a coin flip.
-  //
-  // 'barrier' asks the question a trade actually turns on: does price reach the
-  // profit target before the stop? Bounded, decidable, and the same thing the
-  // entry/stop/target plan on the page depends on. Measured separately, because
-  // it is a different question and its accuracy is NOT comparable to the other.
+  if (idx.length < 150) return { ok: false, reason: 'تاریخچه تمیز کافی برای آموزش مدل‌ها وجود ندارد.' };
+  
   const barrierOpts = { up: barrierUp, down: barrierDown, maxBars: H * 3 };
   const barrierCache = new Map();
   const barrierAt = (i) => {
@@ -500,18 +478,14 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
   const holtProb = (i) => normCdf((holt.trend[i] * H + (holt.level[i] - Math.log(closes[i]))) / ((rollingSigma(closes, i) || 1e-9) * Math.sqrt(H)));
   const patOpts = { window, horizon: H, topK: 12, minCorr: 0.5 };
 
-  // Train every model on the given sample indices; returns predictors taking a bar index.
+  // آموزش هر مدل روی اندیس‌های نمونه داده‌شده؛ پیش‌بینی‌کننده‌هایی را برمی‌گرداند که اندیس کندل را می‌گیرند.
   const trainAll = (trainIdx, seedBase = 1) => {
     const scale = standardizer(trainIdx.map((i) => feats[i]));
     const X = trainIdx.map((i) => scale(feats[i]));
     const y = trainIdx.map(label);
     const r = trainIdx.map(fret);
     const sigH = (rollingSigma(closes, trainIdx[trainIdx.length - 1], 300) || 0.01) * Math.sqrt(H);
-    const keep = r.map((v) => Math.abs(v) > 0.2 * sigH); // drop near-zero moves: they are noise
-    // A market that sat still before it started moving (a fresh listing, a pair
-    // that was pegged or halted) can have every training sample fall under that
-    // bar. Training on an empty set threw and took the whole forecast with it,
-    // so with too few survivors the filter is skipped and every sample is used.
+    const keep = r.map((v) => Math.abs(v) > 0.2 * sigH); // حذف حرکات نزدیک به صفر: آن‌ها نویز هستند
     const enough = keep.filter(Boolean).length >= 50;
     const Xf = enough ? X.filter((_, k) => keep[k]) : X, yf = enough ? y.filter((_, k) => keep[k]) : y;
     const lr = trainLogistic(Xf, yf);
@@ -520,9 +494,6 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
     const mlps = fast ? [] : [trainMlp(Xf, yf, { seed: seedBase + 7, epochs: 25 }), trainMlp(Xf, yf, { seed: seedBase + 29, epochs: 25 })];
     const moves = moveStatsModel(trainIdx.map((i) => ({ z: zAt(i), rsi: ind.rsi[i], up: label(i) })));
     const p = {
-      // Available to re-enable by adding `pooled` back to MODEL_INFO; it takes
-      // the raw feature row, not the per-coin standardised one, because that is
-      // what it was trained on. Measured worse — see the note above.
       pooled: (i) => pooledProb(intervalKey, feats[i]),
       logistic: (i) => lr.predict(scale(feats[i])),
       gbdt: (i) => gb.predict(scale(feats[i])),
@@ -536,14 +507,13 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
     return p;
   };
 
-  // ---- walk-forward validation: K folds over the most recent ~36% of history.
-  // Each fold is predicted by models trained only on data that ended H bars before it.
+  // ---- اعتبارسنجی گام‌به‌جلو (Walk-forward validation)
   const valStart = Math.floor(idx.length * 0.64);
   const K = fast ? 1 : folds;
   const foldSize = Math.ceil((idx.length - valStart) / K);
   const keys = Object.keys(MODEL_INFO).filter((k) => !(fast && k === 'mlp'));
   const hits = Object.fromEntries(keys.map((k) => [k, [0, 0]]));
-  const valRecords = []; // { i, probs:{} }
+  const valRecords = []; 
   for (let f = 0; f < K; f++) {
     const a = valStart + f * foldSize, b = Math.min(idx.length, a + foldSize);
     if (a >= b) break;
@@ -551,17 +521,13 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
     const trainIdx = idx.filter((i) => i <= firstBar - H - 1).slice(-3000);
     if (trainIdx.length < 100) continue;
     const P = trainAll(trainIdx, f * 101);
-    // non-overlapping test points (every H/2 bars) keep validation fast and honest
     const stride = Math.max(1, Math.floor(H / 2));
     for (let j = a; j < b; j += stride) {
       const i = idx[j];
       const rec = { i, fold: f, probs: {} };
       for (const k of keys) {
-        if (k === 'pattern' && ((j - a) / stride) % 2 !== 0) continue; // pattern search on every other point
+        if (k === 'pattern' && ((j - a) / stride) % 2 !== 0) continue;
         const pr = P[k](i);
-        // A model with nothing to say (the pooled one has no coefficients for
-        // this timeframe, say) must abstain, not vote 0 — counting a null as
-        // "down" would both wreck the blend and fake its accuracy.
         if (pr === null || pr === undefined || !Number.isFinite(pr)) continue;
         rec.probs[k] = pr;
         hits[k][1]++; if ((pr >= 0.5 ? 1 : 0) === label(i)) hits[k][0]++;
@@ -572,8 +538,6 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
 
   const models = keys.map((k) => ({ key: k, name: MODEL_INFO[k], accuracy: hits[k][1] ? hits[k][0] / hits[k][1] : null, samples: hits[k][1] }));
 
-  // Accuracy-proportional weights: the simple blend, and the fallback whenever
-  // there is not enough validation data to learn something better.
   const weights = {};
   for (const m of models) {
     const edge = Math.max(0, (m.accuracy ?? 0.5) - 0.5);
@@ -589,21 +553,11 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
     return w ? s / w : 0.5;
   };
 
-  // ---- stacking: learn how to combine the models instead of assuming it.
-  //
-  // Weighting each model by its own hit rate treats them as independent, which
-  // they are not — several read the same trend and vote together, so the blend
-  // over-counts one opinion. A logistic regression over the validation records
-  // learns what each model is worth *given the others*, including a negative
-  // weight for one that is reliably wrong. It is regularised hard (few samples)
-  // and every number it is fitted on is out-of-sample: those models were trained
-  // on data ending H bars before the point they predicted.
   const featRow = (probs) => {
     const x = keys.map((k) => (probs[k] === undefined || probs[k] === null ? 0 : (probs[k] - 0.5) * 2));
-    x.push(1); // intercept
+    x.push(1); // مقدار ثابت (Intercept)
     return x;
   };
-  const sigmoid = (z) => 1 / (1 + Math.exp(-clip(z, -30, 30)));
 
   function fitLogistic(rows, ys, { l2 = 1, iters = 250, lr = 0.6 } = {}) {
     const d = rows[0].length;
@@ -617,7 +571,6 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
         const err = sigmoid(z) - ys[r];
         for (let j = 0; j < d; j++) g[j] += err * x[j];
       }
-      // L2 on the slopes only — shrinking the intercept would fight the base rate
       for (let j = 0; j < d - 1; j++) g[j] += l2 * w[j];
       for (let j = 0; j < d; j++) w[j] -= (lr / rows.length) * g[j];
     }
@@ -631,13 +584,10 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
     return sigmoid(z);
   };
 
-  // Enough records, and more than one fold, or there is nothing honest to fit on.
   const foldsSeen = new Set(valRecords.map((r) => r.fold));
   const canStack = valRecords.length >= 60 && foldsSeen.size >= 2;
   const l2 = Math.max(0.5, keys.length * 2);
 
-  // Out-of-fold stacker predictions: each record scored by a model that never
-  // saw its fold. This is what the published accuracy is measured on.
   const stackedOof = new Map();
   if (canStack) {
     for (const f of foldsSeen) {
@@ -649,8 +599,6 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
   }
   const usedStacking = canStack && stackedOof.size >= valRecords.length * 0.5;
 
-  // Does stacking actually beat the simple blend here? If not, keep the simple
-  // one — a fancier model that tests worse is not an improvement.
   const scoreOf = (get) => {
     let hit = 0, tot = 0;
     for (const r of valRecords) {
@@ -662,29 +610,13 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
   };
   const stackScore = usedStacking ? scoreOf((r) => stackedOof.get(r)) : 0;
   const simpleScore = scoreOf((r) => simpleBlend(r.probs));
-  // Measured on 672 walk-forward forecasts across 12 coins and 4 timeframes,
-  // a loose gate here made the engine WORSE: 51.6% against the simple blend's
-  // 54.0%, because with a hundred-odd validation points the regression fits
-  // noise between correlated models and the fold estimate is too shaky to catch
-  // it. So the bar is deliberately high: a lot of evidence and a clear margin,
-  // or the blend that is known to work stays in charge.
   const stacking = usedStacking && valRecords.length >= 200 && stackScore >= simpleScore + 0.03;
 
-  // Final combiner, fitted on every validation record, for the live prediction.
   const stackW = stacking
     ? fitLogistic(valRecords.map((r) => featRow(r.probs)), valRecords.map((r) => label(r.i)), { l2 })
     : null;
 
-  // ---- calibration: make a stated 70% mean 70%.
-  // Platt scaling on the out-of-sample scores. Without it the blend is
-  // over-confident, which is worse than being wrong — it invites bigger bets.
-  //
-  // Slope only, no intercept — and that detail is the whole thing. Fitting an
-  // intercept as well moved the point where the probability crosses 50%, which
-  // silently changes which way the forecast points: measured over 672
-  // walk-forward forecasts it dropped direction accuracy from 54.0% to 52.4%.
-  // Scaling the log-odds around 0.5 cannot change the direction of a single
-  // forecast; it only makes a stated 70% mean 70%.
+  // ---- کالیبراسیون
   let calA = 1;
   const oof = valRecords
     .map((r) => ({ p: stacking ? stackedOof.get(r) : simpleBlend(r.probs), y: label(r.i) }))
@@ -716,7 +648,7 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
   const valUp = eN ? upCount / eN : 0.5;
   const baseline = trainUp >= 0.5 ? valUp : 1 - valUp;
 
-  // ---- final models on all history → live prediction
+  // ---- مدل‌های نهایی روی کل تاریخچه -> پیش‌بینی زنده
   const last = n - 1;
   const P = trainAll(idx.slice(-3000), 999);
   const live = {};
@@ -724,9 +656,7 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
   else { live.trend = holtProb(last); live.pattern = P.pattern(last); }
   const pat = findPatterns(candles, last, patOpts);
   for (const m of models) { m.probUp = live[m.key] ?? null; }
-  // Show the weights the blend actually used. With stacking on, that is the
-  // size of each fitted coefficient — including the sign, because a model that
-  // is reliably wrong is worth having, inverted.
+  
   const shown = {};
   for (const k of keys) {
     shown[k] = stacking ? stackW[keys.indexOf(k)] : weights[k];
@@ -738,27 +668,20 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
   });
   const probUp = blend(live);
 
-  // ---- expected move & range
+  // ---- حرکت و محدوده مورد انتظار
   const sig = rollingSigma(closes, last);
   const drifts = [];
   if (pat.matches.length >= 3) drifts.push([Math.log(1 + pat.medianReturn), weights.pattern]);
   if (feats[last]) drifts.push([P.knnRet(last), weights.knn]);
   drifts.push([holt.trend[last] * H * 0.5, weights.trend]);
   let mu = drifts.reduce((a, [v, w]) => a + v * w, 0) / drifts.reduce((a, [, w]) => a + w, 0);
-  // central path consistent with the direction probability: shift by the probability edge
-  const edgeMu = (probUp - 0.5) * 2 * 0.8 * sig * Math.sqrt(H); // P(up)=0.6 → ≈ +0.16σ·√H
+  const edgeMu = (probUp - 0.5) * 2 * 0.8 * sig * Math.sqrt(H);
   mu = 0.5 * mu + 0.5 * edgeMu;
   if (Math.sign(mu) !== Math.sign(probUp - 0.5) && Math.abs(probUp - 0.5) > 0.03) mu = edgeMu;
   mu = clip(mu, -2 * sig * Math.sqrt(H), 2 * sig * Math.sqrt(H));
   const price = closes[last];
   const step = intervalMs || (n > 1 ? candles[last].t - candles[last - 1].t : 36e5);
   const path = [];
-  // Range: the quantiles of this coin's own past H-bar moves, each measured in
-  // units of the volatility at that time, so a quiet week and a wild week are
-  // comparable. Crypto moves have fat tails: the old normal curve × 0.75 drew
-  // the 80% band too narrow (it held 72% of outcomes in the 2026-09-26
-  // walk-forward test); the coin's own history held 79%. With too little
-  // history it falls back to the old normal band.
   const zq = empiricalBandQuantiles(closes, last, H);
   const RANGE_CALIBRATION = 0.75;
   const Z = zq || { q05: -1.6449 * RANGE_CALIBRATION, q10: -1.2816 * RANGE_CALIBRATION, q25: -0.6745 * RANGE_CALIBRATION, q75: 0.6745 * RANGE_CALIBRATION, q90: 1.2816 * RANGE_CALIBRATION, q95: 1.6449 * RANGE_CALIBRATION };
@@ -773,9 +696,6 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
   const end = path[path.length - 1];
   const ensembleAcc = eN ? eHit / eN : null;
   const strength = Math.abs(probUp - 0.5);
-  // 95% (Wilson) range of the recent hit rate. A few dozen unseen cases cannot
-  // tell 57% apart from the baseline, so "High" needs the whole range above it
-  // (it used to need only 55%, which 75 cases clear by luck easily).
   const accRange = eN ? wilsonRange(eHit, eN) : null;
   const provenEdge = eN >= 50 && accRange[0] > Math.max(0.5, baseline);
   const confidence = strength >= 0.1 && provenEdge ? 'High'
@@ -786,15 +706,15 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
   if (ensembleAcc !== null) {
     const accP = (ensembleAcc * 100).toFixed(0), baseP = (baseline * 100).toFixed(0);
     const lo = (accRange[0] * 100).toFixed(0), hi = (accRange[1] * 100).toFixed(0);
-    if (provenEdge) notes.push(`The ensemble called the direction right ${accP}% of the time on ${eN} recent unseen cases; even the low end of its 95% range (${lo}%) is above the ${baseP}% it had to beat.`);
-    else if (ensembleAcc > baseline) notes.push(`The ensemble called the direction right ${accP}% of the time on ${eN} recent unseen cases, against ${baseP}% for always naming the more common direction. With this few cases the true rate could be anywhere from ${lo}% to ${hi}%, so this is not a proven edge.`);
-    else notes.push(`On ${eN} recent unseen cases the ensemble was right ${accP}% of the time, no better than the ${baseP}% of always naming the more common direction — treat this forecast as weak and rely on stop-losses.`);
+    if (provenEdge) notes.push(`مجموعه مدل‌ها در ${accP}% موارد از ${eN} مورد اخیر دیده نشده، جهت را به درستی تشخیص داد؛ حتی حد پایین بازه ۹۵٪ آن (${lo}%) بالاتر از نرخ پایه ${baseP}% است.`);
+    else if (ensembleAcc > baseline) notes.push(`مجموعه مدل‌ها جهت را در ${accP}% از ${eN} مورد اخیر پیش‌بینی کرد، در مقایسه با ${baseP}% برای انتخاب همیشگی جهت رایج‌تر. با این تعداد کم، نرخ واقعی می‌تواند بین ${lo}% تا ${hi}% باشد.`);
+    else notes.push(`در ${eN} مورد اخیر، مجموعه مدل‌ها عملکردی بهتر از حد معمول نداشت — این پیش‌بینی را ضعیف در نظر بگیرید و به حد ضررها تکیه کنید.`);
   }
   const mv = feats[last] ? moveStatsModel(idx.map((i) => ({ z: zAt(i), rsi: ind.rsi[i], up: label(i) })))(zAt(last), ind.rsi[last]) : null;
   const zNow = zAt(last);
-  if (mv && Math.abs(zNow) > 1 && mv.n >= 15) notes.push(`Price just moved ${zNow > 0 ? 'up' : 'down'} unusually fast (${Math.abs(zNow).toFixed(1)}σ). In ${mv.n} similar past cases it rose afterwards ${(mv.prob * 100).toFixed(0)}% of the time.`);
-  if (pat.matches.length < 3) notes.push('Few close historical chart matches were found, so pattern matching has little influence.');
-  if (sig * Math.sqrt(H) > 0.08) notes.push('Volatility is high — the forecast range is wide.');
+  if (mv && Math.abs(zNow) > 1 && mv.n >= 15) notes.push(`قیمت به تازگی با سرعت غیرعادی (${zNow > 0 ? 'صعودی' : 'نزولی'}) حرکت کرده است (${Math.abs(zNow).toFixed(1)}σ). در ${mv.n} مورد مشابه گذشته، ${(mv.prob * 100).toFixed(0)}% اوقات صعود کرده است.`);
+  if (pat.matches.length < 3) notes.push('تطابق‌های نموداری تاریخی نزدیک کمی یافت شد، بنابراین تطبیق الگو تاثیر کمی دارد.');
+  if (sig * Math.sqrt(H) > 0.08) notes.push('نوسان بالا است — بازه پیش‌بینی وسیع است.');
 
   return {
     ok: true,
@@ -818,58 +738,19 @@ export function forecast(candles, { horizon = 12, window = 40, fast = false, int
   };
 }
 
-// Update the numbers below only by re-running tools/evaluate-engine.mjs — never by estimating.
-/**
- * Walk-forward accuracy, re-measured 2026-09-26 on fresh Binance candles after
- * the range change: 240 forecasts per timeframe, 1,440 in total, 12 coins, each
- * one produced using only the candles that existed at that moment.
- *
- * Every accuracy ships with its BASELINE — the score of always naming whichever
- * direction was more common in that window. That baseline uses hindsight (no
- * one knows the majority direction in advance), so it is a strict bar; for a
- * bar that CAN be known in advance, "always say up" scored 52.2% on the same
- * tests against the forecast's 53.9%.
- *
- * Honest summary: the direction call is close to a coin flip. It is below the
- * hindsight baseline on every timeframe, and the calls where the models lean
- * hardest (10+ points from 50/50) were right 50.7% of the time — no better.
- * What DID improve is the price range: the 80% band now holds 78.5% of real
- * outcomes (it held 71.7% before) and the 50% band 48.4% (was 45.1%), measured
- * on the same 1,440 tests.
- */
 export const TESTED_ACCURACY = {
-  // accuracy, and what it had to beat
   all: 53.9, allBaseline: 58.5,
   '1m': 59.6, '5m': 56.7, '15m': 55.0, '1h': 52.1, '4h': 47.5, '1d': 52.5,
   baseline: { '1m': 63.3, '5m': 58.3, '15m': 60.4, '1h': 55.0, '4h': 59.2, '1d': 54.6 },
   alwaysUp: 52.2,
-  confident: { accuracy: 50.7, tests: 227, rule: 'model leans at least 10 points away from 50/50' },
+  confident: { accuracy: 50.7, tests: 227, rule: 'مدل حداقل ۱۰ امتیاز از ۵۰/۵۰ فاصله دارد' },
   testsPerInterval: 240, tests: 1440, coins: 12, measuredOn: '2026-09-26',
   brier: { '1m': 0.243, '5m': 0.251, '15m': 0.251, '1h': 0.265, '4h': 0.256, '1d': 0.254 },
-  // Share of outcomes that landed inside the range the forecast drew (target: 50 and 80).
   band50: { '1m': 51.7, '5m': 46.3, '15m': 43.8, '1h': 56.7, '4h': 50.8, '1d': 41.3 },
   band80: { '1m': 82.1, '5m': 72.9, '15m': 73.8, '1h': 84.2, '4h': 78.3, '1d': 79.6 },
-  // The 90% range (added 2026-09-26), measured on the same 1,440 tests.
   band90: { '1m': 90.0, '5m': 82.9, '15m': 82.5, '1h': 92.5, '4h': 87.5, '1d': 89.6 },
   bandsAll: { band50: 48.4, band80: 78.5, band90: 87.5, before: { band50: 45.1, band80: 71.7 } },
-  // How far the direction lean can be trusted: the logit shrink s that best
-  // calibrated probUp on these same 1,440 tests (shown = sigmoid(s·logit p)).
-  // 0 means the lean carried no information on that chart. Charts that were
-  // never tested (1s, 5s, 10s, 1w) are absent, and absent counts as 0.
-  // The release test gave 1m 0.90, 5m 0.41, 15m 0.38. Re-runs on fresh
-  // candles (recheck, below) found almost nothing on those three, and each
-  // chart keeps the smallest so far, as set before the re-runs.
   directionTrust: { '1m': 0, '5m': 0, '15m': 0, '1h': 0, '4h': 0, '1d': 0 },
-  // The same test re-run on fresh candles (tools/evaluate-engine.mjs and
-  // tools/report-engine.mjs, Evaluate workflow job "engine") on every coin the
-  // app can trade (tools/universe.json): 5,710 forecasts, ten per coin and
-  // chart, 106 coins (fewer on 1h, 4h and 1d, where recent listings have too
-  // little history). hit/baseline in %, trust as above. Two runs 90 minutes
-  // apart (both 2026-10-15; these figures are the later one) found no edge on
-  // any chart, nor did the 2026-10-12 run (12 coins, 240 per chart). How far
-  // they moved shows how few independent tests they hold: on 1m the hit rate
-  // went 47.5% → 53.1% and the 80% range 68.5% → 83.6%, because a chart's ten
-  // test moments are the same for every coin and crypto moves together.
   recheck: {
     measuredOn: '2026-10-15', tests: 5710, coins: 106,
     '1m': { hit: 53.1, baseline: 56.2, trust: 0, band50: 50.6, band80: 83.6, n: 1060, coins: 106 },
@@ -879,19 +760,11 @@ export const TESTED_ACCURACY = {
     '4h': { hit: 47.3, baseline: 67.2, trust: 0, band50: 51.5, band80: 75.5, n: 990, coins: 99 },
     '1d': { hit: 59.0, baseline: 63.3, trust: 0, band50: 52.0, band80: 77.1, n: 510, coins: 51 },
   },
-
-  // Timeframes where the model scored at or below the do-nothing baseline.
   noEdge: ['1m', '5m', '15m', '1h', '4h', '1d'],
   beatsBaselineOverall: false,
-  caveat: 'Crypto moves together, so even ten forecasts on each of 106 coins in one market window are far fewer independent tests than they look.',
+  caveat: 'بازار کریپتو با هم حرکت می‌کند، بنابراین حتی ده پیش‌بینی روی هر یک از ۱۰۶ رمزارز تست مستقل محدودی هستند.',
 };
 
-/**
- * The latest re-test over every chart: hit rate and baseline weighted by each
- * chart's number of forecasts, so the figure is the share of all of them that
- * were right (the same 49.6% the learning check reports), not an average of
- * chart averages. Null before any re-test.
- */
 export function recheckOverall(r = TESTED_ACCURACY.recheck) {
   let n = 0, hit = 0, base = 0;
   for (const iv of ['1m', '5m', '15m', '1h', '4h', '1d']) {
@@ -902,14 +775,12 @@ export function recheckOverall(r = TESTED_ACCURACY.recheck) {
   return n ? { hit: +(hit / n).toFixed(1), baseline: +(base / n).toFixed(1), tests: n, coins: r.coins, measuredOn: r.measuredOn } : null;
 }
 
-/** 95% Wilson interval for a hit rate, as fractions. */
 function wilsonRange(hits, n) {
   const z = 1.96, p = hits / n, d = 1 + (z * z) / n;
   const mid = (p + (z * z) / (2 * n)) / d, half = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / d;
   return [Math.max(0, mid - half), Math.min(1, mid + half)];
 }
 
-/** Accuracy and the number it had to beat, for one timeframe. */
 export function accuracyFor(interval) {
   const acc = typeof TESTED_ACCURACY[interval] === 'number' ? TESTED_ACCURACY[interval] : null;
   const base = TESTED_ACCURACY.baseline[interval] ?? null;
@@ -917,22 +788,13 @@ export function accuracyFor(interval) {
   return { accuracyPct: acc, baselinePct: base, edgePts: +(acc - base).toFixed(1), beatsBaseline: acc > base };
 }
 
-/**
- * The chance of a rise to SHOW on a chart: the raw probUp shrunk toward 50% by
- * that timeframe's measured trust. The raw value stays on the forecast for the
- * learning ledger, which grades what the models actually said. `s` defaults to
- * the release test; the app passes the device-adjusted value (selfimprove.js).
- */
 export function shownProbUp(p, interval, s = TESTED_ACCURACY.directionTrust[interval] ?? 0) {
   const q = Math.min(1 - 1e-9, Math.max(1e-9, p));
   return 1 / (1 + Math.exp(-s * Math.log(q / (1 - q))));
 }
 
-/** False where the release test found the direction lean carries no information. */
 export const directionReliable = (interval, s = TESTED_ACCURACY.directionTrust[interval] ?? 0) => s > 0;
 
-// Compact version for prompts / scanner rows. `interval` is the chart the
-// forecast was made on; the probability is the shown one, not the raw one.
 export function summarizeForecast(f, interval = null, trust = TESTED_ACCURACY.directionTrust[interval] ?? 0) {
   if (!f?.ok) return null;
   const shown = shownProbUp(f.probUp, interval, trust);
@@ -958,5 +820,4 @@ export function summarizeForecast(f, interval = null, trust = TESTED_ACCURACY.di
   };
 }
 
-// Exposed for the evaluation harness (tools/evaluate.mjs)
 export const _internals = { buildFeatures, standardizer, trainLogistic, trainMlp, trainGbdt, knnModel, holtSeries, rollingSigma, empiricalBandQuantiles, normCdf, findPatterns, moveStatsModel };
