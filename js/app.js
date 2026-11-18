@@ -37,7 +37,6 @@ const NAV = [
   { path: 'scanner', label: 'اسکنر', icon: 'scanner', short: 'اسکنر' },
   { path: 'track', label: 'سابقه عملکرد', icon: 'forecast', short: 'سوابق' },
   { path: 'futures', label: 'فیوچرز', icon: 'bolt', short: 'فیوچرز' },
-  // { path: 'news', label: 'اخبار', icon: 'info', short: 'اخبار' },
   { path: 'compare', label: 'مقایسه', icon: 'compare', short: 'مقایسه' },
   { path: 'tools', label: 'ابزارها', icon: 'calc', short: 'ابزارها' },
   { path: 'exchanges', label: 'صرافی‌ها', icon: 'exchanges', short: 'صرافی‌ها' },
