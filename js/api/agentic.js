@@ -1,20 +1,20 @@
-// چارچوب ایجنت‌ها: ارکستراسیون وظایف رویدادمحور برای عملیات معاملاتی
-// ارائه‌دهنده یک چارچوب ایجنت الهام‌گرفته از سیستم‌های خودکار که چندین ایجنت
-// معاملاتی (اسکنر بازار، متوازن‌کننده سبد دارایی، مدیریت ریسک و غیره) را هماهنگ می‌کند.
+// Agentic framework: event-driven task orchestration for trading operations
+// Provides a paperclip-inspired agent framework that coordinates multiple
+// trading agents (market scanner, portfolio rebalancer, risk manager, etc.)
 
 import { CONFIG } from '../config.js';
 import { $, $$ , toast } from '../ui.js';
 
-const AGENT_KEY = 'BTCSAgents';
-const TASK_LOG_KEY = 'BTCSTaskLog';
+const AGENT_KEY = 'coinvantageAgents';
+const TASK_LOG_KEY = 'coinvantageTaskLog';
 const MAX_TASKS = 100;
 
-// کلاس پایه ایجنت
+// Base agent class
 class BaseAgent {
   constructor(name, priority = 'normal') {
     this.name = name;
     this.priority = priority;
-    this.status = 'idle'; // آماده به‌کار (idle)، در حال اجرا (running)، تکمیل‌شده (completed)، ناموفق (failed)
+    this.status = 'idle'; // idle, running, completed, failed
     this.tasksCompleted = 0;
     this.tasksFailed = 0;
     this.lastRun = null;
@@ -39,13 +39,13 @@ class BaseAgent {
   }
 
   async run(context) {
-    // کلاس‌های فرزند باید این متد را پیاده‌سازی کنند
-    throw new Error('متد run() باید توسط کلاس فرزند پیاده‌سازی شود');
+    // Subclasses must implement this
+    throw new Error('run() must be implemented by subclass');
   }
 
   recordSignal(signalType, details = {}) {
     this.metrics.signalsGenerated++;
-    toast(`سیگنال: ${signalType}`, 'info');
+    toast(`Signal: ${signalType}`, 'info');
     this.logTask('signal', signalType, details);
   }
 
@@ -58,7 +58,7 @@ class BaseAgent {
 
   recordRiskEvent(event, details = {}) {
     this.metrics.riskEvents++;
-    toast(`ریسک: ${event}`, 'down');
+    toast(`Risk: ${event}`, 'down');
     this.logTask('risk', event, details);
   }
 
@@ -79,7 +79,7 @@ class BaseAgent {
 
     log.unshift(logEntry);
 
-    // نگهداری فقط آخرین MAX_TASKS ورودی
+    // Keep only last MAX_TASKS entries
     if (log.length > MAX_TASKS) log = log.slice(0, MAX_TASKS);
 
     try {
@@ -93,11 +93,11 @@ class BaseAgent {
       const stored = localStorage.getItem(TASK_LOG_KEY);
       if (stored) log = JSON.parse(stored);
     } catch (e) {}
-    return log.slice(0, 20); // بازگرداندن ۲۰ ورودی آخر
+    return log.slice(0, 20); // Return last 20 entries
   }
 }
 
-// ایجنت اسکنر بازار
+// Market Scanner Agent
 class MarketScannerAgent extends BaseAgent {
   constructor() {
     super('MarketScanner', 'high');
@@ -114,38 +114,38 @@ class MarketScannerAgent extends BaseAgent {
       return markers;
     } catch (err) {
       this.status = 'failed';
-      this.recordRiskEvent('خطا در اسکن بازار: ' + err.message);
+      this.recordRiskEvent('market scan failed: ' + err.message);
       throw err;
     }
   }
 
   async scanMarkets(context) {
-    // اسکن فرصت‌های معاملاتی در سراسر یونیورس‌های پیکربندی‌شده
+    // Scan for trading opportunities across configured universes
     const universe = context.universe || CONFIG.DEFAULT_UNIVERSE || ['BTC', 'ETH', 'ADA', 'SOL'];
     const opportunities = [];
 
     for (const symbol of universe) {
       try {
-        // دریافت داده‌های بازار
+        // Get market data
         const marketData = await this.getMarketData(symbol);
         if (!marketData) continue;
 
-        // بررسی الگوها/فرصت‌ها
+        // Check for patterns/opportunities
         const opportunitiesForSymbol = this.checkPatterns(symbol, marketData);
         opportunities.push(...opportunitiesForSymbol);
       } catch (err) {
-        console.warn(`خطا در اسکن ${symbol}:`, err);
+        console.warn(`Failed to scan ${symbol}:`, err);
       }
     }
 
-    // مرتب‌سازی بر اساس امتیاز (بالاترین ابتدا)
+    // Sort by score (highest first)
     opportunities.sort((a, b) => b.score - a.score);
 
-    return opportunities.slice(0, 20); // بازگرداندن ۲۰ مورد برتر
+    return opportunities.slice(0, 20); // Return top 20
   }
 
   async getMarketData(symbol) {
-    // دریافت داده‌های بازار از APIهای تنظیم‌شده
+    // Fetch market data from configured APIs
     const rest = CONFIG.BINANCE_REST[0];
     try {
       const response = await fetch(`${rest}/api/v3/ticker/24h?symbol=${symbol.toUpperCase()}USDT`);
@@ -160,33 +160,33 @@ class MarketScannerAgent extends BaseAgent {
         volume24h: parseFloat(data.volume),
       };
     } catch (err) {
-      console.warn(`دریافت داده‌های بازار برای ${symbol} ناموفق بود:`, err);
+      console.warn(`Failed to fetch market data for ${symbol}:`, err);
       return null;
     }
   }
 
   checkPatterns(symbol, marketData) {
-    // تشخیص الگوی ساده برای فرصت‌ها
+    // Simple pattern detection for opportunities
     const opportunities = [];
     const { price, change24h, volume24h } = marketData;
 
-    // الگوی مومنتوم: مومنتوم صعودی قوی + حجم بالا
+    // Momentum pattern: strong positive momentum + high volume
     if (change24h && change24h > 5 && volume24h > 1000000) {
       opportunities.push({
         symbol,
         type: 'momentum',
         score: change24h,
-        description: `${symbol} با حجم بالا نشان‌دهنده مومنتوم صعودی قوی ${change24h}% است`,
+        description: `${symbol} showing strong ${change24h}% momentum with high volume`,
       });
     }
 
-    // الگوی بازگشتی: حرکت شدید + سیگنال بازگشت به میانگین
+    // Reversal pattern: extreme move + mean reversion signal
     if (change24h && Math.abs(change24h) > 10) {
       opportunities.push({
         symbol,
         type: 'reversal',
         score: -Math.abs(change24h),
-        description: `${symbol} نشان‌دهنده ${change24h > 0 ? 'سود' : 'زیان'} شدید — احتمال بازگشت روند`,
+        description: `${symbol} showing extreme ${change24h > 0 ? 'gain' : 'loss'} — potential reversal`,
       });
     }
 
@@ -194,7 +194,7 @@ class MarketScannerAgent extends BaseAgent {
   }
 }
 
-// ایجنت متوازن‌کننده سبد دارایی
+// Portfolio Rebalancer Agent
 class PortfolioRebalancerAgent extends BaseAgent {
   constructor() {
     super('PortfolioRebalancer', 'medium');
@@ -211,7 +211,7 @@ class PortfolioRebalancerAgent extends BaseAgent {
       return rebalancing;
     } catch (err) {
       this.status = 'failed';
-      this.recordRiskEvent('توازن مجدد سبد دارایی ناموفق بود: ' + err.message);
+      this.recordRiskEvent('rebalancing failed: ' + err.message);
       throw err;
     }
   }
@@ -221,13 +221,13 @@ class PortfolioRebalancerAgent extends BaseAgent {
     const targetAllocation = context.targetAllocation || {};
 
     if (!portfolio || !Object.keys(portfolio).length) {
-      return { action: 'no_portfolio', reason: 'داده‌ای برای سبد دارایی وجود ندارد' };
+      return { action: 'no_portfolio', reason: 'No portfolio data' };
     }
 
     const currentValues = {};
     let totalValue = 0;
 
-    // دریافت ارزش‌های فعلی
+    // Get current values
     for (const [symbol, pos] of Object.entries(portfolio)) {
       const price = context.priceFeed ? context.priceFeed[symbol] : 0;
       currentValues[symbol] = price * pos.quantity;
@@ -235,10 +235,10 @@ class PortfolioRebalancerAgent extends BaseAgent {
     }
 
     if (totalValue === 0) {
-      return { action: 'no_value', reason: 'ارزش سبد دارایی صفر است' };
+      return { action: 'no_value', reason: 'Portfolio has no value' };
     }
 
-    // محاسبه مقادیر هدف
+    // Calculate target quantities
     const rebalancing = {
       action: 'rebalance',
       current: { ...currentValues },
@@ -246,13 +246,13 @@ class PortfolioRebalancerAgent extends BaseAgent {
       adjustments: [],
     };
 
-    // مقایسه با تخصیص هدف
+    // Compare with target allocation
     for (const [symbol, targetPct] of Object.entries(targetAllocation)) {
       const currentPct = totalValue > 0 ? currentValues[symbol] / totalValue : 0;
       const targetValue = totalValue * targetPct;
       const adjustment = targetValue - currentValues[symbol];
 
-      if (Math.abs(adjustment) > totalValue * 0.05) { // آستانه ۵ درصد
+      if (Math.abs(adjustment) > totalValue * 0.05) { // 5% threshold
         rebalancing.adjustments.push({
           symbol,
           currentPct: (currentPct * 100).toFixed(2),
@@ -264,14 +264,14 @@ class PortfolioRebalancerAgent extends BaseAgent {
       }
     }
 
-    // مرتب‌سازی تعدیل‌ها بر اساس مقدار مطلق (بزرگ‌ترین ابتدا)
+    // Sort adjustments by absolute value (largest first)
     rebalancing.adjustments.sort((a, b) => Math.abs(b.adjustment) - Math.abs(a.adjustment));
 
     return rebalancing;
   }
 }
 
-// ایجنت مدیر ریسک
+// Risk Manager Agent
 class RiskManagerAgent extends BaseAgent {
   constructor() {
     super('RiskManager', 'critical');
@@ -287,7 +287,7 @@ class RiskManagerAgent extends BaseAgent {
       return riskAssessment;
     } catch (err) {
       this.status = 'failed';
-      this.recordRiskEvent('ارزیابی ریسک ناموفق بود: ' + err.message);
+      this.recordRiskEvent('risk assessment failed: ' + err.message);
       throw err;
     }
   }
@@ -301,14 +301,14 @@ class RiskManagerAgent extends BaseAgent {
     }
 
     const events = [];
-    let riskScore = 0; // مقیاس ۰ تا ۱۰۰
+    let riskScore = 0; // 0-100 scale
 
-    // بررسی ریسک تمرکز
+    // Check concentration risk
     const positions = Object.values(portfolio);
     const totalExposure = positions.reduce((sum, pos) => sum + pos.notional, 0);
 
     if (totalExposure > 0) {
-      // تمرکز سنگین روی یک موقعیت
+      // Top-heavy concentration
       const topPosition = Math.max(...positions.map(p => p.notional), 0);
       const concentration = topPosition / totalExposure;
 
@@ -316,44 +316,44 @@ class RiskManagerAgent extends BaseAgent {
         events.push({
           type: 'concentration',
           severity: 'high',
-          message: `موقعیت برتر ${(concentration * 100).toFixed(1)}% از کل سبد دارایی را تشکیل می‌دهد`,
+          message: `Top position represents ${(concentration * 100).toFixed(1)}% of portfolio`,
         });
         riskScore += 25;
       }
 
-      // بررسی مارجین / اهرم (Leverage)
+      // Check for margin/leverage
       for (const pos of positions) {
         if (pos.leverage && pos.leverage > 3) {
           events.push({
             type: 'leverage',
             severity: 'medium',
-            message: `رمزارز ${pos.symbol} از اهرم ${pos.leverage} برابری استفاده می‌کند`,
+            message: `${pos.symbol} using ${pos.leverage}x leverage`,
           });
           riskScore += 10;
         }
       }
     }
 
-    // بررسی ریسک بازار
+    // Check market risk
     if (marketData.fearGreed !== undefined) {
       if (marketData.fearGreed < 25) {
         events.push({
           type: 'sentiment',
           severity: 'high',
-          message: 'ترس شدید در بازار — انتظار نوسانات بالا می‌رود',
+          message: 'Extreme fear in market — heightened volatility expected',
         });
         riskScore += 15;
       } else if (marketData.fearGreed > 75) {
         events.push({
           type: 'sentiment',
           severity: 'medium',
-          message: 'طمع شدید در بازار — پتانسیل اصلاح قیمت وجود دارد',
+          message: 'Extreme greed in market — potential for correction',
         });
         riskScore += 10;
       }
     }
 
-    // تعیین سطح کلی ریسک
+    // Determine overall risk level
     let riskLevel = 'low';
     if (riskScore >= 50) riskLevel = 'critical';
     else if (riskScore >= 30) riskLevel = 'high';
@@ -368,16 +368,16 @@ class RiskManagerAgent extends BaseAgent {
   }
 }
 
-// راه‌اندازی و مدیریت چارچوب ایجنت‌ها
+// Agent framework initialization and management
 export function initAgenticFramework() {
-  // راه‌اندازی ایجنت‌های پیش‌فرض
+  // Initialize default agents
   const agents = {
     marketScanner: new MarketScannerAgent(),
     portfolioRebalancer: new PortfolioRebalancerAgent(),
     riskManager: new RiskManagerAgent(),
   };
 
-  // ذخیره در localStorage
+  // Store in localStorage
   try {
     localStorage.setItem(AGENT_KEY, JSON.stringify({
       agents: Object.fromEntries(
@@ -408,7 +408,7 @@ export function createAgent(agentType) {
   if (agents[agentType]) {
     return new agents[agentType]();
   }
-  throw new Error(`نوع ایجنت ناشناخته: ${agentType}`);
+  throw new Error(`Unknown agent type: ${agentType}`);
 }
 
 export async function runAgentTask(agentName, task, context = {}) {
@@ -416,7 +416,7 @@ export async function runAgentTask(agentName, task, context = {}) {
   const agent = agents[agentName];
 
   if (!agent) {
-    throw new Error(`ایجنت ${agentName} یافت نشد`);
+    throw new Error(`Agent ${agentName} not found`);
   }
 
   agent.status = 'running';
@@ -426,15 +426,15 @@ export async function runAgentTask(agentName, task, context = {}) {
     const result = await agent.run(context);
     agent.status = 'completed';
     agent.tasksCompleted++;
-    toast(`ایجنت ${agentName} وظیفه را تکمیل کرد: ${task}`, 'up');
+    toast(`Agent ${agentName} completed task: ${task}`, 'up');
     return result;
   } catch (err) {
     agent.status = 'failed';
     agent.tasksFailed++;
-    toast(`ایجنت ${agentName} با خطا مواجه شد: ${err.message}`, 'down');
+    toast(`Agent ${agentName} failed: ${err.message}`, 'down');
     throw err;
   } finally {
-    // ذخیره وضعیت ایجنت
+    // Save agent state
     try {
       const stored = localStorage.getItem(AGENT_KEY);
       if (stored) {
