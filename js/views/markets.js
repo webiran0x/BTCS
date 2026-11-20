@@ -339,6 +339,8 @@ export async function render(el) {
     return node;
   };
 
+  const listRow = (c, right) => `<a href="#/coin/${esc(c.symbol)}" title="${esc(c.name)} (${esc(c.symbol)})">${coinLogo(c, 22)}<span class="nm">${esc(c.symbol)} <span class="muted">${esc(c.name)}</span></span>${right}</a>`;
+
   const renderMovers = (rows) => {
     const movers = (rows || []).filter((r) => !isStable(r.symbol) && r.volume24h > 5e6 && Number.isFinite(r.change24h));
     const g = [...movers].sort((a, b) => b.change24h - a.change24h).slice(0, 5);
@@ -448,7 +450,6 @@ export async function render(el) {
     renderMovers(state.rows);
   }
 
-  const listRow = (c, right) => `<a href="#/coin/${esc(c.symbol)}" title="${esc(c.name)} (${esc(c.symbol)})">${coinLogo(c, 22)}<span class="nm">${esc(c.symbol)} <span class="muted">${esc(c.name)}</span></span>${right}</a>`;
 
   let loadingMarkets = null;
   const loadMarkets = () => {
