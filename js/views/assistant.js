@@ -8,33 +8,65 @@ import { conversationalAnswer, termsIn } from '../lib/glossary.js';
 import { traderAnswer, TRADER_Q, isTraderFollowUp } from '../lib/traderchat.js';
 import { aiState, deviceSupport, loadLocalModel, askLLM, localReady, customReady, customState, recommendedModelId, checkCustomAI, AI_HOSTS } from '../ai/engine.js';
 import { $, $$, icon, markdown, bindSeg, toast } from '../ui.js';
-import { esc, price, changeHtml, money} from '../format.js';
+import { esc, price, changeHtml, money } from '../format.js';
 import { settings, load, save } from '../store.js';
 
 export const title = 'دستیار هوش مصنوعی';
 const HISTORY_KEY = 'assistantHistory';
 const KEEP = 30;
 const history = [];
+
 function restoreHistory() {
   const saved = load(HISTORY_KEY, null);
   history.length = 0;
-  for (const m of Array.isArray(saved?.messages) ? saved.messages : []) if (m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string') history.push(m);
+  for (const m of Array.isArray(saved?.messages) ? saved.messages : []) {
+    if (m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string') {
+      history.push(m);
+    }
+  }
   history.lastSymbol = (typeof saved?.lastSymbol === 'string' && /^[\p{L}\p{N}_]{1,20}$/u.test(saved.lastSymbol) ? saved.lastSymbol : null) || history.lastSymbol;
 }
+
 let savingHere = false;
 function saveHistory() {
   const value = {
-    messages: history.slice(-KEEP).map((m) => ({ role: m.role, content: String(m.content).slice(0, 6000), ...(m.root ? { root: String(m.root).slice(0, 500) } : {}), ...(m.meta ? { meta: String(m.meta).replace(/<a href="#" data-facts>[^<]*<\/a>/, '') } : {}), at: m.at || Date.now() })),
+    messages: history.slice(-KEEP).map((m) => ({
+      role: m.role,
+      content: String(m.content).slice(0, 6000),
+      ...(m.root ? { root: String(m.root).slice(0, 500) } : {}),
+      ...(m.meta ? { meta: String(m.meta).replace(/<a href="#" data-facts>[^<]*<\/a>/, '').replace(/<button[^>]*data-copy[^>]*>.*?<\/button>/, '') } : {}),
+      at: m.at || Date.now(),
+    })),
     lastSymbol: history.lastSymbol || null,
   };
   savingHere = true;
   try { save(HISTORY_KEY, value); } finally { savingHere = false; }
 }
 
+function buildTraderSuggestions(sym) {
+  return [
+    { label: 'کشیدگی و اشباع بازار', q: 'کدام ارزها در حال حاضر بیش از حد کشیده شده‌اند؟' },
+    { label: 'قوی‌ترین شواهد بازار', q: 'شواهد در کجا بیشترین قدرت را دارند؟' },
+    { label: 'نگهداری چندروزه در برابر اسکالپ', q: 'چه چیزی را باید برای چند هفته نگهداری کنم و کدام یک فقط یک معامله سریع است؟' },
+    { label: 'مقایسه BTC، ETH و SOL', q: 'مقایسه BTC، ETH و SOL' },
+    { label: `مسیر بعدی ${sym}`, q: `آیا ${sym} در مرحله بعد صعودی خواهد بود یا نزولی؟` },
+    { label: `نقطه سیو سود ${sym}`, q: `چه زمانی باید روی ${sym} سود سیو کنم؟` },
+    { label: `مدیریت ریسک ۱۰۰۰$ روی ${sym}`, q: `چقدر از ۱۰۰۰ دلار را می‌توانم با تعیین حد ضرر روی ${sym} ریسک کنم؟` },
+    { label: `ریسک‌ها و سناریوی ابطال ${sym}`, q: `خطرات نگهداری و معامله ${sym} چیست؟` },
+    { label: 'تحلیل سبد و پرتفوی', q: 'بررسی سبد سرمایه من' },
+  ];
+}
+
 export async function render(el, [symParam]) {
   restoreHistory();
   const all = await markets().catch(() => []);
-  const st = { symbol: String(symParam || history.lastSymbol || 'BTC').toUpperCase().replace(/[^\p{L}\p{N}]/gu, '').slice(0, 15) || 'BTC', interval: '4h', busy: false, abort: null, disposed: false };
+  const st = {
+    symbol: String(symParam || history.lastSymbol || 'BTC').toUpperCase().replace(/[^\p{L}\p{N}]/gu, '').slice(0, 15) || 'BTC',
+    interval: '4h',
+    busy: false,
+    abort: null,
+    disposed: false,
+  };
   const support = await deviceSupport();
   const s = settings.get();
 
@@ -48,9 +80,9 @@ export async function render(el, [symParam]) {
         padding-bottom: 60px;
       }
       .ap-hero-card {
-        background: radial-gradient(circle at top right, rgba(94, 92, 230, 0.09), transparent 50%),
-                    radial-gradient(circle at bottom left, rgba(50, 215, 75, 0.07), transparent 50%),
-                    rgba(24, 24, 29, 0.75);
+        background: radial-gradient(circle at top right, rgba(94, 92, 230, 0.12), transparent 50%),
+                    radial-gradient(circle at bottom left, rgba(50, 215, 75, 0.08), transparent 50%),
+                    rgba(24, 24, 29, 0.78);
         border: 1px solid rgba(255, 255, 255, 0.09);
         border-radius: 28px;
         padding: 32px;
@@ -85,6 +117,7 @@ export async function render(el, [symParam]) {
         border-radius: 13px;
         font-weight: 500;
         transition: all 0.2s ease;
+        cursor: pointer;
       }
       .ap-assistant-wrap .btn.primary {
         background: linear-gradient(135deg, #5e5ce6 0%, #3634a3 100%);
@@ -92,9 +125,13 @@ export async function render(el, [symParam]) {
         color: #fff;
         box-shadow: 0 6px 18px rgba(94, 92, 230, 0.3);
       }
-      .ap-assistant-wrap .btn.primary:hover {
+      .ap-assistant-wrap .btn.primary:hover:not(:disabled) {
         filter: brightness(1.08);
         transform: translateY(-1px);
+      }
+      .ap-assistant-wrap .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
       }
       .ap-assistant-wrap .inp, .ap-assistant-wrap select, .ap-assistant-wrap textarea {
         background: rgba(255, 255, 255, 0.05);
@@ -113,7 +150,7 @@ export async function render(el, [symParam]) {
       .ap-chat-box {
         display: flex;
         flex-direction: column;
-        height: 620px;
+        height: 640px;
       }
       .ap-chat-log {
         flex: 1;
@@ -128,7 +165,7 @@ export async function render(el, [symParam]) {
         display: flex;
         gap: 10px;
         align-items: flex-end;
-        margin-top: 16px;
+        margin-top: 12px;
         background: rgba(255, 255, 255, 0.02);
         border: 1px solid rgba(255, 255, 255, 0.07);
         border-radius: 16px;
@@ -138,14 +175,14 @@ export async function render(el, [symParam]) {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
-        margin: 12px 0;
-        max-height: 80px;
+        margin: 10px 0 4px;
+        max-height: 92px;
         overflow-y: auto;
       }
       .ap-suggest-chips button {
         background: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(255, 255, 255, 0.85);
         padding: 6px 12px;
         border-radius: 10px;
         font-size: 0.82rem;
@@ -153,7 +190,22 @@ export async function render(el, [symParam]) {
         transition: all 0.2s;
       }
       .ap-suggest-chips button:hover {
-        background: rgba(255, 255, 255, 0.12);
+        background: rgba(94, 92, 230, 0.22);
+        border-color: rgba(94, 92, 230, 0.45);
+        color: #fff;
+      }
+      .ap-mini-btn {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        border-radius: 8px;
+        padding: 3px 8px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        margin-right: 6px;
+      }
+      .ap-mini-btn:hover {
+        background: rgba(255, 255, 255, 0.14);
         color: #fff;
       }
     </style>
@@ -163,9 +215,10 @@ export async function render(el, [symParam]) {
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
           <div>
             <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">دستیار هوش مصنوعی</h1>
-            <p style="color:rgba(255,255,255,0.7);font-size:1.05rem;line-height:1.6;margin:0;max-width:900px">پشتیبانی از تصمیم‌گیری، نه پیش‌بینی سود. پاسخ‌ها روی دستگاه شما از روی قیمت‌های زنده، سیگنال‌های اندیکاتور، بک‌تست‌ها و پیش‌بینی‌ها ساخته می‌شوند. هر پاسخ مبانی خود را اعلام کرده و در صورت کمبود شواهد، صراحتاً آن را ذکر می‌کند. مشاوره مالی محسوب نمی‌شود.</p>
+            <p style="color:rgba(255,255,255,0.72);font-size:1.05rem;line-height:1.65;margin:0;max-width:920px">پشتیبانی از تصمیم‌گیری و مدیریت ریسک، نه وعده سود قطعی. پاسخ‌ها بر اساس داده‌های زنده بازار، اندیکاتورها، بک‌تست‌ها، پیش‌بینی‌ها و حساب شبیه‌سازی‌شده ساخته می‌شوند. مشاوره مالی محسوب نمی‌شود.</p>
           </div>
-          <div class="row" style="display:flex;gap:8px">
+          <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn sm ghost" type="button" id="assistantSnapshot" style="background:rgba(94,92,230,0.16);border:1px solid rgba(94,92,230,0.35);color:#fff;padding:8px 14px;border-radius:10px">تحلیل سریع ارز فعال</button>
             <button class="btn sm ghost" type="button" id="assistantStop" disabled style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 14px;border-radius:10px">توقف</button>
             <button class="btn sm ghost" type="button" id="assistantClear" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 14px;border-radius:10px">پاک کردن گفتگو</button>
           </div>
@@ -191,15 +244,18 @@ export async function render(el, [symParam]) {
             <div class="row" style="margin-bottom:12px">
               <select class="inp" id="coinSel" aria-label="ارز در مرکز توجه" style="width:100%">${all.filter((c) => !isStable(c.symbol)).slice(0, 150).map((c) => `<option value="${esc(c.symbol)}" ${c.symbol === st.symbol ? 'selected' : ''}>${esc(c.symbol)} · ${esc(c.name)}</option>`).join('')}</select>
             </div>
-            <div class="row spread" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span class="fine" style="color:rgba(255,255,255,0.6)">نمودار</span><div class="seg" id="ivSeg" style="display:flex;gap:4px">${['1m', '5m', '15m', '1h', '4h', '1d'].map((iv) => `<button data-v="${iv}" class="${iv === st.interval ? 'on' : ''}" style="padding:4px 8px;border-radius:8px;border:0;background:${iv === st.interval ? 'rgba(255,255,255,0.15)' : 'transparent'};color:${iv === st.interval ? '#fff' : 'rgba(255,255,255,0.6)'};cursor:pointer">${iv}</button>`).join('')}</div></div>
+            <div class="row spread" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <span class="fine" style="color:rgba(255,255,255,0.6)">نمودار</span>
+              <div class="seg" id="ivSeg" style="display:flex;gap:4px">${['1m', '5m', '15m', '1h', '4h', '1d'].map((iv) => `<button type="button" data-v="${iv}" class="${iv === st.interval ? 'on' : ''}" style="padding:4px 8px;border-radius:8px;border:0;background:${iv === st.interval ? 'rgba(255,255,255,0.15)' : 'transparent'};color:${iv === st.interval ? '#fff' : 'rgba(255,255,255,0.6)'};cursor:pointer">${iv}</button>`).join('')}</div>
+            </div>
             <div id="focus" class="mt fine" style="color:rgba(255,255,255,0.8)"></div>
           </div>
-          <div class="ap-card fine" style="color:rgba(255,255,255,0.6);font-size:0.85rem;line-height:1.6">
+          <div class="ap-card fine" style="color:rgba(255,255,255,0.62);font-size:0.85rem;line-height:1.65">
             <b style="color:#fff;display:block;margin-bottom:6px">دستیار چگونه کار می‌کند</b>
             <ol style="padding-right:18px;margin:0">
-              <li>کندل‌های زنده بایننس را برای ارز مورد نظر دریافت می‌کند.</li>
-              <li>خوانش‌ها را روی ۴ تایم‌فریم، بک‌تست و پیش‌بینی مدل‌ها محاسبه می‌کند.</li>
-              <li>یک تحلیل‌گر داخلی — یا مدل زبانی روی دستگاه — ارقام را به پاسخی روان تبدیل می‌کند.</li>
+              <li>کندل‌های زنده صرافی را برای ارز مورد نظر دریافت می‌کند.</li>
+              <li>خوانش‌ها را روی چند تایم‌فریم، بک‌تست و پیش‌بینی مدل‌ها محاسبه می‌کند.</li>
+              <li>تحلیل‌گر داخلی — یا مدل زبانی روی دستگاه/سرور — ارقام را به پاسخی ساختاریافته تبدیل می‌کند.</li>
               <li>پاسخ‌ها بررسی می‌شوند تا با داده‌های واقعی مطابقت داشته باشند.</li>
             </ol>
             <p class="mt" style="margin:10px 0 0">مشاوره مالی نیست. دستیار توانایی ثبت معامله را ندارد.</p>
@@ -210,6 +266,7 @@ export async function render(el, [symParam]) {
 
   const log = $('#log', el);
   let focusUnsub = null;
+
   const watchFocus = (pair) => {
     if (focusUnsub) { focusUnsub(); focusUnsub = null; }
     focusUnsub = live.subscribe(`${pair}@miniTicker`, (tk) => {
@@ -226,24 +283,27 @@ export async function render(el, [symParam]) {
 
   const drawFocus = () => {
     const c = all.find((x) => x.symbol === st.symbol);
-    $('#focus', el).innerHTML = c ? `<div class="row spread" style="display:flex;justify-content:space-between;align-items:center"><a class="acc" href="#/coin/${esc(c.symbol)}" style="color:var(--accent);text-decoration:none">نمودار ${esc(c.name)} ←</a><span data-focus-px><b class="p" style="color:#fff">${money(c.price)}</b> ${changeHtml(c.change24h)}</span></div>` : '';
+    $('#focus', el).innerHTML = c
+      ? `<div class="row spread" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><a class="acc" href="#/coin/${esc(c.symbol)}" style="color:var(--accent);text-decoration:none">نمودار ${esc(c.name)} ←</a><span data-focus-px><b class="p" style="color:#fff">${money(c.price)}</b> ${changeHtml(c.change24h)}</span></div>`
+      : '';
     if (c?.binance) watchFocus(c.binance);
-    const sym = st.symbol;
-    $('#suggest', el).innerHTML = [
-      'کدام ارزها در حال حاضر بیش از حد کشیده شده‌اند؟', 'شواهد در کجا بیشترین قدرت را دارند؟',
-      'چه چیزی را باید برای چند هفته نگهداری کنم و کدام یک فقط یک معامله سریع است؟',
-      'مقایسه BTC، ETH و SOL',
-      `آیا ${sym} در مرحله بعد صعودی خواهد بود یا نزولی؟`, `چه زمانی باید روی ${sym} سود سیو کنم؟`,
-      `چقدر از ۱۰۰۰ دلار را می‌توانم با تعیین حد ضرر روی ${sym} ریسک کنم؟`, `خطرات نگهداری ${sym} چیست؟`, 'بررسی سبد سرمایه من',
-    ].map((q) => `<button class="btn sm" type="button">${esc(q)}</button>`).join('');
-    $$('#suggest button', el).forEach((b) => b.addEventListener('click', () => ask(b.textContent)));
+
+    const qInput = $('#q', el);
+    if (qInput && !st.busy) {
+      qInput.placeholder = `مثلاً: در حال حاضر ${st.symbol} چقدر ریسک دارد؟ مقایسه بیت‌کوین و اتریوم`;
+    }
+
+    $('#suggest', el).innerHTML = buildTraderSuggestions(st.symbol)
+      .map((item) => `<button class="btn sm" type="button" data-q="${esc(item.q)}">${esc(item.label)}</button>`)
+      .join('');
+    $$('#suggest button', el).forEach((b) => b.addEventListener('click', () => ask(b.dataset.q || b.textContent)));
   };
 
   const drawEngine = () => {
     const card = $('#engineCard', el);
     const status = aiState.status;
     const opts = CONFIG.LLM_MODELS.map((m) => `<option value="${m.id}" ${(s.llmModel || '').startsWith(m.id.split('-q4')[0]) ? 'selected' : ''}>${m.label} · ${m.size}</option>`).join('');
-    const base = `<p style="margin:0 0 8px 0"><span class="chip up" style="background:rgba(48,209,88,0.12);color:#30d158;padding:4px 10px;border-radius:8px;font-size:0.8rem">● آماده</span></p><p class="fine" style="color:rgba(255,255,255,0.6);margin:0;font-size:0.85rem;line-height:1.5">پاسخ‌دهی آنی از روی قیمت‌های زنده و مدل‌های تست‌شده اپلیکیشن، روی همین دستگاه. بدون نیاز به دانلود، حساب کاربری یا کلید API.</p>`;
+    const base = `<p style="margin:0 0 8px 0"><span class="chip up" style="background:rgba(48,209,88,0.12);color:#30d158;padding:4px 10px;border-radius:8px;font-size:0.8rem">● آماده</span></p><p class="fine" style="color:rgba(255,255,255,0.62);margin:0;font-size:0.85rem;line-height:1.55">پاسخ‌دهی آنی از روی قیمت‌های زنده و مدل‌های تست‌شده اپلیکیشن، روی همین دستگاه. بدون نیاز به دانلود، حساب کاربری یا کلید API.</p>`;
     let extra = '';
     if (customReady()) {
       extra = customState.reached
@@ -257,7 +317,7 @@ export async function render(el, [symParam]) {
       extra = `<details class="mt" style="margin-top:12px"><summary class="fine" style="cursor:pointer;color:var(--accent)">اختیاری: مدل زبانی مرورگر (WebGPU)</summary>
         <p class="fine mt" style="color:rgba(255,255,255,0.6);margin:8px 0;font-size:0.85rem">یک مدل رایگان که داخل مرورگر شما اجرا می‌شود. یک بار دانلود می‌شود و سپس از حافظه پنهان بارگیری می‌شود.</p>
         <label class="fld mt" style="display:flex;flex-direction:column;gap:6px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">مدل</span><select class="inp" id="modelSel">${opts}</select></label>
-        <button class="btn mt" id="startAi" style="width:100%;margin-top:10px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1;color:#fff">${icon('chip', 16)} بارگیری مدل زبانی</button></details>`;
+        <button class="btn mt" id="startAi" style="width:100%;margin-top:10px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#fff">${icon('chip', 16)} بارگیری مدل زبانی</button></details>`;
     }
     const body = base + extra;
     card.innerHTML = `<div class="card-h" style="margin-bottom:14px"><h3 style="margin:0;font-size:1.1rem;color:#fff">${icon('ai', 16)} هوش مصنوعی بی تی سی اس · داخلی</h3></div>${body}
@@ -269,6 +329,7 @@ export async function render(el, [symParam]) {
           <p class="fine down" id="customErr" role="alert" hidden style="color:#ff453a;margin:0"></p>
           <div class="row" style="display:flex;gap:8px"><button class="btn sm primary" style="padding:8px 16px">ذخیره</button><button class="btn sm ghost" type="button" id="clearCustom" style="background:rgba(255,255,255,0.06);border:0;color:#fff;padding:8px 16px;border-radius:10px">حذف</button></div>
         </form></details>`;
+
     $('#startAi', card)?.addEventListener('click', async () => {
       try { await loadLocalModel($('#modelSel', card).value); toast('مدل زبانی فعال شد', 'up'); }
       catch (e) { toast(e.message, 'down'); }
@@ -284,15 +345,37 @@ export async function render(el, [symParam]) {
       settings.set({ customEndpoint: ok.url, customModel: ok.model, customKey: ok.key });
       toast('اندپوینت هوش مصنوعی ذخیره شد', 'up'); drawEngine();
     });
-    $('#clearCustom', card).addEventListener('click', () => { customState.reached = false; customState.lastError = null; settings.set({ customEndpoint: '', customModel: '', customKey: '' }); drawEngine(); });
+    $('#clearCustom', card).addEventListener('click', () => {
+      customState.reached = false;
+      customState.lastError = null;
+      settings.set({ customEndpoint: '', customModel: '', customKey: '' });
+      drawEngine();
+    });
   };
+
   const onAi = () => { if (!st.disposed) drawEngine(); };
   aiState.addEventListener('change', onAi);
+
+  const bindMessageActions = (msgEl, rawText, factsText) => {
+    msgEl.querySelector('[data-copy]')?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(rawText);
+        toast('پاسخ کپی شد.', 'up');
+      } catch {
+        toast('امکان کپی خودکار وجود نداشت.', 'info');
+      }
+    });
+    msgEl.querySelector('[data-facts]')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.currentTarget.remove();
+      addMsg('bot', `<div class="fine"><b>داده‌های تأییدشده پشت این پاسخ</b></div>${markdown(factsText)}`);
+    });
+  };
 
   const addMsg = (role, html) => {
     const div = document.createElement('div');
     div.className = `msg ${role}`;
-    div.style.cssText = `padding: 14px 18px; border-radius: 16px; line-height: 1.6; max-width: 85%; ${role === 'user' ? 'background: linear-gradient(135deg, #5e5ce6 0%, #3634a3 100%); color: #fff; margin-right: auto;' : 'background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.9); margin-left: auto;'}`;
+    div.style.cssText = `padding: 14px 18px; border-radius: 16px; line-height: 1.65; max-width: 86%; ${role === 'user' ? 'background: linear-gradient(135deg, #5e5ce6 0%, #3634a3 100%); color: #fff; margin-right: auto;' : 'background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.92); margin-left: auto;'}`;
     div.innerHTML = html;
     log.append(div);
     log.scrollTop = log.scrollHeight;
@@ -302,13 +385,23 @@ export async function render(el, [symParam]) {
   const drawHistory = () => {
     log.innerHTML = '';
     if (!history.length) {
-      addMsg('bot', markdown(`**هر چیزی درباره بازار بپرسید.**
+      addMsg('bot', markdown(`**هر چیزی درباره بازار یا مدیریت معامله بپرسید.**
 
-با سوالات کلی شروع کنید — *«شواهد در حال حاضر کجا بیشترین قدرت را دارند؟»* — تا تمام ارزها بررسی شوند. یا درباره یک ارز بپرسید: *«آیا خرید ETH در این هفته ارزش دارد؟»* · *«کجا باید SOL را بفروشم؟»*
+با سوالات کلی شروع کنید — *«شواهد در حال حاضر کجا بیشترین قدرت را دارند؟»* — تا بازار بررسی شود. یا درباره یک ارز بپرسید: *«آیا خرید ETH در این هفته ارزش دارد؟»* · *«چقدر از ۱۰۰۰ دلار را می‌توانم روی SOL ریسک کنم؟»*
 
 هر پاسخ از قیمت‌های زنده، سیگنال‌ها و پیش‌بینی‌ها ساخته شده است. ماهیت آموزشی دارد، نه مشاوره مالی.`));
     }
-    for (const m of history) addMsg(m.role === 'user' ? 'user' : 'bot', m.role === 'user' ? esc(m.content) : markdown(m.content) + (m.meta ? `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.5);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">${m.meta}</div>` : ''));
+    for (const m of history) {
+      if (m.role === 'user') {
+        addMsg('user', esc(m.content));
+      } else {
+        const footerHtml = m.meta
+          ? `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.55);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px">${m.meta}<button type="button" class="ap-mini-btn" data-copy>کپی</button></div>`
+          : '';
+        const node = addMsg('bot', markdown(m.content) + footerHtml);
+        bindMessageActions(node, m.content, m.content);
+      }
+    }
   };
 
   async function ask(question) {
@@ -317,6 +410,8 @@ export async function render(el, [symParam]) {
     st.busy = true;
     $('#send', el).disabled = true;
     $('#assistantClear', el).disabled = true;
+    $('#assistantSnapshot', el).disabled = true;
+
     const last = [...history].reverse().find((m) => m.role === 'user');
     const previous = last ? last.root || last.content : '';
     const followUp = isTraderFollowUp(question, previous);
@@ -324,31 +419,47 @@ export async function render(el, [symParam]) {
     history.push({ role: 'user', content: question, at: Date.now(), ...(root ? { root } : {}) });
     saveHistory();
     addMsg('user', esc(question));
+
     const bot = addMsg('bot', '<span class="typing"><i></i><i></i><i></i></span> <span class="fine" data-step style="color:rgba(255,255,255,0.6)">در حال پردازش…</span>');
     const step = (t) => { const n = bot.querySelector('[data-step]'); if (n) n.textContent = t; };
+
     try {
-      const wantsPortfolio = SELL_ALL.test(question) || /(portfolio|wallet|holding|my coins)/i.test(question);
+      const wantsPortfolio = SELL_ALL.test(question) || /(portfolio|wallet|holding|my coins|پورتفو|سبد|دارایی)/i.test(question);
       const found = await detectSymbol(question);
       const detected = found && termsIn(found).length && !namedCoins(question).includes(found) ? null : found;
       const plain = !followUp && !TRADER_Q.test(question) && conversationalAnswer(question, { symbol: st.symbol, named: detected ? [detected] : namedCoins(question) });
       if (plain) {
         const src = '<span><b>نگارش:</b> پاسخ داخلی</span><span class="src-note">جنبه آموزشی، نه مشاوره مالی.</span>';
         history.push({ role: 'assistant', content: plain, meta: src, at: Date.now() });
-        bot.innerHTML = markdown(plain) + `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.5);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">${src}</div>`;
+        bot.innerHTML = markdown(plain) + `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.55);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px">${src}<button type="button" class="ap-mini-btn" data-copy>کپی</button></div>`;
+        bindMessageActions(bot, plain, plain);
         return;
       }
+
       const wantsMarket = isMarketWide(question) && !detected;
-      if (detected && detected !== st.symbol) { st.symbol = detected; $('#coinSel', el).value = detected; drawFocus(); }
+      if (detected && detected !== st.symbol) {
+        st.symbol = detected;
+        $('#coinSel', el).value = detected;
+        drawFocus();
+      }
       history.lastSymbol = st.symbol;
       const portfolio = await portfolioSummary();
 
-      const trader = traderAnswer(followUp ? `${previous} ${question}` : question, { state: load('traderState', null), saved: load('traderCfg', {}), lessons: load('traderLessons', []), symbol: detected, fmt: (v) => money(v), followUp, latest: question });
+      const trader = traderAnswer(followUp ? `${previous} ${question}` : question, {
+        state: load('traderState', null),
+        saved: load('traderCfg', {}),
+        lessons: load('traderLessons', []),
+        symbol: detected,
+        fmt: (v) => money(v),
+        followUp,
+        latest: question,
+      });
 
       let analysis = null, market = null, marketFrames = null, compare = null;
       const iv = horizonChart(question) || st.interval;
       const wantsCompare = !trader && detectCompare(question);
       if (trader) {
-        // بدون نیاز به اقدام اضافی
+        // پاسخ مستقیماً از وضعیت تریدر شبیه‌سازی‌شده استخراج می‌شود
       } else if (wantsCompare) {
         step(`در حال مقایسه ${wantsCompare.join(', ')}…`);
         compare = await compareCoins(wantsCompare, { interval: iv, onStep: step });
@@ -360,6 +471,7 @@ export async function render(el, [symParam]) {
       } else if (!wantsPortfolio || detected) {
         analysis = await analyzeCoin(st.symbol, { interval: iv, onStep: step });
       }
+
       const ctx = analysis
         ? { ...analystContext(analysis, portfolio), market, marketFrames, compare, compareInterval: iv }
         : { portfolio, market, marketFrames, compare, compareInterval: iv, interval: iv };
@@ -369,6 +481,7 @@ export async function render(el, [symParam]) {
       if (trader) basis.push('حساب معاملاتی شبیه‌سازی‌شده');
       const caveat = '<span class="src-note">جنبه آموزشی، نه مشاوره مالی.</span>';
       const meta = (src) => `<span><b>نگارش:</b> ${esc(src)}</span>${basis.length ? `<span><b>مبتنی بر:</b> ${esc(basis.join(' · '))}</span>` : ''}${caveat}<a href="#" data-facts style="color:var(--accent);margin-right:8px">نمایش داده‌های تأییدشده</a>`;
+
       let finalText = facts, source = 'تحلیل‌گر داخلی';
       if (localReady() || customReady()) {
         step('در حال نوشتن پاسخ…');
@@ -380,8 +493,17 @@ export async function render(el, [symParam]) {
           if (marketFrames) data.marketByTimeframe = marketFrames;
           else if (market) data.marketPicks = market;
           if (portfolio.length) data.portfolio = portfolio.map((p) => ({ coin: p.symbol, valueUsd: Math.round(p.value), pnlPct: p.pnlPct !== null ? +p.pnlPct.toFixed(1) : null }));
-          const r = await askLLM({ history: history.slice(0, -1), question, facts, data, signal: ac.signal, onText: (t) => { bot.innerHTML = markdown(t); log.scrollTop = log.scrollHeight; } });
-          const bad = r.text.trim().length > 20 ? unsupportedFigures(r.text, [facts, JSON.stringify(data), AI_SYSTEM_PROMPT, ...history.filter((m) => m.role === 'user').map((m) => m.content)]) : [];
+          const r = await askLLM({
+            history: history.slice(0, -1),
+            question,
+            facts,
+            data,
+            signal: ac.signal,
+            onText: (t) => { bot.innerHTML = markdown(t); log.scrollTop = log.scrollHeight; },
+          });
+          const bad = r.text.trim().length > 20
+            ? unsupportedFigures(r.text, [facts, JSON.stringify(data), AI_SYSTEM_PROMPT, ...history.filter((m) => m.role === 'user').map((m) => m.content)])
+            : [];
           if (r.text.trim().length <= 20) source = 'تحلیل‌گر داخلی';
           else if (bad.length >= 3 || (bad.length === 2 && materialFigures(r.text) < 4)) source = 'تحلیل‌گر داخلی';
           else {
@@ -394,9 +516,10 @@ export async function render(el, [symParam]) {
           else source = 'تحلیل‌گر داخلی';
         }
       }
+
       history.push({ role: 'assistant', content: finalText, meta: meta(source), at: Date.now() });
-      bot.innerHTML = markdown(finalText) + `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.5);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px">${meta(source)}</div>`;
-      bot.querySelector('[data-facts]')?.addEventListener('click', (e) => { e.preventDefault(); e.currentTarget.remove(); addMsg('bot', `<div class="fine"><b>داده‌های تأییدشده پشت این پاسخ</b></div>${markdown(facts)}`); });
+      bot.innerHTML = markdown(finalText) + `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.55);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px">${meta(source)}<button type="button" class="ap-mini-btn" data-copy>کپی</button></div>`;
+      bindMessageActions(bot, finalText, facts);
     } catch (err) {
       const msg = 'مشکلی در ساخت این پاسخ رخ داد. دوباره تلاش کنید.';
       bot.innerHTML = markdown(msg) + '<div class="src"><span><b>نگارش:</b> بدون پاسخ</span></div>';
@@ -408,24 +531,70 @@ export async function render(el, [symParam]) {
         $('#send', el).disabled = false;
         $('#assistantStop', el).disabled = true;
         $('#assistantClear', el).disabled = false;
+        $('#assistantSnapshot', el).disabled = false;
       }
       log.scrollTop = log.scrollHeight;
     }
   }
 
+  $('#assistantSnapshot', el).addEventListener('click', () => {
+    ask(`تحلیل کامل ساختار، سطوح ورود، حد ضرر و ریسک ${st.symbol} در تایم‌فریم ${st.interval}`);
+  });
   $('#assistantStop', el).addEventListener('click', () => st.abort?.abort());
-  $('#assistantClear', el).addEventListener('click', () => { if (st.busy) return; history.length = 0; saveHistory(); drawHistory(); });
-  $('#form', el).addEventListener('submit', (e) => { e.preventDefault(); const q = $('#q', el); ask(q.value); q.value = ''; });
-  $('#q', el).addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#form', el).requestSubmit(); } });
-  $('#coinSel', el).addEventListener('change', (e) => { st.symbol = e.target.value; history.lastSymbol = st.symbol; saveHistory(); drawFocus(); });
-  const onStore = (e) => { if (e.detail?.key === HISTORY_KEY && !savingHere && !st.busy && !st.disposed) { restoreHistory(); drawHistory(); } };
+  $('#assistantClear', el).addEventListener('click', () => {
+    if (st.busy) return;
+    history.length = 0;
+    saveHistory();
+    drawHistory();
+  });
+  $('#form', el).addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = $('#q', el);
+    ask(q.value);
+    q.value = '';
+  });
+  $('#q', el).addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      $('#form', el).requestSubmit();
+    }
+  });
+  $('#coinSel', el).addEventListener('change', (e) => {
+    st.symbol = e.target.value;
+    history.lastSymbol = st.symbol;
+    saveHistory();
+    drawFocus();
+  });
+  const onStore = (e) => {
+    if (e.detail?.key === HISTORY_KEY && !savingHere && !st.busy && !st.disposed) {
+      restoreHistory();
+      drawHistory();
+    }
+  };
   window.addEventListener('cv:store', onStore);
-  bindSeg($('#ivSeg', el), (v) => { st.interval = v; });
+  bindSeg($('#ivSeg', el), (v) => {
+    st.interval = v;
+    $$('#ivSeg button', el).forEach((btn) => {
+      const active = btn.dataset.v === v;
+      btn.classList.toggle('on', active);
+      btn.style.background = active ? 'rgba(255,255,255,0.15)' : 'transparent';
+      btn.style.color = active ? '#fff' : 'rgba(255,255,255,0.6)';
+    });
+  });
 
-  drawHistory(); drawFocus(); drawEngine();
+  drawHistory();
+  drawFocus();
+  drawEngine();
 
   if (support.webgpu && s.llmAuto && s.llmModel && aiState.status === 'idle') {
     loadLocalModel(s.llmModel).catch(() => {});
   }
-  return () => { st.disposed = true; st.abort?.abort(); focusUnsub?.(); aiState.removeEventListener('change', onAi); window.removeEventListener('cv:store', onStore); };
+
+  return () => {
+    st.disposed = true;
+    st.abort?.abort();
+    focusUnsub?.();
+    aiState.removeEventListener('change', onAi);
+    window.removeEventListener('cv:store', onStore);
+  };
 }
