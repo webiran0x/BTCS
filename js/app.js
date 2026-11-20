@@ -15,13 +15,13 @@ import { auth, sb, backendEnabled, isAdmin, signOut, pullUserData, pushUserData,
 import { createSync, SYNCED_KEYS, TRADING_KEYS } from './lib/cloudsync.js';
 import { DEPS } from './deps.js';
 
-// تنظیم اجباری جهت راست‌به‌چین و زبان فارسی در سند اصلی
+// تنظیم اجباری جهت راست‌به‌چین و زبان فارسی در سند اصلی[cite: 11]
 if (typeof document !== 'undefined') {
   document.documentElement.dir = 'rtl';
   document.documentElement.lang = 'fa';
 }
 
-// محافظت در برابر Clickjacking
+// محافظت در برابر Clickjacking[cite: 11]
 if (typeof window !== 'undefined' && window.top !== window.self) {
   let sameOrigin = false;
   try { sameOrigin = window.top.location.origin === window.location.origin; } catch { /* دامنه دیگر */ }
@@ -30,8 +30,8 @@ if (typeof window !== 'undefined' && window.top !== window.self) {
 
 const NAV = [
   { path: '', label: 'بازارها', icon: 'markets', short: 'بازارها' },
-  { path: 'advice', label: 'اسکن بازار', icon: 'bolt', short: 'اسکن' },
-    { path: 'trader', label: 'معاملات', icon: 'forecast', short: 'معاملات' },
+  // { path: 'advice', label: 'اسکن بازار', icon: 'bolt', short: 'اسکن' },
+  { path: 'trader', label: 'معاملات', icon: 'forecast', short: 'معاملات' },
   { path: 'ai', label: 'دستیار هوشمند', icon: 'ai', short: 'پرسش' },
   { path: 'learn', label: 'یادگیری هوش مصنوعی', icon: 'ai', short: 'یادگیری' },
   { path: 'scanner', label: 'اسکنر', icon: 'scanner', short: 'اسکنر' },
@@ -45,9 +45,9 @@ const NAV = [
   { path: 'premium', label: 'اشتراک ویژه', icon: 'star', short: 'ویژه' },
 ];
 const ADMIN_NAV = { path: 'admin', label: 'مدیریت', icon: 'chip', short: 'مدیریت' };
-const MOBILE = ['', 'advice', 'ai', 'wallet'];
+const MOBILE = ['', 'ai', 'trader', 'wallet'];
 
-// نگاشت مسیرها به ماژول‌های صفحه در js/views/
+// نگاشت مسیرها به ماژول‌های صفحه در js/views/[cite: 11]
 const VIEWS = {
   '': 'markets',
   coin: 'coin',
@@ -79,13 +79,20 @@ function navItems() {
 
 function renderNav() {
   const cur = location.hash.replace(/^#\/?/, '').split('/')[0];
-  $('#nav').innerHTML = navItems().map((n) =>
-    `<a href="#/${n.path}" class="${cur === n.path ? 'on' : ''}"${cur === n.path ? ' aria-current="page"' : ''}>${icon(n.icon)}<span>${esc(t(n.label))}</span>${n.badge ? `<em class="badge">${esc(n.badge)}</em>` : ''}</a>`).join('');
-  $('#bottombar').innerHTML = `${MOBILE.map((p) => {
-    const n = NAV.find((x) => x.path === p);
-    return `<a href="#/${p}" class="${cur === p ? 'on' : ''}"${cur === p ? ' aria-current="page"' : ''}>${icon(n.icon, 22)}<span>${esc(t(n.short))}</span></a>`;
-  }).join('')}<button id="moreBtn" type="button" aria-haspopup="dialog" class="${MOBILE.includes(cur) ? '' : 'on'}">${icon('more', 22)}<span>${esc(t('بیشتر'))}</span></button>`;
-  $('#moreBtn').addEventListener('click', openMore);
+  const navEl = $('#nav');
+  if (navEl) {
+    navEl.innerHTML = navItems().map((n) =>
+      `<a href="#/${n.path}" class="${cur === n.path ? 'on' : ''}"${cur === n.path ? ' aria-current="page"' : ''}>${icon(n.icon)}<span>${esc(t(n.label))}</span>${n.badge ? `<em class="badge">${esc(n.badge)}</em>` : ''}</a>`).join('');
+  }
+  const bottomEl = $('#bottombar');
+  if (bottomEl) {
+    bottomEl.innerHTML = `${MOBILE.map((p) => {
+      const n = NAV.find((x) => x.path === p);
+      if (!n) return '';
+      return `<a href="#/${p}" class="${cur === p ? 'on' : ''}"${cur === p ? ' aria-current="page"' : ''}>${icon(n.icon, 22)}<span>${esc(t(n.short))}</span></a>`;
+    }).join('')}<button id="moreBtn" type="button" aria-haspopup="dialog" class="${MOBILE.includes(cur) ? '' : 'on'}">${icon('more', 22)}<span>${esc(t('بیشتر'))}</span></button>`;
+    $('#moreBtn', bottomEl)?.addEventListener('click', openMore);
+  }
 }
 
 function openMore() {
@@ -159,12 +166,12 @@ async function route(opts) {
 
 document.querySelector('.skip-link')?.addEventListener('click', (e) => { e.preventDefault(); $('#view').focus(); });
 
-// ---------------------------------------------------------------- theme
+// ---------------------------------------------------------------- theme[cite: 11]
 function applyTheme() {
   document.documentElement.dataset.theme = 'dark';
 }
 
-// ---------------------------------------------------------------- search
+// ---------------------------------------------------------------- search[cite: 11]
 function initSearch() {
   const input = $('#searchInput'), box = $('#searchResults');
   const narrow = matchMedia('(max-width: 600px)');
@@ -183,7 +190,7 @@ function initSearch() {
   const draw = () => {
     box.hidden = !items.length;
     input.setAttribute('aria-expanded', String(!!items.length));
-    // اصلاح margin-right:auto برای تراز صحیح قیمت در چیدمان راست‌به‌چین
+    // اصلاح margin-right:auto برای تراز صحیح قیمت در چیدمان راست‌به‌چین[cite: 11]
     box.innerHTML = items.map((c, i) => `<a href="#/coin/${encodeURIComponent(c.symbol)}" id="sr-${i}" role="option" aria-selected="${i === active}" class="${i === active ? 'on' : ''}">${coinLogo(c, 22)}<b>${esc(c.name)}</b><span class="muted">${esc(c.symbol)}</span><span style="margin-right:auto;direction:ltr">${money(c.price)}</span></a>`).join('');
     if (active >= 0) input.setAttribute('aria-activedescendant', `sr-${active}`); else input.removeAttribute('aria-activedescendant');
   };
@@ -209,7 +216,7 @@ function initSearch() {
   document.addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') { e.preventDefault(); input.focus(); } });
 }
 
-// ---------------------------------------------------------------- currency
+// ---------------------------------------------------------------- currency[cite: 11]
 async function initSelectors() {
   const cur = $('#curSel');
   cur.innerHTML = CONFIG.CURRENCIES.map(([c, s]) => `<option value="${c}">${c} ${s}</option>`).join('');
@@ -223,7 +230,7 @@ async function initSelectors() {
   });
 }
 
-// ---------------------------------------------------------------- account
+// ---------------------------------------------------------------- account[cite: 11]
 function initAccount() {
   const btn = $('#accountBtn');
   if (!backendEnabled()) { btn.hidden = true; return; }
@@ -257,7 +264,7 @@ function initAccount() {
   sb();
 }
 
-// ---------------------------------------------------------------- cloud sync
+// ---------------------------------------------------------------- cloud sync[cite: 11]
 const SHOWN_ON = {
   '': ['watchlist'],
   coin: ['watchlist', 'drawings'],
@@ -313,7 +320,7 @@ document.addEventListener('visibilitychange', () => {
 setInterval(() => { if (!document.hidden && Date.now() - lastSyncAt > 100e3) syncNow(); }, 120e3);
 setInterval(() => { if (!document.hidden) showTriggeredServerAlerts(); }, 120e3);
 
-// ---------------------------------------------------------------- live ticker + alerts
+// ---------------------------------------------------------------- live ticker + alerts[cite: 11]
 let tickerCoins = [];
 async function initTicker() {
   const list = await markets().catch(() => []);
@@ -392,7 +399,7 @@ async function showTriggeredServerAlerts() {
 }
 auth.addEventListener('change', showTriggeredServerAlerts);
 
-// ---------------------------------------------------------------- risk gate (shown once)
+// ---------------------------------------------------------------- risk gate (shown once)[cite: 11]
 function riskGate() {
   if (load('riskAck', false)) return;
 
@@ -444,7 +451,7 @@ function riskGate() {
   });
 }
 
-// ---------------------------------------------------------------- banners
+// ---------------------------------------------------------------- banners[cite: 11]
 let demoBanner = '';
 let siteBanner = '';
 const paintBanners = () => { $('#banner').innerHTML = demoBanner + siteBanner; };
@@ -460,13 +467,13 @@ getAppSettings().then((s) => {
   const text = s?.site?.announcement;
   if (!text) return;
   if (load('dismissedNotice', '') === text) return;
-  // اصلاح margin-right:auto برای دکمه بستن بنر در چیدمان راست‌به‌چین
+  // اصلاح margin-right:auto برای دکمه بستن بنر در چیدمان راست‌به‌چین[cite: 11]
   siteBanner = `<div class="banner" id="siteNotice" dir="rtl">${icon('info', 16)} ${esc(text)} <button class="icon-btn" id="noticeX" style="width:26px;height:26px;margin-right:auto" aria-label="بستن">${icon('close', 12)}</button></div>`;
   paintBanners();
   $('#noticeX')?.addEventListener('click', () => { save('dismissedNotice', text); siteBanner = ''; paintBanners(); });
 }).catch(() => { /* بک‌اند اختیاری است */ });
 
-// ---------------------------------------------------------------- 3D world
+// ---------------------------------------------------------------- 3D world[cite: 11]
 function startWorld() {
   const go = () => import('./world/world.js').then((m) => m.startWorld()).catch((e) => {
     console.warn('3D world', e);
@@ -476,7 +483,7 @@ function startWorld() {
   else setTimeout(go, 800);
 }
 
-// ---------------------------------------------------------------- boot
+// ---------------------------------------------------------------- boot[cite: 11]
 { const entry = document.documentElement.dataset.route; if (entry && !location.hash) history.replaceState(null, '', entry); }
 $$('[data-app-name]').forEach((n) => { n.textContent = CONFIG.APP_NAME; });
 applyTheme(settings.get().theme || 'dark');
@@ -528,7 +535,7 @@ setTimeout(() => {
   cloudLearning().then((c) => { if (c) remove('aiLearn'); }).catch(() => {});
 }, 4000);
 
-// ---------------------------------------------------------------- updates
+// ---------------------------------------------------------------- updates[cite: 11]
 export const BUILD = "20261105-185358";
 const BUILD_STAMP = /^\d{8}-\d{6}$/;
 
@@ -576,7 +583,7 @@ if (location.protocol === 'https:') {
   });
 }
 
-// --- گفتگوی سریع: دستورات مبتنی بر داده‌های زنده بازار ---
+// --- گفتگوی سریع: دستورات مبتنی بر داده‌های زنده بازار ---[cite: 11]
 (async function initMagicChat() {
   const chatPanel = $('#chatPanel');
   const chatClose = $('#chatClose');
