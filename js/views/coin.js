@@ -148,14 +148,34 @@ export async function render(el, [symParam]) {
         margin-bottom: 24px;
         box-shadow: 0 24px 54px rgba(0, 0, 0, 0.35);
       }
-      .ap-bento-grid {
+      .ap-bento-grid,
+      .ap-coin-wrap .grid.g4 {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 16px;
-        margin-bottom: 24px;
       }
-      @media(max-width: 960px) {
-        .ap-bento-grid { grid-template-columns: repeat(2, 1fr); }
+      .ap-coin-wrap .grid.g3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .ap-coin-wrap .grid.g2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      @media (max-width: 960px) {
+        .ap-bento-grid,
+        .ap-coin-wrap .grid.g4 { grid-template-columns: repeat(2, 1fr); }
+        .ap-coin-wrap .fc-grid,
+        .ap-coin-wrap .grid.g2 { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 640px) {
+        .ap-hero-card { padding: 20px 16px; border-radius: 22px; }
+        .ap-card { padding: 16px; border-radius: 18px; }
+        .ap-bento-grid,
+        .ap-coin-wrap .grid.g4,
+        .ap-coin-wrap .grid.g3 { grid-template-columns: 1fr; }
       }
       .ap-card {
         background: rgba(255, 255, 255, 0.03);
@@ -169,6 +189,43 @@ export async function render(el, [symParam]) {
       .ap-card:hover {
         border-color: rgba(255, 255, 255, 0.15);
         box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+      }
+      .ap-coin-wrap dl.kv {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 8px 14px;
+        align-items: baseline;
+      }
+      .ap-coin-wrap dl.kv dt {
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 0.85rem;
+      }
+      .ap-coin-wrap dl.kv dd {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+      }
+      .ap-coin-wrap .tl {
+        position: relative;
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 12px 0;
+      }
+      .ap-coin-wrap .tl-bar {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 3px;
+        background: linear-gradient(90deg, rgba(94, 92, 230, 0.35), rgba(48, 209, 88, 0.35));
+      }
+      .ap-coin-wrap .tl-mark {
+        position: absolute;
+        top: -4px;
+        width: 4px;
+        height: 14px;
+        border-radius: 2px;
+        transform: translateX(-50%);
       }
       .ap-coin-wrap .btn {
         border-radius: 13px;
@@ -199,7 +256,11 @@ export async function render(el, [symParam]) {
       .ap-coin-wrap .seg button.on {
         background: rgba(255, 255, 255, 0.15);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+      .ap-coin-wrap .tabs button.on {
+        background: rgba(255, 255, 255, 0.12) !important;
+        color: #fff !important;
       }
       .ap-faq-grid {
         display: grid;
@@ -327,7 +388,18 @@ export async function render(el, [symParam]) {
 
   (async () => {
     if (!backendEnabled()) return;
-    const rows = await getNews({ coin: coin.symbol, limit: 4 }).catch(() => []);
+    let rows;
+    try {
+      rows = await getNews({ coin: coin.symbol, limit: 4 });
+    } catch (err) {
+      if (st.disposed) return;
+      const card = $('#newsCard', el);
+      if (card) {
+        card.hidden = false;
+        card.innerHTML = `<div class="card-h" style="margin-bottom:10px"><h3 style="margin:0;font-size:1.1rem;color:#fff">اخبار ${esc(coin.symbol)}</h3></div>${errorBox(err?.message || 'خطا در دریافت اخبار کوتاه.')}`;
+      }
+      return;
+    }
     if (st.disposed || !rows?.length) return;
     const card = $('#newsCard', el);
     if (!card) return;
@@ -920,7 +992,7 @@ export async function render(el, [symParam]) {
         <div class="row spread"><b style="color:#fff">مومنتوم</b><span class="chip ${meterTone}">${esc(meter.label)}</span></div>
         <div class="meter-track" style="margin-top:10px;background:rgba(255,255,255,0.08);height:6px;border-radius:3px;position:relative"><i class="meter-needle" style="position:absolute;top:-4px;width:4px;height:14px;background:#fff;border-radius:2px;left:${meter.pos}%"></i></div>
         <div class="meter-labels fine" style="margin-top:6px;color:rgba(255,255,255,0.4);display:flex;justify-content:space-between"><span>سقوط قوی</span><span>نزولی</span><span>خنثی</span><span>صعودی</span><span>صعود قوی</span></div>
-        <p class="fine" style="margin:8px 0 0;color:rgba(255,255,255,0.5)">سنجش‌گر قدرت متعارف برای میزان امتداد یافتن اندیکاتورها. سابقه ارزیابی‌شده جداست: ${(() => { const b = upRateFor(st.interval, sig.score); return b ? `روی ${esc(st.interval)}، خوانش‌هایی مانند این در <b>${b.upRatePct}٪</b> مواقع با قیمت‌های بالاتری دنبال شده‌اند` : `اینکه خوانش‌هایی مانند این چند مرتبه با قیمت بالاتری دنبال شده‌اند روی ${esc(st.interval)} اندازه‌گیری نشده است (این مورد روی ۱۵ دقیقه، ۱ ساعت، ۴ ساعت و ۱ روزه اندازه‌گیری شده است)`; })()} — امتیاز بالا به معنای امتداد یافتن حرکت است، نه لزوماً ادامه آن.</p>
+        <p class="fine" style="margin:8px 0 0;color:rgba(255,255,255,0.5)">سنجش‌گر قدرت متعارف برای میزان امتداد یافتن اندیکاتورها. سابقه ارزیابی‌شده جداست: ${(() => { const b = upRateFor(st.interval, sig.score); return b ? `روی ${esc(st.interval)}، خوانش‌هایی مانند این در <b>${b.upRatePct}٪</b> مواقع با قیمت‌های بالاتری دنبال شده‌اند` : `اینکه خوانش‌هایی مانند این چند مرتبه با قیمت‌های بالاتری دنبال شده‌اند روی ${esc(st.interval)} اندازه‌گیری نشده است (این مورد روی ۱۵ دقیقه، ۱ ساعت، ۴ ساعت و ۱ روزه اندازه‌گیری شده است)`; })()} — امتیاز بالا به معنای امتداد یافتن حرکت است، نه لزوماً ادامه آن.</p>
       </div>
       ${warnings.length ? `<div class="risk-list mt" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">${warnings.map((w) => `<div class="risk-item ${w.level}" style="display:flex;align-items:center;gap:8px;background:rgba(255,159,10,0.08);border:1px solid rgba(255,159,10,0.2);padding:10px 12px;border-radius:10px;color:#ff9f0a">${icon('info', 14)}<span>${esc(w.text)}</span></div>`).join('')}</div>` : ''}
       ${conf ? `<p class="combined mt" style="margin-top:14px;color:rgba(255,255,255,0.7)">دیدگاه کلی در تمام بازه‌های زمانی: <b class="${conf.tone}">${esc(conf.text)}</b> (${conf.score > 0 ? '+' : ''}${conf.score}). پنل زیر تنها نمودار ${esc(st.interval)} را می‌خواند.</p>` : ''}
@@ -1149,7 +1221,7 @@ export async function render(el, [symParam]) {
       <details class="mt fc-more" style="margin-top:14px"><summary class="fine" style="cursor:pointer;color:var(--accent)">سابقه عملکرد، مدل‌های متقاطع و کالیبراسیون</summary>
       <div class="learning-box mt" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;margin-top:10px">
         <div class="row spread"><b style="color:#fff">سابقه پیش‌بینی‌های شما</b><span class="chip ${trendCls}">${esc(TREND_WORDS[ls.trend] || ls.trend)}</span></div>
-        <div class="grid g2" style="margin-top:10px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+        <div class="grid g2" style="margin-top:10px;gap:10px">
           <div class="stat" style="background:rgba(255,255,255,0.03);padding:10px;border-radius:10px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">۲۰ مورد آخر</span><span class="v" style="font-size:1.15rem;font-weight:600;color:#fff;display:block;margin-top:4px">${winHtml(20)}</span></div>
           <div class="stat" style="background:rgba(255,255,255,0.03);padding:10px;border-radius:10px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">۵۰ مورد آخر</span><span class="v" style="font-size:1.15rem;font-weight:600;color:#fff;display:block;margin-top:4px">${winHtml(50)}</span></div>
           <div class="stat" style="background:rgba(255,255,255,0.03);padding:10px;border-radius:10px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">۱۰۰ مورد آخر</span><span class="v" style="font-size:1.15rem;font-weight:600;color:#fff;display:block;margin-top:4px">${winHtml(100)}</span></div>
@@ -1195,11 +1267,11 @@ export async function render(el, [symParam]) {
     return `
       <h3 class="mt" style="margin:20px 0 8px 0;font-size:1.15rem;color:#fff">مدت زمان دوام حرکت — و زمان تغییر روند</h3>
       ${trust.level === 'bad' ? `<div class="banner" style="margin:0 0 10px;background:rgba(255,69,58,0.1);border:1px solid rgba(255,69,58,0.3);padding:10px 14px;border-radius:10px;color:#ff453a">${icon('info', 16)} ${esc(trust.text)}</div>` : ''}
-      <div class="grid g2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="grid g2" style="gap:16px">
         <div><div id="tmChart"></div>
           <p class="fine" style="margin-top:8px;color:rgba(255,255,255,0.5)">ساخته شده بر اساس رفتار واقعی قیمت پس از ${t.matchesUsed} نمودار مشابه گذشته، گام به گام — سپس متمایل شده تا در انتظار حرکت مورد انتظار به پایان برسد. باند سایه‌دار = نیمه میانی نتایج آن گذشته.</p></div>
         <div class="stack" style="display:flex;flex-direction:column;gap:12px">
-          <div class="grid g3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div class="grid g3" style="gap:8px">
             <div class="stat" style="background:rgba(255,255,255,0.02);padding:10px;border-radius:10px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">${t.rising ? 'مدت صعود' : 'مدت نزول'}</span><span class="v" style="font-size:1.1rem;font-weight:600;color:#fff;display:block;margin-top:4px">${esc(dur(main.bar))}</span></div>
             <div class="stat" style="background:rgba(255,255,255,0.02);padding:10px;border-radius:10px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">${t.rising ? 'سقف تقریبی' : 'کف تقریبی'}</span><span class="v ${t.rising ? 'up' : 'down'}" style="font-size:1.1rem;font-weight:600;display:block;margin-top:4px">${money(main.price, { dp: st.dp })}</span><span class="s fine" style="font-size:0.75rem;color:rgba(255,255,255,0.4)">${pct(main.pct, 1)}</span></div>
             <div class="stat" style="background:rgba(255,255,255,0.02);padding:10px;border-radius:10px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">${t.turn ? 'تغییر روند پس از' : t.recover ? 'بازگشت پس از' : 'در انتهای افق'}</span><span class="v" style="font-size:1.1rem;font-weight:600;color:#fff;display:block;margin-top:4px">${esc(dur(t.turn?.bar ?? t.recover?.bar ?? t.horizonBars))}</span></div>
@@ -1248,11 +1320,11 @@ export async function render(el, [symParam]) {
       <div class="timing-box mt" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;margin-top:14px">
         <div class="row spread"><b style="color:#fff">${t.priceless ? `زمان رسیدن به ${t.rising ? 'سقف' : 'کف'}` : t.rising ? 'مدت زمان صعود' : 'مدت زمان نزول'}</b>
           <span class="chip ${t.priceless ? '' : cls}">${t.priceless ? `ثبت ${t.rising ? 'سقف' : 'کف'} در` : t.rising ? 'سقف در' : 'کف در'} ${esc(dur(main.bar))}</span></div>
-        <div class="tl mt" style="background:rgba(255,255,255,0.08);height:6px;border-radius:3px;position:relative;margin:12px 0">
+        <div class="tl mt">
           <i class="tl-bar"></i>
-          <span class="tl-mark ${cls}" style="position:absolute;top:-4px;width:4px;height:14px;background:#fff;border-radius:2px;left:${(main.bar / t.horizonBars) * 100}%" title="${t.rising ? 'سقف' : 'کف'}"></span>
-          ${t.turn ? `<span class="tl-mark warn" style="position:absolute;top:-4px;width:4px;height:14px;background:#ff9f0a;border-radius:2px;left:${(t.turn.bar / t.horizonBars) * 100}%" title="تغییر روند"></span>` : ''}
-          ${t.recover ? `<span class="tl-mark up" style="position:absolute;top:-4px;width:4px;height:14px;background:#30d158;border-radius:2px;left:${(t.recover.bar / t.horizonBars) * 100}%" title="بازگشت"></span>` : ''}
+          <span class="tl-mark ${cls}" style="background:#fff;left:${(main.bar / t.horizonBars) * 100}%" title="${t.rising ? 'سقف' : 'کف'}"></span>
+          ${t.turn ? `<span class="tl-mark warn" style="background:#ff9f0a;left:${(t.turn.bar / t.horizonBars) * 100}%" title="تغییر روند"></span>` : ''}
+          ${t.recover ? `<span class="tl-mark up" style="background:#30d158;left:${(t.recover.bar / t.horizonBars) * 100}%" title="بازگشت"></span>` : ''}
         </div>
         <div class="row spread fine" style="margin-top:4px;color:rgba(255,255,255,0.4)"><span>اکنون</span><span>${esc(dur(t.horizonBars))}</span></div>
         <p class="fine" style="margin:8px 0 0;color:rgba(255,255,255,0.7);line-height:1.6">
@@ -1304,7 +1376,6 @@ export async function render(el, [symParam]) {
         <button type="button" class="btn sm ghost" style="margin-top:10px;background:rgba(255,255,255,0.06);border:0;color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer" id="openHist">مشاهده نمودارهای مشابه ←</button>
       </div>`;
     $('#openHist', el)?.addEventListener('click', () => {
-      $$('#tabs [data-tab]', el).forEach((b) => b.classList.toggle('on', b.dataset.tab === 'history'));
       st.tab = 'history';
       drawTab();
       $('#tabs', el).scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1333,23 +1404,27 @@ export async function render(el, [symParam]) {
     st.charts = [];
   };
 
+  function syncTabButtons() {
+    $$('#tabs [data-tab]', el).forEach((b) => {
+      const active = b.dataset.tab === st.tab;
+      b.classList.toggle('on', active);
+      b.style.background = active ? 'rgba(255,255,255,0.12)' : 'transparent';
+      b.style.color = active ? '#fff' : 'rgba(255,255,255,0.6)';
+      b.setAttribute('aria-selected', String(active));
+    });
+  }
+
   function drawTab() {
     if (tabCleanup) {
       tabCleanup();
       tabCleanup = null;
     }
     destroyCharts();
+    syncTabButtons();
     const body = $('#tabBody', el);
     const fc = st.fcView || st.forecast;
     const accent = cssVar('--accent');
     const muted = cssVar('--text-muted');
-
-    $$('#tabs button', el).forEach((b) => {
-      const active = b.dataset.tab === st.tab;
-      b.style.background = active ? 'rgba(255,255,255,0.1)' : 'transparent';
-      b.style.color = active ? '#fff' : 'rgba(255,255,255,0.6)';
-      b.setAttribute('aria-selected', String(active));
-    });
 
     if (st.tab === 'forecast') {
       if (!fc) {
@@ -1357,7 +1432,7 @@ export async function render(el, [symParam]) {
         return;
       }
       if (!fc.ok) {
-        body.innerHTML = `<p class="muted">${esc(fc.reason)}</p>`;
+        body.innerHTML = errorBox(fc.reason || 'امکان نمایش پیش‌بینی وجود ندارد.');
         return;
       }
       const e = fc.ensemble;
@@ -1374,7 +1449,7 @@ export async function render(el, [symParam]) {
             <p class="fine" style="margin-top:8px;color:rgba(255,255,255,0.5)">خط پیوسته = قیمت واقعی. نواحی سایه‌دار = محدوده‌هایی که نیمی و ۸۰٪ از نتایج را در آزمایش‌ها حفظ کرده‌اند.${fc.leanRemoved ? ' خط میانی وجود ندارد: جهت روی این نمودار به طور قابل اعتمادی اندازه‌گیری نشده است، بنابراین محدوده بر روی قیمت امروز متمرکز شده است.' : ' خط‌چین = پیش‌بینی میانه.'}</p>
           </div>
           <div class="stack" style="display:flex;flex-direction:column;gap:16px">
-            <div class="grid g3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+            <div class="grid g3">
               <div class="stat" style="background:rgba(255,255,255,0.02);padding:12px;border-radius:12px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">احتمال صعود</span>${reliable
                 ? `<span class="v ${shown >= 0.5 ? 'up' : 'down'}" style="font-size:1.15rem;font-weight:600;display:block;margin-top:4px">${(shown * 100).toFixed(1)}٪</span>`
                 : `<span class="v flat" style="font-size:1.15rem;font-weight:600;display:block;margin-top:4px">—</span><span class="s fine" style="font-size:0.75rem;color:rgba(255,255,255,0.4)">جهت قابل اعتمادی روی این نمودار وجود ندارد. ${rawLeanNote(fc)}</span>`}</div>
@@ -1445,7 +1520,7 @@ export async function render(el, [symParam]) {
       const top = pat.matches.slice(0, 5);
       const ups = pat.matches.filter((m) => m.futureReturnPct > 0).length;
       body.innerHTML = `
-        <div class="row spread" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <div class="row spread" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
           <div><h3 style="margin:0;color:#fff">نمودار امروز در مقایسه با مشابه‌ترین لحظات در تاریخچه ${esc(coin.symbol)}</h3>
           <p class="fine" style="color:rgba(255,255,255,0.5)">مقایسه ${W} کندل آخر ${esc(st.interval)} با هر پنجره گذشته به همان طول. خطوط مقیاس‌بندی شده‌اند تا هر پنجره در نقطه ۱۰۰ به اتمام برسد.</p></div>
           <div class="chip ${ups / pat.matches.length >= 0.5 ? 'up' : 'down'}" style="font-weight:600">${ups} مورد از ${pat.matches.length} نمودار مشابه در ادامه صعود کرده‌اند</div>
@@ -1485,7 +1560,14 @@ export async function render(el, [symParam]) {
           $('#newsBody', body).innerHTML = '<p class="muted">بخش اخبار در این نسخه پیکربندی نشده است.</p>';
           return;
         }
-        const rows = await getNews({ coin: coin.symbol, limit: 30 }).catch(() => []);
+        let rows;
+        try {
+          rows = await getNews({ coin: coin.symbol, limit: 30 });
+        } catch (err) {
+          if (st.tab !== 'news' || st.disposed) return;
+          $('#newsBody', body).innerHTML = errorBox(err?.message || 'خطا در بارگیری اخبار این ارز.');
+          return;
+        }
         if (st.tab !== 'news' || st.disposed) return;
         st.news = rows;
         $('#newsBody', body).innerHTML = rows.length ? `
@@ -1512,16 +1594,16 @@ export async function render(el, [symParam]) {
     }
 
     if (st.tab === 'periods') {
-      body.innerHTML = `<div class="row spread" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><div><h3 style="margin:0;color:#fff">مقایسه وضعیت فعلی با دوره‌های پیشین</h3><p class="fine" style="color:rgba(255,255,255,0.5)">عملکرد دوره اخیر در مقایسه با دوره پیش از آن و تاریخ مشابه در یک و دو سال گذشته.</p></div>
+      body.innerHTML = `<div class="row spread" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><h3 style="margin:0;color:#fff">مقایسه وضعیت فعلی با دوره‌های پیشین</h3><p class="fine" style="color:rgba(255,255,255,0.5)">عملکرد دوره اخیر در مقایسه با دوره پیش از آن و تاریخ مشابه در یک و دو سال گذشته.</p></div>
         <div class="seg" id="perSeg" style="display:flex;gap:4px"><button type="button" data-v="7" style="padding:6px 12px;border-radius:8px;border:0;background:transparent;color:rgba(255,255,255,0.6);cursor:pointer">۷ روز</button><button type="button" data-v="30" class="on" style="padding:6px 12px;border-radius:8px;border:0;background:rgba(255,255,255,0.15);color:#fff;cursor:pointer">۳۰ روز</button><button type="button" data-v="90" style="padding:6px 12px;border-radius:8px;border:0;background:transparent;color:rgba(255,255,255,0.6);cursor:pointer">۹۰ روز</button><button type="button" data-v="365" style="padding:6px 12px;border-radius:8px;border:0;background:transparent;color:rgba(255,255,255,0.6);cursor:pointer">۱ سال</button></div></div>
-        <div id="perChart" style="height:320px"></div><div id="perStats" class="grid g4 mt" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px"></div>`;
+        <div id="perChart" style="height:320px"></div><div id="perStats" class="grid g4 mt" style="gap:12px;margin-top:16px"></div>`;
       const drawPeriods = async (days) => {
         let daily;
         try {
           daily = (await getCandles(coin, '1d', 1100)).candles;
-        } catch {
+        } catch (err) {
           const chartBox = body.querySelector('#perChart');
-          if (chartBox) chartBox.innerHTML = errorBox('تاریخچه روزانه در دسترس نیست');
+          if (chartBox) chartBox.innerHTML = errorBox(err?.message || 'تاریخچه روزانه در دسترس نیست');
           return;
         }
         if (st.disposed || st.tab !== 'periods') return;
@@ -1574,7 +1656,7 @@ export async function render(el, [symParam]) {
         return;
       }
       if (!bt.ok) {
-        body.innerHTML = `<p class="muted">${esc(bt.reason)}</p>`;
+        body.innerHTML = errorBox(bt.reason || 'امکان اجرای آزمایش گذشته برای این ارز وجود ندارد.');
         return;
       }
       const lag = bt.totalReturnPct - bt.buyHoldPct;
@@ -1588,7 +1670,7 @@ export async function render(el, [symParam]) {
       body.innerHTML = `
         ${verdict}
         <p class="fine" style="margin-bottom:14px;color:rgba(255,255,255,0.6);line-height:1.6">نتیجه احتمالی در صورت اجرای تمام نقاط ورودی این موتور روی ${bt.bars} کندل آخر ${esc(st.interval)} — فقط خرید (Long)، با کارمزد ۰.۱٪ در هر طرف، استفاده از همان حد ضرر و هدف نشان‌داده‌شده در طرح بالا (${geometryFor(st.interval).stopAtr} برابر حد ضرر ATR، هدف ${geometryFor(st.interval).rr}R) و بدون جابجایی به نقطه سربه‌سر (Break-even)، زیرا اندازه‌گیری‌ها نشان داده‌اند انتقال حد ضرر به نقطه سربه‌سر هزینه‌بر است.</p>
-        <div class="grid g4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+        <div class="grid g4" style="gap:12px;margin-bottom:16px">
           <div class="stat" style="background:rgba(255,255,255,0.02);padding:14px;border-radius:12px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">بازدهی استراتژی</span><span class="v ${bt.totalReturnPct >= 0 ? 'up' : 'down'}" style="font-size:1.2rem;font-weight:600;display:block;margin-top:6px">${pct(bt.totalReturnPct)}</span></div>
           <div class="stat" style="background:rgba(255,255,255,0.02);padding:14px;border-radius:12px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">خرید و نگهداری</span><span class="v ${bt.buyHoldPct >= 0 ? 'up' : 'down'}" style="font-size:1.2rem;font-weight:600;display:block;margin-top:6px">${pct(bt.buyHoldPct)}</span></div>
           <div class="stat" style="background:rgba(255,255,255,0.02);padding:14px;border-radius:12px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">نرخ موفقیت</span><span class="v" style="font-size:1.2rem;font-weight:600;color:#fff;display:block;margin-top:6px">${bt.winRate ?? '—'}٪</span><span class="s muted" style="font-size:0.75rem;color:rgba(255,255,255,0.4)">${bt.tradeCount} معامله</span></div>
@@ -1616,19 +1698,25 @@ export async function render(el, [symParam]) {
     }
 
     if (st.tab === 'book') {
-      body.innerHTML = `<div class="grid g2" style="display:grid;grid-template-columns:1fr 1fr;gap:20px"><div><h3 style="margin-bottom:10px;color:#fff">دفتر سفارش (Order Book)</h3><div id="book">${skeleton(10, 14)}</div></div><div><h3 style="margin-bottom:10px;color:#fff">معاملات اخیر</h3><div id="trades">${skeleton(10, 14)}</div></div></div>`;
+      body.innerHTML = `<div class="grid g2" style="gap:20px"><div><h3 style="margin-bottom:10px;color:#fff">دفتر سفارش (Order Book)</h3><div id="book">${skeleton(10, 14)}</div></div><div><h3 style="margin-bottom:10px;color:#fff">معاملات اخیر</h3><div id="trades">${skeleton(10, 14)}</div></div></div>`;
       const drawBook = async () => {
-        const [d, tr] = await Promise.all([getDepth(pair, 15), getTrades(pair, 20)]);
-        if (st.tab !== 'book' || st.disposed) return;
-        if (d) {
-          const maxQ = Math.max(...d.bids.map((b) => b[1] * b[0]), ...d.asks.map((a) => a[1] * a[0]), 1);
-          const row = (p, q, side) => `<div class="book-row" style="display:flex;justify-content:space-between;padding:4px 8px;position:relative"><i style="position:absolute;top:0;bottom:0;right:0;background:${side === 'up' ? 'rgba(48,209,88,0.1)' : 'rgba(255,69,58,0.1)'};width:${Math.min(100, ((p * q) / maxQ) * 100)}%"></i><span class="${side}" style="position:relative">${money(p, { dp: st.dp })}</span><span style="position:relative">${amount(q)}</span></div>`;
-          $('#book', body).innerHTML = `<div class="book" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px"><div><div class="row spread fine" style="margin-bottom:6px;color:rgba(255,255,255,0.5)"><span>خرید (Bid)</span><span>مقدار</span></div>${d.bids.map(([p, q]) => row(p, q, 'up')).join('')}</div>
-            <div><div class="row spread fine" style="margin-bottom:6px;color:rgba(255,255,255,0.5)"><span>فروش (Ask)</span><span>مقدار</span></div>${d.asks.map(([p, q]) => row(p, q, 'down')).join('')}</div></div>
-            <p class="fine mt" style="margin-top:10px;color:rgba(255,255,255,0.5)">اسپرد (اختلاف خرید و فروش): ${d.bids[0] && d.asks[0] ? pct(((d.asks[0][0] - d.bids[0][0]) / d.bids[0][0]) * 100, 4, false) : '—'}</p>`;
-        }
-        if (tr) {
-          $('#trades', body).innerHTML = `<div class="book-row fine" style="display:flex;justify-content:space-between;padding:4px 8px;color:rgba(255,255,255,0.5)"><span>قیمت</span><span>مقدار</span><span>زمان</span></div><div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px">${tr.map((t) => `<div class="book-row" style="display:flex;justify-content:space-between;padding:4px 0"><span class="${t.buyerMaker ? 'down' : 'up'}">${money(t.price, { dp: st.dp })}</span><span>${amount(t.qty)}</span><span class="muted" style="color:rgba(255,255,255,0.4)">${new Date(t.time).toLocaleTimeString('en-US', { hour12: false })}</span></div>`).join('')}</div>`;
+        try {
+          const [d, tr] = await Promise.all([getDepth(pair, 15), getTrades(pair, 20)]);
+          if (st.tab !== 'book' || st.disposed) return;
+          if (d) {
+            const maxQ = Math.max(...d.bids.map((b) => b[1] * b[0]), ...d.asks.map((a) => a[1] * a[0]), 1);
+            const row = (p, q, side) => `<div class="book-row" style="display:flex;justify-content:space-between;padding:4px 8px;position:relative"><i style="position:absolute;top:0;bottom:0;right:0;background:${side === 'up' ? 'rgba(48,209,88,0.1)' : 'rgba(255,69,58,0.1)'};width:${Math.min(100, ((p * q) / maxQ) * 100)}%"></i><span class="${side}" style="position:relative">${money(p, { dp: st.dp })}</span><span style="position:relative">${amount(q)}</span></div>`;
+            $('#book', body).innerHTML = `<div class="book" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px"><div><div class="row spread fine" style="margin-bottom:6px;color:rgba(255,255,255,0.5)"><span>خرید (Bid)</span><span>مقدار</span></div>${d.bids.map(([p, q]) => row(p, q, 'up')).join('')}</div>
+              <div><div class="row spread fine" style="margin-bottom:6px;color:rgba(255,255,255,0.5)"><span>فروش (Ask)</span><span>مقدار</span></div>${d.asks.map(([p, q]) => row(p, q, 'down')).join('')}</div></div>
+              <p class="fine mt" style="margin-top:10px;color:rgba(255,255,255,0.5)">اسپرد (اختلاف خرید و فروش): ${d.bids[0] && d.asks[0] ? pct(((d.asks[0][0] - d.bids[0][0]) / d.bids[0][0]) * 100, 4, false) : '—'}</p>`;
+          }
+          if (tr) {
+            $('#trades', body).innerHTML = `<div class="book-row fine" style="display:flex;justify-content:space-between;padding:4px 8px;color:rgba(255,255,255,0.5)"><span>قیمت</span><span>مقدار</span><span>زمان</span></div><div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px">${tr.map((t) => `<div class="book-row" style="display:flex;justify-content:space-between;padding:4px 0"><span class="${t.buyerMaker ? 'down' : 'up'}">${money(t.price, { dp: st.dp })}</span><span>${amount(t.qty)}</span><span class="muted" style="color:rgba(255,255,255,0.4)">${new Date(t.time).toLocaleTimeString('en-US', { hour12: false })}</span></div>`).join('')}</div>`;
+          }
+        } catch (err) {
+          if (st.tab !== 'book' || st.disposed) return;
+          $('#book', body).innerHTML = errorBox(err?.message || 'دفتر سفارش در دسترس نیست.');
+          $('#trades', body).innerHTML = errorBox(err?.message || 'معاملات اخیر در دسترس نیست.');
         }
       };
       drawBook();
@@ -1640,15 +1728,20 @@ export async function render(el, [symParam]) {
     if (st.tab === 'exchanges') {
       body.innerHTML = `<div id="exBody">${skeleton(8, 22)}</div>`;
       const drawEx = async () => {
-        const r = await compareExchanges(coin.symbol);
-        if (st.tab !== 'exchanges' || st.disposed) return;
-        const rows = r.rows.filter((x) => x.ok).sort((a, b) => (b.vol || 0) - (a.vol || 0));
-        $('#exBody', body).innerHTML = rows.length ? `
-          ${r.gapPct !== null ? `<p style="margin-bottom:14px;color:rgba(255,255,255,0.8)">ارزان‌ترین برای خرید: <b>${esc(r.bestBuy.exchange)}</b> با قیمت ${usd(r.bestBuy.ask)} · بهترین برای فروش: <b>${esc(r.bestSell.exchange)}</b> با قیمت ${usd(r.bestSell.bid)} · اختلاف <b class="${r.gapPct > 0 ? 'up' : 'flat'}">${pct(r.gapPct, 3)}</b> <span class="fine" style="color:rgba(255,255,255,0.4)">(پیش از کسر کارمزد و زمان انتقال)</span></p>` : ''}
-          <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">صرافی</th><th class="l">جفت ارز</th><th>قیمت</th><th>نسبت به میانه</th><th>اسپرد</th><th>۲۴ ساعت</th><th>حجم ۲۴ ساعت</th></tr></thead><tbody>
-          ${rows.map((q) => `<tr style="cursor:default"><td class="l"><b>${esc(q.exchange)}</b></td><td class="l muted">${esc(q.pair)}</td><td>${usd(q.price)}</td><td class="${q.deviationPct >= 0 ? 'up' : 'down'}">${pct(q.deviationPct, 3)}</td><td>${pct(q.spreadPct, 3, false)}</td><td>${changeHtml(q.change24h)}</td><td>${compact(q.vol)}</td></tr>`).join('')}
-          </tbody></table></div>
-          <p class="fine mt" style="margin-top:14px;color:rgba(255,255,255,0.5)">${esc(r.rows.filter((x) => !x.ok).map((x) => x.exchange).join(', ') || 'همه صرافی‌ها پاسخ دادند')}${r.rows.some((x) => !x.ok) ? ': لیست نشده یا غیرقابل دسترس.' : '.'} <a class="acc" href="#/exchanges/${encodeURIComponent(coin.symbol)}" style="color:var(--accent)">مشاهده مقایسه کامل ←</a></p>` : errorBox('هیچ صرافی‌ای قیمتی برای این ارز برنگرداند.');
+        try {
+          const r = await compareExchanges(coin.symbol);
+          if (st.tab !== 'exchanges' || st.disposed) return;
+          const rows = r.rows.filter((x) => x.ok).sort((a, b) => (b.vol || 0) - (a.vol || 0));
+          $('#exBody', body).innerHTML = rows.length ? `
+            ${r.gapPct !== null ? `<p style="margin-bottom:14px;color:rgba(255,255,255,0.8)">ارزان‌ترین برای خرید: <b>${esc(r.bestBuy.exchange)}</b> با قیمت ${usd(r.bestBuy.ask)} · بهترین برای فروش: <b>${esc(r.bestSell.exchange)}</b> با قیمت ${usd(r.bestSell.bid)} · اختلاف <b class="${r.gapPct > 0 ? 'up' : 'flat'}">${pct(r.gapPct, 3)}</b> <span class="fine" style="color:rgba(255,255,255,0.4)">(پیش از کسر کارمزد و زمان انتقال)</span></p>` : ''}
+            <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">صرافی</th><th class="l">جفت ارز</th><th>قیمت</th><th>نسبت به میانه</th><th>اسپرد</th><th>۲۴ ساعت</th><th>حجم ۲۴ ساعت</th></tr></thead><tbody>
+            ${rows.map((q) => `<tr style="cursor:default"><td class="l"><b>${esc(q.exchange)}</b></td><td class="l muted">${esc(q.pair)}</td><td>${usd(q.price)}</td><td class="${q.deviationPct >= 0 ? 'up' : 'down'}">${pct(q.deviationPct, 3)}</td><td>${pct(q.spreadPct, 3, false)}</td><td>${changeHtml(q.change24h)}</td><td>${compact(q.vol)}</td></tr>`).join('')}
+            </tbody></table></div>
+            <p class="fine mt" style="margin-top:14px;color:rgba(255,255,255,0.5)">${esc(r.rows.filter((x) => !x.ok).map((x) => x.exchange).join(', ') || 'همه صرافی‌ها پاسخ دادند')}${r.rows.some((x) => !x.ok) ? ': لیست نشده یا غیرقابل دسترس.' : '.'} <a class="acc" href="#/exchanges/${encodeURIComponent(coin.symbol)}" style="color:var(--accent)">مشاهده مقایسه کامل ←</a></p>` : errorBox('هیچ صرافی‌ای قیمتی برای این ارز برنگرداند.', drawEx);
+        } catch (err) {
+          if (st.tab !== 'exchanges' || st.disposed) return;
+          $('#exBody', body).innerHTML = errorBox(err?.message || 'خطا در مقایسه صرافی‌ها.', drawEx);
+        }
       };
       drawEx();
       const ivTimer = setInterval(drawEx, 10000);
@@ -1663,11 +1756,11 @@ export async function render(el, [symParam]) {
         const loaded = !!p && !p.unavailable;
         const unknown = loaded ? '—' : '<span class="muted">بارگذاری‌نشده</span>';
         const note = p?.unavailable
-          ? '<p class="fine warn" style="color:#ff9f0a">داده‌های مرجع بارگذاری نشدند — ارائه‌دهنده درخواست‌های رایگان را محدود کرده است. ارقام زیر نامشخص هستند، نه غایب. لطفاً پس از یک دقیقه دوباره تلاش کنید.</p>'
+          ? errorBox('داده‌های مرجع بارگذاری نشدند — ارائه‌دهنده درخواست‌های رایگان را محدود کرده است. ارقام زیر نامشخص هستند، نه غایب. لطفاً پس از یک دقیقه دوباره تلاش کنید.')
           : p === null
             ? '<p class="fine muted">هیچ پروفایل مرجعی برای این ارز منتشر نشده است، بنابراین ارقام زیر به جای غایب بودن، نامشخص هستند.</p>'
             : '';
-        body.innerHTML = `<div class="grid g2" style="display:grid;grid-template-columns:1.2fr 1fr;gap:24px">
+        body.innerHTML = `<div class="grid g2" style="gap:24px">
           <div><h3 style="margin-bottom:10px;color:#fff">درباره ${esc(coin.name)}</h3>${note}<p class="muted" style="line-height:1.7;color:rgba(255,255,255,0.7)">${esc(p?.description || (loaded ? 'توضیحاتی در دسترس نیست.' : ''))}</p>
             <div class="row mt" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px">${(p?.categories || []).map((c) => `<span class="chip" style="background:rgba(255,255,255,0.06);padding:4px 10px;border-radius:8px;color:#fff">${esc(c)}</span>`).join('')}</div>
             <div class="row mt" style="display:flex;gap:10px;margin-top:16px">${safeUrl(p?.homepage) ? `<a class="btn sm" target="_blank" rel="noopener noreferrer" href="${esc(safeUrl(p.homepage))}" style="background:rgba(255,255,255,0.08);border:0;color:#fff;padding:6px 14px;border-radius:8px;text-decoration:none">وب‌سایت ↗</a>` : ''}${safeUrl(p?.explorer) ? `<a class="btn sm" target="_blank" rel="noopener noreferrer" href="${esc(safeUrl(p.explorer))}" style="background:rgba(255,255,255,0.08);border:0;color:#fff;padding:6px 14px;border-radius:8px;text-decoration:none">کاوشگر (Explorer) ↗</a>` : ''}</div></div>
@@ -1681,6 +1774,9 @@ export async function render(el, [symParam]) {
             <dt>تغییر ۱ ساله</dt><dd>${Number.isFinite(+p?.change1y) ? changeHtml(p.change1y) : unknown}</dd>
             <dt>تاریخ راه‌اندازی</dt><dd>${esc(String(p?.genesisDate || '')) || unknown}</dd>
           </dl></div>`;
+      }).catch((err) => {
+        if (st.tab !== 'about' || st.disposed) return;
+        body.innerHTML = errorBox(err?.message || 'خطا در دریافت اطلاعات درباره این ارز.');
       });
     }
   }
@@ -1736,7 +1832,7 @@ export async function render(el, [symParam]) {
     const yrs = (h.years || []).filter((y) => y.points.length > 20);
 
     body.innerHTML = `
-      <div class="row spread" style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+      <div class="row spread" style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <div><h3 style="margin:0;color:#fff">رفتار ${esc(coin.symbol)} در دفعات مشابه گذشته</h3>
         <p class="fine" style="color:rgba(255,255,255,0.5)">مقایسه <b>${h.window} روز</b> آخر امروز با تمام پنجره‌های ۴۵ روزه در تاریخچه روزانه ${esc(coin.symbol)} (${dateTime(h.firstDate, false)} ← تاکنون، ${h.days.toLocaleString()} روز). شکل نمودار مقایسه می‌شود، نه سطح قیمت، بنابراین نمودار ۳۰۰ دلاری و ۳۰,۰۰۰ دلاری می‌توانند با هم تطابق داشته باشند.</p></div>
         ${hzSeg}
@@ -1749,7 +1845,7 @@ export async function render(el, [symParam]) {
           <div class="meter" style="background:rgba(255,255,255,0.08);height:8px;border-radius:4px;position:relative"><i style="position:absolute;top:0;bottom:0;border-radius:4px;left:0;width:${Math.round(v.probUp * 100)}%;background:var(--${v.probUp >= 0.5 ? 'up' : 'down'})"></i></div>
           <div class="row spread fine" style="margin-top:6px;color:rgba(255,255,255,0.4)"><span>${s.upCount} صعودی</span><span>${s.total - s.upCount} نزولی</span></div>
         </div>
-        <div class="grid g3" style="flex:2;min-width:260px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div class="grid g3" style="flex:2;min-width:260px">
           <div class="stat" style="background:rgba(255,255,255,0.03);padding:10px;border-radius:10px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">حرکت میانه پس از آن</span><span class="v ${s.median >= 0 ? 'up' : 'down'}" style="font-size:1.1rem;font-weight:600;display:block;margin-top:4px">${pct(s.median)}</span></div>
           <div class="stat" style="background:rgba(255,255,255,0.03);padding:10px;border-radius:10px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">بهترین / بدترین حالت</span><span class="v" style="font-size:1rem;font-weight:600;display:block;margin-top:4px"><span class="${s.best >= 0 ? 'up' : 'down'}">${pct(s.best, 1)}</span> / <span class="${s.worst >= 0 ? 'up' : 'down'}">${pct(s.worst, 1)}</span></span></div>
           <div class="stat" style="background:rgba(255,255,255,0.03);padding:10px;border-radius:10px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">دقت این روش در اینجا</span><span class="v ${reliable && v.accuracy >= 0.55 ? 'up' : reliable && v.accuracy < 0.5 ? 'down' : ''}" style="font-size:1.1rem;font-weight:600;display:block;margin-top:4px">${reliable ? `${(v.accuracy * 100).toFixed(0)}٪` : '—'}</span><span class="s fine" style="font-size:0.75rem;color:rgba(255,255,255,0.4)">${h.validation?.tests || 0} آزمایش گذشته</span></div>
@@ -1845,7 +1941,7 @@ export async function render(el, [symParam]) {
     const cur = season.currentMonth;
     return `
       <h3 class="mt" style="margin:24px 0 8px 0;color:#fff">فصل‌بندی — عملکرد معمول ${esc(coin.symbol)} در هر ماه</h3>
-      <div class="season-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">
+      <div class="season-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(95px, 1fr));gap:8px">
         ${season.summary.map((m) => m.count ? `
           <div class="${m.month === cur ? 'now' : ''}" title="${m.count} سال · ${m.winRate.toFixed(0)}٪ مثبت" style="background:${m.month === cur ? 'rgba(94,92,230,0.2)' : 'rgba(255,255,255,0.02)'};border:1px solid ${m.month === cur ? 'rgba(94,92,230,0.5)' : 'rgba(255,255,255,0.06)'};padding:10px;border-radius:10px;text-align:center">
             <div class="m" style="font-size:0.8rem;color:rgba(255,255,255,0.5)">${MONTHS[m.month]}</div>
