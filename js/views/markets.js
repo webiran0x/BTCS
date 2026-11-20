@@ -331,9 +331,13 @@ export async function render(el) {
   };
   let disposed = false;
 
+  const resolveEl = (sel) => {
+    if (disposed || !el) return null;
+    return $(sel, el) || el.querySelector(sel) || null;
+  };
+
   const setHtml = (sel, html) => {
-    if (disposed) return null;
-    const node = $(sel, el);
+    const node = resolveEl(sel);
     if (!node) return null;
     node.innerHTML = html;
     return node;
@@ -351,7 +355,7 @@ export async function render(el) {
 
   const drawTable = () => {
     if (disposed) return;
-    const area = $('#tableArea', el);
+    const area = resolveEl('#tableArea');
     if (!area) return;
 
     let rows = state.rows || [];
@@ -440,16 +444,15 @@ export async function render(el) {
     });
   };
 
-  bindSeg($('#scope', el), (v) => { state.scope = v; drawTable(); });
-  bindSeg($('#mode', el), (v) => { state.mode = v; drawTable(); });
-  $('#filter', el)?.addEventListener('input', (e) => { state.filter = e.target.value; drawTable(); });
+  bindSeg(resolveEl('#scope'), (v) => { state.scope = v; drawTable(); });
+  bindSeg(resolveEl('#mode'), (v) => { state.mode = v; drawTable(); });
+  resolveEl('#filter')?.addEventListener('input', (e) => { state.filter = e.target.value; drawTable(); });
 
   if (state.rows.length) {
     state.hasLoadedOnce = true;
     drawTable();
     renderMovers(state.rows);
   }
-
 
   let loadingMarkets = null;
   const loadMarkets = () => {
@@ -490,16 +493,17 @@ export async function render(el) {
       return;
     }
     if (disposed || !g) return;
+    const mcapChg = Number.isFinite(+g.marketCapChange24h) ? +g.marketCapChange24h : 0;
     const card = (k, v, s = '') => `<div class="apple-card stat"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
     setHtml('#globalStrip', [
-      card('کل ارزش بازار', compact(g.totalMarketCap), `${changeHtml(g.marketCapChange24h)} <span class="muted">۲۴س</span>`),
+      card('کل ارزش بازار', compact(g.totalMarketCap), `${changeHtml(mcapChg)} <span class="muted">۲۴س</span>`),
       card('حجم ۲۴ ساعته', compact(g.totalVolume), '<span class="muted">همه صرافی‌ها</span>'),
-      card('دامیننس بیت‌کوین', pct(g.btcDominance, 1, false), '<span class="muted">سهم از ارزش بازار</span>'),
-      card('دامیننس اتریوم', pct(g.ethDominance, 1, false), '<span class="muted">سهم از ارزش بازار</span>'),
-      card('ارزهای رصدشده', g.activeCryptocurrencies?.toLocaleString('fa-IR') ?? '—', g.markets ? `<span class="muted">${g.markets.toLocaleString('fa-IR')} بازار</span>` : ''),
+      card('دامیننس بیت‌کوین', g.btcDominance != null ? pct(g.btcDominance, 1, false) : '—', '<span class="muted">سهم از ارزش بازار</span>'),
+      card('دامیننس اتریوم', g.ethDominance != null ? pct(g.ethDominance, 1, false) : '—', '<span class="muted">سهم از ارزش بازار</span>'),
+      card('ارزهای رصدشده', Number.isFinite(+g.activeCryptocurrencies) ? (+g.activeCryptocurrencies).toLocaleString('fa-IR') : '—', Number.isFinite(+g.markets) ? `<span class="muted">${(+g.markets).toLocaleString('fa-IR')} بازار</span>` : ''),
     ].join(''));
-    setHtml('#mkSummary', `ارزش کل بازار ارز دیجیتال <b>${compact(g.totalMarketCap)}</b> است که در ۲۴ ساعت گذشته ${g.marketCapChange24h >= 0 ? 'افزایش' : 'کاهش'} <b class="${g.marketCapChange24h >= 0 ? 'up' : 'down'}">${pct(Math.abs(g.marketCapChange24h), 2, false)}</b> داشته است.`);
-    setHtml('#mkPulse', `حجم معاملات ۲۴ ساعته به <b>${compact(g.totalVolume)}</b> رسیده و دامیننس بیت‌کوین <b>${pct(g.btcDominance, 1, false)}</b> و دامیننس اتریوم <b>${pct(g.ethDominance, 1, false)}</b> ثبت شده است.`);
+    setHtml('#mkSummary', `ارزش کل بازار ارز دیجیتال <b>${compact(g.totalMarketCap)}</b> است که در ۲۴ ساعت گذشته ${mcapChg >= 0 ? 'افزایش' : 'کاهش'} <b class="${mcapChg >= 0 ? 'up' : 'down'}">${pct(Math.abs(mcapChg), 2, false)}</b> داشته است.`);
+    setHtml('#mkPulse', `حجم معاملات ۲۴ ساعته به <b>${compact(g.totalVolume)}</b> رسیده و دامیننس بیت‌کوین <b>${g.btcDominance != null ? pct(g.btcDominance, 1, false) : '—'}</b> و دامیننس اتریوم <b>${g.ethDominance != null ? pct(g.ethDominance, 1, false) : '—'}</b> ثبت شده است.`);
   };
 
   const loadFng = async () => {
@@ -518,18 +522,22 @@ export async function render(el) {
       return;
     }
     const now = f[0], week = f[7], month = f[29];
-    const stamp = $('#fngDate', el);
-    if (stamp && now.timestamp) {
-      stamp.textContent = `به تاریخ ${new Intl.DateTimeFormat('fa-IR', {
-        calendar: 'persian',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        timeZone: 'Asia/Tehran',
-      }).format(new Date(Number(now.timestamp) * 1000))}`;
+    const stamp = resolveEl('#fngDate');
+    if (stamp && now?.timestamp) {
+      try {
+        stamp.textContent = `به تاریخ ${new Intl.DateTimeFormat('fa-IR', {
+          calendar: 'persian',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          timeZone: 'Asia/Tehran',
+        }).format(new Date(Number(now.timestamp) * 1000))}`;
+      } catch {
+        stamp.textContent = '';
+      }
     }
     setHtml('#fng', `${gauge(now.value, now.classification)}
-      <div class="row spread fine" style="margin-top:10px"><span>دیروز <b>${f[1]?.value ?? '—'}</b></span><span>هفته گذشته <b>${week?.value ?? '—'}</b></span><span>ماه گذشته <b>${month?.value ?? '—'}</b></span></div>`);
+      <div class="row spread fine" style="margin-top:10px"><span>دیروز <b>${esc(String(f[1]?.value ?? '—'))}</b></span><span>هفته گذشته <b>${esc(String(week?.value ?? '—'))}</b></span><span>ماه گذشته <b>${esc(String(month?.value ?? '—'))}</b></span></div>`);
   };
 
   const loadTrending = async () => {
