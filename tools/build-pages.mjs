@@ -415,7 +415,7 @@ function page(p) {
     html = swap(
       html,
       /<meta charset="utf-8">/i,
-      `<meta charset="utf-8">\n  <base href="${BASE}">`,
+      `<meta charset="utf-8">\n  <base href="/">`,
       'charset',
     );
   }
@@ -436,12 +436,14 @@ function page(p) {
     html = html.replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${esc(canonicalUrl)}">`);
   }
 
-  html = swap(
-    html,
-    /<!-- ld:start -->[\s\S]*?<!-- ld:end -->/,
-    `<!-- ld:start -->\n${ld.map((x) => `  <script type="application/ld+json">${JSON.stringify(x)}</script>`).join('\n')}\n  <!-- ld:end -->`,
-    'structured data',
-  );
+    const __ldBlock = `<!-- ld:start -->\n${ld.map((x) => `  <script type="application/ld+json">${JSON.stringify(x)}</script>`).join('\n')}\n  <!-- ld:end -->`;
+    if (/<!-- ld:start -->[\s\S]*?<!-- ld:end -->/.test(html)) {
+      html = swap(html, /<!-- ld:start -->[\s\S]*?<!-- ld:end -->/, __ldBlock, 'structured data');
+    } else if (/<script type="application\/ld\+json">[\s\S]*?<\/script>(\s*<script type="application\/ld\+json">[\s\S]*?<\/script>)*/.test(html)) {
+      html = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>(\s*<script type="application\/ld\+json">[\s\S]*?<\/script>)*/, __ldBlock);
+    } else {
+      html = html.replace("</head>", `  ${__ldBlock}\n</head>`);
+    }
 
   const links = p.coin
     ? `<a class="btn primary" href="${esc(p.route)}">مشاهده نمودار زنده ${esc(p.coin)}</a> <a class="btn" href="#/trader">شبیه‌ساز معاملات هوش مصنوعی</a> <a class="btn" href="#/learn">آموزش</a>`

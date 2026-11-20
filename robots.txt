@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://btcs.ir/BTCS/sitemap.xml
+Sitemap: https://btcs.ir/sitemap.xml

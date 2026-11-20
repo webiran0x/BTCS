@@ -1,39 +1,55 @@
 <!doctype html>
-<html lang="en" data-theme="dark" data-route="#/coin/STABLE">
+<html lang="fa" dir="rtl" data-theme="dark" data-route="#/coin/STABLE">
 <head>
   <meta charset="utf-8">
-  <base href="/BTCS/">
+  <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>STABLE Price, Live Chart &amp; Tested AI Forecast | BTCS</title>
-  <meta name="description" content="Live STABLE price and chart from Gate.io, 13 indicators, a price-range forecast tested on 106 coins and an AI paper-trading signal with its measured record.">
-  <!-- Locks the page down against injected scripts: only our own files and the
-       pinned CDN may run code, and the page may talk only to the hosts listed
-       under connect-src (the exchanges, the app's backend, the model files and
-       the AI services it supports). Forms cannot post off-site. Inline styles
-       still work; inline SCRIPTS do not, which is the attack this closes. The
-       one inline script (the import map) is allowed by its exact hash: change
-       it and you must update the hash. Framing is refused by the server where
-       it can send headers; GitHub Pages cannot, and a meta tag cannot either. -->
+  <title>قیمت STABLE، نمودار زنده، اندیکاتورها و پیش‌بینی هوش مصنوعی | BTCS</title>
+  <meta name="description" content="قیمت زنده و نمودار کندل‌استیک STABLE از Gate.io، ۱۳ اندیکاتور تکنیکال، بازه پیش‌بینی تست‌شده روی 106 ارز و سیگنال شبیه‌سازی‌شده هوش مصنوعی با سابقه اندازه‌گیری‌شده.">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta property="og:site_name" content="BTCS">
+  <meta property="og:locale" content="fa_IR">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="قیمت STABLE، نمودار زنده، اندیکاتورها و پیش‌بینی هوش مصنوعی | BTCS">
+  <meta name="twitter:description" content="قیمت زنده و نمودار کندل‌استیک STABLE از Gate.io، ۱۳ اندیکاتور تکنیکال، بازه پیش‌بینی تست‌شده روی 106 ارز و سیگنال شبیه‌سازی‌شده هوش مصنوعی با سابقه اندازه‌گیری‌شده.">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta property="og:site_name" content="BTCS">
+  <meta property="og:locale" content="fa_IR">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="BTCS — قیمت زنده ارزهای دیجیتال، نمودارها، پیش‌بینی‌های تست‌شده و شبیه‌ساز هوش مصنوعی">
+  <meta name="twitter:description" content="قیمت‌های زنده و نمودار کندل‌استیک ارزهای دیجیتال برتر، بازه‌های پیش‌بینی تست‌شده روی 106 ارز، شبیه‌ساز معاملات کاغذی هوش مصنوعی و سابقه عملکرد عمومی. تمامی ارقام اندازه‌گیری‌شده هستند؛ مشاوره مالی نیست.">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta property="og:site_name" content="BTCS">
+  <meta property="og:locale" content="fa_IR">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="BTCS — قیمت زنده ارزهای دیجیتال، نمودارها، پیش‌بینی‌های تست‌شده و شبیه‌ساز هوش مصنوعی">
+  <meta name="twitter:description" content="قیمت‌های زنده و نمودار کندل‌استیک ارزهای دیجیتال برتر، بازه‌های پیش‌بینی تست‌شده روی 106 ارز، شبیه‌ساز معاملات کاغذی هوش مصنوعی و سابقه عملکرد عمومی. تمامی ارقام اندازه‌گیری‌شده هستند؛ مشاوره مالی نیست.">
+  <!-- قفل امنیتی CSP برای محافظت از اسکریپت‌های تزریقی -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-gGBMy7aDnHeWxwjS1IWbYtRJ6eGNvL5bC7uZgb9+vrE=' https://cdn.jsdelivr.net 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' blob: data: https://api.coingecko.com https://api.coinpaprika.com https://api.alternative.me https://open.er-api.com https://data-api.binance.vision https://api.binance.com https://fapi.binance.com wss://data-stream.binance.vision wss://stream.binance.com:9443 wss://fstream.binance.com https://api.gateio.ws wss://api.gateio.ws https://api.huobi.pro wss://api.huobi.pro https://www.okx.com wss://ws.okx.com:8443 https://api.bybit.com https://api.exchange.coinbase.com https://api.kraken.com https://api.gemini.com https://api.crypto.com https://api.bitget.com https://ethereum-rpc.publicnode.com https://bsc-rpc.publicnode.com https://polygon-bor-rpc.publicnode.com https://api.mainnet-beta.solana.com https://mempool.space https://blockstream.info https://lsokeplagodofqlsslcy.supabase.co wss://lsokeplagodofqlsslcy.supabase.co https://cdn.jsdelivr.net https://huggingface.co https://*.huggingface.co https://*.hf.co https://raw.githubusercontent.com http://localhost:* http://127.0.0.1:* https://api.openai.com https://api.groq.com https://openrouter.ai https://api.together.xyz https://api.mistral.ai https://api.deepseek.com https://generativelanguage.googleapis.com; media-src 'self'; manifest-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#070708">
   <meta name="color-scheme" content="dark">
-  <meta property="og:title" content="STABLE Price, Live Chart &amp; Tested AI Forecast | BTCS">
-  <meta property="og:description" content="Live STABLE price and chart from Gate.io, 13 indicators, a price-range forecast tested on 106 coins and an AI paper-trading signal with its measured record.">
+  <meta property="og:title" content="قیمت STABLE، نمودار زنده، اندیکاتورها و پیش‌بینی هوش مصنوعی | BTCS">
+  <meta property="og:description" content="قیمت زنده و نمودار کندل‌استیک STABLE از Gate.io، ۱۳ اندیکاتور تکنیکال، بازه پیش‌بینی تست‌شده روی 106 ارز و سیگنال شبیه‌سازی‌شده هوش مصنوعی با سابقه اندازه‌گیری‌شده.">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="BTCS">
-  <meta property="og:url" content="https://umer-78.github.io/BTCS/coin/stable/">
-  <meta property="og:image" content="https://umer-78.github.io/BTCS/og-image.png">
+  <meta property="og:site_name" content="BTCS (بی تی سی)">
+  <meta property="og:url" content="https://btcs.ir/coin/stable/">
+  <meta property="og:image" content="https://btcs.irog-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="BTCS: a 3D candlestick chart of Bitcoin behind a gold coin, with the largest coins as tokens on a trading grid">
+  <meta property="og:image:alt" content="بی تی سی: نمودار کندل‌استیک سه‌بعدی بیت‌کوین و رمزارزهای برتر در شبکه معاملات">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="canonical" href="https://umer-78.github.io/BTCS/coin/stable/">
+  <link rel="canonical" href="https://btcs.ir/coin/stable/">
   <meta name="robots" content="index, follow, max-image-preview:large">
+  <!-- داده‌های ساختاریافته سئو (Schema.org) -->
   <!-- ld:start -->
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"STABLE Price, Live Chart & Tested AI Forecast | BTCS","url":"https://umer-78.github.io/BTCS/coin/stable/","description":"Live STABLE price and chart from Gate.io, 13 indicators, a price-range forecast tested on 106 coins and an AI paper-trading signal with its measured record.","isPartOf":{"@type":"WebSite","name":"BTCS","url":"https://umer-78.github.io/BTCS/"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"BTCS","item":"https://umer-78.github.io/BTCS/"},{"@type":"ListItem","position":2,"name":"Coins","item":"https://umer-78.github.io/BTCS/"},{"@type":"ListItem","position":3,"name":"STABLE","item":"https://umer-78.github.io/BTCS/coin/stable/"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"قیمت STABLE، نمودار زنده، اندیکاتورها و پیش‌بینی هوش مصنوعی | BTCS","url":"https://btcs.ir/coin/stable/","inLanguage":"fa-IR","description":"قیمت زنده و نمودار کندل‌استیک STABLE از Gate.io، ۱۳ اندیکاتور تکنیکال، بازه پیش‌بینی تست‌شده روی 106 ارز و سیگنال شبیه‌سازی‌شده هوش مصنوعی با سابقه اندازه‌گیری‌شده.","isPartOf":{"@type":"WebSite","name":"BTCS","url":"https://btcs.ir/"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"BTCS","item":"https://btcs.ir/"},{"@type":"ListItem","position":2,"name":"Coins","item":"https://btcs.ir/"},{"@type":"ListItem","position":3,"name":"STABLE","item":"https://btcs.ir/coin/stable/"}]}</script>
   <!-- ld:end -->
+  
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6e7c1'/%3E%3Cstop offset='.45' stop-color='%23d6b46c'/%3E%3Cstop offset='1' stop-color='%239c7a3c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='%230b0a09' stroke='url(%23g)' stroke-width='2'/%3E%3Cpath d='M15 41l11-11 8 8 15-17' stroke='url(%23g)' stroke-width='4.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="manifest" href="manifest.webmanifest">
@@ -42,12 +58,8 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://data-api.binance.vision">
   <link rel="preconnect" href="https://api.coingecko.com">
-  <!-- three.js for the 3D world behind the page (js/world/). The CSP allows this
-       one inline script by its hash: change the map and you must update the hash. -->
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
   <link rel="stylesheet" href="css/app.css">
-  <!-- The app shell's modules, fetched in parallel (tools/build-deps.mjs). -->
-  <!-- modulepreload:start -->
   <link rel="modulepreload" href="js/app.js">
   <link rel="modulepreload" href="js/api/backend.js">
   <link rel="modulepreload" href="js/api/clock.js">
@@ -70,80 +82,113 @@
   <link rel="modulepreload" href="js/lib/signals.js">
   <link rel="modulepreload" href="js/store.js">
   <link rel="modulepreload" href="js/ui.js">
-  <!-- modulepreload:end -->
+
+  <style>
+    /* قرارگیری سایدبار در سمت راست و محتوای اصلی در سمت چپ */
+    .app {
+      display: flex;
+      flex-direction: row;
+      direction: rtl;
+    }
+
+    @media (min-width: 900px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        right: 0 !important;
+        left: auto !important;
+        width: 260px;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: none !important;
+      }
+
+      .main {
+        margin-right: 260px !important;
+        margin-left: 0 !important;
+        width: calc(100% - 260px);
+      }
+    }
+
+    /* قرارگیری دکمه و پنجره چت سریع در سمت چپ پایین */
+    .chat-fab,
+    .chat-panel {
+      left: 20px !important;
+      right: auto !important;
+    }
+  </style>
 </head>
 <body>
-  <a class="skip-link" href="#view">Skip to content</a>
+  <a class="skip-link" href="#view">پرش به محتوا</a>
   <canvas id="world" aria-hidden="true"></canvas>
   <div class="grain" aria-hidden="true"></div>
   <div class="world-tip" id="worldTip" hidden></div>
 
   <div class="app">
-    <aside class="sidebar" aria-label="Main navigation">
+    <aside class="sidebar" aria-label="ناوبری اصلی">
       <a class="brand" href="#/">
         <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="cvGradSide" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e7c1"/><stop offset=".45" stop-color="#d6b46c"/><stop offset="1" stop-color="#9c7a3c"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="#0b0a09" stroke="url(#cvGradSide)" stroke-width="2"/><path d="M15 41l11-11 8 8 15-17" stroke="url(#cvGradSide)" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span class="brand-name" data-app-name>BTCS</span>
+        <span class="brand-name" data-app-name>بی تی سی (BTCS)</span>
       </a>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
-        <div class="live-pill" id="livePill" role="status" aria-live="polite" aria-atomic="true"><i aria-hidden="true"></i><span>Connecting…</span></div>
-        <p class="fine">Data: 10 exchanges (Binance first) and CoinGecko. Signals, forecasts and the trading simulator are educational tools, not financial advice.</p>
-        <a class="side-gh" href="https://github.com/umer-78/BTCS" target="_blank" rel="noopener noreferrer">Source on GitHub ↗</a>
+        <div class="live-pill" id="livePill" role="status" aria-live="polite" aria-atomic="true"><i aria-hidden="true"></i><span>در حال اتصال…</span></div>
+        <p class="fine">داده‌ها: ۱۰ صرافی معتبر (ابتدا بایننس) و کوین‌گکو. سیگنال‌ها، پیش‌بینی‌ها و شبیه‌ساز معامله ابزارهای آموزشی هستند و پیشنهاد مالی محسوب نمی‌شوند.</p>
+        <a class="side-gh" href="https://tokensaz.org" target="_blank" rel="noopener noreferrer">تهیه و اجرا توسط توکن ساز ↗</a>
       </div>
     </aside>
 
     <div class="main">
       <header class="topbar">
-        <a class="brand brand-m" href="#/" aria-label="BTCS home">
+        <a class="brand brand-m" href="#/" aria-label="صفحه اصلی بی تی سی">
           <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="cvGradTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e7c1"/><stop offset=".45" stop-color="#d6b46c"/><stop offset="1" stop-color="#9c7a3c"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="#0b0a09" stroke="url(#cvGradTop)" stroke-width="2"/><path d="M15 41l11-11 8 8 15-17" stroke="url(#cvGradTop)" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
         <div class="search" id="search" role="search">
           <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          <label class="sr-only" for="searchInput">Search coins by name or ticker</label>
-          <input id="searchInput" type="search" placeholder="Search coin (BTC, Ethereum…)" autocomplete="off" spellcheck="false" maxlength="40">
+          <label class="sr-only" for="searchInput">جستجوی کوین با نام یا نماد</label>
+          <input id="searchInput" type="search" placeholder="جستجوی رمزارز (بیت‌کوین، اتریوم...)" autocomplete="off" spellcheck="false" maxlength="40">
           <div class="search-results" id="searchResults" hidden></div>
         </div>
-        <label class="sr-only" for="curSel">Display currency</label>
+        <label class="sr-only" for="curSel">واحد ارز نمایشی</label>
         <select class="mini-sel" id="curSel"></select>
-        <button class="btn sm" id="accountBtn" aria-label="Account" type="button"></button>
+        <button class="btn sm" id="accountBtn" aria-label="حساب کاربری" type="button"></button>
       </header>
       <div id="banner"></div>
-      <div class="ticker" id="ticker" role="region" aria-label="Live prices"></div>
+      <div class="ticker" id="ticker" role="region" aria-label="قیمت‌های لحظه‌ای"></div>
       <main id="view" tabindex="-1">
-        <section class="card seo-intro"><h1>STABLE price, chart and AI forecast</h1><p class="lede">The live STABLE price and candlestick chart come from Gate.io. When you open the page the app trains its forecast models on STABLE's own candles, in your browser, and shows the price range they give for the next candles, the indicators and the AI trader's signal for STABLE.</p><p>Its price range is measured: the 80% range held 79–80.1% of the time across about 540,000 tests on 106 coins.</p><p>No model has beaten chance at calling which way price goes next, so the page never presents a direction as a buy or sell call.</p>
-          <ul class="facts" aria-label="At a glance"><li><b>What it does</b><p>Shows the live STABLE price and chart, 13 indicators, a price-range forecast trained on STABLE's own candles in your browser, and the AI trader's signal.</p></li><li><b>What it measures</b><p>How often the forecast range held across the tested coins, and the AI trader's walk-forward result on each chart.</p></li><li><b>What it does not do</b><p>It does not say whether to buy or sell STABLE, place orders, or know about news before it happens.</p></li><li><b>Limitations</b><p>Direction calls have not beaten a simple baseline, and every figure describes the past. Not financial advice.</p></li></ul>
-          <p class="row" style="gap:8px;flex-wrap:wrap"><a class="btn primary" href="#/coin/STABLE">Open the live STABLE chart</a> <a class="btn" href="#/trader">AI trading simulator</a> <a class="btn" href="#/learn">How it is tested</a></p>
-          <p class="fine">Educational, not financial advice. Forecasts, signals and simulated results describe the past and do not promise future returns. Crypto is volatile; never risk money you cannot afford to lose.</p></section>
+        <section class="card seo-intro"><h1>قیمت، نمودار و پیش‌بینی هوش مصنوعی STABLE</h1><p class="lede">قیمت زنده و نمودار کندل‌استیک STABLE از Gate.io دریافت می‌شود. هنگامی که صفحه را باز می‌کنید، برنامه مدل‌های پیش‌بینی خود را روی کندل‌های خود STABLE در مرورگر شما آموزش می‌دهد و بازه قیمتی حاصل برای کندل‌های بعدی، اندیکاتورها و سیگنال معامله‌گر هوش مصنوعی برای STABLE را نمایش می‌دهد.</p><p>بازه قیمتی آن به دقت اندازه‌گیری شده است: محدوده ۸۰٪ در حدود ۵۴۰٬۰۰۰ آزمون روی ۱۰۶ ارز، در ۷۹ تا ۸۰٫۱ درصد مواقع قیمت را در خود نگه داشته است.</p><p>هیچ مدلی نتوانسته است در پیش‌بینی جهت بعدی حرکت قیمت عملکردی بهتر از شانس داشته باشد، بنابراین این صفحه هرگز جهت خاصی را به عنوان سیگنال خرید یا فروش معرفی نمی‌کند.</p>
+          <ul class="facts" aria-label="در یک نگاه"><li><b>عملکرد</b><p>قیمت و نمودار زنده STABLE، ۱۳ اندیکاتور، پیش‌بینی بازه قیمتی آموزش‌دیده روی کندل‌های خود STABLE در مرورگر شما، و سیگنال معامله‌گر هوش مصنوعی را نمایش می‌دهد.</p></li><li><b>معیارهای اندازه‌گیری</b><p>اینکه بازه پیش‌بینی در بین ارزهای تست‌شده چقدر اعتبار داشته است، و نتیجه تست گام‌به‌گام معامله‌گر هوش مصنوعی در هر نمودار چگونه بوده است.</p></li><li><b>مواردی که انجام نمی‌دهد</b><p>این ابزار نمی‌گوید که STABLE را بخرید یا بفروشید، سفارشی ثبت نمی‌کند، و از اخبار پیش از انتشار مطلع نیست.</p></li><li><b>محدودیت‌ها</b><p>پیش‌بینی‌های جهت حرکت نتوانسته‌اند از یک مبنای ساده بهتر عمل کنند، و هر رقم گذشته را توصیف می‌کند. مشاوره مالی نیست.</p></li></ul>
+          <p class="row" style="gap:8px;flex-wrap:wrap"><a class="btn primary" href="#/coin/STABLE">مشاهده نمودار زنده STABLE</a> <a class="btn" href="#/trader">شبیه‌ساز معاملات هوش مصنوعی</a> <a class="btn" href="#/learn">آموزش</a></p>
+          <p class="fine">جنبه آموزشی دارد، نه مشاوره مالی. پیش‌بینی‌ها، سیگنال‌ها و نتایج شبیه‌سازی‌شده گذشته را توصیف می‌کنند و بازدهی آینده را تضمین نمی‌کنند. بازار ارزهای دیجیتال پرنوسان است؛ هرگز پولی را که توان از دست دادن آن را ندارید ریسک نکنید.</p></section>
       </main>
-     <footer class="foot">
+      <footer class="foot">
         <span data-app-name>بی تی سی (BTCS)</span> · داده‌های لحظه‌ای از API صرافی‌های عمومی · سیگنال‌ها، پیش‌بینی‌ها و شبیه‌ساز معاملات ابزارهای آموزشی هستند و <b>پیشنهاد مالی محسوب نمی‌شوند</b>. بازارهای رمزارز پرنوسان هستند — هرگز پولی که تحمل از دست دادنش را ندارید ریسک نکنید.
         <span class="foot-links"><a href="#/legal/terms">قوانین</a> · <a href="#/legal/privacy">حریم خصوصی</a> · <a href="#/legal/risk">افشای ریسک</a> · <a href="#/track">سابقه عملکرد</a> · <a href="#/learn">آموزش</a> · <a href="https://tokensaz.org" target="_blank" rel="noopener noreferrer">اجرا توسط توکن ساز</a> · <span id="buildTag"></span></span>
       </footer>
 
-      <!-- Quick chat: live-data commands (/price, /signal, /market). Open questions go to the Ask page. -->
-      <button class="chat-fab" id="chatBtn" type="button" aria-controls="chatPanel" aria-expanded="false" aria-label="Open quick chat"></button>
+      <button class="chat-fab" id="chatBtn" type="button" aria-controls="chatPanel" aria-expanded="false" aria-label="باز کردن گفتگوی سریع"></button>
       <div class="chat-panel" id="chatPanel" role="dialog" aria-modal="false" aria-labelledby="chatTitle" hidden>
         <div class="chat-header">
-          <h2 class="chat-title" id="chatTitle">Quick chat</h2>
-          <button class="chat-close" id="chatClose" type="button" aria-label="Close quick chat"><span aria-hidden="true">&times;</span></button>
+          <h2 class="chat-title" id="chatTitle">گفتگوی سریع</h2>
+          <button class="chat-close" id="chatClose" type="button" aria-label="بستن گفتگوی سریع"><span aria-hidden="true">&times;</span></button>
         </div>
         <div class="chat-messages" id="chatMessages" role="log" aria-live="polite" aria-relevant="additions">
           <div class="chat-message bot">
-            <span class="avatar" aria-hidden="true">AI</span>
-            <span class="msg">Live market answers in one line, read straight from exchange data. Try /price BTC, /signal ETH or /market. For open questions, use the Ask page. Not financial advice.</span>
+            <span class="avatar" aria-hidden="true">هوش مصنوعی</span>
+            <span class="msg">پاسخ‌های لحظه‌ای بازار در یک خط، مستقیماً از داده‌های صرافی. دستوراتی مانند /price BTC، /signal ETH یا /market را امتحان کنید. برای سوالات آزاد از صفحه پرسش استفاده کنید. پیشنهاد مالی نیست.</span>
           </div>
         </div>
         <div class="chat-input-wrapper">
-          <label class="sr-only" for="chatInput">Quick chat command</label>
+          <label class="sr-only" for="chatInput">دستور گفتگوی سریع</label>
           <input type="text" id="chatInput" placeholder="/price BTC" autocomplete="off" spellcheck="false" maxlength="120">
-          <button class="chat-send" id="chatSend" type="button" aria-label="Send command">Send</button>
+          <button class="chat-send" id="chatSend" type="button" aria-label="ارسال دستور">ارسال</button>
         </div>
       </div>
     </div>
 
-    <nav class="bottombar" id="bottombar" aria-label="Mobile navigation"></nav>
+    <nav class="bottombar" id="bottombar" aria-label="ناوبری موبایل"></nav>
   </div>
-  <noscript><p style="padding:24px;color:#fff">BTCS needs JavaScript for live prices and charts. The text above describes each page; turn JavaScript on to use it.</p></noscript>
+  <noscript><p style="padding:24px;color:#fff">سایت بی تی سی (BTCS) برای نمایش قیمت‌های زنده و نمودارها به جاوا اسکریپت نیاز دارد. لطفاً جاوا اسکریپت مرورگر خود را فعال کنید.</p></noscript>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
