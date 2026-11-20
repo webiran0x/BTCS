@@ -1,5 +1,5 @@
 // تحلیل‌گر مبتنی بر قاعده. یک پاسخ مارک‌داون از همان زمینه‌ای که
-// به مدل زبانی ارسال می‌شود تولید می‌کند، بنابراین دستیار حتی بدون کلید API کار می‌کند.
+// به مدل زبانی ارسال می‌شود تولید می‌کند، بنابراین دستیار حتی بدون کلید API کار می‌کند[cite: 9].
 
 import { fmtNum as fmtUsd, upRateFor, SCORE_BUCKETS_TESTED, THRESHOLDS } from './signals.js';
 import { accuracyFor, TESTED_ACCURACY, recheckOverall } from './predict.js';
@@ -10,20 +10,20 @@ import { conversationalAnswer, termsIn } from './glossary.js';
 // هر قیمتی که دستیار ذکر می‌کند — سطوح، حد ضرر، اهداف، میانگین‌های متحرک (EMA)، باندهای بولینگر،
 // ATR، بازه‌های پیش‌بینی — همگی به‌صورت تبدیل‌نشده و با برچسب USD خارج می‌شدند، در حالی که
 // سایر بخش‌های صفحه ارز نمایشی انتخاب‌شده توسط کاربر را نشان می‌دادند. پیچیدن تابع قالب‌بندی
-// تمام بیست و یک نقطه فراخوان را به‌طور هم‌زمان تبدیل می‌کند.
+// تمام بیست و یک نقطه فراخوان را به‌طور هم‌زمان تبدیل می‌کند[cite: 9].
 const fmtNum = (v) => (v === null || v === undefined || !Number.isFinite(v) ? fmtUsd(v) : fmtUsd(v * (fx.rate || 1)));
 
 const DISCLAIMER = '_سیگنال‌ها شاخص‌های فنی هستند، نه مشاوره مالی. همیشه از حد ضرر استفاده کنید و فقط به اندازه‌ای که توان از دست دادنش را دارید ریسک کنید._';
 
 // یک علامت منفی واقعی، درست مانند هر عدد دیگری در سایت؛ `digits` رقم معنی‌دار
-// در صورت ارائه، در غیر این صورت یک عدد صحیح.
+// در صورت ارائه، در غیر این صورت یک عدد صحیح[cite: 9].
 const signed = (v, digits) => {
   if (v === null || v === undefined || !Number.isFinite(v)) return '—';
   const t = digits ? Math.abs(v).toPrecision(digits) : Math.abs(v).toFixed(0);
   return v < 0 && +t !== 0 ? `−${t}` : t;
 };
 const money = (v) => Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 });
-// «1 روز آینده» به صورت «روز آینده» خوانده می‌شود
+// «1 روز آینده» به صورت «روز آینده» خوانده می‌شود[cite: 9]
 const nextSpan = (h) => `${String(h).replace(/^1 /, '')} آینده`;
 
 function parseAccount(q) {
@@ -37,17 +37,17 @@ function parseAccount(q) {
 
 function pct(v) {
   if (v === null || v === undefined || !isFinite(v)) return '—';
-  // همان سبکی که در سایر نقاط سایت استفاده می‌شود: علامت منفی واقعی، بدون علامت روی 0.00%.
+  // همان سبکی که در سایر نقاط سایت استفاده می‌شود: علامت منفی واقعی، بدون علامت روی 0.00%[cite: 9].
   const t = Math.abs(Number(v)).toFixed(2);
   return +t === 0 ? `${t}%` : `${v < 0 ? '−' : '+'}${t}%`;
 }
 
 // نمادها و نام‌هایی که آن‌قدر رایج هستند که ذکر یکی از آن‌ها سوال را
 // به یک ارز خاص محدود می‌کند. detectSymbol() جستجوی اصلی را انجام می‌دهد؛ این تابع فقط مانع از آن می‌شود
-// که تحلیل‌گر قاعده‌مند زمانی که یک ارز به صراحت نام برده شده، پاسخی بازارمحور بدهد.
+// که تحلیل‌گر قاعده‌مند زمانی که یک ارز به صراحت نام برده شده، پاسخی بازارمحور بدهد[cite: 9].
 const NAMES_A_COIN_G = /\b(btc|bitcoin|eth|ether|ethereum|bnb|sol|solana|xrp|ripple|ada|cardano|doge|dogecoin|trx|tron|avax|dot|polkadot|link|chainlink|matic|polygon|ltc|litecoin|shib|ton|near|atom|uni|xlm|bch|etc|fil|apt|arb|op|sui|pepe|hbar|icp|inj|tao|sei|rndr|aave|mkr|zec)\b/gi;
 const NAMES_A_COIN = new RegExp(NAMES_A_COIN_G.source);
-/** ارزهای نام‌برده‌شده در سوال، به همراه حذف کلمات روزمره («near term» و غیره). */
+/** ارزهای نام‌برده‌شده در سوال، به همراه حذف کلمات روزمره («near term» و غیره)[cite: 9]. */
 export function namedCoins(q) {
   const text = String(q || '');
   return [...text.matchAll(NAMES_A_COIN_G)].filter((m) => isTickerMention(m[0], text, m.index)).map((m) => m[0].toUpperCase());
@@ -58,7 +58,7 @@ export function namedCoins(q) {
  * تایم‌فریم روزانه (۷ روز آینده)، «tomorrow» برای ۴ ساعته (یک روز آینده)،
  * «today» برای ساعتی (۱۲ ساعت آینده). وقتی هیچ بازه‌ای نام برده نشود مقدار null برمی‌گرداند و از
  * تایم‌فریم انتخاب‌شده روی صفحه استفاده می‌شود. «Is ETH worth buying this week?» قبلاً
- * از تایم‌فریم ۴ ساعته و درباره روز آینده پاسخ داده می‌شد.
+ * از تایم‌فریم ۴ ساعته و درباره روز آینده پاسخ داده می‌شد[cite: 9].
  */
 export function horizonChart(q) {
   const s = String(q || '').toLowerCase();
@@ -69,17 +69,17 @@ export function horizonChart(q) {
   return null;
 }
 
-// «کدام ارز را باید بخرم؟» سوالی متفاوت از «آیا باید بیت‌کوین بخرم؟» است.
+// «کدام ارز را باید بخرم؟» سوالی متفاوت از «آیا باید بیت‌کوین بخرم؟» است[cite: 9].
 export function isMarketWide(q) {
   const s = (q || '').toLowerCase();
   if (/(which|what) (coin|crypto|one|token|altcoin)|best (coin|crypto|buy|pick|token)|top (coin|pick|buy)|what (should i|to) buy|anything (good|worth)|all (the|of the)? ?coins|every coin|whole market|scan the market|market overview|any (good )?(buy|opportunit)|evidence (is )?(the )?strongest|strongest (evidence|setups?)|recommend|picks?\b|where should i (put|invest)|shopping list/.test(s)) return true;
-  // یک سوال خرید/فروش/زمان‌بندی که هیچ ارزی را نام نمی‌برد، سوالی درباره کل بازار است.
+  // یک سوال خرید/فروش/زمان‌بندی که هیچ ارزی را نام نمی‌برد، سوالی درباره کل بازار است[cite: 9].
   if (namedCoins(q).length || /\b(this coin|my)\b/.test(s)) return false;
   return /\b(buy|sell|short|long|invest|entry|exit|hold)\b/.test(s)
     && /\b(what|which|when|anything|something|now|today|this week|time ?frame|timeframe|short term|long term|how long)\b/.test(s);
 }
 
-// «مقایسه بیت‌کوین و اتریوم» / «BTC در برابر SOL» / «کدام یک بهتر است، X یا Y»
+// «مقایسه بیت‌کوین و اتریوم» / «BTC در برابر SOL» / «کدام یک بهتر است، X یا Y»[cite: 9]
 export function detectCompare(q) {
   const s = String(q || '');
   const named = namedCoins(s);
@@ -88,7 +88,7 @@ export function detectCompare(q) {
   return uniq.length >= 2 && (asksToCompare || uniq.length >= 2) ? uniq.slice(0, 4) : null;
 }
 
-// «آیا باید همه چیز را بفروشم؟» مربوط به دارایی‌ها است، نه ارز مورد تمرکز.
+// «آیا باید همه چیز را بفروشم؟» مربوط به دارایی‌ها است، نه ارز مورد تمرکز[cite: 9].
 export const SELL_ALL = /\b(sell|exit|dump|cash out( of)?|get out of) (everything|it all|all of it|all my|all (my )?(coins|crypto))\b/i;
 
 function detectIntent(q) {
@@ -99,7 +99,7 @@ function detectIntent(q) {
   // عبارت «دقت پیش‌بینی‌های شما چقدر است؟» شامل کلمه «predict» است، بنابراین قبلاً
   // با پیش‌بینی قیمت برای ارز مورد تمرکز پاسخ داده می‌شد — سوال درباره مدل
   // با خروجی خود مدل پاسخ داده می‌شد. بررسی اینکه مدل چقدر خوب کار می‌کند
-  // اکنون در اولویت بررسی قرار دارد.
+  // اکنون در اولویت بررسی قرار دارد[cite: 9].
   if (/(backtest|win ?rate|accura|reliab|track record|history of signal|how good|does it work|trust)/.test(s)) return 'backtest';
   if (/(predict|forecast|future|will (it|the price|price|this)|go(ing)? (up|down)|next (hour|day|week|month)|tomorrow|pump|dump|target price|where .* (head|go)|up or down)/.test(s)) return 'forecast';
   if (/(position size|how much|\bsize\b|invest|risk|lot size|allocation|\$\s?\d|\d+\s?k?\s?(usd|usdt|dollars?|bucks))/.test(s)) return 'risk';
@@ -121,7 +121,7 @@ function signalLine(sig, interval = null) {
   const m = interval ? upRateFor(interval, sig.score) : null;
   // این بخش قبلاً به این شکل نوشته می‌شد: «سیگنال: خرید قوی (امتیاز +67/100)» بدون هیچ متن دیگری در ادامه،
   // که در واقع تحلیل را به شکل یک توصیه ارائه می‌داد. اکنون سابقه اندازه‌گیری‌شده
-  // برای آن بازه در کنار آن قرار دارد.
+  // برای آن بازه در کنار آن قرار دارد[cite: 9].
   return m
     ? `${base}\n\n_در ${SCORE_BUCKETS_TESTED.bars.toLocaleString()} کندل تست‌شده، خوانش‌های این بازه در ${m.upRatePct}% از مواقع با قیمت بالاتر همراه بوده‌اند — امتیاز نشان‌دهنده میزان امتداد یک حرکت است، نه ادامه یافتن آن._`
     : base;
@@ -156,17 +156,17 @@ function forecastBlock(f, ctx) {
   ];
   if (f.patternMatches?.length) {
     const ups = f.patternMatches.filter((m) => m.thenMovedPct > 0).length;
-    lines.path(`- مقایسه الگوی نمودار: ${ups} مورد از ${f.patternMatches.length} نمودار مشابه گذشته پس از آن صعود کرده‌اند (به عنوان مثال ${f.patternMatches.slice(0, 3).map((m) => `${m.date}: ${m.similarityPct}% شباهت → ${pct(m.thenMovedPct)}`).join('; ')})`);
+    lines.push(`- مقایسه الگوی نمودار: ${ups} مورد از ${f.patternMatches.length} نمودار مشابه گذشته پس از آن صعود کرده‌اند (به عنوان مثال ${f.patternMatches.slice(0, 3).map((m) => `${m.date}: ${m.similarityPct}% شباهت → ${pct(m.thenMovedPct)}`).join('; ')})`);
   }
   if (f.notes?.length) lines.push(`- نکته: ${f.notes[0]}`);
   return `\n${lines.join('\n')}\n`;
 }
 
-// این که تاریخچه چندساله خود ارز درباره یک نمودار شبیه به امروز چه می‌گوید.
+// این که تاریخچه چندساله خود ارز درباره یک نمودار شبیه به امروز چه می‌گوید[cite: 9].
 function historyBlock(h) {
   if (!h) return '';
   // شمارش مواردی که طبق کلمات پیش‌رفته‌اند: عددی را داده که صعود کرده
-  // حتی زمانی که «نزولی» را نشان داده («lower in 1/4 cases» در حالی که ۳ مورد از ۴ مورد نزولی بوده‌اند).
+  // حتی زمانی که «نزولی» را نشان داده («lower in 1/4 cases» در حالی که ۳ مورد از ۴ مورد نزولی بوده‌اند)[cite: 9].
   const [up, total] = String(h.wentUpAfter || '').split('/').map(Number);
   const fell = h.verdict === 'DOWN';
   const count = Number.isFinite(up) && Number.isFinite(total) ? `**${fell ? total - up : up} مورد از ${total}**` : `**${h.wentUpAfter}**`;
@@ -181,12 +181,12 @@ function historyBlock(h) {
   return `\n${lines.join('\n')}\n`;
 }
 
-// زمان به اوج رسیدن حرکت و زمان برگشت آن — بخشی از پاسخ که احتمال جهت حرکت از آن چشم‌پوشی می‌کند.
+// زمان به اوج رسیدن حرکت و زمان برگشت آن — بخشی از پاسخ که احتمال جهت حرکت از آن چشم‌پوشی می‌کند[cite: 9].
 function timingBlock(ctx) {
   const t = ctx.timing;
   if (!t) return '';
   const lines = [];
-  // ترجیح استفاده از جمله ساخته‌شده با مدت‌زمان‌های واقعی («حدود ۶ ساعت») به جای تعداد کندل‌ها.
+  // ترجیح استفاده از جمله ساخته‌شده با مدت‌زمان‌های واقعی («حدود ۶ ساعت») به جای تعداد کندل‌ها[cite: 9].
   if (ctx.timingSentence) lines.push(`**زمان‌بندی:** ${ctx.timingSentence.replace(/\*\*/g, '')}`);
   else if (t.direction === 'rise then fade') {
     lines.push(`**زمان‌بندی:** قدرت حرکت معمولاً حدود **${t.barsToPeak} کندل** طول می‌کشد و در نزدیکی ${fmtNum(t.peakPrice)} (${pct(t.peakMovePct)}) به اوج می‌رسد${t.barsUntilItTurnsDown ? `، سپس در حدود کندل ${t.barsUntilItTurnsDown} روند نزولی به خود می‌گیرد` : ' و به جای بازگشت، تثبیت می‌شود'}.`);
@@ -200,7 +200,7 @@ function timingBlock(ctx) {
 }
 
 // هر ارز، بررسی‌شده در سه تایم‌فریم به طور هم‌زمان: چه چیزی را برای چند ساعت آینده،
-// چند روز آینده و چند هفته آینده بخریم — و هر کدام را کجا بفروشیم.
+// چند روز آینده و چند هفته آینده بخریم — و هر کدام را کجا بفروشیم[cite: 9].
 function frameLines(b, horizon) {
   const lines = [`  - **${b.coin}** (${b.name}) — ${b.verdict}، میزان اطمینان ${b.conviction}/100، قیمت فعلی ${fmtNum(b.price)}`];
   if (b.buyBetween) lines.push(`    - خرید بین **${fmtNum(b.buyBetween[0])}** و **${fmtNum(b.buyBetween[1])}**؛ حد ضرر **${fmtNum(b.stopLoss)}** (ریسک ${b.riskPct}%)`);
@@ -237,7 +237,7 @@ function marketMultiBlock(m) {
     out.push('_ارزی که در بیش از یک تایم‌فریم وضعیت خوبی دارد، گزینه مطمئن‌تری است — ارزی که فقط روی نمودار ۱ ساعته مناسب به نظر می‌رسد یک معامله کوتاه‌مدت است، نه یک سرمایه‌گذاری._');
   }
 
-  // تنها سیگنال دارای سابقه تست‌شده: عملکرد فعلی قوانین معامله‌گر هوش مصنوعی.
+  // تنها سیگنال دارای سابقه تست‌شده: عملکرد فعلی قوانین معامله‌گر هوش مصنوعی[cite: 9].
   if (m.rule) {
     const r = m.rule, rec = r.record;
     const sg = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}%`;
@@ -255,11 +255,11 @@ function marketMultiBlock(m) {
     for (const a of m.avoid) out.push(`- **${a.coin}** — وضعیت ${a.verdict} روی نمودار ${a.interval} (میزان اطمینان ${a.conviction}/100)${a.topReason ? `: ${a.topReason}` : ''}`);
   }
 
-  out.push(`\nدر هر تحلیل، هر خوانش بر اساس دقت واقعی آن در داده‌های گذشته وزن‌دهی می‌شود، بنابراین مواردی که مزیت اندازه‌گیری‌شده‌ای ندارند ارزش صفر دارند — که در حال حاضر امتیاز خود نمودار نیز شامل آن می‌شود: در ${SCORE_BUCKETS_TESTED.bars.toLocaleString('en-US')} کندل از ${SCORE_BUCKETS_TESTED.coins} ارز، قوی‌ترین خوانش‌های آن کمترین دفعات با صعود قیمت همراه بوده‌ام. بخش **اسکن بازار** را برای همین لیست به همراه نمودارها باز کنید، یا درباره هر ارز واحدی از من سوال کنید تا تحلیل کامل را دریافت کنید.`);
+  out.push(`\nدر هر تحلیل، هر خوانش بر اساس دقت واقعی آن در داده‌های گذشته وزن‌دهی می‌شود، بنابراین مواردی که مزیت اندازه‌گیری‌شده‌ای ندارند ارزش صفر دارند — که در حال حاضر امتیاز خود نمودار نیز شامل آن می‌شود: در ${SCORE_BUCKETS_TESTED.bars.toLocaleString('en-US')} کندل از ${SCORE_BUCKETS_TESTED.coins} ارز، قوی‌ترین خوانش‌های آن کمترین دفعات با صعود قیمت همراه بوده‌اند. بخش **اسکن بازار** را برای همین لیست به همراه نمودارها باز کنید، یا درباره هر ارز واحدی از من سوال کنید تا تحلیل کامل را دریافت کنید.`);
   return `${out.join('\n')}\n`;
 }
 
-// پاسخ کل بازار: کدام ارز، با چه قیمتی، برای چه مدت زمانی، و کجا فروخته شود.
+// پاسخ کل بازار: کدام ارز، با چه قیمتی، برای چه مدت زمانی، و کجا فروخته شود[cite: 9].
 function marketBlock(m) {
   if (!m) return '';
   const out = [`**اسکن بازار — ${m.scanned} ارز روی نمودار ${m.interval}**${m.skipped ? ` (${m.skipped} مورد دیگر رد شدند: عدم وجود کندل صرافی)` : ''}\n`];
@@ -286,12 +286,12 @@ function marketBlock(m) {
   return `${out.join('\n')}\n`;
 }
 
-// دو یا سه ارز، رتبه‌بندی‌شده در برابر یکدیگر بر اساس شواهد یکسان.
+// دو یا سه ارز، رتبه‌بندی‌شده در برابر یکدیگر بر اساس شواهد یکسان[cite: 9].
 //
 // بخش سخت مقایسه، جمع‌آوری اعداد نیست، بلکه امتناع از اعلام برنده زمانی است
 // که برنده مشخصی وجود ندارد. هر ارز در اینجا با همان ترکیبی امتیازدهی می‌شود که
 // سایر بخش‌های برنامه استفاده می‌کنند، و زمانی که اختلاف بین آن‌ها در حد نویز باشد،
-// پاسخ اعلام می‌کند که آن‌ها در یک سطح هستند به جای اینکه رتبه‌بندی ساختگی ایجاد کند.
+// پاسخ اعلام می‌کند که آن‌ها در یک سطح هستند به جای اینکه رتبه‌بندی ساختگی ایجاد کند[cite: 9].
 function compareBlock(rows, interval, horizon) {
   if (!rows?.length) return '';
   const ranked = [...rows].sort((a, b) => (b.conviction ?? 0) - (a.conviction ?? 0));
@@ -326,7 +326,7 @@ function compareBlock(rows, interval, horizon) {
   return `${out.join('\n')}\n`;
 }
 
-// سرتیتر اخبار صرفاً زمینه را برای خواننده فراهم می‌کنند، نه ورودی مدل — این موضوع به صراحت بیان می‌شود.
+// سرتیتر اخبار صرفاً زمینه را برای خواننده فراهم می‌کنند، نه ورودی مدل — این موضوع به صراحت بیان می‌شود[cite: 9].
 function newsBlock(ctx) {
   const n = ctx.news;
   if (!n?.length) return '';
@@ -340,7 +340,7 @@ function newsBlock(ctx) {
 // سیگنال نمودار و پیش‌بینی دو خوانش مستقل هستند و اغلب با یکدیگر اختلاف دارند.
 // ارائه یک پیشنهاد مطمئن «خرید» در حالی که مدل به‌سکوت احتمال صعود را 42% اعلام می‌کند،
 // گمراه‌کننده‌ترین کاری است که این برنامه می‌تواند انجام دهد، بنابراین این تناقض ابتدا به زبان ساده
-// اعلام می‌شود و پیشنهاد خرید متناسب با آن تعدیل می‌گردد.
+// اعلام می‌شود و پیشنهاد خرید متناسب با آن تعدیل می‌گردد[cite: 9].
 export function conflictCheck(sig, forecast) {
   if (!sig?.ok || !forecast) return null;
   const side = sig.plan?.side ?? (sig.score > 0 ? 'long' : sig.score < 0 ? 'short' : null);
@@ -348,7 +348,7 @@ export function conflictCheck(sig, forecast) {
   const probUp = forecast.probUpPct;
   if (probUp === null || probUp === undefined) return null;
 
-  // فقط تمایل مشخص حساب می‌شود — 49% در برابر 51% نویز است
+  // فقط تمایل مشخص حساب می‌شود — 49% در برابر 51% نویز است[cite: 9]
   const forecastSide = probUp >= 55 ? 'long' : probUp <= 45 ? 'short' : null;
   if (!forecastSide || forecastSide === side) return null;
 
@@ -361,11 +361,11 @@ function conflictBlock(ctx) {
   const c = conflictCheck(ctx.signal, ctx.forecast);
   if (!c) return '';
   // الگو از عبارت «the next ${horizon}» استفاده می‌کند، بنابراین جایگزینی که با «the» شروع می‌شد
-  // منجر به ساخت عبارت «the next the forecast horizon» می‌شد.
+  // منجر به ساخت عبارت «the next the forecast horizon» می‌شد[cite: 9].
   const horizon = ctx.horizonText || `${ctx.forecast?.horizonBars ?? 'چند'} کندل`;
   // این بخش همچنان امتیاز نمودار را یک «خرید» یا «فروش» می‌نامید در حالی که سایر قسمت‌های
   // پاسخ از آن دست کشیده بودند — دو جمله پایین‌تر از خطی که می‌گوید امتیاز نشان‌دهنده میزان امتداد حرکت است
-  // نه مقصد بعدی آن. هر دو طرف این تناقض اکنون به یک شکل توصیف می‌شوند: به عنوان یک تمایل.
+  // نه مقصد بعدی آن. هر دو طرف این تناقض اکنون به یک شکل توصیف می‌شوند: به عنوان یک تمایل[cite: 9].
   const signalWord = c.side === 'long' ? 'صعودی' : 'نزولی';
   const modelWord = c.forecastSide === 'long' ? 'صعودی' : 'نزولی';
   const lines = [
@@ -395,12 +395,12 @@ function sentimentLine(ctx) {
 
 export function ruleBasedAnswer(question, ctx = {}) {
   // احوالپرسی‌ها، تعاریف، «چگونه کار می‌کند» و «آیا کلاهبرداری است» سوالات مربوط به نمودار نیستند؛
-  // پاسخ دادن به آن‌ها با تحلیل نمودار رفتار قبلی سیستم بود.
+  // پاسخ دادن به آن‌ها با تحلیل نمودار رفتار قبلی سیستم بود[cite: 9].
   const plain = conversationalAnswer(question, { symbol: ctx.coin?.symbol || null, named: namedCoins(question) });
   if (plain) return plain;
   let intent = detectIntent(question);
   // سوالی که کل بازار را هدف قرار داده اما با تحلیل یک ارز و بدون اسکن بازار دریافت شده است
-  // (صفحه تشخیص داده بود که ارزی نام برده شده)، به جای «لحظاتی دیگر دوباره سوال کنید» درباره همان ارز پاسخ داده می‌شود.
+  // (صفحه تشخیص داده بود که ارزی نام برده شده)، به جای «لحظاتی دیگر دوباره سوال کنید» درباره همان ارز پاسخ داده می‌شود[cite: 9].
   if (intent === 'market' && !ctx.marketFrames && !ctx.market && ctx.signal) intent = 'summary';
   const sig = ctx.signal;
   const out = [];
@@ -524,7 +524,7 @@ export function ruleBasedAnswer(question, ctx = {}) {
       // یک برنامه خروج. این بخش قبلاً سطوح خود نمودار و سپس قوانین طرح معامله
       // را در زیر آن‌ها فهرست می‌کرد: دو حد ضرر متفاوت، خروج بر اساس روند دو بار
       // (یک بار به عنوان «بسته شدن روزانه» روی نمودار ۴ ساعته) و اهدافی که با
-      // اهداف بخش محاسبه حجم مطابقت نداشتند.
+      // اهداف بخش محاسبه حجم مطابقت نداشتند[cite: 9].
       if (sig.plan?.side === 'long' && sig.plan.exitRules?.length) {
         out.push(`\n**برنامه خروج** (طرح معاملاتی ${ctx.interval})\n- اهداف کسب سود: ${sig.plan.takeProfits.map(fmtNum).join(' / ')}\n${sig.plan.exitRules.map((r) => `- ${r}`).join('\n')}`);
       } else {
@@ -553,7 +553,7 @@ export function ruleBasedAnswer(question, ctx = {}) {
         const p1 = Math.min(account, r1 / (stopDistPct / 100)), p2 = Math.min(account, r2 / (stopDistPct / 100));
         out.push(`\nبرای یک حساب **$${money(account)}**:\n- محافظه‌کارانه (ریسک ۱٪ = $${money(r1)}): خرید حدود **$${money(p1)}** از ${ctx.coin?.symbol || 'ارز'} (≈ ${fmtNum(p1 / sig.price)} ${ctx.coin?.symbol || ''})\n- تهاجمی (ریسک ۲٪ = $${money(r2)}): خرید حدود **$${money(p2)}** (≈ ${fmtNum(p2 / sig.price)} ${ctx.coin?.symbol || ''})`);
         // محدود شده به کل موجودی (یک حد ضرر نزدیک)، ضرر در نقطه حد ضرر کمتر از
-        // بودجه ریسک است؛ قبلاً بودجه را در هر دو حالت اعلام می‌کرد.
+        // بودجه ریسک است؛ قبلاً بودجه را در هر دو حالت اعلام می‌کرد[cite: 9].
         const l1 = p1 * (stopDistPct / 100), l2 = p2 * (stopDistPct / 100);
         out.push(`\nدر صورت اصابت حد ضرر حدود $${money(l1)}${Math.abs(l2 - l1) > 0.005 ? `–$${money(l2)}` : ''} ضرر خواهید کرد، نه کل مبلغ حساب شما.${p2 >= account ? ' با حد ضرری به این نزدیکی، حجم پوزیشن به کل موجودی شما محدود می‌شود.' : ''} بدون اهرم (لوریج).`);
       } else {
@@ -571,7 +571,7 @@ export function ruleBasedAnswer(question, ctx = {}) {
       const i = sig.indicators;
       out.push(`**وضعیت اندیکاتورها**\n- RSI(14): ${i.rsi?.toFixed(1) ?? '—'} ${i.rsi > 70 ? '(اشباع خرید)' : i.rsi < 30 ? '(اشباع فروش)' : ''}\n- MACD: ${signed(i.macd, 4)} در برابر سیگنال ${signed(i.macdSignal, 4)} (هیستوگرام ${i.macdHist > 0 ? 'مثبت' : 'منفی'})\n- میانگین‌های متحرک EMA 20 / 50 / 200: ${fmtNum(i.ema20)} / ${fmtNum(i.ema50)} / ${fmtNum(i.ema200)}\n- باندهای بولینگر: ${fmtNum(i.bbLower)} – ${fmtNum(i.bbUpper)}\n- ADX: ${i.adx?.toFixed(0) ?? '—'} ${i.adx > 25 ? '(رونددار)' : '(بدون روند/نوسانی)'}\n- ATR: ${fmtNum(i.atr)} (${i.atrPct}%)\n- حجم نسبت به میانگین ۲۰ کندل: ${i.volumeRatio ?? '—'}×${i.supertrendDir ? `\n- ابر فوق‌العاده (Supertrend): ${i.supertrendDir === 1 ? 'صعودی' : 'نزولی'} (تغییر جهت در ${fmtNum(i.supertrend)})` : ''}${i.mfi !== null && i.mfi !== undefined ? `\n- شاخص جریان پول (MFI): ${i.mfi.toFixed(0)} ${i.mfi > 80 ? '(خرید سنگین)' : i.mfi < 20 ? '(فروش سنگین)' : ''}` : ''}${i.cci !== null && i.cci !== undefined ? `\n- CCI(20): ${signed(i.cci)} ${i.cci > 100 ? '(اصطکاک صعودی)' : i.cci < -100 ? '(اصطکاک نزولی)' : ''}` : ''}${i.willR !== null && i.willR !== undefined ? `\n- ویلیامز %R: ${signed(i.willR)} ${i.willR > -20 ? '(نزدیک سقف محدوده)' : i.willR < -80 ? '(نزدیک کف محدوده)' : ''}` : ''}${i.donchianHigh ? `\n- سطوح شکست کانال دونچین ۲۰ کندلی: ${fmtNum(i.donchianLow)} – ${fmtNum(i.donchianHigh)}` : ''}`);
       out.push('این خوانش‌ها وضعیت نمودار را توصیف می‌کنند؛ هیچ‌کدام به تنهایی برای پیش‌بینی حرکت بعدی اندازه‌گیری نشده‌اند.');
-      // سوال «RSI بیت‌کوین چقدر است؟» داده‌های بالا و معنای آن عدد را دریافت می‌کند.
+      // سوال «RSI بیت‌کوین چقدر است؟» داده‌های بالا و معنای آن عدد را دریافت می‌کند[cite: 9].
       const asked = termsIn(question);
       if (asked.length) out.push(`\n${asked.map((g) => `**${g.title}:** ${g.text}`).join('\n\n')}`);
       out.push(reasonsBlock(sig, 5));
@@ -581,7 +581,7 @@ export function ruleBasedAnswer(question, ctx = {}) {
       const b = ctx.backtest;
       // پاسخ صادقانه اولیه به سوال «آیا این سیستم خوب است؟» اندازه‌گیری گام‌به‌گام (Walk-forward)
       // و مبنایی است که باید بر آن غلبه کند، نه بک‌تست یک نمودار منفرد. با این موارد شروع کنید،
-      // و هر زمان مزیتی وجود نداشت به صراحت اعلام کنید.
+      // و هر زمان مزیتی وجود نداشت به صراحت اعلام کنید[cite: 9].
       const a = ctx.interval ? accuracyFor(ctx.interval) : null;
       const r = ctx.interval ? TESTED_ACCURACY.recheck?.[ctx.interval] : null;
       if (r) {
@@ -619,7 +619,7 @@ export function ruleBasedAnswer(question, ctx = {}) {
 }
 
 // پرامپت سیستمی برای مدل زبانی داخلی. مدل‌های محلی کوچک زمانی دقیق هستند که
-// حقایق تأییدشده را با بیان خود بازگو کنند، بنابراین پرامپت آن‌ها را به داده‌های ارائه‌شده محدود می‌کند.
+// حقایق تأییدشده را با بیان خود بازگو کنند، بنابراین پرامپت آن‌ها را به داده‌های ارائه‌شده محدود می‌کند[cite: 9].
 export const AI_SYSTEM_PROMPT = `You are BTCS AI, a crypto market analyst inside a market-data website.
 Answer the user's question using ONLY the FACTS and DATA provided in their message. They come from live exchange data, technical indicators, a backtested signal engine and a machine-learning forecast that was validated on unseen data.
 Rules:
