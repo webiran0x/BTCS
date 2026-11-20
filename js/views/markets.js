@@ -77,51 +77,64 @@ export async function render(el) {
 
   el.innerHTML = `
     <style>
+      .mk-wrap {
+        direction: rtl;
+        text-align: right;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding-bottom: 48px;
+      }
       .apple-hero {
         position: relative;
-        padding: 48px 36px;
-        background: radial-gradient(circle at top right, rgba(212, 175, 55, 0.08), transparent 50%),
-                    radial-gradient(circle at bottom left, rgba(52, 199, 89, 0.05), transparent 40%),
-                    rgba(20, 20, 25, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 28px;
-        backdrop-filter: blur(25px);
+        padding: 40px 34px;
+        background:
+          radial-gradient(circle at 88% 12%, rgba(10, 132, 255, 0.16), transparent 46%),
+          radial-gradient(circle at 12% 88%, rgba(48, 209, 88, 0.08), transparent 45%),
+          var(--glass);
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        backdrop-filter: blur(26px) saturate(1.45);
+        -webkit-backdrop-filter: blur(26px) saturate(1.45);
         margin-bottom: 24px;
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+        box-shadow: var(--shadow-lg);
       }
       .apple-hero .eyebrow {
         font-size: 0.85rem;
-        font-weight: 500;
-        letter-spacing: 0.05em;
-        color: rgba(255, 255, 255, 0.6);
-        margin-bottom: 12px;
+        font-weight: 600;
+        color: var(--text-2);
+        margin: 0 0 12px 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
       }
       .apple-hero h1 {
-        font-size: 2.75rem;
-        font-weight: 700;
-        letter-spacing: -0.03em;
-        line-height: 1.15;
-        color: #fff;
-        margin-bottom: 14px;
+        font-size: clamp(1.9rem, 3.2vw, 2.55rem);
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+        margin: 0 0 14px 0;
+        background: linear-gradient(180deg, var(--ivory) 0%, rgba(214, 221, 230, 0.78) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
       .apple-hero h1 em {
         font-style: normal;
-        background: linear-gradient(135deg, #ffd700 0%, #ff9500 100%);
+        background: var(--gold-grad);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
       .apple-hero .lede {
-        font-size: 1.1rem;
-        color: rgba(255, 255, 255, 0.78);
+        font-size: 1.04rem;
+        color: var(--text);
         max-width: 780px;
-        line-height: 1.65;
-        margin-bottom: 14px;
+        line-height: 1.7;
+        margin: 0 0 12px 0;
       }
       .seo-pulse-note {
-        font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.94rem;
+        color: var(--text-2);
         line-height: 1.7;
-        margin-bottom: 16px;
+        margin: 0 0 16px 0;
         max-width: 820px;
       }
       .seo-quick-links {
@@ -134,50 +147,55 @@ export async function render(el) {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 7px 13px;
+        padding: 7px 14px;
         border-radius: 999px;
         font-size: 0.84rem;
-        color: rgba(255, 255, 255, 0.88);
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-weight: 600;
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--line);
         text-decoration: none;
-        transition: border-color 0.2s ease, background 0.2s ease;
+        transition: all 0.2s var(--ease);
       }
       .seo-quick-links a:hover {
-        border-color: rgba(255, 215, 0, 0.45);
-        background: rgba(255, 215, 0, 0.08);
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        transform: translateY(-1px);
       }
       .apple-hero .key-hint {
         font-size: 0.85rem;
-        color: rgba(255, 255, 255, 0.48);
-        line-height: 1.55;
-        border-right: 2px solid rgba(212, 175, 55, 0.4);
+        color: var(--text-muted);
+        line-height: 1.65;
+        border-right: 2px solid var(--accent);
         padding-right: 12px;
-        margin-top: 16px;
+        margin: 16px 0 0 0;
       }
       .apple-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: var(--glass);
+        border: 1px solid var(--line);
         border-radius: 22px;
-        padding: 24px;
-        backdrop-filter: blur(20px);
-        transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        padding: 22px 24px;
+        backdrop-filter: blur(22px) saturate(1.35);
+        -webkit-backdrop-filter: blur(22px) saturate(1.35);
+        transition: border-color 0.22s var(--ease), box-shadow 0.25s var(--ease);
       }
       .apple-card:hover {
-        border-color: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        border-color: var(--line-strong);
+        box-shadow: var(--shadow-lg);
       }
-      .apple-card .card-h h3 {
+      .apple-card .card-h h3,
+      .apple-card .card-h h2 {
         font-size: 1.1rem;
-        font-weight: 600;
+        font-weight: 700;
         letter-spacing: -0.01em;
-        color: #fff;
+        color: var(--ivory);
+        margin: 0;
       }
       .apple-controls {
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        margin-bottom: 24px;
+        gap: 14px;
+        margin-bottom: 20px;
       }
       @media (min-width: 768px) {
         .apple-controls {
@@ -198,82 +216,105 @@ export async function render(el) {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 14px;
-        margin-top: 14px;
+        margin-top: 16px;
       }
       .seo-faq-item {
-        background: rgba(255, 255, 255, 0.025);
-        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: var(--surface-2);
+        border: 1px solid var(--line-soft);
         border-radius: 16px;
         padding: 16px;
       }
       .seo-faq-item h3 {
-        font-size: 0.98rem;
-        color: #fff;
+        font-size: 0.96rem;
+        font-weight: 700;
+        color: var(--ivory);
         margin: 0 0 8px 0;
       }
       .seo-faq-item p {
-        font-size: 0.88rem;
-        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.87rem;
+        color: var(--text-2);
         line-height: 1.65;
         margin: 0;
       }
-      #globalStrip { min-height: 92px; }
+      .mk-wrap .tbl-wrap {
+        border-radius: 16px;
+        border: 1px solid var(--line-soft);
+        overflow-x: auto;
+      }
+      .mk-wrap .tbl th {
+        background: var(--surface-2);
+        font-weight: 700;
+        color: var(--text-2);
+        padding: 12px 14px;
+      }
+      .mk-wrap .tbl td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .mk-wrap .tbl tr:last-child td { border-bottom: 0; }
+      #globalStrip { min-height: 92px; margin-bottom: 20px; }
       #fng { min-height: 132px; }
       #trending, #gainers, #losers { min-height: 185px; }
       #tableArea { min-height: 420px; }
+      @media (max-width: 640px) {
+        .apple-hero { padding: 24px 18px; border-radius: 20px; }
+        .apple-card { padding: 16px; border-radius: 18px; }
+      }
     </style>
 
-    <header class="apple-hero" dir="rtl">
-      <p class="eyebrow">بازارهای زنده <span class="rule" aria-hidden="true"></span> ${esc(new Date().toLocaleDateString('fa-IR', { day: 'numeric', month: 'long', year: 'numeric' }))}</p>
-      <h1>قیمت ارزهای دیجیتال <em>امروز</em></h1>
-      <p class="lede" id="mkSummary">قیمت لحظه‌ای ارزهای دیجیتال، ارزش کل بازار، حجم معاملات ۲۴ ساعته، دامیننس و روند ۷ روزه برای رمزارزهای برتر.</p>
-      <p class="seo-pulse-note" id="mkPulse">این صفحه مرجع، وضعیت لحظه‌ای بازار کریپتو، شاخص ترس و طمع، رمزارزهای ترند و بیشترین رشد و ریزش روزانه را در کنار جدول قیمت و نقشه حرارتی یکجا گرد هم آورده است.</p>
-      <nav class="seo-quick-links" aria-label="بخش‌های تحلیلی بازار">
-        <a href="#/coin/BTC">تحلیل لحظه‌ای بیت‌کوین (BTC)</a>
-        <a href="#/coin/ETH">تحلیل لحظه‌ای اتریوم (ETH)</a>
-        <a href="#/scanner">اسکنر تکنیکال بازار</a>
-        <a href="#/compare">مقایسه رمزارزها</a>
-        <a href="#/ai">دستیار هوشمند بازار</a>
-        <a href="#/track">سابقه دقت پیش‌بینی‌ها</a>
-      </nav>
-      <p class="key-hint">پشت قیمت‌ها: ۷۲ ساعت گذشته بیت‌کوین به شکل نمودار کندل سه‌بعدی، جدیدترین کندل آن با قیمت زنده حرکت می‌کند، و بزرگ‌ترین ارزها به عنوان توکن نمایش داده می‌شوند. هرچه توکن بزرگ‌تر باشد، ارزش بازار آن بیشتر است؛ لبه آن برای صعود در ۲۴ ساعت گذشته یشمی و برای ریزش مرجانی است. روی یک توکن اشاره کنید تا نام آن نمایش داده شود؛ برای باز کردن نمودارش کلیک کنید.</p>
-    </header>
+    <div class="mk-wrap" dir="rtl">
+      <header class="apple-hero">
+        <p class="eyebrow">بازارهای زنده <span class="rule" aria-hidden="true"></span> ${esc(new Date().toLocaleDateString('fa-IR', { day: 'numeric', month: 'long', year: 'numeric' }))}</p>
+        <h1>قیمت ارزهای دیجیتال <em>امروز</em></h1>
+        <p class="lede" id="mkSummary">قیمت لحظه‌ای ارزهای دیجیتال، ارزش کل بازار، حجم معاملات ۲۴ ساعته، دامیننس و روند ۷ روزه برای رمزارزهای برتر.</p>
+        <p class="seo-pulse-note" id="mkPulse">این صفحه مرجع، وضعیت لحظه‌ای بازار کریپتو، شاخص ترس و طمع، رمزارزهای ترند و بیشترین رشد و ریزش روزانه را در کنار جدول قیمت و نقشه حرارتی یکجا گرد هم آورده است.</p>
+        <nav class="seo-quick-links" aria-label="بخش‌های تحلیلی بازار">
+          <a href="#/coin/BTC">تحلیل لحظه‌ای بیت‌کوین (BTC)</a>
+          <a href="#/coin/ETH">تحلیل لحظه‌ای اتریوم (ETH)</a>
+          <a href="#/scanner">اسکنر تکنیکال بازار</a>
+          <a href="#/compare">مقایسه رمزارزها</a>
+          <a href="#/ai">دستیار هوشمند بازار</a>
+          <a href="#/track">سابقه دقت پیش‌بینی‌ها</a>
+        </nav>
+        <p class="key-hint">پشت قیمت‌ها: ۷۲ ساعت گذشته بیت‌کوین به شکل نمودار کندل سه‌بعدی، جدیدترین کندل آن با قیمت زنده حرکت می‌کند، و بزرگ‌ترین ارزها به عنوان توکن نمایش داده می‌شوند. هرچه توکن بزرگ‌تر باشد، ارزش بازار آن بیشتر است؛ لبه آن برای صعود در ۲۴ ساعت گذشته یشمی و برای ریزش مرجانی است. روی یک توکن اشاره کنید تا نام آن نمایش داده شود؛ برای باز کردن نمودارش کلیک کنید.</p>
+      </header>
 
-    <div class="global-strip" id="globalStrip" dir="rtl">${Array.from({ length: 5 }, () => `<div class="apple-card">${skeleton(2, 16)}</div>`).join('')}</div>
+      <div class="global-strip" id="globalStrip">${Array.from({ length: 5 }, () => `<div class="apple-card">${skeleton(2, 16)}</div>`).join('')}</div>
 
-    <div class="grid g4" style="margin-bottom:20px" dir="rtl">
-      <div class="apple-card"><div class="card-h"><h3>شاخص ترس و طمع</h3><span class="fine" id="fngDate"></span></div><div id="fng" style="margin-top:12px">${skeleton(3)}</div></div>
-      <div class="apple-card"><div class="card-h"><h3>ترندها</h3></div><div class="hl-list" id="trending" style="margin-top:12px">${skeleton(5)}</div></div>
-      <div class="apple-card"><div class="card-h"><h3>بیشترین رشد <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="gainers" style="margin-top:12px">${skeleton(5)}</div></div>
-      <div class="apple-card"><div class="card-h"><h3>بیشترین ریزش <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="losers" style="margin-top:12px">${skeleton(5)}</div></div>
-    </div>
+      <div class="grid g4" style="margin-bottom:20px">
+        <div class="apple-card"><div class="card-h"><h3>شاخص ترس و طمع</h3><span class="fine" id="fngDate"></span></div><div id="fng" style="margin-top:12px">${skeleton(3)}</div></div>
+        <div class="apple-card"><div class="card-h"><h3>ترندها</h3></div><div class="hl-list" id="trending" style="margin-top:12px">${skeleton(5)}</div></div>
+        <div class="apple-card"><div class="card-h"><h3>بیشترین رشد <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="gainers" style="margin-top:12px">${skeleton(5)}</div></div>
+        <div class="apple-card"><div class="card-h"><h3>بیشترین ریزش <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="losers" style="margin-top:12px">${skeleton(5)}</div></div>
+      </div>
 
-    <section class="apple-card" dir="rtl" aria-label="جدول و نقشه حرارتی رمزارزها">
-      <div class="apple-controls">
-        <div class="seg" id="scope"><button data-v="all" class="on">همه ارزها</button><button data-v="watch">${icon('star', 13)} واچ‌لیست</button></div>
-        <div class="row" style="gap:12px; flex-wrap: wrap;">
-          <input class="inp" id="filter" placeholder="جستجوی سریع ارز..." aria-label="جستجوی سریع ارز" style="width:180px; border-radius:12px;">
-          <div class="seg" id="mode"><button data-v="table" class="on">جدول</button><button data-v="heatmap">نقشه حرارتی</button></div>
+      <section class="apple-card" aria-label="جدول و نقشه حرارتی رمزارزها">
+        <div class="apple-controls">
+          <div class="seg" id="scope"><button data-v="all" class="on">همه ارزها</button><button data-v="watch">${icon('star', 13)} واچ‌لیست</button></div>
+          <div class="row" style="gap:12px; flex-wrap: wrap;">
+            <input class="inp" id="filter" placeholder="جستجوی سریع ارز..." aria-label="جستجوی سریع ارز" style="width:190px; border-radius:12px;">
+            <div class="seg" id="mode"><button data-v="table" class="on">جدول</button><button data-v="heatmap">نقشه حرارتی</button></div>
+          </div>
         </div>
-      </div>
-      <div id="tableArea">${skeleton(10, 26)}</div>
-    </section>
+        <div id="tableArea">${skeleton(10, 26)}</div>
+      </section>
 
-    <section class="apple-card" dir="rtl" style="margin-top:20px" aria-label="راهنمای سریع بازار و سوالات متداول">
-      <div class="card-h">
-        <h2>راهنمای خواندن داده‌های بازار رمزارزها</h2>
-        <span class="fine">به‌روزرسانی خودکار داده‌ها</span>
-      </div>
-      <p class="fine" style="line-height:1.7;margin:6px 0 0">برای بررسی عمیق‌تر هر رمزارز، روی نام یا نماد آن در جدول کلیک کنید تا نمودار چندتایم‌فریمی، اندیکاتورها، سطوح کلیدی و سوابق مدل را ببینید. اطلاعات نمایش‌داده‌شده جنبه تحلیلی و آموزشی دارند و مشاوره سرمایه‌گذاری محسوب نمی‌شوند.</p>
-      <div class="seo-faq-grid">
-        ${SEO_FAQS.map((item) => `
-          <article class="seo-faq-item">
-            <h3>${esc(item.q)}</h3>
-            <p>${esc(item.a)}</p>
-          </article>
-        `).join('')}
-      </div>
-    </section>`;
+      <section class="apple-card" style="margin-top:20px" aria-label="راهنمای سریع بازار و سوالات متداول">
+        <div class="card-h">
+          <h2>راهنمای خواندن داده‌های بازار رمزارزها</h2>
+          <span class="fine">به‌روزرسانی خودکار داده‌ها</span>
+        </div>
+        <p class="fine" style="line-height:1.7;margin:6px 0 0">برای بررسی عمیق‌تر هر رمزارز، روی نام یا نماد آن در جدول کلیک کنید تا نمودار چندتایم‌فریمی، اندیکاتورها، سطوح کلیدی و سوابق مدل را ببینید. اطلاعات نمایش‌داده‌شده جنبه تحلیلی و آموزشی دارند و مشاوره سرمایه‌گذاری محسوب نمی‌شوند.</p>
+        <div class="seo-faq-grid">
+          ${SEO_FAQS.map((item) => `
+            <article class="seo-faq-item">
+              <h3>${esc(item.q)}</h3>
+              <p>${esc(item.a)}</p>
+            </article>
+          `).join('')}
+        </div>
+      </section>
+    </div>`;
 
   const state = { scope: 'all', mode: 'table', sort: 'rank', dir: 1, filter: '', limit: 100, rows: cachedMarkets() || [] };
   let disposed = false;
@@ -463,6 +504,8 @@ export async function render(el) {
   };
   window.addEventListener('cv:tickers', onTick);
   const refresh = setInterval(loadMarkets, 90e3);
+
+  void price; void dateTime;
 
   return () => {
     disposed = true;
