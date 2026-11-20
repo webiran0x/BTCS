@@ -129,6 +129,7 @@ export async function render(el) {
         max-width: 780px;
         line-height: 1.7;
         margin: 0 0 12px 0;
+        min-height: 35px;
       }
       .seo-pulse-note {
         font-size: 0.94rem;
@@ -136,6 +137,7 @@ export async function render(el) {
         line-height: 1.7;
         margin: 0 0 16px 0;
         max-width: 820px;
+        min-height: 32px;
       }
       .seo-quick-links {
         display: flex;
@@ -250,12 +252,13 @@ export async function render(el) {
       .mk-wrap .tbl td {
         padding: 12px 14px;
         border-bottom: 1px solid var(--line-soft);
+        white-space: nowrap;
       }
       .mk-wrap .tbl tr:last-child td { border-bottom: 0; }
-      #globalStrip { min-height: 92px; margin-bottom: 20px; }
-      #fng { min-height: 132px; }
-      #trending, #gainers, #losers { min-height: 185px; }
-      #tableArea { min-height: 420px; }
+      #globalStrip { min-height: 108px; margin-bottom: 20px; }
+      #fng { min-height: 145px; }
+      #trending, #gainers, #losers { min-height: 195px; }
+      #tableArea { min-height: 520px; contain: layout style; }
       @media (max-width: 640px) {
         .apple-hero { padding: 24px 18px; border-radius: 20px; }
         .apple-card { padding: 16px; border-radius: 18px; }
@@ -279,24 +282,24 @@ export async function render(el) {
         <p class="key-hint">پشت قیمت‌ها: ۷۲ ساعت گذشته بیت‌کوین به شکل نمودار کندل سه‌بعدی، جدیدترین کندل آن با قیمت زنده حرکت می‌کند، و بزرگ‌ترین ارزها به عنوان توکن نمایش داده می‌شوند. هرچه توکن بزرگ‌تر باشد، ارزش بازار آن بیشتر است؛ لبه آن برای صعود در ۲۴ ساعت گذشته یشمی و برای ریزش مرجانی است. روی یک توکن اشاره کنید تا نام آن نمایش داده شود؛ برای باز کردن نمودارش کلیک کنید.</p>
       </header>
 
-      <div class="global-strip" id="globalStrip">${Array.from({ length: 5 }, () => `<div class="apple-card">${skeleton(2, 16)}</div>`).join('')}</div>
+      <div class="global-strip" id="globalStrip">${Array.from({ length: 5 }, () => `<div class="apple-card" style="min-height:108px">${skeleton(2, 16)}</div>`).join('')}</div>
 
       <div class="grid g4" style="margin-bottom:20px">
-        <div class="apple-card"><div class="card-h"><h3>شاخص ترس و طمع</h3><span class="fine" id="fngDate"></span></div><div id="fng" style="margin-top:12px">${skeleton(3)}</div></div>
-        <div class="apple-card"><div class="card-h"><h3>ترندها</h3></div><div class="hl-list" id="trending" style="margin-top:12px">${skeleton(5)}</div></div>
-        <div class="apple-card"><div class="card-h"><h3>بیشترین رشد <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="gainers" style="margin-top:12px">${skeleton(5)}</div></div>
-        <div class="apple-card"><div class="card-h"><h3>بیشترین ریزش <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="losers" style="margin-top:12px">${skeleton(5)}</div></div>
+        <div class="apple-card"><div class="card-h"><h3>شاخص ترس و طمع</h3><span class="fine" id="fngDate"></span></div><div id="fng" style="margin-top:12px">${skeleton(3, 24)}</div></div>
+        <div class="apple-card"><div class="card-h"><h3>ترندها</h3></div><div class="hl-list" id="trending" style="margin-top:12px">${skeleton(5, 22)}</div></div>
+        <div class="apple-card"><div class="card-h"><h3>بیشترین رشد <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="gainers" style="margin-top:12px">${skeleton(5, 22)}</div></div>
+        <div class="apple-card"><div class="card-h"><h3>بیشترین ریزش <span class="fine">۲۴ ساعته</span></h3></div><div class="hl-list" id="losers" style="margin-top:12px">${skeleton(5, 22)}</div></div>
       </div>
 
       <section class="apple-card" aria-label="جدول و نقشه حرارتی رمزارزها">
         <div class="apple-controls">
-          <div class="seg" id="scope"><button data-v="all" class="on">همه ارزها</button><button data-v="watch">${icon('star', 13)} واچ‌لیست</button></div>
+          <div class="seg" id="scope"><button type="button" data-v="all" class="on">همه ارزها</button><button type="button" data-v="watch">${icon('star', 13)} واچ‌لیست</button></div>
           <div class="row" style="gap:12px; flex-wrap: wrap;">
             <input class="inp" id="filter" placeholder="جستجوی سریع ارز..." aria-label="جستجوی سریع ارز" style="width:190px; border-radius:12px;">
-            <div class="seg" id="mode"><button data-v="table" class="on">جدول</button><button data-v="heatmap">نقشه حرارتی</button></div>
+            <div class="seg" id="mode"><button type="button" data-v="table" class="on">جدول</button><button type="button" data-v="heatmap">نقشه حرارتی</button></div>
           </div>
         </div>
-        <div id="tableArea">${skeleton(10, 26)}</div>
+        <div id="tableArea">${skeleton(10, 34)}</div>
       </section>
 
       <section class="apple-card" style="margin-top:20px" aria-label="راهنمای سریع بازار و سوالات متداول">
@@ -316,12 +319,44 @@ export async function render(el) {
       </section>
     </div>`;
 
-  const state = { scope: 'all', mode: 'table', sort: 'rank', dir: 1, filter: '', limit: 100, rows: cachedMarkets() || [] };
+  const state = {
+    scope: 'all',
+    mode: 'table',
+    sort: 'rank',
+    dir: 1,
+    filter: '',
+    limit: 100,
+    rows: cachedMarkets() || [],
+    hasLoadedOnce: false,
+  };
   let disposed = false;
 
+  const setHtml = (sel, html) => {
+    if (disposed) return null;
+    const node = $(sel, el);
+    if (!node) return null;
+    node.innerHTML = html;
+    return node;
+  };
+
+  const renderMovers = (rows) => {
+    const movers = (rows || []).filter((r) => !isStable(r.symbol) && r.volume24h > 5e6 && Number.isFinite(r.change24h));
+    const g = [...movers].sort((a, b) => b.change24h - a.change24h).slice(0, 5);
+    const l = [...movers].sort((a, b) => a.change24h - b.change24h).slice(0, 5);
+    setHtml('#gainers', g.length ? g.map((c) => listRow(c, changeHtml(c.change24h))).join('') : '<p class="muted">داده‌ای از نوسانات فعلی موجود نیست.</p>');
+    setHtml('#losers', l.length ? l.map((c) => listRow(c, changeHtml(c.change24h))).join('') : '<p class="muted">داده‌ای از نوسانات فعلی موجود نیست.</p>');
+  };
+
   const drawTable = () => {
+    if (disposed) return;
     const area = $('#tableArea', el);
-    let rows = state.rows;
+    if (!area) return;
+
+    let rows = state.rows || [];
+    if (!rows.length && !state.hasLoadedOnce) {
+      return;
+    }
+
     if (state.scope === 'watch') {
       const w = watchlist.all();
       rows = rows.filter((r) => w.includes(r.symbol));
@@ -335,17 +370,20 @@ export async function render(el) {
       return;
     }
     if (state.mode === 'heatmap') {
-      area.innerHTML = '<div class="treemap" id="tm"></div><p class="fine mt" style="text-align:center;">اندازه کاشی = ارزش بازار · رنگ = تغییر ۲۴ ساعته. برای باز کردن ارز، روی یک کاشی ضربه بزنید.</p>';
+      area.innerHTML = '<div class="treemap" id="tm" style="min-height:380px"></div><p class="fine mt" style="text-align:center;">اندازه کاشی = ارزش بازار · رنگ = تغییر ۲۴ ساعته. برای باز کردن ارز، روی یک کاشی ضربه بزنید.</p>';
       const top = rows.filter((r) => !isStable(r.symbol)).slice(0, 60);
-      treemap($('#tm', area), top.map((r) => ({
-        value: Math.sqrt(r.marketCap || 1),
-        label: r.symbol,
-        sub: pct(r.change24h),
-        color: changeColor(r.change24h),
-        symbol: r.symbol,
-      })), {
-        onClick: (r) => { location.hash = `#/coin/${r.symbol}`; },
-      });
+      const tmEl = $('#tm', area);
+      if (tmEl) {
+        treemap(tmEl, top.map((r) => ({
+          value: Math.sqrt(r.marketCap || 1),
+          label: r.symbol,
+          sub: pct(r.change24h),
+          color: changeColor(r.change24h),
+          symbol: r.symbol,
+        })), {
+          onClick: (r) => { location.hash = `#/coin/${r.symbol}`; },
+        });
+      }
       return;
     }
 
@@ -358,10 +396,10 @@ export async function render(el) {
       <thead><tr><th class="l" style="width:28px"></th>${th('rank', '#', 'l hide-p')}${th('name', 'ارز', 'l')}${th('price', 'قیمت')}${th('change1h', '۱ ساعته', 'hide-m hide-l')}${th('change24h', '۲۴ ساعته')}${th('change7d', '۷روز', 'hide-m')}${th('marketCap', 'ارزش بازار', 'hide-p')}${th('volume24h', 'حجم ۲۴ ساعته', 'hide-m hide-t')}<th class="hide-m hide-t">۷ روز گذشته</th></tr></thead>
       <tbody>${rows.slice(0, state.limit).map((r) => `
         <tr data-sym="${esc(r.symbol)}" data-pair="${r.binance || ''}">
-          <td class="l"><button class="star ${watchlist.has(r.symbol) ? 'on' : ''}" data-star="${esc(r.symbol)}" aria-label="افزودن ${esc(r.name)} به واچ‌لیست">${icon('star', 15)}</button></td>
+          <td class="l"><button type="button" class="star ${watchlist.has(r.symbol) ? 'on' : ''}" data-star="${esc(r.symbol)}" aria-label="افزودن ${esc(r.name)} به واچ‌لیست">${icon('star', 15)}</button></td>
           <td class="l muted hide-p">${r.rank ?? ''}</td>
           <td class="l"><div class="coin-cell">${coinLogo(r, 26)}<a class="coin-link" href="#/coin/${encodeURIComponent(r.symbol)}">${esc(r.name)}</a><small>${esc(r.symbol)}</small></div></td>
-          <td class="p">${money(r.price)}</td>
+          <td class="p" data-v="${Number.isFinite(+r.price) ? +r.price : 0}">${money(r.price)}</td>
           <td class="hide-m hide-l">${changeHtml(r.change1h)}</td>
           <td class="c24">${changeHtml(r.change24h)}</td>
           <td class="hide-m">${changeHtml(r.change7d)}</td>
@@ -369,14 +407,15 @@ export async function render(el) {
           <td class="hide-m hide-t">${compact(r.volume24h)}</td>
           <td class="hide-m hide-t">${sparkline(r.sparkline, { w: 128, h: 38 })}</td>
         </tr>`).join('')}</tbody></table></div>
-       ${rows.length > state.limit ? `<div class="row" style="justify-content:center;margin-top:16px"><button class="btn" id="more" style="border-radius:12px; padding: 10px 24px;">نمایش بیشتر (${(rows.length - state.limit).toLocaleString('fa-IR')})</button></div>` : ''}`;
+       ${rows.length > state.limit ? `<div class="row" style="justify-content:center;margin-top:16px"><button type="button" class="btn" id="more" style="border-radius:12px; padding: 10px 24px;">نمایش بیشتر (${(rows.length - state.limit).toLocaleString('fa-IR')})</button></div>` : ''}`;
 
     wireSortHeaders(area, (k) => {
       state.dir = state.sort === k ? -state.dir : 1;
       state.sort = k;
       drawTable();
     });
-    $('#mkt tbody', area).addEventListener('click', (e) => {
+    const tbody = $('#mkt tbody', area);
+    tbody?.addEventListener('click', (e) => {
       const star = e.target.closest('[data-star]');
       if (star) {
         e.stopPropagation();
@@ -401,55 +440,80 @@ export async function render(el) {
 
   bindSeg($('#scope', el), (v) => { state.scope = v; drawTable(); });
   bindSeg($('#mode', el), (v) => { state.mode = v; drawTable(); });
-  $('#filter', el).addEventListener('input', (e) => { state.filter = e.target.value; drawTable(); });
-  if (state.rows.length) drawTable();
+  $('#filter', el)?.addEventListener('input', (e) => { state.filter = e.target.value; drawTable(); });
+
+  if (state.rows.length) {
+    state.hasLoadedOnce = true;
+    drawTable();
+    renderMovers(state.rows);
+  }
 
   const listRow = (c, right) => `<a href="#/coin/${esc(c.symbol)}" title="${esc(c.name)} (${esc(c.symbol)})">${coinLogo(c, 22)}<span class="nm">${esc(c.symbol)} <span class="muted">${esc(c.name)}</span></span>${right}</a>`;
 
-  const loadMarkets = async () => {
-    try {
-      state.rows = await markets();
-      if (disposed) return;
-      drawTable();
-      const movers = state.rows.filter((r) => !isStable(r.symbol) && r.volume24h > 5e6 && Number.isFinite(r.change24h));
-      const g = [...movers].sort((a, b) => b.change24h - a.change24h).slice(0, 5);
-      const l = [...movers].sort((a, b) => a.change24h - b.change24h).slice(0, 5);
-      $('#gainers', el).innerHTML = g.length ? g.map((c) => listRow(c, changeHtml(c.change24h))).join('') : '<p class="muted">داده‌ای از نوسانات فعلی موجود نیست.</p>';
-      $('#losers', el).innerHTML = l.length ? l.map((c) => listRow(c, changeHtml(c.change24h))).join('') : '<p class="muted">داده‌ای از نوسانات فعلی موجود نیست.</p>';
-    } catch (e) {
-      $('#tableArea', el).innerHTML = errorBox('بارگیری داده‌های بازار امکان‌پذیر نبود.', loadMarkets);
-    }
+  let loadingMarkets = null;
+  const loadMarkets = () => {
+    if (disposed) return Promise.resolve();
+    if (loadingMarkets) return loadingMarkets;
+    loadingMarkets = (async () => {
+      try {
+        const fresh = await markets();
+        if (disposed) return;
+        if (Array.isArray(fresh) && fresh.length) {
+          state.rows = fresh;
+        }
+        state.hasLoadedOnce = true;
+        drawTable();
+        renderMovers(state.rows);
+      } catch (e) {
+        if (disposed) return;
+        if (!state.rows?.length) {
+          setHtml('#tableArea', errorBox(e?.message || 'بارگیری داده‌های بازار امکان‌پذیر نبود.', loadMarkets));
+          setHtml('#gainers', '<p class="muted">در دسترس نیست.</p>');
+          setHtml('#losers', '<p class="muted">در دسترس نیست.</p>');
+        }
+      } finally {
+        loadingMarkets = null;
+      }
+    })();
+    return loadingMarkets;
   };
 
   const loadGlobal = async () => {
     let g;
-    try { g = await getGlobal(); } catch (e) {
-      if (disposed) return;
-      $('#globalStrip', el).innerHTML = `<div class="apple-card empty" style="grid-column:1/-1"><b>خلاصه بازار جهانی در دسترس نیست</b><p class="fine">${esc(e?.message || 'منبع بازار جهانی پاسخ نداد.')}</p></div>`;
+    try {
+      g = await getGlobal();
+    } catch (e) {
+      if (!disposed) {
+        setHtml('#globalStrip', `<div class="apple-card empty" style="grid-column:1/-1"><b>خلاصه بازار جهانی در دسترس نیست</b><p class="fine">${esc(e?.message || 'منبع بازار جهانی پاسخ نداد.')}</p></div>`);
+      }
       return;
     }
-    if (disposed) return;
+    if (disposed || !g) return;
     const card = (k, v, s = '') => `<div class="apple-card stat"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
-    $('#globalStrip', el).innerHTML = [
+    setHtml('#globalStrip', [
       card('کل ارزش بازار', compact(g.totalMarketCap), `${changeHtml(g.marketCapChange24h)} <span class="muted">۲۴س</span>`),
       card('حجم ۲۴ ساعته', compact(g.totalVolume), '<span class="muted">همه صرافی‌ها</span>'),
       card('دامیننس بیت‌کوین', pct(g.btcDominance, 1, false), '<span class="muted">سهم از ارزش بازار</span>'),
       card('دامیننس اتریوم', pct(g.ethDominance, 1, false), '<span class="muted">سهم از ارزش بازار</span>'),
       card('ارزهای رصدشده', g.activeCryptocurrencies?.toLocaleString('fa-IR') ?? '—', g.markets ? `<span class="muted">${g.markets.toLocaleString('fa-IR')} بازار</span>` : ''),
-    ].join('');
-    $('#mkSummary', el).innerHTML = `ارزش کل بازار ارز دیجیتال <b>${compact(g.totalMarketCap)}</b> است که در ۲۴ ساعت گذشته ${g.marketCapChange24h >= 0 ? 'افزایش' : 'کاهش'} <b class="${g.marketCapChange24h >= 0 ? 'up' : 'down'}">${pct(Math.abs(g.marketCapChange24h), 2, false)}</b> داشته است.`;
-    $('#mkPulse', el).innerHTML = `حجم معاملات ۲۴ ساعته به <b>${compact(g.totalVolume)}</b> رسیده و دامیننس بیت‌کوین <b>${pct(g.btcDominance, 1, false)}</b> و دامیننس اتریوم <b>${pct(g.ethDominance, 1, false)}</b> ثبت شده است.`;
+    ].join(''));
+    setHtml('#mkSummary', `ارزش کل بازار ارز دیجیتال <b>${compact(g.totalMarketCap)}</b> است که در ۲۴ ساعت گذشته ${g.marketCapChange24h >= 0 ? 'افزایش' : 'کاهش'} <b class="${g.marketCapChange24h >= 0 ? 'up' : 'down'}">${pct(Math.abs(g.marketCapChange24h), 2, false)}</b> داشته است.`);
+    setHtml('#mkPulse', `حجم معاملات ۲۴ ساعته به <b>${compact(g.totalVolume)}</b> رسیده و دامیننس بیت‌کوین <b>${pct(g.btcDominance, 1, false)}</b> و دامیننس اتریوم <b>${pct(g.ethDominance, 1, false)}</b> ثبت شده است.`);
   };
 
   const loadFng = async () => {
     let f;
-    try { f = await getFearGreed(); } catch (e) {
-      if (!disposed) $('#fng', el).innerHTML = `<div class="empty"><p>شاخص ترس و طمع در دسترس نیست.</p><p class="fine">${esc(e?.message || 'منبع احساسات بازار پاسخ نداد.')}</p></div>`;
+    try {
+      f = await getFearGreed();
+    } catch (e) {
+      if (!disposed) {
+        setHtml('#fng', `<div class="empty"><p>شاخص ترس و طمع در دسترس نیست.</p><p class="fine">${esc(e?.message || 'منبع احساسات بازار پاسخ نداد.')}</p></div>`);
+      }
       return;
     }
     if (disposed) return;
-    if (!f?.length) {
-      $('#fng', el).innerHTML = '<div class="empty"><p>هیچ داده اخیری از شاخص ترس و طمع دریافت نشد.</p></div>';
+    if (!Array.isArray(f) || !f.length) {
+      setHtml('#fng', '<div class="empty"><p>هیچ داده اخیری از شاخص ترس و طمع دریافت نشد.</p></div>');
       return;
     }
     const now = f[0], week = f[7], month = f[29];
@@ -463,34 +527,54 @@ export async function render(el) {
         timeZone: 'Asia/Tehran',
       }).format(new Date(Number(now.timestamp) * 1000))}`;
     }
-    $('#fng', el).innerHTML = `${gauge(now.value, now.classification)}
-      <div class="row spread fine" style="margin-top:10px"><span>دیروز <b>${f[1]?.value ?? '—'}</b></span><span>هفته گذشته <b>${week?.value ?? '—'}</b></span><span>ماه گذشته <b>${month?.value ?? '—'}</b></span></div>`;
+    setHtml('#fng', `${gauge(now.value, now.classification)}
+      <div class="row spread fine" style="margin-top:10px"><span>دیروز <b>${f[1]?.value ?? '—'}</b></span><span>هفته گذشته <b>${week?.value ?? '—'}</b></span><span>ماه گذشته <b>${month?.value ?? '—'}</b></span></div>`);
   };
 
   const loadTrending = async () => {
     let t;
-    try { t = await getTrending(); } catch (e) {
-      if (!disposed) $('#trending', el).innerHTML = `<p class="muted">داده‌های ترند در دسترس نیست: ${esc(e?.message || 'منبع در دسترس نیست')}.</p>`;
+    try {
+      t = await getTrending();
+    } catch (e) {
+      if (!disposed) {
+        setHtml('#trending', `<p class="muted">داده‌های ترند در دسترس نیست: ${esc(e?.message || 'منبع در دسترس نیست')}.</p>`);
+      }
       return;
     }
     if (disposed) return;
-    $('#trending', el).innerHTML = t.slice(0, 5).map((c) => listRow(c, changeHtml(c.change24h))).join('') || '<p class="muted">داده‌ای وجود ندارد</p>';
+    const list = Array.isArray(t) ? t.slice(0, 5) : [];
+    setHtml('#trending', list.length ? list.map((c) => listRow(c, changeHtml(c.change24h))).join('') : '<p class="muted">داده‌ای وجود ندارد</p>');
   };
 
-  loadMarkets();
-  loadGlobal();
-  loadFng();
-  loadTrending();
+  Promise.allSettled([
+    loadMarkets(),
+    loadGlobal(),
+    loadFng(),
+    loadTrending(),
+  ]);
 
   const onTick = (e) => {
-    if (state.mode !== 'table') return;
+    if (disposed || state.mode !== 'table' || !Array.isArray(e?.detail)) return;
+    const priceMap = new Map();
     for (const t of e.detail) {
-      const tr = el.querySelector(`tr[data-pair="${t.s}"]`);
+      const p = +t.c;
+      if (t?.s && Number.isFinite(p) && p > 0) priceMap.set(t.s, p);
+    }
+    if (!priceMap.size) return;
+
+    for (const r of state.rows) {
+      if (r.binance && priceMap.has(r.binance)) {
+        r.price = priceMap.get(r.binance);
+      }
+    }
+
+    for (const [pairSym, p] of priceMap.entries()) {
+      const tr = el.querySelector(`tr[data-pair="${pairSym}"]`);
       if (!tr) continue;
       const cell = tr.querySelector('.p');
-      const p = +t.c;
+      if (!cell) continue;
       const prev = +cell.dataset.v || 0;
-      cell.dataset.v = p;
+      cell.dataset.v = String(p);
       const txt = `${money(p)}`;
       if (cell.textContent !== txt) {
         cell.textContent = txt;
