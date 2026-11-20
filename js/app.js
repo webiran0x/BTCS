@@ -46,6 +46,28 @@ const NAV = [
 const ADMIN_NAV = { path: 'admin', label: 'مدیریت', icon: 'chip', short: 'مدیریت' };
 const MOBILE = ['', 'ai', 'trader', 'wallet'];
 
+const ROUTE_LABELS = {
+  '': 'بازارها',
+  coin: 'تحلیل رمزارز',
+  advice: 'پیشنهادات',
+  ai: 'دستیار هوشمند',
+  trader: 'معاملات',
+  learn: 'یادگیری هوش مصنوعی',
+  scanner: 'اسکنر بازار',
+  track: 'سابقه عملکرد',
+  futures: 'فیوچرز',
+  news: 'اخبار بازار',
+  compare: 'مقایسه رمزارزها',
+  tools: 'ابزارها و ماشین‌حساب',
+  exchanges: 'صرافی‌ها',
+  wallet: 'کیف پول',
+  alerts: 'هشدارها',
+  premium: 'اشتراک ویژه',
+  account: 'حساب کاربری',
+  admin: 'پنل مدیریت',
+  legal: 'اطلاعات حقوقی',
+};
+
 // نگاشت مسیرها به ماژول‌های صفحه در js/views/
 const VIEWS = {
   '': 'markets',
@@ -71,6 +93,8 @@ const VIEWS = {
 
 let cleanup = null;
 let routeSeq = 0;
+let loaderTimer = null;
+let loaderHideTimer = null;
 
 function navItems() {
   return isAdmin() ? [...NAV, ADMIN_NAV] : NAV;
@@ -104,8 +128,58 @@ function syncCanonicalAndDescription(viewName, params = []) {
   }
   canonical.href = canonicalHref;
 
-  let ogUrl = document.querySelector('meta[property="og:url"]');
+  const ogUrl = document.querySelector('meta[property="og:url"]');
   if (ogUrl) ogUrl.setAttribute('content', canonicalHref);
+}
+
+// ساخت ظرف پایدار (.cv-view-wrap) و لایه لودینگ (.cv-route-loader) در داخل #view
+function ensureViewShell(viewEl) {
+  let wrap = $('.cv-view-wrap', viewEl);
+  if (!wrap) {
+    viewEl.innerHTML = `
+      <div class="cv-view-wrap" dir="rtl">
+        <div class="cv-view-host"></div>
+        <div class="cv-route-loader" role="status" aria-live="polite" aria-hidden="true">
+          <div class="cv-loader-ring"></div>
+          <div class="cv-loader-text">در حال بارگذاری بخش…</div>
+          <div class="cv-loader-bar"></div>
+        </div>
+      </div>`;
+    wrap = $('.cv-view-wrap', viewEl);
+  }
+  return {
+    wrap,
+    host: $('.cv-view-host', wrap),
+    loader: $('.cv-route-loader', wrap),
+    loaderText: $('.cv-loader-text', wrap),
+  };
+}
+
+function showRouteLoader(loader, loaderText, label, { immediate = false } = {}) {
+  if (!loader) return;
+  clearTimeout(loaderTimer);
+  clearTimeout(loaderHideTimer);
+  if (loaderText) loaderText.textContent = `در حال بارگذاری ${label}…`;
+
+  const activate = () => {
+    loader.hidden = false;
+    loader.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => loader.classList.add('is-visible'));
+  };
+
+  if (immediate) activate();
+  else loaderTimer = setTimeout(activate, 90);
+}
+
+function hideRouteLoader(loader) {
+  clearTimeout(loaderTimer);
+  clearTimeout(loaderHideTimer);
+  if (!loader) return;
+  loader.classList.remove('is-visible');
+  loader.setAttribute('aria-hidden', 'true');
+  loaderHideTimer = setTimeout(() => {
+    if (!loader.classList.contains('is-visible')) loader.hidden = true;
+  }, 240);
 }
 
 function renderNav() {
@@ -160,40 +234,73 @@ async function route(opts) {
   const [name = '', ...params] = location.hash.replace(/^#\/?/, '').split('/').map(safeDecode);
   const resolvedView = VIEWS[name] || VIEWS[''];
   const file = `views/${resolvedView}.js`;
-  document.documentElement.dataset.page = VIEWS[name] ? name || 'markets' : 'markets';
+  const pageKey = VIEWS[name] ? (name || 'markets') : 'markets';
+
+  document.documentElement.dataset.page = pageKey;
   syncCanonicalAndDescription(VIEWS[name] ? name : '', params);
-  window.dispatchEvent(new CustomEvent('cv:route', { detail: { name: document.documentElement.dataset.page, params } }));
+  window.dispatchEvent(new CustomEvent('cv:route', { detail: { name: pageKey, params } }));
   preloadDeps(file);
   renderNav();
-  if (typeof cleanup === 'function') { try { cleanup(); } catch (e) { console.error(e); } }
-  cleanup = null;
+
+  if (typeof cleanup === 'function') {
+    try { cleanup(); } catch (e) { console.error(e); }
+    cleanup = null;
+  }
+
   const view = $('#view');
   if (!view) return;
+
   if (name && !VIEWS[name] && !name.includes('=')) {
+    clearTimeout(loaderTimer);
+    clearTimeout(loaderHideTimer);
     view.innerHTML = `<div class="card empty" dir="rtl"><h3>صفحه پیدا نشد</h3><p>صفحه‌ای در مسیر <code dir="ltr">#/${esc(name)}</code> وجود ندارد. ممکن است لینک قدیمی باشد یا اشتباه تایپ شده باشد.</p><a class="btn primary" href="#/">بازگشت به بازارها</a></div>`;
     document.title = `صفحه پیدا نشد · ${CONFIG.APP_NAME}`;
     window.scrollTo({ top: 0 });
     return;
   }
-  view.innerHTML = '<div class="skel-wrap"><div class="skel" style="height:28px;width:220px"></div><div class="skel" style="height:360px"></div></div>';
+
+  const { host, loader, loaderText } = ensureViewShell(view);
+  const routeLabel = params[0] && name === 'coin'
+    ? `${ROUTE_LABELS[name]} ${params[0].toUpperCase()}`
+    : (ROUTE_LABELS[name] || 'بازارها');
+
+  const hasExistingContent = host.childElementCount > 0;
+  if (!hasExistingContent) {
+    host.innerHTML = '<div class="skel-wrap"><div class="skel" style="height:28px;width:220px"></div><div class="skel" style="height:360px"></div></div>';
+  }
+  showRouteLoader(loader, loaderText, routeLabel, { immediate: hasExistingContent });
+
   try {
     const mod = await import(`./${file}`);
     if (seq !== routeSeq) return;
-    const host = document.createElement('div');
-    host.dir = 'rtl';
-    view.replaceChildren(host);
-    const done = await mod.render(host, params);
-    if (seq !== routeSeq) { if (typeof done === 'function') done(); return; }
+
+    const nextHost = document.createElement('div');
+    nextHost.dir = 'rtl';
+    const done = await mod.render(nextHost, params);
+    if (seq !== routeSeq) {
+      if (typeof done === 'function') done();
+      return;
+    }
+
+    host.replaceChildren(...nextHost.childNodes);
     cleanup = done;
-    document.title = `${mod.title ? (typeof mod.title === 'function' ? mod.title(params) : mod.title) + ' · ' : ''}${CONFIG.APP_NAME}`;
+    hideRouteLoader(loader);
+
+    const viewTitle = mod.title ? (typeof mod.title === 'function' ? mod.title(params) : mod.title) : '';
+    document.title = `${viewTitle ? `${viewTitle} · ` : ''}${CONFIG.APP_NAME}`;
   } catch (err) {
     console.error(err);
     if (seq === routeSeq) {
-      view.innerHTML = `<div class="card empty" dir="rtl"><h3>خطایی رخ داد</h3><p>${esc(err.message)}</p><button class="btn" id="errReload">بارگذاری مجدد</button></div>`;
+      hideRouteLoader(loader);
+      host.innerHTML = `<div class="card empty" dir="rtl"><h3>خطایی رخ داد</h3><p>${esc(err.message)}</p><button class="btn" id="errReload">بارگذاری مجدد</button></div>`;
       document.getElementById('errReload')?.addEventListener('click', () => location.reload());
     }
   }
-  if (keep !== null) { if (seq === routeSeq) window.scrollTo({ top: keep }); return; }
+
+  if (keep !== null) {
+    if (seq === routeSeq) window.scrollTo({ top: keep });
+    return;
+  }
   window.scrollTo({ top: 0 });
   trackPageView(location.hash || '#/');
 }
