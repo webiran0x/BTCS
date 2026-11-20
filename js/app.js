@@ -15,13 +15,13 @@ import { auth, sb, backendEnabled, isAdmin, signOut, pullUserData, pushUserData,
 import { createSync, SYNCED_KEYS, TRADING_KEYS } from './lib/cloudsync.js';
 import { DEPS } from './deps.js';
 
-// تنظیم اجباری جهت راست‌به‌چین و زبان فارسی در سند اصلی[cite: 11]
+// تنظیم اجباری جهت راست‌به‌چین و زبان فارسی در سند اصلی
 if (typeof document !== 'undefined') {
   document.documentElement.dir = 'rtl';
   document.documentElement.lang = 'fa';
 }
 
-// محافظت در برابر Clickjacking[cite: 11]
+// محافظت در برابر Clickjacking
 if (typeof window !== 'undefined' && window.top !== window.self) {
   let sameOrigin = false;
   try { sameOrigin = window.top.location.origin === window.location.origin; } catch { /* دامنه دیگر */ }
@@ -30,7 +30,6 @@ if (typeof window !== 'undefined' && window.top !== window.self) {
 
 const NAV = [
   { path: '', label: 'بازارها', icon: 'markets', short: 'بازارها' },
-  // { path: 'advice', label: 'اسکن بازار', icon: 'bolt', short: 'اسکن' },
   { path: 'trader', label: 'معاملات', icon: 'forecast', short: 'معاملات' },
   { path: 'ai', label: 'دستیار هوشمند', icon: 'ai', short: 'پرسش' },
   { path: 'learn', label: 'یادگیری هوش مصنوعی', icon: 'ai', short: 'یادگیری' },
@@ -47,7 +46,7 @@ const NAV = [
 const ADMIN_NAV = { path: 'admin', label: 'مدیریت', icon: 'chip', short: 'مدیریت' };
 const MOBILE = ['', 'ai', 'trader', 'wallet'];
 
-// نگاشت مسیرها به ماژول‌های صفحه در js/views/[cite: 11]
+// نگاشت مسیرها به ماژول‌های صفحه در js/views/
 const VIEWS = {
   '': 'markets',
   coin: 'coin',
@@ -77,8 +76,40 @@ function navItems() {
   return isAdmin() ? [...NAV, ADMIN_NAV] : NAV;
 }
 
+function currentRouteSlug() {
+  return location.hash.replace(/^#\/?/, '').split('/')[0] || '';
+}
+
+function safeDecode(segment) {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
+function syncCanonicalAndDescription(viewName, params = []) {
+  if (typeof document === 'undefined') return;
+  const origin = `${location.origin || 'https://btcs.ir'}/`;
+  const cleanPath = viewName
+    ? `${viewName.toLowerCase()}/${params.map((p) => encodeURIComponent(String(p).toLowerCase())).filter(Boolean).join('/')}${params.length ? '/' : ''}`
+    : '';
+  const canonicalHref = `${origin}${cleanPath}`;
+
+  let canonical = document.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    document.head.appendChild(canonical);
+  }
+  canonical.href = canonicalHref;
+
+  let ogUrl = document.querySelector('meta[property="og:url"]');
+  if (ogUrl) ogUrl.setAttribute('content', canonicalHref);
+}
+
 function renderNav() {
-  const cur = location.hash.replace(/^#\/?/, '').split('/')[0];
+  const cur = currentRouteSlug();
   const navEl = $('#nav');
   if (navEl) {
     navEl.innerHTML = navItems().map((n) =>
@@ -96,7 +127,7 @@ function renderNav() {
 }
 
 function openMore() {
-  const cur = location.hash.replace(/^#\/?/, '').split('/')[0];
+  const cur = currentRouteSlug();
   const rest = navItems().filter((n) => !MOBILE.includes(n.path));
   const m = modal(`
     <div dir="rtl" style="text-align:right">
@@ -126,15 +157,18 @@ function preloadDeps(file) {
 async function route(opts) {
   const seq = ++routeSeq;
   const keep = opts?.keepScroll === true ? window.scrollY : null;
-  const [name = '', ...params] = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
-  const file = `views/${VIEWS[name] || VIEWS['']}.js`;
+  const [name = '', ...params] = location.hash.replace(/^#\/?/, '').split('/').map(safeDecode);
+  const resolvedView = VIEWS[name] || VIEWS[''];
+  const file = `views/${resolvedView}.js`;
   document.documentElement.dataset.page = VIEWS[name] ? name || 'markets' : 'markets';
+  syncCanonicalAndDescription(VIEWS[name] ? name : '', params);
   window.dispatchEvent(new CustomEvent('cv:route', { detail: { name: document.documentElement.dataset.page, params } }));
   preloadDeps(file);
   renderNav();
   if (typeof cleanup === 'function') { try { cleanup(); } catch (e) { console.error(e); } }
   cleanup = null;
   const view = $('#view');
+  if (!view) return;
   if (name && !VIEWS[name] && !name.includes('=')) {
     view.innerHTML = `<div class="card empty" dir="rtl"><h3>صفحه پیدا نشد</h3><p>صفحه‌ای در مسیر <code dir="ltr">#/${esc(name)}</code> وجود ندارد. ممکن است لینک قدیمی باشد یا اشتباه تایپ شده باشد.</p><a class="btn primary" href="#/">بازگشت به بازارها</a></div>`;
     document.title = `صفحه پیدا نشد · ${CONFIG.APP_NAME}`;
@@ -164,16 +198,17 @@ async function route(opts) {
   trackPageView(location.hash || '#/');
 }
 
-document.querySelector('.skip-link')?.addEventListener('click', (e) => { e.preventDefault(); $('#view').focus(); });
+document.querySelector('.skip-link')?.addEventListener('click', (e) => { e.preventDefault(); $('#view')?.focus(); });
 
-// ---------------------------------------------------------------- theme[cite: 11]
+// ---------------------------------------------------------------- theme
 function applyTheme() {
   document.documentElement.dataset.theme = 'dark';
 }
 
-// ---------------------------------------------------------------- search[cite: 11]
+// ---------------------------------------------------------------- search
 function initSearch() {
   const input = $('#searchInput'), box = $('#searchResults');
+  if (!input || !box) return;
   const narrow = matchMedia('(max-width: 600px)');
   const hint = () => { input.placeholder = narrow.matches ? 'جستجو' : 'جستجوی رمزارز (BTC، اتریوم…)'; };
   hint();
@@ -190,7 +225,6 @@ function initSearch() {
   const draw = () => {
     box.hidden = !items.length;
     input.setAttribute('aria-expanded', String(!!items.length));
-    // اصلاح margin-right:auto برای تراز صحیح قیمت در چیدمان راست‌به‌چین[cite: 11]
     box.innerHTML = items.map((c, i) => `<a href="#/coin/${encodeURIComponent(c.symbol)}" id="sr-${i}" role="option" aria-selected="${i === active}" class="${i === active ? 'on' : ''}">${coinLogo(c, 22)}<b>${esc(c.name)}</b><span class="muted">${esc(c.symbol)}</span><span style="margin-right:auto;direction:ltr">${money(c.price)}</span></a>`).join('');
     if (active >= 0) input.setAttribute('aria-activedescendant', `sr-${active}`); else input.removeAttribute('aria-activedescendant');
   };
@@ -212,13 +246,17 @@ function initSearch() {
     if (e.key === 'Escape') { items = []; draw(); }
   });
   box.addEventListener('click', () => { input.value = ''; items = []; draw(); });
-  document.addEventListener('click', (e) => { if (!$('#search').contains(e.target)) { items = []; draw(); } });
+  document.addEventListener('click', (e) => { if (!$('#search')?.contains(e.target)) { items = []; draw(); } });
   document.addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') { e.preventDefault(); input.focus(); } });
 }
 
-// ---------------------------------------------------------------- currency[cite: 11]
+// ---------------------------------------------------------------- currency
 async function initSelectors() {
   const cur = $('#curSel');
+  if (!cur) {
+    await initCurrency();
+    return;
+  }
   cur.innerHTML = CONFIG.CURRENCIES.map(([c, s]) => `<option value="${c}">${c} ${s}</option>`).join('');
   await initCurrency();
   cur.value = fx.code;
@@ -226,13 +264,15 @@ async function initSelectors() {
     const ok = await setCurrency(cur.value);
     if (!ok) { toast('نرخ تبدیل برای این ارز در حال حاضر در دسترس نیست.', 'info'); cur.value = fx.code; return; }
     refreshTickerPrices();
-    route();
+    window.dispatchEvent(new CustomEvent('cv:currency', { detail: { code: fx.code, rate: fx.rate } }));
+    if (currentRouteSlug() !== 'coin') route({ keepScroll: true });
   });
 }
 
-// ---------------------------------------------------------------- account[cite: 11]
+// ---------------------------------------------------------------- account
 function initAccount() {
   const btn = $('#accountBtn');
+  if (!btn) return;
   if (!backendEnabled()) { btn.hidden = true; return; }
   const paint = () => {
     const p = auth.profile;
@@ -264,7 +304,7 @@ function initAccount() {
   sb();
 }
 
-// ---------------------------------------------------------------- cloud sync[cite: 11]
+// ---------------------------------------------------------------- cloud sync
 const SHOWN_ON = {
   '': ['watchlist'],
   coin: ['watchlist', 'drawings'],
@@ -287,13 +327,15 @@ const cloudSync = createSync({
       if (s.currency && s.currency !== fx.code) {
         setCurrency(s.currency).then((ok) => {
           if (!ok) return;
-          $('#curSel').value = fx.code;
+          const curEl = $('#curSel');
+          if (curEl) curEl.value = fx.code;
           refreshTickerPrices();
+          window.dispatchEvent(new CustomEvent('cv:currency', { detail: { code: fx.code, rate: fx.rate } }));
           route({ keepScroll: true });
         });
       }
     }
-    const view = location.hash.replace(/^#\/?/, '').split('/')[0];
+    const view = currentRouteSlug();
     if (redrawAll || keys.some((k) => (SHOWN_ON[view] || []).includes(k))) route({ keepScroll: !redrawAll });
     redrawAll = false;
   },
@@ -320,7 +362,7 @@ document.addEventListener('visibilitychange', () => {
 setInterval(() => { if (!document.hidden && Date.now() - lastSyncAt > 100e3) syncNow(); }, 120e3);
 setInterval(() => { if (!document.hidden) showTriggeredServerAlerts(); }, 120e3);
 
-// ---------------------------------------------------------------- live ticker + alerts[cite: 11]
+// ---------------------------------------------------------------- live ticker + alerts
 let tickerCoins = [];
 async function initTicker() {
   const list = await markets().catch(() => []);
@@ -329,11 +371,13 @@ async function initTicker() {
   live.subscribe('!miniTicker@arr', (arr) => {
     const el = $('#ticker');
     for (const tk of arr) {
-      const node = el.querySelector(`[data-pair="${tk.s}"]`);
+      const node = el?.querySelector(`[data-pair="${tk.s}"]`);
       if (node) {
         const p = +tk.c, o = +tk.o;
-        node.querySelector('.p').textContent = `${money(p)}`;
-        node.querySelector('.chg').outerHTML = changeHtml((p / o - 1) * 100);
+        const pNode = node.querySelector('.p');
+        const chgNode = node.querySelector('.chg');
+        if (pNode) pNode.textContent = `${money(p)}`;
+        if (chgNode && o) chgNode.outerHTML = changeHtml((p / o - 1) * 100);
       }
       checkAlerts(tk.s, +tk.c);
     }
@@ -341,15 +385,21 @@ async function initTicker() {
   });
   live.addEventListener('status', (e) => {
     const pill = $('#livePill');
+    if (!pill) return;
     pill.classList.toggle('on', e.detail.connected);
-    pill.querySelector('span').textContent = e.detail.connected
-      ? t('زنده · متصل به دیتای جهانی')
-      : e.detail.paused ? t('متوقف شده در پس‌زمینه') : t('در حال اتصال مجدد…');
+    const label = pill.querySelector('span');
+    if (label) {
+      label.textContent = e.detail.connected
+        ? t('زنده · متصل به دیتای جهانی')
+        : e.detail.paused ? t('متوقف شده در پس‌زمینه') : t('در حال اتصال مجدد…');
+    }
   });
 }
 
 function refreshTickerPrices() {
-  $('#ticker').innerHTML = tickerCoins.map((c) => `<a href="#/coin/${esc(c.symbol)}" data-pair="${c.binance}" dir="ltr"><b>${esc(c.symbol)}</b><span class="p">${money(c.price)}</span>${changeHtml(c.change24h)}</a>`).join('');
+  const tickerEl = $('#ticker');
+  if (!tickerEl) return;
+  tickerEl.innerHTML = tickerCoins.map((c) => `<a href="#/coin/${esc(c.symbol)}" data-pair="${c.binance}" dir="ltr"><b>${esc(c.symbol)}</b><span class="p">${money(c.price)}</span>${changeHtml(c.change24h)}</a>`).join('');
 }
 
 function checkAlerts(pair, p) {
@@ -399,7 +449,7 @@ async function showTriggeredServerAlerts() {
 }
 auth.addEventListener('change', showTriggeredServerAlerts);
 
-// ---------------------------------------------------------------- risk gate (shown once)[cite: 11]
+// ---------------------------------------------------------------- risk gate (shown once)
 function riskGate() {
   if (load('riskAck', false)) return;
 
@@ -451,10 +501,13 @@ function riskGate() {
   });
 }
 
-// ---------------------------------------------------------------- banners[cite: 11]
+// ---------------------------------------------------------------- banners
 let demoBanner = '';
 let siteBanner = '';
-const paintBanners = () => { $('#banner').innerHTML = demoBanner + siteBanner; };
+const paintBanners = () => {
+  const bannerEl = $('#banner');
+  if (bannerEl) bannerEl.innerHTML = demoBanner + siteBanner;
+};
 
 dataStatus.addEventListener('change', (e) => {
   demoBanner = e.detail.demo
@@ -467,13 +520,12 @@ getAppSettings().then((s) => {
   const text = s?.site?.announcement;
   if (!text) return;
   if (load('dismissedNotice', '') === text) return;
-  // اصلاح margin-right:auto برای دکمه بستن بنر در چیدمان راست‌به‌چین[cite: 11]
   siteBanner = `<div class="banner" id="siteNotice" dir="rtl">${icon('info', 16)} ${esc(text)} <button class="icon-btn" id="noticeX" style="width:26px;height:26px;margin-right:auto" aria-label="بستن">${icon('close', 12)}</button></div>`;
   paintBanners();
   $('#noticeX')?.addEventListener('click', () => { save('dismissedNotice', text); siteBanner = ''; paintBanners(); });
 }).catch(() => { /* بک‌اند اختیاری است */ });
 
-// ---------------------------------------------------------------- 3D world[cite: 11]
+// ---------------------------------------------------------------- 3D world
 function startWorld() {
   const go = () => import('./world/world.js').then((m) => m.startWorld()).catch((e) => {
     console.warn('3D world', e);
@@ -483,7 +535,7 @@ function startWorld() {
   else setTimeout(go, 800);
 }
 
-// ---------------------------------------------------------------- boot[cite: 11]
+// ---------------------------------------------------------------- boot
 { const entry = document.documentElement.dataset.route; if (entry && !location.hash) history.replaceState(null, '', entry); }
 $$('[data-app-name]').forEach((n) => { n.textContent = CONFIG.APP_NAME; });
 applyTheme(settings.get().theme || 'dark');
@@ -535,7 +587,7 @@ setTimeout(() => {
   cloudLearning().then((c) => { if (c) remove('aiLearn'); }).catch(() => {});
 }, 4000);
 
-// ---------------------------------------------------------------- updates[cite: 11]
+// ---------------------------------------------------------------- updates
 export const BUILD = "20261105-185358";
 const BUILD_STAMP = /^\d{8}-\d{6}$/;
 
@@ -583,17 +635,18 @@ if (location.protocol === 'https:') {
   });
 }
 
-// --- گفتگوی سریع: دستورات مبتنی بر داده‌های زنده بازار ---[cite: 11]
+// --- گفتگوی سریع: دستورات مبتنی بر داده‌های زنده بازار ---
 (async function initMagicChat() {
   const chatPanel = $('#chatPanel');
   const chatClose = $('#chatClose');
   const chatMessages = $('#chatMessages');
   const chatInput = $('#chatInput');
   const chatSend = $('#chatSend');
-
-  if (chatPanel) chatPanel.dir = 'rtl';
-
   const chatBtn = $('#chatBtn');
+
+  if (!chatPanel || !chatMessages || !chatInput || !chatSend || !chatBtn) return;
+
+  chatPanel.dir = 'rtl';
   chatBtn.innerHTML = `${icon('ai', 18)}<span>گفتگوی سریع</span>`;
 
   chatInput.maxLength = 120;
@@ -606,7 +659,7 @@ if (location.protocol === 'https:') {
   };
 
   chatBtn.addEventListener('click', toggleChat);
-  chatClose.addEventListener('click', toggleChat);
+  chatClose?.addEventListener('click', toggleChat);
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !chatPanel.hidden) toggleChat();
@@ -668,6 +721,7 @@ if (location.protocol === 'https:') {
     '/clear       پاک کردن این گفتگو',
     'پرسش‌های آزاد: از صفحه دستیار هوشمند (#/ai) استفاده کنید.',
   ].join('\n');
+
   const generateMCPResponse = async (message) => {
     if (message.startsWith('/')) {
       const [cmdRaw, ...rest] = message.slice(1).trim().split(/\s+/);
