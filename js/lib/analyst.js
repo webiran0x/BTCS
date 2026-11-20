@@ -27,8 +27,10 @@ const money = (v) => Number(v).toLocaleString('en-US', { maximumFractionDigits: 
 const nextSpan = (h) => `${String(h).replace(/^1 /, '')} آینده`;
 
 function parseAccount(q) {
-  const s = String(q || '').replace(/,/g, '');
-  const m = /\$\s?(\d+(?:\.\d+)?)\s?(k)?/i.exec(s) || /(\d+(?:\.\d+)?)\s?(k)?\s?(usd|usdt|dollars?|bucks)/i.exec(s);
+  const s = String(q || '').replace(/,/g, '').replace(/٬/g, '');
+  const m =
+    /\$\s?(\d+(?:\.\d+)?)\s?(k)?/i.exec(s) ||
+    /(\d+(?:\.\d+)?)\s?(k)?\s?(usd|usdt|dollars?|bucks|دلار|تتر)/i.exec(s);
   if (!m) return null;
   let v = parseFloat(m[1]);
   if (m[2] && m[2].toLowerCase() === 'k') v *= 1000;
@@ -71,10 +73,15 @@ export function horizonChart(q) {
 
 // «کدام ارز را باید بخرم؟» سوالی متفاوت از «آیا باید بیت‌کوین بخرم؟» است[cite: 9].
 export function isMarketWide(q) {
-  const s = (q || '').toLowerCase();
-  if (/(which|what) (coin|crypto|one|token|altcoin)|best (coin|crypto|buy|pick|token)|top (coin|pick|buy)|what (should i|to) buy|anything (good|worth)|all (the|of the)? ?coins|every coin|whole market|scan the market|market overview|any (good )?(buy|opportunit)|evidence (is )?(the )?strongest|strongest (evidence|setups?)|recommend|picks?\b|where should i (put|invest)|shopping list/.test(s)) return true;
-  // یک سوال خرید/فروش/زمان‌بندی که هیچ ارزی را نام نمی‌برد، سوالی درباره کل بازار است[cite: 9].
-  if (namedCoins(q).length || /\b(this coin|my)\b/.test(s)) return false;
+  const raw = String(q || '');
+  const s = raw.toLowerCase();
+  if (
+    /(which|what) (coin|crypto|one|token|altcoin)|best (coin|crypto|buy|pick|token)|top (coin|pick|buy)|what (should i|to) buy|anything (good|worth)|all (the|of the)? ?coins|every coin|whole market|scan the market|market overview|any (good )?(buy|opportunit)|evidence (is )?(the )?strongest|strongest (evidence|setups?)|recommend|picks?\b|where should i (put|invest)|shopping list/.test(s) ||
+    /(کدام ارز|چه ارزهایی|کدوم ارز|کل بازار|همه ارزها|اسکن بازار|بهترین ارز|اشباع خرید|اشباع فروش|بیش از حد کشیده|کشیده شده‌اند|قوی‌ترین شواهد)/.test(raw)
+  ) {
+    return true;
+  }
+  if (namedCoins(q).length || /\b(this coin|my)\b/.test(s) || /(این ارز|ارز من)/.test(raw)) return false;
   return /\b(buy|sell|short|long|invest|entry|exit|hold)\b/.test(s)
     && /\b(what|which|when|anything|something|now|today|this week|time ?frame|timeframe|short term|long term|how long)\b/.test(s);
 }
@@ -92,21 +99,18 @@ export function detectCompare(q) {
 export const SELL_ALL = /\b(sell|exit|dump|cash out( of)?|get out of) (everything|it all|all of it|all my|all (my )?(coins|crypto))\b/i;
 
 function detectIntent(q) {
-  const s = (q || '').toLowerCase();
-  if (SELL_ALL.test(s) || /(portfolio|wallet|holding|my coins|my bag)/.test(s)) return 'portfolio';
-  if (detectCompare(q)) return 'compare';
-  if (isMarketWide(s)) return 'market';
-  // عبارت «دقت پیش‌بینی‌های شما چقدر است؟» شامل کلمه «predict» است، بنابراین قبلاً
-  // با پیش‌بینی قیمت برای ارز مورد تمرکز پاسخ داده می‌شد — سوال درباره مدل
-  // با خروجی خود مدل پاسخ داده می‌شد. بررسی اینکه مدل چقدر خوب کار می‌کند
-  // اکنون در اولویت بررسی قرار دارد[cite: 9].
-  if (/(backtest|win ?rate|accura|reliab|track record|history of signal|how good|does it work|trust)/.test(s)) return 'backtest';
-  if (/(predict|forecast|future|will (it|the price|price|this)|go(ing)? (up|down)|next (hour|day|week|month)|tomorrow|pump|dump|target price|where .* (head|go)|up or down)/.test(s)) return 'forecast';
-  if (/(position size|how much|\bsize\b|invest|risk|lot size|allocation|\$\s?\d|\d+\s?k?\s?(usd|usdt|dollars?|bucks))/.test(s)) return 'risk';
-  if (/(exit|close|sell|take profit|tp\b|stop|get out)/.test(s)) return 'exit';
-  if (/(entry|enter|buy|long|get in|good time|should i)/.test(s)) return 'entry';
-  if (/(support|resistance|level)/.test(s)) return 'levels';
-  if (/(indicator|rsi|macd|ema|bollinger|adx|stoch|supertrend|mfi|money flow|cci|williams|donchian|keltner)/.test(s)) return 'indicators';
+  const raw = String(q || '');
+  const s = raw.toLowerCase();
+  if (SELL_ALL.test(s) || /(portfolio|wallet|holding|my coins|my bag|پورتفو|سبد|دارایی)/.test(s)) return 'portfolio';
+  if (detectCompare(q) || /(مقایسه|در برابر|کدام بهتر)/.test(raw)) return 'compare';
+  if (isMarketWide(q)) return 'market';
+  if (/(backtest|win ?rate|accura|reliab|track record|history of signal|how good|does it work|trust|دقت|بک‌تست|سابقه عملکرد|قابل اعتماد)/.test(s)) return 'backtest';
+  if (/(predict|forecast|future|will (it|the price|price|this)|go(ing)? (up|down)|next (hour|day|week|month)|tomorrow|pump|dump|target price|where .* (head|go)|up or down|پیش‌بینی|صعودی.*نزولی|روند بعدی|هدف قیمت|فردا|هفته آینده)/.test(s)) return 'forecast';
+  if (/(position size|how much|\bsize\b|invest|risk|lot size|allocation|\$\s?\d|\d+\s?k?\s?(usd|usdt|dollars?|bucks)|ریسک|حجم پوزیشن|حجم معامله|حد ضرر|دلار|تتر|سرمایه)/.test(s)) return 'risk';
+  if (/(exit|close|sell|take profit|tp\b|stop|get out|خروج|فروش|سیو سود|حد سود)/.test(s)) return 'exit';
+  if (/(entry|enter|buy|long|get in|good time|should i|ورود|نقطه ورود|خرید)/.test(s)) return 'entry';
+  if (/(support|resistance|level|حمایت|مقاومت|سطوح)/.test(s)) return 'levels';
+  if (/(indicator|rsi|macd|ema|bollinger|adx|stoch|supertrend|mfi|money flow|cci|williams|donchian|keltner|اندیکاتور|میانگین متحرک|بولینگر)/.test(s)) return 'indicators';
   return 'summary';
 }
 
