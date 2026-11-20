@@ -241,75 +241,75 @@ export async function render(el) {
     $('#body', el).innerHTML = `
       <div class="grid g2">
         <div class="ap-learn-card">
-          <div class="card-h"><h3>${icon('ai', 16)} چه کسی در حال حاضر تصمیم می‌گیرد</h3><span class="chip ${champion === 'blend' ? 'up' : ''}">${champion === 'blend' ? 'ترکیب یادگرفته‌شده' : 'موتور پیش‌بینی'}</span></div>
-          <p class="fine" style="margin-top:0; line-height:1.65">دو روش با هم رقابت می‌کنند. <b>موتور پیش‌بینی</b> (هفت مدل) به طور پیش‌فرض تصمیم می‌گیرد. <b>ترکیب یادگرفته‌شده</b> اندیکاتورهایی را که حق رأی کسب کرده‌اند اضافه می‌کند. این ترکیب تنها پس از حداقل ${SWITCH_MIN} پیش‌بینی زنده امتیازدهی‌شده برای هرکدام، و تنها در صورتی که حداقل ${SWITCH_GAP} امتیاز جلوتر باشد و کل بازه ۹۵٪ آن بالاتر از نرخ پیش‌بینی قرار گیرد، هدایت را به دست می‌گیرد. به محض عقب افتادن، کنترل را پس می‌دهد.</p>
+          <div class="card-h"><h3>${icon('ai', 16)} الان فرمان دست کیست؟</h3><span class="chip ${champion === 'blend' ? 'up' : ''}">${champion === 'blend' ? 'ترکیب هوشمند' : 'موتور پیش‌بینی'}</span></div>
+          <p class="fine" style="margin-top:0; line-height:1.65">اینجا دو سیستم با هم رقابت می‌کنند. در حالت عادی <b>موتور پیش‌بینی</b> (شامل ۷ مدل تحلیلی) تصمیم‌گیرنده اصلی است. اما <b>ترکیب هوشمند</b> اندیکاتورهایی را که امتحان خود را پس داده‌اند و حق رأی گرفته‌اند به بازی می‌آورد. این ترکیب فقط زمانی سکان را به دست می‌گیرد که برای هر کدام حداقل ${SWITCH_MIN} پیش‌بینی زنده ثبت شده باشد، حداقل ${SWITCH_GAP} امتیاز جلوتر باشد و از نظر آماری (بازه اطمینان ۹۵٪) کاملاً برتر باشد. هر زمان هم که عقب بیفتد، بلافاصله فرمان را پس می‌دهد.</p>
           <dl class="kv">
-            <dt>پیش‌بینی، زنده</dt><dd>${pctTxt(liveCall.forecast, waitF)}</dd>
-            <dt>ترکیب، زنده</dt><dd>${pctTxt(liveCall.blend, waitB)}</dd>
-            <dt>تست انتشار</dt><dd>پیش‌بینی ${LEARN_TESTED.forecast}٪ · ترکیب ${LEARN_TESTED.blend}٪ <span class="fine">(${LEARN_TESTED.tests.toLocaleString()} پیش‌بینی${tested ? `; ${esc(st.interval)}: ${tested[0]}٪ در برابر ${tested[1]}٪` : ''})</span></dd>
+            <dt>پیش‌بینی (زنده)</dt><dd>${pctTxt(liveCall.forecast, waitF)}</dd>
+            <dt>ترکیب هوشمند (زنده)</dt><dd>${pctTxt(liveCall.blend, waitB)}</dd>
+            <dt>نتیجه تست اولیه</dt><dd>پیش‌بینی ${LEARN_TESTED.forecast}٪ · ترکیب ${LEARN_TESTED.blend}٪ <span class="fine">(${LEARN_TESTED.tests.toLocaleString()} پیش‌بینی${tested ? `; تایم‌فریم ${esc(st.interval)}: ${tested[0]}٪ در برابر ${tested[1]}٪` : ''})</span></dd>
           </dl>
-          <p class="fine mt" style="line-height:1.65">${(() => { const by = Object.entries(LEARN_TESTED.byInterval); const better = by.filter(([, [f, b]]) => b > f).map(([k]) => k), worse = by.filter(([, [f, b]]) => b < f).map(([k]) => k); return `در آخرین تست (${LEARN_TESTED.tests.toLocaleString()} پیش‌بینی روی ${LEARN_TESTED.coins} ارز)، ترکیب ${LEARN_TESTED.blend}٪ در برابر ${LEARN_TESTED.forecast}٪ پیش‌بینی امتیاز کسب کرد${better.length ? `: عملکرد بهتر در ${better.join(', ')}` : ''}${worse.length ? `${better.length ? '، و ' : ': '}عملکرد ضعیف‌تر در ${worse.join(', ')}` : ''}. این دلیلی برای تغییر فوری نیست، بنابراین به عنوان رقیب شروع کرده و باید ابتدا خود را در ${where} ثابت کند.`; })()}${C?.reason ? ` ${esc(C.reason)}` : ''}</p>
+          <p class="fine mt" style="line-height:1.65">${(() => { const by = Object.entries(LEARN_TESTED.byInterval); const better = by.filter(([, [f, b]]) => b > f).map(([k]) => k), worse = by.filter(([, [f, b]]) => b < f).map(([k]) => k); return `در آخرین آزمون (${LEARN_TESTED.tests.toLocaleString()} پیش‌بینی روی ${LEARN_TESTED.coins} رمزارز)، ترکیب هوشمند امتیاز ${LEARN_TESTED.blend}٪ را در مقابل ${LEARN_TESTED.forecast}٪ موتور پیش‌بینی گرفت${better.length ? `: عملکرد بهتر در تایم‌فریم‌های ${better.join(', ')}` : ''}${worse.length ? `${better.length ? ' و ' : ': '}عملکرد ضعیف‌تر در ${worse.join(', ')}` : ''}. این اختلاف هنوز برای تغییر فوری کافی نیست؛ پس فعلاً به عنوان رقیب وارد میدان شده و باید اول در ${where} شایستگی‌اش را ثابت کند.`; })()}${C?.reason ? ` ${esc(C.reason)}` : ''}</p>
         </div>
 
         <div class="ap-learn-card">
-          <div class="card-h"><h3>${icon('forecast', 16)} سابقه پیش‌بینی</h3><span class="chip">${esc(TREND_WORDS[fl.trend] || fl.trend)}</span></div>
+          <div class="card-h"><h3>${icon('forecast', 16)} کارنامه و سابقه پیش‌بینی‌ها</h3><span class="chip">${esc(TREND_WORDS[fl.trend] || fl.trend)}</span></div>
           <dl class="kv">
             ${(() => {
               const big = Object.values(FORECAST_TESTED.centred).filter((x) => x.coins >= 20);
               const c80 = big.map((x) => x.band80);
               const n80 = big.reduce((a, x) => a + x.tests, 0);
               const ro = recheckOverall();
-              return `${ro ? `<dt>جهت، آخرین تست</dt><dd>${ro.hit}٪ <span class="fine">در برابر مبنای ${ro.baseline}٪ · ${ro.tests.toLocaleString('en-US')} تست روی ${ro.coins} ارز، ${esc(ro.measuredOn)}</span></dd>` : ''}
-            <dt>جهت، تست انتشار</dt><dd>${TESTED_ACCURACY.all}٪ <span class="fine">در برابر مبنای ${TESTED_ACCURACY.allBaseline}٪ · ${TESTED_ACCURACY.tests.toLocaleString()} تست</span></dd>
-            <dt>حفظ بازه ۸۰٪</dt><dd>${c80.length ? `${Math.min(...c80)}–${Math.max(...c80)}٪` : '—'} <span class="fine">(هدف ۸۰٪؛ بر اساس تایم‌فریم، متمرکز بر قیمت امروز، ${n80.toLocaleString('en-US')} تست روی ${(() => { const k = big.map((x) => x.coins); const lo = Math.min(...k), hi = Math.max(...k); return lo === hi ? hi : `${lo}–${hi}`; })()} ارز، ${esc(FORECAST_TESTED.centredMeasuredOn)}؛ ${TESTED_ACCURACY.bandsAll.band80}٪ در تست انتشار)</span></dd>`;
+              return `${ro ? `<dt>دقت جهت (آخرین آزمون)</dt><dd>${ro.hit}٪ <span class="fine">در مقایسه با خط مبنای ${ro.baseline}٪ · ${ro.tests.toLocaleString('en-US')} آزمون روی ${ro.coins} ارز (${esc(ro.measuredOn)})</span></dd>` : ''}
+            <dt>دقت جهت (تست اولیه)</dt><dd>${TESTED_ACCURACY.all}٪ <span class="fine">در مقایسه با خط مبنای ${TESTED_ACCURACY.allBaseline}٪ · ${TESTED_ACCURACY.tests.toLocaleString()} آزمون</span></dd>
+            <dt>دقت بازه ۸۰٪</dt><dd>${c80.length ? `${Math.min(...c80)}–${Math.max(...c80)}٪` : '—'} <span class="fine">(هدف: ۸۰٪ · بر اساس تایم‌فریم و قیمت روز در ${n80.toLocaleString('en-US')} آزمون روی ${(() => { const k = big.map((x) => x.coins); const lo = Math.min(...k), hi = Math.max(...k); return lo === hi ? hi : `${lo}–${hi}`; })()} ارز، ${esc(FORECAST_TESTED.centredMeasuredOn)}؛ و ${TESTED_ACCURACY.bandsAll.band80}٪ در تست اولیه)</span></dd>`;
             })()}
-            <dt>حفظ بازه ۹۰٪</dt><dd>${TESTED_ACCURACY.bandsAll.band90}٪ <span class="fine">(هدف ۹۰٪)</span></dd>
-            <dt>سابقه شما (۵۰ مورد اخیر)</dt><dd>${fl.windows[50].pct === null ? '<span class="muted">تعداد ناکافی</span>' : `${fl.windows[50].pct}٪ <span class="fine">(${fl.windows[50].hits}/${fl.windows[50].total})</span>`}</dd>
+            <dt>دقت بازه ۹۰٪</dt><dd>${TESTED_ACCURACY.bandsAll.band90}٪ <span class="fine">(هدف: ۹۰٪)</span></dd>
+            <dt>کارنامه شما (۵۰ پیش‌بینی اخیر)</dt><dd>${fl.windows[50].pct === null ? '<span class="muted">هنوز به حد نصاب نرسیده</span>' : `${fl.windows[50].pct}٪ <span class="fine">(${fl.windows[50].hits} موفق از ${fl.windows[50].total})</span>`}</dd>
           </dl>
-          <h4 class="mt" style="margin:12px 0 6px 0; color:#fff; font-size:0.95rem">میزان اعتماد به جهت پیش‌بینی</h4>
-          <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">تایم‌فریم</th><th>تست انتشار</th><th>امتیازدهی‌شده برای شما</th><th>استفاده فعلی</th></tr></thead><tbody>
+          <h4 class="mt" style="margin:12px 0 6px 0; color:#fff; font-size:0.95rem">ضریب اعتماد به پیش‌بینی جهت بازار</h4>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">تایم‌فریم</th><th>تست اولیه</th><th>امتیاز ثبت‌شده شما</th><th>ضریب فعلی</th></tr></thead><tbody>
             ${['1m', '5m', '15m', '1h', '4h', '1d'].map((iv) => {
               const t = learnedTrust(ledger, iv);
               return `<tr><td class="l">${iv}</td><td>${t.prior.toFixed(2)}</td><td>${t.local === null ? `<span class="muted">${t.graded} از ${MIN_GRADED_FOR_TRUST}</span>` : `${t.local.toFixed(2)} <span class="fine">(${t.graded})</span>`}</td><td><b>${t.trust.toFixed(2)}</b></td></tr>`;
             }).join('')}
           </tbody></table></div>
-          <p class="fine mt" style="line-height:1.6">احتمال صعود در هر تایم‌فریم معادل تمایل خام مدل‌هاست که در این عدد ضرب شده است: عدد ۱ آن را دست‌نخورده نگه می‌دارد، و صفر به این معناست که تمایل مذکور در تست‌ها هیچ اطلاعاتی به همراه نداشته است، بنابراین هیچ احتمالی نمایش داده نمی‌شود. به محض اینکه یک تایم‌فریم ${MIN_GRADED_FOR_TRUST} پیش‌بینی امتیازدهی‌شده از شما داشته باشد (هنگام ورود به حساب، سابقه با حساب شما ذخیره می‌شود تا هر دستگاهی به آن اضافه کند)، سابقه آن‌ها عدد را تنظیم می‌کند و با ${TESTED_ACCURACY.testsPerInterval} پیش‌بینی تست انتشار به ازای هر تایم‌فریم وزن‌دهی می‌شود. تایم‌ففرمی که تست انتشار چیزی در آن نیافته روی صفر باقی می‌ماند.</p>
-          <p class="fine mt" style="line-height:1.6">موتور پیش‌بینی هر بار که اجرا می‌شود، تمام ۷ مدل را روی جدیدترین کندل‌های هر ارز مجدداً آموزش می‌دهد. به محض اینکه سابقه شما پیش‌بینی‌های امتیازدهی‌شده کافی داشته باشد، سابقه ضعیف اخیر به خودی خود اطمینان نمایش‌داده‌شده را به سمت ۵۰/۵۰ متمایل می‌کند.</p>
+          <p class="fine mt" style="line-height:1.6">احتمال صعود در هر تایم‌فریم از ضرب تمایل خام مدل‌ها در این ضریب به دست می‌آید: عدد ۱ یعنی بدون تغییر و با اعتماد کامل، و عدد ۰ یعنی مدل در تست‌های این تایم‌فریم هیچ برتری خاصی نداشته و به همین دلیل احتمالی نمایش داده نمی‌شود. وقتی در یک تایم‌فریم حداقل ${MIN_GRADED_FOR_TRUST} پیش‌بینی امتیازدهی‌شده داشته باشید (با ورود به حساب، سوابق شما در همه دستگاه‌ها همگام می‌شود)، سیستم بر اساس عملکرد شما و ${TESTED_ACCURACY.testsPerInterval} آزمون اولیه، این ضریب را به‌روز می‌کند. تایم‌فریم‌هایی که در آزمون اولیه عملکرد موفقی نداشته‌اند، روی صفر می‌مانند.</p>
+          <p class="fine mt" style="line-height:1.6">موتور پیش‌بینی در هر اجرا، هر ۷ مدل خود را با تازه‌ترین کندل‌های بازار دوباره آموزش می‌دهد. اگر در سوابق اخیر شما پیش‌بینی‌های ناموفق زیاد شود، سیستم به‌طور خودکار سطح اطمینان را محتاطانه‌تر و به سمت ۵۰/۵۰ تنظیم می‌کند.</p>
         </div>
       </div>
 
       <div class="ap-learn-card mt">
-        <div class="card-h"><h3>${icon('chart', 16)} اندیکاتورها، امتیازدهی‌شده (${esc(st.interval)})</h3><span class="fine">${voting.length ? `در حال رأی‌دهی: ${esc(voting.join(', '))}` : 'هیچ اندیکاتوری در این تایم‌فریم حق رأی کسب نکرده است'}</span></div>
-        <p class="fine" style="margin-top:0; line-height:1.65">خوانش هر اندیکاتور به یک پیش‌بینی تبدیل می‌شود (مثلاً RSI زیر ۳۰ به معنای «صعودی» است)، سپس ${esc(horizonText(st.interval, DEFAULT_HORIZON[st.interval] || 12))} بعد (همان افق زمانی که پیش‌بینی در تایم‌فریم‌های ${esc(st.interval)} استفاده می‌کند) با قیمت مقایسه می‌شود. <b>سابقه اخیر</b> روی ۵۰۰ کندل آخر ${C ? `از هر یک از ${C.coins} ارز، بار دیگر هر زمان که ابر بازمی‌گردد` : 'ارزهای معامله‌گر در هر بررسی'} اندازه‌گیری می‌شود. <b>زنده</b> فقط شامل مواردی است که ${C ? 'ابر' : 'این مرورگر'} پیش از مشخص شدن نتیجه ثبت کرده است. یک خوانش به ۳۰+ فراخوان و بازه ۹۵٪ دور از ۵۰٪ نیاز دارد تا حق رأی کسب کند. شواهد زنده با شکل‌گیری به مرور جایگزین سابقه می‌شوند.</p>
-        ${hist ? `<div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">اندیکاتور</th><th class="l hide-p">قانون</th><th>سابقه اخیر</th><th>زنده</th><th class="hide-t">تست به تنهایی</th><th>وزن فعلی</th></tr></thead><tbody>
+        <div class="card-h"><h3>${icon('chart', 16)} امتیازدهی اندیکاتورها (${esc(st.interval)})</h3><span class="fine">${voting.length ? `اندیکاتورهای دارای حق رأی: ${esc(voting.join(', '))}` : 'هنوز هیچ اندیکاتوری در این تایم‌فریم حق رأی نگرفته است'}</span></div>
+        <p class="fine" style="margin-top:0; line-height:1.65">سیگنال هر اندیکاتور به یک پیش‌بینی مشخص تبدیل می‌شود (مثلاً RSI زیر ۳۰ یعنی انتظار رشد قیمت) و سپس نتیجه آن ${esc(horizonText(st.interval, DEFAULT_HORIZON[st.interval] || 12))} بعد با قیمت واقعی بازار سنجیده می‌شود. <b>سابقه اخیر</b> روی ۵۰۰ کندل آخر ${C ? `در هر یک از ${C.coins} رمزارز بررسی می‌شود و با هر به‌روزرسانی ابری تازه می‌گردد` : 'رمزارزهای فعال در هر بررسی محاسبه می‌شود'}. بخش <b>زنده</b> فقط شامل سیگنال‌هایی است که ${C ? 'سرور ابری' : 'مرورگر شما'} قبل از مشخص شدن نتیجه ثبت کرده است. هر اندیکاتور برای گرفتن حق رأی به بیش از ۳۰ سیگنال و دقت معنادار (فاصله مطمئن از ۵۰٪) نیاز دارد و به مرور داده‌های زنده جایگزین سوابق گذشته می‌شوند.</p>
+        ${hist ? `<div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">اندیکاتور</th><th class="l hide-p">شرط سیگنال</th><th>سابقه اخیر</th><th>عملکرد زنده</th><th class="hide-t">تست انفرادی</th><th>وزن فعلی</th></tr></thead><tbody>
           ${Object.entries(INDICATORS).map(([k, d]) => `<tr><td class="l wrap"><b>${esc(d.name)}</b><small class="show-p-block">${esc(d.rule)}</small></td><td class="l fine wrap hide-p" style="min-width:140px">${esc(d.rule)}</td>
             <td>${hist[k] ? `${hist[k].rate ?? '—'}٪ <span class="fine">(${hist[k].n})</span>` : '—'}</td>
             <td>${live[k]?.n ? `${live[k].rate}٪ <span class="fine">(${live[k].n})</span>` : '<span class="muted">—</span>'}</td>
             <td class="fine hide-t">${LEARN_TESTED.indicatorsAlone[k] ?? '—'}٪</td>
             <td>${chip({ ...(hist[k] || {}), weight: weights[k] || 0, n: (hist[k]?.n || 0) + (live[k]?.n || 0) })}</td></tr>`).join('')}
-        </tbody></table></div>` : `<p class="muted" style="margin:0">${C || st.cloud ? 'هنوز در این تایم‌فریم امتیازدهی نشده است: ابر هر تایم‌فریم را به نوبت بررسی می‌کند.' : 'برای امتیازدهی به اندیکاتورها در این تایم‌فریم، روی به‌روزرسانی بزنید.'}</p>`}
-        <p class="fine mt" style="line-height:1.6">«تست به تنهایی» نرخ موفقیت هر اندیکاتور در ۱,۴۴۰ نقطه تست انتشار در تمامی تایم‌فریم‌هاست. هیچ‌کدام فاصله زیادی از ۵۰٪ ندارند، به همین دلیل صفحه در انتخاب موارد دارای حق رأی با احتیاط عمل می‌کند.</p>
+        </tbody></table></div>` : `<p class="muted" style="margin:0">${C || st.cloud ? 'هنوز امتیازی برای این تایم‌فریم ثبت نشده: سیستم ابری به نوبت همه تایم‌فریم‌ها را بررسی می‌کند.' : 'برای محاسبه امتیاز اندیکاتورها در این تایم‌فریم، دکمه به‌روزرسانی را بزنید.'}</p>`}
+        <p class="fine mt" style="line-height:1.6">ستون «تست انفرادی» نشان می‌دهد هر اندیکاتور در ۱,۴۴۰ نقطه آزمایشی در کل تایم‌فریم‌ها چقدر موفق بوده است. از آنجا که هیچ اندیکاتوری به تنهایی فاصله زیادی از شانس ۵۰٪ ندارد، سیستم در دادن حق رأی بسیار سخت‌گیرانه عمل می‌کند.</p>
       </div>
 
       <div class="ap-learn-card mt">
-        <div class="card-h"><h3>${icon('chart', 16)} معاملات خرید، امتیازدهی‌شده</h3><span class="fine">آنچه پس از هر خرید رخ داد</span></div>
-        <p class="fine" style="margin-top:0; line-height:1.65">هر معامله خرید بسته‌شده با رفتار بعدی بازار مقایسه می‌شود. خریدها بر اساس وضعیت نمودار در لحظه خرید دسته‌بندی می‌شوند (همسو یا خلاف روند، در حال نوسان یا رونددار، RSI افراطی یا غیره)، تا الگویی که مدام ضرر می‌دهد شناسایی شود. این مورد شامل معاملات شبیه‌سازی‌شده هوش مصنوعی، خریدهای آزمایشی شخصی شما و معاملات واقعی ثبت‌شده شما می‌شود. نتایج بر حسب R هستند: ۱R مقدار ریسک‌پذیرفته‌شده در یک معامله است.</p>
-        <div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">حساب</th><th>خریدهای بسته‌شده</th><th class="hide-p">برد</th><th>میانگین</th><th class="l">نکات برجسته</th></tr></thead><tbody>
+        <div class="card-h"><h3>${icon('chart', 16)} بررسی و امتیازدهی معاملات خرید</h3><span class="fine">بازار بعد از هر خرید چه رفتاری داشت؟</span></div>
+        <p class="fine" style="margin-top:0; line-height:1.65">هر معامله خریدی که بسته می‌شود، با حرکت بعدی بازار مقایسه می‌گردد. سیستم خریدها را بر اساس شرایط نمودار در لحظه ورود دسته‌بندی می‌کند (مثلاً هم‌جهت یا خلاف روند، بازار رنج یا رونددار، اشباع خرید/فروش در RSI و...) تا الگوهایی را که مدام ضرر می‌دهند شناسایی کند. این بررسی شامل معاملات آزمایشی هوش مصنوعی، خریدهای تمرینی و معاملات واقعی ثبت‌شده شماست. نتایج بر پایه واحد ریسک (R) سنجیده می‌شوند؛ یعنی ۱R برابر با همان مبلغی است که در هر معامله ریسک کرده‌اید.</p>
+        <div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">حساب</th><th>خریدهای بسته‌شده</th><th class="hide-p">نرخ برد</th><th>میانگین بازده</th><th class="l">مهم‌ترین یافته</th></tr></thead><tbody>
           ${accounts.map((a) => `<tr><td class="l wrap"><b>${esc(a.name)}</b></td><td>${a.r.overall.n}</td><td class="hide-p">${a.r.overall.winRate === null ? '—' : a.r.overall.winRate + '٪'}</td><td class="${a.r.overall.avgR > 0 ? 'up' : a.r.overall.avgR < 0 ? 'down' : ''}">${a.r.overall.avgR === null ? '—' : (a.r.overall.avgR > 0 ? '+' : '') + a.r.overall.avgR + 'R'}</td><td class="l fine wrap" style="min-width:110px">${esc(a.r.findings[0] || '—')}</td></tr>`).join('')}
         </tbody></table></div>
         ${accounts.flatMap((a) => a.r.findings.slice(1).map((f) => `<p class="fine" style="margin-top:8px">${esc(a.name)}: ${esc(f)}</p>`)).join('')}
       </div>
 
       <div class="ap-learn-card mt">
-        <div class="card-h"><h3>${icon('bolt', 16)} معاملات</h3><a class="btn sm" href="#/trader">باز کردن صفحه معامله‌گر</a></div>
-        <p class="fine" style="margin-top:0; line-height:1.65">معامله‌گر هوش مصنوعی پس از هر بررسی، گزارش معاملات خود را می‌خواند. زمانی که یک شرایط بازار مدام زیان‌ده باشد فیلتری را فعال می‌کند و اگر نتایج بدتر شوند آن را غیرفعال می‌سازد. قوانین این ربات روی کندل‌های قدیمی‌تر انتخاب شده و روی کندل‌های جدیدتری که هرگز ندیده بودند سه بار اجرا شدند: در ${esc(cfg.interval)} به طور میانگین ${CHART_TESTED[cfg.interval] ? (() => { const x = CHART_TESTED[cfg.interval], t = x.adopt ? x.own : x.standard; return `${t.ret}٪ به ازای هر ${x.block} در برابر ${x.hold}٪ برای نگهداری همان ارزها`; })() : 'نتیجه‌ای تست‌نشده'} سود داشتند.</p>
-        <p class="fine" style="margin-bottom:0"><b>قوانین فعال:</b> ${esc((activeLessons(cfg).join(' · ')) || 'استراتژی اولیه')}.</p>
+        <div class="card-h"><h3>${icon('bolt', 16)} ربات معامله‌گر و فیلترهای هوشمند</h3><a class="btn sm" href="#/trader">ورود به بخش معامله‌گر</a></div>
+        <p class="fine" style="margin-top:0; line-height:1.65">معامله‌گر هوش مصنوعی بعد از هر دور بررسی، کارنامه معاملاتش را مرور می‌کند. هر زمان متوجه شود یک شرایط خاص در بازار مدام ضرر می‌سازد، یک فیلتر محافظتی فعال می‌کند و اگر نتیجه بهتر نشد، آن فیلتر را برمی‌دارد. قوانین این ربات روی داده‌های قدیمی انتخاب شده و سه بار روی کندل‌های جدید و دیده‌نشده تست شده‌اند: در تایم‌فریم ${esc(cfg.interval)} به طور میانگین ${CHART_TESTED[cfg.interval] ? (() => { const x = CHART_TESTED[cfg.interval], t = x.adopt ? x.own : x.standard; return `${t.ret}٪ سود در هر ${x.block} (در مقایسه با ${x.hold}٪ برای خرید و نگهداری ساده همان ارزها)`; })() : 'هنوز نتیجه تست‌شده‌ای ثبت نشده'} به دست آمده است.</p>
+        <p class="fine" style="margin-bottom:0"><b>قوانین و فیلترهای فعال:</b> ${esc((activeLessons(cfg).join(' · ')) || 'استراتژی پایه')}.</p>
       </div>
 
       <div class="ap-learn-card mt">
-        <div class="card-h"><h3>${icon('info', 16)} تغییرات هوش مصنوعی و زمان آن‌ها</h3><span class="fine">جدیدترین در ابتدا</span></div>
+        <div class="card-h"><h3>${icon('info', 16)} تاریخچه تغییرات و یادگیری هوش مصنوعی</h3><span class="fine">جدیدترین موارد در بالا</span></div>
         ${changes.length ? `<ul class="fine" style="list-style:none;padding:0;margin:0">${changes.map((c) => `<li style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span class="muted" style="display:inline-block;min-width:155px">${dateTime(c.at)}</span><span class="chip" style="margin-left:8px">${esc(c.tag)}</span>${esc(c.text)}</li>`).join('')}</ul>`
-          : '<p class="muted" style="margin:0">هنوز موردی وجود ندارد. تغییرات به محض اینکه شواهد کافی وجود داشته باشد در اینجا ظاهر می‌شوند.</p>'}
+          : '<p class="muted" style="margin:0">هنوز تغییری ثبت نشده است. به محض اینکه سیستم به شواهد کافی برسد، اصلاحات انجام‌شده اینجا نمایش داده می‌شوند.</p>'}
       </div>`;
   }
 
