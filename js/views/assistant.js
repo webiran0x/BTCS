@@ -161,6 +161,9 @@ export async function render(el, [symParam]) {
         gap: 16px;
         scroll-behavior: smooth;
       }
+      .ap-chat-log .msg {
+        scroll-margin-top: 12px;
+      }
       .ap-chat-input-area {
         display: flex;
         gap: 10px;
@@ -267,6 +270,17 @@ export async function render(el, [symParam]) {
   const log = $('#log', el);
   let focusUnsub = null;
 
+  const scrollToMessage = (targetEl, { smooth = true } = {}) => {
+    if (!targetEl || st.disposed) return;
+    requestAnimationFrame(() => {
+      if (!targetEl.isConnected) return;
+      targetEl.scrollIntoView({
+        behavior: smooth ? 'smooth' : 'auto',
+        block: 'start',
+      });
+    });
+  };
+
   const watchFocus = (pair) => {
     if (focusUnsub) { focusUnsub(); focusUnsub = null; }
     focusUnsub = live.subscribe(`${pair}@miniTicker`, (tk) => {
@@ -368,7 +382,8 @@ export async function render(el, [symParam]) {
     msgEl.querySelector('[data-facts]')?.addEventListener('click', (e) => {
       e.preventDefault();
       e.currentTarget.remove();
-      addMsg('bot', `<div class="fine"><b>داده‌های تأییدشده پشت این پاسخ</b></div>${markdown(factsText)}`);
+      const factsMsg = addMsg('bot', `<div class="fine"><b>داده‌های تأییدشده پشت این پاسخ</b></div>${markdown(factsText)}`);
+      scrollToMessage(factsMsg, { smooth: true });
     });
   };
 
@@ -378,7 +393,6 @@ export async function render(el, [symParam]) {
     div.style.cssText = `padding: 14px 18px; border-radius: 16px; line-height: 1.65; max-width: 86%; ${role === 'user' ? 'background: linear-gradient(135deg, #5e5ce6 0%, #3634a3 100%); color: #fff; margin-right: auto;' : 'background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.92); margin-left: auto;'}`;
     div.innerHTML = html;
     log.append(div);
-    log.scrollTop = log.scrollHeight;
     return div;
   };
 
@@ -390,7 +404,10 @@ export async function render(el, [symParam]) {
 با سوالات کلی شروع کنید — *«شواهد در حال حاضر کجا بیشترین قدرت را دارند؟»* — تا بازار بررسی شود. یا درباره یک ارز بپرسید: *«آیا خرید ETH در این هفته ارزش دارد؟»* · *«چقدر از ۱۰۰۰ دلار را می‌توانم روی SOL ریسک کنم؟»*
 
 هر پاسخ از قیمت‌های زنده، سیگنال‌ها و پیش‌بینی‌ها ساخته شده است. ماهیت آموزشی دارد، نه مشاوره مالی.`));
+      log.scrollTop = log.scrollHeight;
+      return;
     }
+    let lastBot = null;
     for (const m of history) {
       if (m.role === 'user') {
         addMsg('user', esc(m.content));
@@ -400,8 +417,11 @@ export async function render(el, [symParam]) {
           : '';
         const node = addMsg('bot', markdown(m.content) + footerHtml);
         bindMessageActions(node, m.content, m.content);
+        lastBot = node;
       }
     }
+    if (lastBot) scrollToMessage(lastBot, { smooth: false });
+    else log.scrollTop = log.scrollHeight;
   };
 
   async function ask(question) {
@@ -418,9 +438,11 @@ export async function render(el, [symParam]) {
     const root = followUp ? previous : TRADER_Q.test(question) ? question : null;
     history.push({ role: 'user', content: question, at: Date.now(), ...(root ? { root } : {}) });
     saveHistory();
-    addMsg('user', esc(question));
+    const userNode = addMsg('user', esc(question));
+    scrollToMessage(userNode, { smooth: true });
 
     const bot = addMsg('bot', '<span class="typing"><i></i><i></i><i></i></span> <span class="fine" data-step style="color:rgba(255,255,255,0.6)">در حال پردازش…</span>');
+    scrollToMessage(bot, { smooth: true });
     const step = (t) => { const n = bot.querySelector('[data-step]'); if (n) n.textContent = t; };
 
     try {
@@ -433,6 +455,7 @@ export async function render(el, [symParam]) {
         history.push({ role: 'assistant', content: plain, meta: src, at: Date.now() });
         bot.innerHTML = markdown(plain) + `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.55);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px">${src}<button type="button" class="ap-mini-btn" data-copy>کپی</button></div>`;
         bindMessageActions(bot, plain, plain);
+        scrollToMessage(bot, { smooth: true });
         return;
       }
 
@@ -499,7 +522,7 @@ export async function render(el, [symParam]) {
             facts,
             data,
             signal: ac.signal,
-            onText: (t) => { bot.innerHTML = markdown(t); log.scrollTop = log.scrollHeight; },
+            onText: (t) => { bot.innerHTML = markdown(t); },
           });
           const bad = r.text.trim().length > 20
             ? unsupportedFigures(r.text, [facts, JSON.stringify(data), AI_SYSTEM_PROMPT, ...history.filter((m) => m.role === 'user').map((m) => m.content)])
@@ -520,10 +543,12 @@ export async function render(el, [symParam]) {
       history.push({ role: 'assistant', content: finalText, meta: meta(source), at: Date.now() });
       bot.innerHTML = markdown(finalText) + `<div class="src" style="margin-top:10px;font-size:0.8rem;color:rgba(255,255,255,0.55);border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px">${meta(source)}<button type="button" class="ap-mini-btn" data-copy>کپی</button></div>`;
       bindMessageActions(bot, finalText, facts);
+      scrollToMessage(bot, { smooth: true });
     } catch (err) {
       const msg = 'مشکلی در ساخت این پاسخ رخ داد. دوباره تلاش کنید.';
       bot.innerHTML = markdown(msg) + '<div class="src"><span><b>نگارش:</b> بدون پاسخ</span></div>';
       history.push({ role: 'assistant', content: msg, at: Date.now() });
+      scrollToMessage(bot, { smooth: true });
     } finally {
       saveHistory();
       st.busy = false; st.abort = null;
@@ -533,7 +558,6 @@ export async function render(el, [symParam]) {
         $('#assistantClear', el).disabled = false;
         $('#assistantSnapshot', el).disabled = false;
       }
-      log.scrollTop = log.scrollHeight;
     }
   }
 
