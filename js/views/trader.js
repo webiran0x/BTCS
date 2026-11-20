@@ -101,7 +101,6 @@ export async function render(el) {
   const tradable = all.filter((c) => !isStable(c.symbol)).slice(0, 60);
 
   el.innerHTML = `
-    <!-- استایل‌های اختصاصی مدرن اپل ۲۰۲۶ -->
     <style>
       .ap-wrap {
         direction: rtl;
@@ -112,16 +111,17 @@ export async function render(el) {
       }
       .ap-hero {
         position: relative;
-        padding: 36px 32px;
-        background: radial-gradient(circle at top right, rgba(255, 214, 10, 0.08), transparent 45%),
-                    radial-gradient(circle at bottom left, rgba(10, 132, 255, 0.07), transparent 45%),
-                    rgba(24, 24, 29, 0.72);
-        border: 1px solid rgba(255, 255, 255, 0.09);
-        border-radius: 28px;
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
+        padding: 34px 32px;
+        background:
+          radial-gradient(circle at 88% 12%, rgba(10, 132, 255, 0.16), transparent 46%),
+          radial-gradient(circle at 12% 90%, rgba(90, 200, 250, 0.08), transparent 45%),
+          var(--glass);
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        backdrop-filter: blur(26px) saturate(1.45);
+        -webkit-backdrop-filter: blur(26px) saturate(1.45);
         margin-bottom: 24px;
-        box-shadow: 0 24px 54px rgba(0, 0, 0, 0.35);
+        box-shadow: var(--shadow-lg);
       }
       .ap-hero-top {
         display: flex;
@@ -131,19 +131,18 @@ export async function render(el) {
         gap: 20px;
       }
       .ap-hero h1 {
-        font-size: 2.35rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        color: #fff;
+        font-size: clamp(1.85rem, 3vw, 2.35rem);
+        font-weight: 800;
+        letter-spacing: -0.025em;
         margin: 0 0 10px 0;
-        background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.78) 100%);
+        background: linear-gradient(180deg, var(--ivory) 0%, rgba(214, 221, 230, 0.78) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
       .ap-hero-sub {
-        font-size: 1rem;
-        line-height: 1.65;
-        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.98rem;
+        line-height: 1.7;
+        color: var(--text-2);
         max-width: 760px;
         margin: 0;
       }
@@ -152,10 +151,10 @@ export async function render(el) {
         align-items: center;
         flex-wrap: wrap;
         gap: 10px;
-        background: rgba(255, 255, 255, 0.04);
+        background: var(--surface-2);
         padding: 8px 12px;
         border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.07);
+        border: 1px solid var(--line);
       }
       .ap-session-chip {
         display: inline-flex;
@@ -164,33 +163,33 @@ export async function render(el) {
         padding: 6px 14px;
         border-radius: 999px;
         font-size: 0.84rem;
-        font-weight: 600;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(255, 255, 255, 0.85);
+        font-weight: 700;
+        background: var(--surface-3);
+        color: var(--text-2);
       }
       .ap-session-chip i {
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #8e8e93;
+        background: var(--text-muted);
         display: inline-block;
       }
       .ap-session-chip.running {
-        background: rgba(48, 209, 88, 0.14);
-        color: #30d158;
-        border: 1px solid rgba(48, 209, 88, 0.28);
+        background: var(--up-soft);
+        color: var(--up);
+        border: 1px solid rgba(48, 209, 88, 0.3);
       }
       .ap-session-chip.running i {
-        background: #30d158;
-        box-shadow: 0 0 10px #30d158;
+        background: var(--up);
+        box-shadow: 0 0 10px var(--up);
         animation: apPulse 1.8s infinite;
       }
       .ap-session-chip.stopped {
-        background: rgba(255, 159, 10, 0.14);
-        color: #ff9f0a;
-        border: 1px solid rgba(255, 159, 10, 0.25);
+        background: var(--warn-soft);
+        color: var(--warn);
+        border: 1px solid rgba(255, 214, 10, 0.3);
       }
-      .ap-session-chip.stopped i { background: #ff9f0a; }
+      .ap-session-chip.stopped i { background: var(--warn); }
       @keyframes apPulse {
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.45; transform: scale(0.85); }
@@ -199,14 +198,14 @@ export async function render(el) {
         margin-top: 20px;
         padding: 16px 20px;
         border-radius: 18px;
-        background: rgba(255, 159, 10, 0.08);
-        border: 1px solid rgba(255, 159, 10, 0.22);
-        color: rgba(255, 255, 255, 0.85);
+        background: var(--warn-soft);
+        border: 1px solid rgba(255, 214, 10, 0.28);
+        color: var(--text);
         font-size: 0.9rem;
-        line-height: 1.65;
+        line-height: 1.7;
       }
       .ap-banner-warn b {
-        color: #ffb340;
+        color: var(--warn);
         display: inline-flex;
         align-items: center;
         gap: 6px;
@@ -214,16 +213,16 @@ export async function render(el) {
       }
       .ap-details {
         margin-top: 14px;
-        background: rgba(255, 255, 255, 0.025);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: var(--surface-2);
+        border: 1px solid var(--line);
         border-radius: 16px;
         padding: 12px 18px;
       }
       .ap-details summary {
         cursor: pointer;
         font-size: 0.9rem;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.78);
+        font-weight: 600;
+        color: var(--text);
         list-style: none;
         display: flex;
         align-items: center;
@@ -233,7 +232,7 @@ export async function render(el) {
       .ap-details summary::after {
         content: '⌄';
         font-size: 1.1rem;
-        transition: transform 0.2s ease;
+        transition: transform 0.22s var(--ease);
       }
       .ap-details[open] summary::after { transform: rotate(180deg); }
       .ap-defs {
@@ -242,46 +241,47 @@ export async function render(el) {
         gap: 14px;
         margin-top: 14px;
         padding-top: 14px;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        border-top: 1px solid var(--line-soft);
       }
       .ap-defs-item {
-        background: rgba(255, 255, 255, 0.02);
+        background: var(--surface-2);
         padding: 12px 14px;
         border-radius: 14px;
+        border: 1px solid var(--line-soft);
       }
       .ap-defs-item dt {
-        font-weight: 600;
-        color: #fff;
+        font-weight: 700;
+        color: var(--ivory);
         font-size: 0.9rem;
         margin-bottom: 4px;
       }
       .ap-defs-item dd {
         margin: 0;
         font-size: 0.84rem;
-        color: rgba(255, 255, 255, 0.62);
-        line-height: 1.55;
+        color: var(--text-2);
+        line-height: 1.6;
       }
       .ap-sec-title {
         font-size: 1.35rem;
         font-weight: 700;
-        color: #fff;
+        color: var(--ivory);
         margin: 28px 0 14px 0;
         display: flex;
         align-items: center;
         gap: 10px;
       }
       .ap-wrap .card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.075);
+        background: var(--glass);
+        border: 1px solid var(--line);
         border-radius: 22px;
         padding: 22px 24px;
-        backdrop-filter: blur(22px);
-        -webkit-backdrop-filter: blur(22px);
-        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        backdrop-filter: blur(22px) saturate(1.35);
+        -webkit-backdrop-filter: blur(22px) saturate(1.35);
+        transition: border-color 0.22s var(--ease), box-shadow 0.25s var(--ease);
       }
       .ap-wrap .card:hover {
-        border-color: rgba(255, 255, 255, 0.14);
-        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+        border-color: var(--line-strong);
+        box-shadow: var(--shadow-lg);
       }
       .ap-wrap .card-h {
         display: flex;
@@ -293,16 +293,16 @@ export async function render(el) {
       }
       .ap-wrap .card-h h3 {
         font-size: 1.12rem;
-        font-weight: 600;
-        color: #fff;
+        font-weight: 700;
+        color: var(--ivory);
         margin: 0;
         display: inline-flex;
         align-items: center;
         gap: 8px;
       }
       .ap-wrap .stat {
-        background: rgba(255, 255, 255, 0.025);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: var(--surface-2);
+        border: 1px solid var(--line-soft);
         border-radius: 18px;
         padding: 16px 18px;
       }
@@ -312,8 +312,8 @@ export async function render(el) {
         padding: 0;
       }
       .ap-wrap .stat .k {
-        font-size: 0.84rem;
-        color: rgba(255, 255, 255, 0.58);
+        font-size: 0.82rem;
+        color: var(--text-muted);
         margin-bottom: 6px;
         display: block;
       }
@@ -322,53 +322,58 @@ export async function render(el) {
         font-weight: 700;
         letter-spacing: -0.02em;
         display: block;
+        color: var(--ivory);
       }
       .ap-wrap .btn {
-        border-radius: 13px;
-        font-weight: 500;
-        transition: all 0.2s ease;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.18s var(--ease);
       }
       .ap-wrap .btn.primary {
-        background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+        background: var(--gold-grad);
         border: 1px solid rgba(255, 255, 255, 0.15);
-        color: #fff;
-        box-shadow: 0 6px 18px rgba(10, 132, 255, 0.3);
+        color: var(--accent-ink);
+        box-shadow: 0 8px 22px -6px rgba(10, 132, 255, 0.55);
       }
       .ap-wrap .btn.primary:hover {
-        filter: brightness(1.08);
+        filter: brightness(1.07);
         transform: translateY(-1px);
       }
       .ap-wrap .inp, .ap-wrap select.inp {
         border-radius: 12px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: var(--surface-2);
+        border: 1px solid var(--line);
         padding: 8px 12px;
       }
       .ap-wrap .inp:focus {
-        border-color: #0a84ff;
+        border-color: var(--accent);
         outline: none;
-        box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+        box-shadow: 0 0 0 3px var(--accent-soft);
       }
       .ap-wrap .tbl-wrap {
         border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--line-soft);
         overflow-x: auto;
       }
       .ap-wrap .tbl th {
-        background: rgba(255, 255, 255, 0.03);
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.65);
+        background: var(--surface-2);
+        font-weight: 700;
+        color: var(--text-2);
         padding: 12px 14px;
       }
       .ap-wrap .tbl td {
         padding: 12px 14px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+        border-bottom: 1px solid var(--line-soft);
       }
       .ap-wrap .tbl tr:last-child td { border-bottom: 0; }
       .ap-wrap .chip {
         border-radius: 999px;
         padding: 4px 11px;
-        font-weight: 500;
+        font-weight: 600;
+      }
+      @media (max-width: 640px) {
+        .ap-hero { padding: 22px 18px; border-radius: 20px; }
+        .ap-wrap .card { padding: 16px; border-radius: 18px; }
       }
     </style>
 
@@ -414,7 +419,7 @@ export async function render(el) {
     const w = CHART_TESTED[iv];
     const TFS = ['15m', '1h', '4h', '1d'];
     if (!w) {
-      return `<div class="card" style="border-color:rgba(255,159,10,0.35)">
+      return `<div class="card" style="border-color:rgba(255,214,10,0.35)">
       <div class="card-h"><h3>${icon('info', 16)} روی نمودار ${esc(iv)} تست نشده است</h3></div>
       <p class="fine">این استراتژی روی نمودارهای ${TFS.join('، ')} اندازه‌گیری شده است. در تایم‌فریم ${esc(iv)} با ${cfg.strategy === 'custom' ? 'قوانین شخصی شما' : 'قوانین استاندارد'} معامله می‌کند و نتیجه اندازه‌گیری‌شده‌ای برای انتظار وجود ندارد؛ گزینه «تست این تنظیمات» در بخش تنظیمات عملکرد آن‌ها را روی کندل‌های اخیر نشان می‌دهد. قوانین فعال: ${esc(rulesText(effective(iv)))}</p>
     </div>`;
@@ -424,11 +429,11 @@ export async function render(el) {
     const pickVerdict = (x) => (x.cleared ? `در این اجرا به اندازه کافی بهتر از قوانین استاندارد عمل کرد اما در اجرای قبلی (${esc(x.previous?.measuredOn || '')}) خیر، و قوانین تنها زمانی تغییر می‌کنند که دو اجرای متوالی هم‌نظر باشند` : `به اندازه کافی بهتر عمل نکرد${x.previous?.cleared ? ` (در اجرای قبلی در تاریخ ${esc(x.previous.measuredOn)} بهتر بود)` : ''}`);
     const r = traded(w);
     const e = effective(iv);
-    return `<div class="card" style="border-color:rgba(255,159,10,0.3)">
+    return `<div class="card" style="border-color:rgba(255,214,10,0.3)">
       <div class="card-h"><h3>${icon('info', 16)} عملکرد واقعی این استراتژی هنگام تست</h3><span class="fine">اندازه‌گیری‌شده در ${esc(CHART_TESTED.measuredOn)}، نه تخمینی</span></div>
       <p style="line-height:1.7">اجرا شده کندل به کندل روی ${w.coins ?? CHART_TESTED.coins} ارز در یک حساب با احتساب کارمزد، در ${CHART_TESTED.blocks} دوره متوالی حدوداً ${esc(w.block)} (${esc(w.from)} ← ${esc(w.to)}). ${w.adopt ? `پیش از هر دوره، قوانین از میان ${CHART_TESTED.configs} مجموعه قانون بر اساس تاریخچه قبلی انتخاب و سپس روی دوره‌ای که هرگز ندیده بودند اجرا شدند.` : `قوانین استاندارد در هر سه دوره اجرا شدند؛ در کنار آن‌ها، انتخابی از میان ${CHART_TESTED.configs} مجموعه قانون بر اساس تاریخچه قبلی نیز اجرا شد که ${pickVerdict(w)}.`} ${cfg.strategy === 'custom' ? `<b>شما با قوانین شخصی خود معامله می‌کنید که بخشی از این تست نبوده‌اند</b>، بنابراین این آمارها درباره آن‌ها صدق نمی‌کند؛ برای بررسی گذشته از «تست این تنظیمات» در تنظیمات استفاده کنید. برای مقایسه، قوانین تست‌شده برای ${esc(iv)} به طور میانگین <b class="${r.ret >= 0 ? 'up' : 'down'}">${sign(r.ret)}</b> در هر دوره سود داشتند در حالی که نگهداری همان ارزها <b class="${w.hold >= 0 ? 'up' : 'down'}">${sign(w.hold)}</b> بازدهی داشت.` : `در تایم‌فریم ${esc(iv)}، قوانینی که معامله می‌کند به طور میانگین <b class="${r.ret >= 0 ? 'up' : 'down'}">${sign(r.ret)}</b> در هر دوره با میانگین بیشترین افت سرمایه ${r.dd}% کسب کردند، در حالی که نگهداری همان ارزها به طور میانگین <b class="${w.hold >= 0 ? 'up' : 'down'}">${sign(w.hold)}</b> بازدهی و ${w.holdDrop}% افت سرمایه داشت. ${r.ret > w.hold ? 'در این نمودار طی سه دوره بهتر از نگهداری عمل کرد؛ این یک مدرک است نه تضمین.' : 'در این نمودار نگهداری ساده سود بیشتری داشت.'}${w.previous && !w.adopt && Math.abs(w.previous.ret - r.ret) >= 2 ? ` اجرای قبلی در تاریخ ${esc(w.previous.measuredOn)} روی کندل‌های تقریباً مشابه، ${sign(w.previous.ret)} در هر دوره نتیجه داد: میانگین هر اجرا را تقریبی در نظر بگیرید.` : ''}${r.dd < w.holdDrop - 5 ? (r.ret > w.hold ? ' همچنین افت سرمایه بسیار کمتری داشت.' : ' اما افت سرمایه بسیار کمتری را تجربه کرد.') : ''} بیشترین افت سرمایه با احتساب معاملات باز در بسته شدن هر کندل محاسبه شده است.${w.fillCost ? ` در تست، تمام سفارش‌ها با قیمت کندل پر شده‌اند؛ با فرض پر شدن سفارش‌ها ۰.۰۵٪ بدتر در هر طرف (اسپرد و لغزش)، سود هر دوره حدود ${w.fillCost} واحد درصد کمتر می‌شد.` : ''}`}</p>
       <div class="tbl-wrap mt"><table class="tbl fit"><thead><tr><th class="l">نمودار</th><th class="hide-p">بازه تست</th><th class="hide-p">قوانین</th><th>نتیجه هر دوره</th><th>بیشترین افت</th><th class="hide-p">قوانین استاندارد</th><th>نگهداری ساده</th><th class="hide-p">افت نگهداری ساده</th><th class="hide-p">معاملات</th></tr></thead><tbody>
-        ${TFS.map((k) => { const x = CHART_TESTED[k], t = traded(x); return `<tr${k === iv ? ' style="font-weight:600;background:rgba(255,255,255,0.03)"' : ''}><td class="l">${k}</td><td class="fine wrap hide-p" style="min-width:96px">${esc(x.from)} ← ${esc(x.to)}</td><td class="fine hide-p">${x.adopt ? 'اختصاصی' : 'استاندارد'}</td><td class="${t.ret >= 0 ? 'up' : 'down'}">${sign(t.ret)}</td><td class="down">−${t.dd}%</td><td class="hide-p ${x.standard.ret >= 0 ? 'up' : 'down'}">${sign(x.standard.ret)}</td><td class="${x.hold >= 0 ? 'up' : 'down'}">${sign(x.hold)}</td><td class="down hide-p">−${x.holdDrop}%</td><td class="hide-p">${t.trades}</td></tr>`; }).join('')}
+        ${TFS.map((k) => { const x = CHART_TESTED[k], t = traded(x); return `<tr${k === iv ? ' style="font-weight:600;background:rgba(10,132,255,0.08)"' : ''}><td class="l">${k}</td><td class="fine wrap hide-p" style="min-width:96px">${esc(x.from)} ← ${esc(x.to)}</td><td class="fine hide-p">${x.adopt ? 'اختصاصی' : 'استاندارد'}</td><td class="${t.ret >= 0 ? 'up' : 'down'}">${sign(t.ret)}</td><td class="down">−${t.dd}%</td><td class="hide-p ${x.standard.ret >= 0 ? 'up' : 'down'}">${sign(x.standard.ret)}</td><td class="${x.hold >= 0 ? 'up' : 'down'}">${sign(x.hold)}</td><td class="down hide-p">−${x.holdDrop}%</td><td class="hide-p">${t.trades}</td></tr>`; }).join('')}
       </tbody></table></div>
       <p class="fine mt">قوانین فعال در ${esc(iv)}: ${esc(rulesText(e))} ${cfg.strategy === 'custom' ? 'این‌ها قوانین شخصی شما هستند که در تنظیمات تعیین شده‌اند.' : w.adopt ? `این‌ها انتخاب اختصاصی این نمودار هستند: در تست، انتخاب قوانین برای نمودار در ${w.better} دوره از ${CHART_TESTED.blocks} دوره قوانین استاندارد را شکست داد (${sign(w.own.ret)} در برابر ${sign(w.standard.ret)} در هر دوره، و بیشترین افت ${w.own.dd}% در برابر ${w.standard.dd}%).` : `انتخاب اختصاصی نمودار ${w.cleared ? `در این اجرا قوانین استاندارد را شکست داد (بهتر در ${w.better} دوره از ${CHART_TESTED.blocks} دوره، ${sign(w.own.ret)} در برابر ${sign(w.standard.ret)}) اما در اجرای قبلی خیر، بنابراین نمودار تا زمانی که دو اجرای متوالی توافق نکنند قوانین استاندارد را حفظ می‌کند.` : `به اندازه کافی بهتر از قوانین استاندارد عمل نکرد (بهتر در ${w.better} دوره از ${CHART_TESTED.blocks} دوره${w.previous?.cleared ? `؛ در اجرای قبلی در تاریخ ${esc(w.previous.measuredOn)} بهتر بود` : ''})، بنابراین قوانین استاندارد حفظ می‌شوند.`}`} کارمزدها معادل ${r.fees}% از موجودی در هر دوره بود و ${r.win}% معاملات با سود بسته شدند.${iv === '15m' ? ' هر دوره در تایم‌فریم ۱۵ دقیقه فقط ده روز است، بنابراین این اعداد بین اجراهای مختلف نوسان زیادی دارند.' : ''}${ownRulesText()}${ownRulesOn() ? ` تست‌شده روی ${PER_COIN_RULES.coins} ارز در بازه ${esc(PER_COIN_RULES.tested.from)} ← ${esc(PER_COIN_RULES.tested.to)} با انتخاب قوانین بر اساس سال‌های قبل: ${sign(PER_COIN_RULES.tested.own.ret)} با بیشترین افت ${PER_COIN_RULES.tested.own.dd}%، در برابر ${sign(PER_COIN_RULES.tested.standard.ret)} و ${PER_COIN_RULES.tested.standard.dd}% برای قوانین روزانه به تنهایی، و ${sign(PER_COIN_RULES.tested.hold)} برای نگهداری ساده ارزها (بیشترین افت ${PER_COIN_RULES.tested.holdDrop}%).${PER_COIN_RULES.tested.previousRun ? ` اجرای قبلی روی ${PER_COIN_RULES.tested.previousRun.coins} ارز، ${sign(PER_COIN_RULES.tested.previousRun.own)} در برابر ${sign(PER_COIN_RULES.tested.previousRun.standard)} سود داد: تست‌های طولانی به ارزها و تاریخ شروع حساس هستند، پس میزان سود را تقریبی بدانید.` : ''} می‌توانید این گزینه را در تنظیمات خاموش کنید.` : ''}</p>
       ${ownRulesOn() ? coinRulesTable(e) : ''}
@@ -462,7 +467,7 @@ export async function render(el) {
     return `<div class="card mt" id="earnCard">
       <div class="card-h"><h3>${icon('chart', 16)} میزان بازدهی احتمالی: ساعتی، روزانه، هفتگی و ماهانه</h3><span class="fine">با ریسک ${rows[0].risk}% در هر معامله، روی موجودی ${money(bal)}</span></div>
       <div class="tbl-wrap hide-p"><table class="tbl fine fit"><thead><tr><th class="l">نمودار</th><th>در ساعت</th><th>در روز</th><th>در هفته</th><th>در ماه</th><th class="hide-p">بدترین دوره تست</th><th class="hide-t">نگهداری ارزها (ماهانه)</th><th class="hide-t">معاملات در ماه</th></tr></thead><tbody>
-        ${rows.map((r) => { const tags = [r.chart === iv ? 'انتخاب شما' : '', top && r.chart === top.iv ? 'پیشنهادی' : ''].filter(Boolean); return `<tr${r.chart === iv ? ' style="font-weight:600;background:rgba(255,255,255,0.03)"' : ''}><td class="l"><b>${esc(r.chart)}</b>${tags.length ? ` <small class="chip">${tags.join(' · ')}</small>` : ''}</td>
+        ${rows.map((r) => { const tags = [r.chart === iv ? 'انتخاب شما' : '', top && r.chart === top.iv ? 'پیشنهادی' : ''].filter(Boolean); return `<tr${r.chart === iv ? ' style="font-weight:600;background:rgba(10,132,255,0.08)"' : ''}><td class="l"><b>${esc(r.chart)}</b>${tags.length ? ` <small class="chip">${tags.join(' · ')}</small>` : ''}</td>
           <td>${cell(r.per.hour)}</td><td>${cell(r.per.day)}</td><td>${cell(r.per.week)}</td><td>${cell(r.per.month)}</td>
           <td class="hide-p ${r.worst >= 0 ? 'up' : 'down'}">${pct(r.worst, 2)}<br><small>در ${esc(r.block)}</small></td>
           <td class="hide-t ${r.holdPer.month >= 0 ? 'up' : 'down'}">${pct(r.holdPer.month, 2)}</td><td class="hide-t">${r.tradesPerMonth}</td></tr>`; }).join('')}
@@ -547,7 +552,7 @@ export async function render(el) {
       .map(([k, n]) => `${n} معامله در ${NAMES[k]}`);
     if (!parts.length) return '';
     const list = parts.length > 1 ? `${parts.slice(0, -1).join('، ')} و ${parts[parts.length - 1]}` : parts[0];
-    return `<div class="card mb" id="backupCard" style="border-color:rgba(255,159,10,0.4);margin-bottom:16px">
+    return `<div class="card mb" id="backupCard" style="border-color:rgba(255,214,10,0.4);margin-bottom:16px">
       <div class="card-h"><h3>${icon('info', 16)} معاملات این دستگاه کنار گذاشته شدند</h3><span class="fine">${dateTime(b.at, false)}</span></div>
       <p class="fine">دستگاه دیگری پیش از این دستگاه، نسخه متفاوتی از معاملات شما را ذخیره کرده است. نسخه ذخیره‌شده در اینجا و سایر دستگاه‌های شما نمایش داده می‌شود. نسخه این دستگاه دارای ${esc(list)} است که در نسخه ذخیره‌شده وجود ندارد.</p>
       <p class="fine">می‌توانید نسخه این دستگاه را جایگزین نسخه ذخیره‌شده در همه‌جا کنید، یا نسخه ذخیره‌شده را نگه دارید و این مورد را حذف کنید.</p>
@@ -719,7 +724,7 @@ export async function render(el) {
     return `<div class="card mt">
       <div class="card-h"><h3>${icon('ai', 16)} فعالیت‌های هوش مصنوعی</h3><span class="fine">${autoOn ? 'در حال اجرا · بررسی هر ۵ دقیقه' : session.status === 'stopped' ? 'متوقف‌شده · برای ادامه دکمه از سرگیری را بزنید' : 'آماده به کار'}${st.lastRun ? ` · آخرین بررسی ${ago(st.lastRun)}` : ''}</span></div>
       ${replayed ? `<p class="fine" style="margin-top:0">موارد دارای برچسب <span class="chip">بازپخش‌شده</span> روی کندل‌های پیش از شروع زنده این حساب در تاریخ ${dateTime(liveSince)} اجرا شده‌اند — همان قوانین روی قیمت‌های گذشته اجرا شدند تا سابقه حساب خالی نباشد. تمام موارد پس از آن به صورت زنده تصمیم‌گیری شده‌اند.</p>` : ''}
-      ${ev.length ? `<ul class="fine" style="list-style:none;padding:0;margin:0">${ev.slice(0, 30).map((e) => `<li style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span class="muted" style="display:inline-block;min-width:155px">${dateTime(e.t)}</span>${!['check', 'review', 'settings'].includes(e.kind) && e.t < liveSince ? '<span class="chip" style="margin-left:8px">بازپخش‌شده</span>' : ''}${line(e)}</li>`).join('')}</ul>`
+      ${ev.length ? `<ul class="fine" style="list-style:none;padding:0;margin:0">${ev.slice(0, 30).map((e) => `<li style="padding:8px 0;border-bottom:1px solid var(--line-soft)"><span class="muted" style="display:inline-block;min-width:155px">${dateTime(e.t)}</span>${!['check', 'review', 'settings'].includes(e.kind) && e.t < liveSince ? '<span class="chip" style="margin-left:8px">بازپخش‌شده</span>' : ''}${line(e)}</li>`).join('')}</ul>`
         : `<p class="muted">${autoOn ? 'هنوز معامله‌ای انجام نشده — هوش مصنوعی منتظر موقعیتی مطابق با قوانین است.' : `هنوز معامله‌ای انجام نشده. هوش مصنوعی در حال حاضر ${session.status === 'stopped' ? 'متوقف است' : 'فعال نیست'}، بنابراین به دنبال موقعیت نمی‌گردد — برای شروع دکمه ${session.status === 'stopped' ? 'ادامه هوش مصنوعی' : 'شروع معامله‌گر'} را بزنید.`}</p>`}
     </div>`;
   }
@@ -759,7 +764,7 @@ export async function render(el) {
       ${review.findings.length ? `<ul class="reasons mt">${review.findings.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
       ${(() => { const d = diagnose(state.closed, { startingBalance: state.startingBalance, fmt: (v) => `${v < 0 ? '−' : ''}${money(Math.abs(v))}` }); return d.length ? `<div class="mt"><div class="fine" style="margin-bottom:4px"><b>عوامل مؤثر در نتیجه</b></div><ul class="reasons">${d.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''; })()}
       <p class="fine mt"><b>قوانین فعال فعلی:</b> ${active.length ? esc(active.join(' · ')) : 'هنوز تغییری اعمال نشده — استراتژی اولیه'}.</p>
-      ${lessons.length ? `<div class="mt"><div class="fine" style="margin-bottom:4px"><b>تغییرات اعمال‌شده و زمان آن‌ها</b></div><ul class="fine" style="list-style:none;padding:0;margin:0">${[...lessons].reverse().slice(0, 12).map((l) => `<li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span class="muted" style="display:inline-block;min-width:155px">${dateTime(l.at)}</span>${esc(l.text)}${l.undone ? ' <span class="chip">بعداً لغو شد</span>' : ''}</li>`).join('')}</ul></div>` : ''}
+      ${lessons.length ? `<div class="mt"><div class="fine" style="margin-bottom:4px"><b>تغییرات اعمال‌شده و زمان آن‌ها</b></div><ul class="fine" style="list-style:none;padding:0;margin:0">${[...lessons].reverse().slice(0, 12).map((l) => `<li style="padding:6px 0;border-bottom:1px solid var(--line-soft)"><span class="muted" style="display:inline-block;min-width:155px">${dateTime(l.at)}</span>${esc(l.text)}${l.undone ? ' <span class="chip">بعداً لغو شد</span>' : ''}</li>`).join('')}</ul></div>` : ''}
     </div>`;
   }
 
@@ -798,7 +803,7 @@ export async function render(el) {
       </div>` : ''}
       <p class="fine" id="csvMsg" hidden></p>
 
-      <form id="rf" class="row mt" style="gap:10px;align-items:flex-end;flex-wrap:wrap;background:rgba(255,255,255,0.02);padding:14px;border-radius:16px;border:1px solid rgba(255,255,255,0.05)">
+      <form id="rf" class="row mt" style="gap:10px;align-items:flex-end;flex-wrap:wrap;background:var(--surface-2);padding:14px;border-radius:16px;border:1px solid var(--line-soft)">
         <label class="fld">ارز<select class="inp" name="sym">${tradable.slice(0, 60).map((c) => `<option value="${esc(c.symbol)}">${esc(c.symbol)}</option>`).join('')}</select></label>
         <label class="fld">جهت<select class="inp" name="side"><option value="long">خرید (Long)</option><option value="short">فروش استقراضی (Short)</option></select></label>
         <label class="fld">مقدار<input class="inp" name="qty" type="number" step="any" min="0" placeholder="0.05" style="width:105px" required></label>
@@ -1068,7 +1073,7 @@ export async function render(el) {
   function settingsCard() {
     const w = settingsWarnings({ ...cfg, interval: state?.interval || cfg.interval });
     if (!w.length) return '';
-    return `<div class="card" style="border-color:rgba(255,159,10,0.4);margin-bottom:16px" id="settingsWarn">
+    return `<div class="card" style="border-color:rgba(255,214,10,0.4);margin-bottom:16px" id="settingsWarn">
       <p style="margin:0"><b>تنظیمات شما با تنظیمات تست‌شده متفاوت است، بنابراین نتایج تست‌شده درباره این حساب صدق نمی‌کند.</b></p>
       <ul class="fine" style="margin:8px 0 0;padding-right:18px">${w.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
       <button class="btn sm mt" type="button" id="warnUseBest">استفاده از بهترین تنظیمات تست‌شده</button>
@@ -1079,7 +1084,7 @@ export async function render(el) {
     const u = untradable();
     if (!u.all.length) return '';
     const n = u.all.length;
-    return `<div class="card mb" style="border-color:rgba(255,159,10,0.4);margin-bottom:16px" id="untradable">
+    return `<div class="card mb" style="border-color:rgba(255,214,10,0.4);margin-bottom:16px" id="untradable">
       <p style="margin:0"><b>${n} ارز در لیست هوش مصنوعی قابل معامله نیست و در هر بررسی نادیده گرفته می‌شود.</b>
       ${u.noData.length ? `${esc(u.noData.join('، '))}: داده‌ای از صرافی‌های تحت پوشش (Binance, Gate.io, HTX, OKX) دریافت نشد. ` : ''}${u.sparse.length ? `${esc(u.sparse.join('، '))}: فقط قیمت‌های پراکنده CoinGecko موجود است که برای معامله کافی نیست. ` : ''}بقیه لیست بدون مشکل است.</p>
       <button class="btn sm mt" type="button" id="dropUntradable">حذف از لیست</button>
@@ -1162,7 +1167,7 @@ export async function render(el) {
         </tbody></table></div>` : '<p class="muted" style="margin:0">هنوز معامله بسته‌شده‌ای وجود ندارد.</p>'}
       </div>
 
-      <div class="card mt" style="background:rgba(255,255,255,0.02)">
+      <div class="card mt" style="background:var(--surface-2)">
         <h3 style="margin-top:0">این ابزار چیست و چه چیزی نیست</h3>
         <p class="fine">${esc(PAPER_NOTICE)} نتایج شامل ${cfg.feePct}% کارمزد در هر طرف معامله هستند و فرض می‌کنند هرگاه یک کندل همزمان هم حد ضرر و هم حد سود را لمس کند، ابتدا حد ضرر فعال شده است — بنابراین محاسبات به ضرر استراتژی (بدبینانه) انجام می‌شود نه به نفع آن.</p>
         <p class="fine" style="margin-bottom:0">شبیه‌سازی نمی‌تواند لغزش قیمت، عمق کم دفتر سفارش‌ها یا قطعی صرافی در میانه حرکت بازار را بازسازی کند. اجرای موفق در اینجا را نشانه‌ای از منطقی بودن قوانین بدانید، نه تضمین بازدهی.</p>
@@ -1244,7 +1249,7 @@ export async function render(el) {
       return `${i} — تست‌شده ${pct(t.ret, 2)} در هر ${x.block} (نگهداری ساده ${pct(x.hold, 2)})`;
     };
     const m = modal(`<div dir="rtl" style="text-align:right"><h3>تنظیمات معامله‌گر</h3>
-      <div class="card mt" style="padding:14px;border-radius:18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08)" id="todo"><b>پیشنهاد بهینه</b>
+      <div class="card mt" style="padding:14px;border-radius:18px;background:var(--surface-2);border:1px solid var(--line)" id="todo"><b>پیشنهاد بهینه</b>
         <p class="fine" style="margin:6px 0 0">بهترین ترکیب تست‌شده: نمودار <b>${esc(best.iv)}</b> همراه با قوانین تست‌شده. پس از کسر هزینه پر شدن واقعی سفارش‌ها (۰.۰۵٪ بدتر در هر طرف)، به طور میانگین ${pct(best.net, 2)} در هر ${esc(best.block)} (حدود ${pct(best.month, 1)} در ماه) با بیشترین افت ${best.dd}% بازدهی داشته است؛ نگهداری ساده همین ارزها ${pct(best.hold, 2)} در هر دوره بازدهی داشت و بدترین دوره آن ${best.worstNet >= 0 ? 'همچنان سودده بود' : `${Math.abs(best.worstNet)}% ضرر داد`}. ریسک را روی ۱ تا ۲ درصد نگه دارید، حداقل پنج ارز انتخاب کنید و خودارزیابی را روشن بگذارید. هیچ‌کدام از این‌ها تضمین نیست: تست‌ها به گذشته نگاه می‌کنند و بازار به سمت آینده می‌رود.</p>
         <button class="btn sm mt" type="button" id="useBest">اعمال بهترین ترکیب تست‌شده</button>
         <div id="todoLive"></div></div>
@@ -1325,7 +1330,7 @@ export async function render(el) {
       $('#switchRow', m.el).hidden = !(hasTrades && next.interval !== (state?.interval || cfg.interval));
       $('#coinCount', m.el).textContent = `· ${next.universe.length} انتخاب‌شده${next.universe.length > MAX_COINS ? ` — فقط ${MAX_COINS} ارز قابل معامله هستند` : ''}`;
       const warn = settingsWarnings({ ...cfg, ...next });
-      $('#todoLive', m.el).innerHTML = `<div class="mt" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:8px">${yieldHtml({ ...cfg, ...next })}</div>
+      $('#todoLive', m.el).innerHTML = `<div class="mt" style="border-top:1px solid var(--line);padding-top:8px">${yieldHtml({ ...cfg, ...next })}</div>
         ${warn.length ? `<ul class="fine" style="margin:8px 0 0;padding-right:18px">${warn.map((w) => `<li class="down">${esc(w)}</li>`).join('')}</ul>` : '<p class="fine up" style="margin:8px 0 0">هیچ موردی در این تنظیمات نیاز به هشدار ندارد.</p>'}`;
     };
     $('#useBest', m.el).addEventListener('click', () => {
