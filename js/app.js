@@ -31,8 +31,8 @@ if (typeof window !== 'undefined' && window.top !== window.self) {
 const NAV = [
   { path: '', label: 'بازارها', icon: 'markets', short: 'بازارها' },
   // { path: 'advice', label: 'اسکن بازار', icon: 'bolt', short: 'اسکن' },
+    { path: 'trader', label: 'معاملات', icon: 'forecast', short: 'معاملات' },
   { path: 'ai', label: 'دستیار هوشمند', icon: 'ai', short: 'پرسش' },
-  { path: 'trader', label: 'معاملات', icon: 'forecast', short: 'معاملات' },
   { path: 'learn', label: 'یادگیری هوش مصنوعی', icon: 'ai', short: 'یادگیری' },
   { path: 'scanner', label: 'اسکنر', icon: 'scanner', short: 'اسکنر' },
   { path: 'track', label: 'سابقه عملکرد', icon: 'forecast', short: 'سوابق' },
