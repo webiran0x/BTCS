@@ -415,7 +415,7 @@ function page(p) {
     html = swap(
       html,
       /<meta charset="utf-8">/i,
-      `<meta charset="utf-8">\n  <base href="${BASE === '/BTCS/' ? '/' : BASE}">`,
+      `<meta charset="utf-8">\n  <base href="${BASE}">`,
       'charset',
     );
   }
