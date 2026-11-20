@@ -331,9 +331,18 @@ export async function render(el) {
   };
   let disposed = false;
 
+  const isCurrentMarketsView = () => {
+    const page = document.documentElement?.dataset?.page;
+    return !page || page === 'markets';
+  };
+
   const resolveEl = (sel) => {
-    if (disposed || !el) return null;
-    return $(sel, el) || el.querySelector(sel) || null;
+    if (!el) return null;
+    if (el.isConnected) return $(sel, el) || el.querySelector(sel) || null;
+    if (!disposed || isCurrentMarketsView()) {
+      return document.querySelector(`#view .mk-wrap ${sel}`) || document.querySelector(`#view ${sel}`) || document.querySelector(sel) || null;
+    }
+    return null;
   };
 
   const setHtml = (sel, html) => {
@@ -354,7 +363,7 @@ export async function render(el) {
   };
 
   const drawTable = () => {
-    if (disposed) return;
+    if (disposed && !isCurrentMarketsView()) return;
     const area = resolveEl('#tableArea');
     if (!area) return;
 
@@ -456,12 +465,12 @@ export async function render(el) {
 
   let loadingMarkets = null;
   const loadMarkets = () => {
-    if (disposed) return Promise.resolve();
+    if (disposed && !isCurrentMarketsView()) return Promise.resolve();
     if (loadingMarkets) return loadingMarkets;
     loadingMarkets = (async () => {
       try {
         const fresh = await markets();
-        if (disposed) return;
+        if (disposed && !isCurrentMarketsView()) return;
         if (Array.isArray(fresh) && fresh.length) {
           state.rows = fresh;
         }
@@ -469,7 +478,7 @@ export async function render(el) {
         drawTable();
         renderMovers(state.rows);
       } catch (e) {
-        if (disposed) return;
+        if (disposed && !isCurrentMarketsView()) return;
         if (!state.rows?.length) {
           setHtml('#tableArea', errorBox(e?.message || 'بارگیری داده‌های بازار امکان‌پذیر نبود.', loadMarkets));
           setHtml('#gainers', '<p class="muted">در دسترس نیست.</p>');
@@ -487,12 +496,12 @@ export async function render(el) {
     try {
       g = await getGlobal();
     } catch (e) {
-      if (!disposed) {
+      if (!disposed || isCurrentMarketsView()) {
         setHtml('#globalStrip', `<div class="apple-card empty" style="grid-column:1/-1"><b>خلاصه بازار جهانی در دسترس نیست</b><p class="fine">${esc(e?.message || 'منبع بازار جهانی پاسخ نداد.')}</p></div>`);
       }
       return;
     }
-    if (disposed || !g) return;
+    if ((disposed && !isCurrentMarketsView()) || !g) return;
     const mcapChg = Number.isFinite(+g.marketCapChange24h) ? +g.marketCapChange24h : 0;
     const card = (k, v, s = '') => `<div class="apple-card stat"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s}</span></div>`;
     setHtml('#globalStrip', [
@@ -511,12 +520,12 @@ export async function render(el) {
     try {
       f = await getFearGreed();
     } catch (e) {
-      if (!disposed) {
+      if (!disposed || isCurrentMarketsView()) {
         setHtml('#fng', `<div class="empty"><p>شاخص ترس و طمع در دسترس نیست.</p><p class="fine">${esc(e?.message || 'منبع احساسات بازار پاسخ نداد.')}</p></div>`);
       }
       return;
     }
-    if (disposed) return;
+    if (disposed && !isCurrentMarketsView()) return;
     if (!Array.isArray(f) || !f.length) {
       setHtml('#fng', '<div class="empty"><p>هیچ داده اخیری از شاخص ترس و طمع دریافت نشد.</p></div>');
       return;
@@ -545,12 +554,12 @@ export async function render(el) {
     try {
       t = await getTrending();
     } catch (e) {
-      if (!disposed) {
+      if (!disposed || isCurrentMarketsView()) {
         setHtml('#trending', `<p class="muted">داده‌های ترند در دسترس نیست: ${esc(e?.message || 'منبع در دسترس نیست')}.</p>`);
       }
       return;
     }
-    if (disposed) return;
+    if (disposed && !isCurrentMarketsView()) return;
     const list = Array.isArray(t) ? t.slice(0, 5) : [];
     setHtml('#trending', list.length ? list.map((c) => listRow(c, changeHtml(c.change24h))).join('') : '<p class="muted">داده‌ای وجود ندارد</p>');
   };
@@ -563,7 +572,7 @@ export async function render(el) {
   ]);
 
   const onTick = (e) => {
-    if (disposed || state.mode !== 'table' || !Array.isArray(e?.detail)) return;
+    if ((disposed && !isCurrentMarketsView()) || state.mode !== 'table' || !Array.isArray(e?.detail)) return;
     const priceMap = new Map();
     for (const t of e.detail) {
       const p = +t.c;
@@ -577,8 +586,9 @@ export async function render(el) {
       }
     }
 
+    const root = el.isConnected ? el : document.querySelector('#view .mk-wrap') || el;
     for (const [pairSym, p] of priceMap.entries()) {
-      const tr = el.querySelector(`tr[data-pair="${pairSym}"]`);
+      const tr = root.querySelector(`tr[data-pair="${pairSym}"]`);
       if (!tr) continue;
       const cell = tr.querySelector('.p');
       if (!cell) continue;
