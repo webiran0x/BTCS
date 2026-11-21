@@ -100,6 +100,7 @@
     }
 
     /* لودر سراسری برای صفحه اول و جابه‌جایی بین صفحات */
+   /* لودر مدرن ۲۰۲۶ به سبک Apple Liquid Glass */
     #globalLoader {
       position: fixed;
       inset: 0;
@@ -107,15 +108,150 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
-      gap: 14px;
-      background: rgba(7, 7, 8, 0.88);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background:
+        radial-gradient(600px circle at 50% 42%, rgba(214, 180, 108, 0.10), transparent 65%),
+        rgba(6, 6, 8, 0.72);
+      backdrop-filter: blur(26px) saturate(160%);
+      -webkit-backdrop-filter: blur(26px) saturate(160%);
       opacity: 1;
       visibility: visible;
-      transition: opacity 0.28s ease, visibility 0.28s ease;
+      transform: scale(1);
+      transition:
+        opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0.42s ease;
       pointer-events: auto;
+    }
+
+    #globalLoader.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(1.03);
+      pointer-events: none;
+    }
+
+    .apple-glass-pill {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      min-width: 230px;
+      padding: 26px 32px 24px;
+      border-radius: 28px;
+      background: linear-gradient(
+        165deg,
+        rgba(255, 255, 255, 0.085) 0%,
+        rgba(255, 255, 255, 0.025) 100%
+      );
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow:
+        0 24px 60px -12px rgba(0, 0, 0, 0.75),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+        inset 0 -1px 0 0 rgba(214, 180, 108, 0.12);
+      backdrop-filter: blur(32px) saturate(180%);
+      -webkit-backdrop-filter: blur(32px) saturate(180%);
+      animation: pillFloat 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    }
+
+    .apple-orb-wrap {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+    }
+
+    .apple-orb-glow {
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        rgba(246, 231, 193, 0.0) 0%,
+        rgba(214, 180, 108, 0.55) 45%,
+        rgba(246, 231, 193, 0.95) 55%,
+        rgba(214, 180, 108, 0.0) 100%
+      );
+      filter: blur(6px);
+      animation: orbRotate 1.6s linear infinite;
+    }
+
+    .apple-orb-core {
+      position: relative;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #1c1a17, #09090b);
+      border: 1px solid rgba(246, 231, 193, 0.28);
+      display: grid;
+      place-items: center;
+      box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.18);
+    }
+
+    .apple-orb-core svg {
+      width: 24px;
+      height: 24px;
+      animation: logoPulse 1.8s ease-in-out infinite;
+    }
+
+    .cv-loader-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.94);
+      letter-spacing: -0.01em;
+    }
+
+    .cv-loader-sub {
+      margin-top: -10px;
+      font-size: 0.76rem;
+      color: rgba(246, 231, 193, 0.68);
+    }
+
+    .apple-progress-track {
+      width: 148px;
+      height: 3.5px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.09);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .apple-progress-bar {
+      position: absolute;
+      inset: 0;
+      width: 48%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, #d6b46c, #f6e7c1, transparent);
+      animation: appleSlide 1.35s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    }
+
+    @keyframes orbRotate {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes logoPulse {
+      0%, 100% { transform: scale(0.95); opacity: 0.85; }
+      50% { transform: scale(1.05); opacity: 1; }
+    }
+
+    @keyframes pillFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-3px); }
+    }
+
+    @keyframes appleSlide {
+      0% { transform: translateX(135%); }
+      100% { transform: translateX(-235%); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .apple-glass-pill,
+      .apple-orb-glow,
+      .apple-orb-core svg,
+      .apple-progress-bar {
+        animation: none;
+      }
     }
 
     #globalLoader.is-hidden {
@@ -147,9 +283,30 @@
 </head>
 <body>
   <!-- لودر سراسری -->
+  <!-- لودر سراسری مدرن ۲۰۲۶ -->
   <div id="globalLoader" role="status" aria-live="polite" aria-label="در حال بارگذاری">
-    <div class="cv-spinner" aria-hidden="true"></div>
-    <div class="cv-loader-text">در حال بارگذاری داده‌ها…</div>
+    <div class="apple-glass-pill">
+      <div class="apple-orb-wrap" aria-hidden="true">
+        <div class="apple-orb-glow"></div>
+        <div class="apple-orb-core">
+          <svg viewBox="0 0 64 64">
+            <defs>
+              <linearGradient id="cvLoaderGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#f6e7c1"/>
+                <stop offset=".5" stop-color="#d6b46c"/>
+                <stop offset="1" stop-color="#9c7a3c"/>
+              </linearGradient>
+            </defs>
+            <path d="M15 41l11-11 8 8 15-17" stroke="url(#cvLoaderGrad)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="cv-loader-title">بی تی سی (BTCS)</div>
+      <div class="cv-loader-sub" id="cvLoaderSub">در حال همگام‌سازی داده‌های زنده…</div>
+      <div class="apple-progress-track" aria-hidden="true">
+        <div class="apple-progress-bar"></div>
+      </div>
+    </div>
   </div>
 
   <a class="skip-link" href="#view">پرش به محتوا</a>
