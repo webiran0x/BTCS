@@ -429,17 +429,17 @@ export function interpretFutures(f) {
     if (Number.isFinite(nowUsd) && Number.isFinite(thenUsd) && thenUsd > 0) oiChange = (nowUsd / thenUsd - 1) * 100;
   }
   const longPct = f.longShort?.length ? f.longShort[f.longShort.length - 1].longPct : null;
-  const notes = [];
+const notes = [];
   if (fundingPct !== null) {
-    if (fundingPct > 0.05) notes.push('Funding is high and positive — longs are paying shorts heavily, which often precedes long squeezes.');
-    else if (fundingPct > 0.01) notes.push('Funding is positive — traders lean long.');
-    else if (fundingPct < -0.05) notes.push('Funding is deeply negative — shorts are paying longs, which often precedes short squeezes.');
-    else if (fundingPct < -0.01) notes.push('Funding is negative — traders lean short.');
-    else notes.push('Funding is close to neutral.');
+    if (fundingPct > 0.05) notes.push('نرخ فاندینگ بالا و مثبت است — پوزیشن‌های لانگ هزینه‌های سنگینی به شورت‌ها می‌دهند که اغلب پیش‌درآمد لیکوئید شدن لانگ‌ها (Long Squeeze) است.');
+    else if (fundingPct > 0.01) notes.push('نرخ فاندینگ مثبت است — معامله‌گران متمایل به لانگ هستند.');
+    else if (fundingPct < -0.05) notes.push('نرخ فاندینگ به‌شدت منفی است — پوزیشن‌های شورت هزینه‌های سنگینی به لانگ‌ها می‌دهند که اغلب پیش‌درآمد لیکوئید شدن شورت‌ها (Short Squeeze) است.');
+    else if (fundingPct < -0.01) notes.push('نرخ فاندینگ منفی است — معامله‌گران متمایل به شورت هستند.');
+    else notes.push('نرخ فاندینگ نزدیک به حالت خنثی است.');
   }
   if (oiChange !== null) {
-    if (oiChange > 5) notes.push(`Open interest is up ${oiChange.toFixed(1)}% in 12h — new leveraged positions are being opened.`);
-    else if (oiChange < -5) notes.push(`Open interest is down ${Math.abs(oiChange).toFixed(1)}% in 12h — positions are being closed or liquidated.`);
+    if (oiChange > 5) notes.push(`سود باز (Open Interest) در ۱۲ ساعت گذشته ${oiChange.toFixed(1)}% افزایش یافته — پوزیشن‌های اهرمی جدیدی در حال باز شدن هستند.`);
+    else if (oiChange < -5) notes.push(`سود باز (Open Interest) در ۱۲ ساعت گذشته ${Math.abs(oiChange).toFixed(1)}% کاهش یافته — پوزیشن‌ها در حال بسته شدن یا لیکوئید شدن هستند.`);
   }
   if (longPct !== null) notes.push(`${longPct.toFixed(0)}% of ${String(f.source || 'Binance').replace(/ Futures$/, '')} futures accounts are long.`);
   return { fundingPct, annualisedFundingPct: annual, fundingIntervalHours: intervalHours, oiChange12hPct: oiChange, longAccountsPct: longPct, notes };
