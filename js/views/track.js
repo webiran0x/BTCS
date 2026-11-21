@@ -1,5 +1,5 @@
-// سابقه عملکرد عمومی: هر سیگنالی که سرور ثبت کرده و نتیجه واقعی آن[cite: 5].
-// هیچ‌چیز در اینجا گزینشی نیست — ردیف‌های تعیین‌تکلیف‌شده دقیقاً همان‌طور که بسته شده‌اند شمرده می‌شوند[cite: 5].
+// سابقه عملکرد عمومی: هر سیگنالی که سرور ثبت کرده و نتیجه واقعی آن.
+// هیچ‌چیز در اینجا گزینشی نیست — ردیف‌های تعیین‌تکلیف‌شده دقیقاً همان‌طور که بسته شده‌اند شمرده می‌شوند.
 import { $, $$, bindSeg, skeleton, icon } from '../ui.js';
 import { esc, pct, money, dateTime } from '../format.js';
 import { markets } from '../api/market.js';
@@ -37,15 +37,15 @@ const PLAN_WORDS = {
 const TRACK_FAQS = [
   {
     q: 'سیگنال‌ها و پیش‌بینی‌ها چگونه در سابقه عملکرد ثبت می‌شوند؟',
-    a: 'هر سیگنال پیش از مشخص شدن نتیجه آینده در دیتابیس ثبت می‌شود و پس از پایان افق زمانی تعیین‌شده، بر اساس قیمت واقعی بازار به‌صورت خودکار نمره‌دهی می‌شود[cite: 5].',
+    a: 'هر سیگنال پیش از مشخص شدن نتیجه آینده در دیتابیس ثبت می‌شود و پس از پایان افق زمانی تعیین‌شده، بر اساس قیمت واقعی بازار به‌صورت خودکار نمره‌دهی می‌شود.',
   },
   {
     q: 'معیار «خط مبنا» در ارزیابی دقت پیش‌بینی چیست؟',
-    a: 'خط مبنا نشان می‌دهد اگر کسی در همان بازه صرفاً جهت غالب بازار را انتخاب می‌کرد، چه درصدی درست می‌گفت؛ مقایسه با خط مبنا ارزش واقعی مدل را مشخص می‌کند[cite: 5].',
+    a: 'خط مبنا نشان می‌دهد اگر کسی در همان بازه صرفاً جهت غالب بازار را انتخاب می‌کرد، چه درصدی درست می‌گفت؛ مقایسه با خط مبنا ارزش واقعی مدل را مشخص می‌کند.',
   },
   {
     q: 'چرا سیگنال‌های باز در درصدهای دقت محاسبه نمی‌شوند؟',
-    a: 'تا زمانی که افق زمانی یا شرایط هدف/حد ضرر یک سیگنال تکمیل نشود، نتیجه آن نامشخص است و وارد آمار نهایی تعیین‌تکلیف‌شده نمی‌شود[cite: 5].',
+    a: 'تا زمانی که افق زمانی یا شرایط هدف/حد ضرر یک سیگنال تکمیل نشود، نتیجه آن نامشخص است و وارد آمار نهایی تعیین‌تکلیف‌شده نمی‌شود.',
   },
 ];
 
@@ -270,7 +270,7 @@ export async function render(el) {
       <header class="ap-hero-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px">
         <div>
           <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">سابقه عملکرد</h1>
-          <p style="color:rgba(255,255,255,0.72);font-size:1.05rem;line-height:1.65;margin:0;max-width:860px">هر سیگنال زیر <b>پیش از</b> مشخص شدن نتیجه در دیتابیس ثبت شده و پس از رسیدن افق زمانی بر اساس حرکت واقعی بازار نمره‌دهی شده است[cite: 5]. معیار مقایسه، خط مبنا و شفافیت داده‌ها در این صفحه به‌صورت عمومی منتشر می‌شوند[cite: 5].</p>
+          <p style="color:rgba(255,255,255,0.72);font-size:1.05rem;line-height:1.65;margin:0;max-width:860px">هر سیگنال زیر <b>پیش از</b> مشخص شدن نتیجه در دیتابیس ثبت شده و پس از رسیدن افق زمانی بر اساس حرکت واقعی بازار نمره‌دهی شده است. معیار مقایسه، خط مبنا و شفافیت داده‌ها در این صفحه به‌صورت عمومی منتشر می‌شوند.</p>
           <nav class="ap-nav-pills" aria-label="صفحات مرتبط با تحلیل و بازار">
             <a href="#/">نمای زنده بازارها</a>
             <a href="#/coin/BTC">تحلیل بیت‌کوین (BTC)</a>
@@ -296,7 +296,7 @@ export async function render(el) {
 
       <section class="ap-card" aria-label="سوالات متداول درباره سابقه عملکرد">
         <h2 style="margin:0 0 6px 0;font-size:1.2rem;color:#fff">سوالات متداول درباره کارنامه سیگنال‌ها</h2>
-        <p class="fine" style="color:rgba(255,255,255,0.55);margin:0">تمامی آمارها جنبه تحلیلی و آموزشی دارند و مشاوره سرمایه‌گذاری محسوب نمی‌شوند[cite: 5].</p>
+        <p class="fine" style="color:rgba(255,255,255,0.55);margin:0">تمامی آمارها جنبه تحلیلی و آموزشی دارند و مشاوره سرمایه‌گذاری محسوب نمی‌شوند.</p>
         <div class="ap-faq-grid">
           ${TRACK_FAQS.map((item) => `
             <article class="ap-faq-box">
@@ -348,15 +348,15 @@ export async function render(el) {
       ? `
       <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="margin:0;font-size:1.15rem;color:#fff">بررسی داده‌های زنده</h3><span class="chip ${worst < 0.1 ? 'up' : 'warn'}" style="padding:4px 10px;border-radius:8px;font-size:0.8rem">${worst < 0.1 ? 'منطبق با صرافی' : 'اختلاف جزئی'}</span></div>
       <div class="tbl-wrap"><table class="tbl fit"><thead><tr><th class="l">رمزارز</th><th>قیمت زنده صرافی</th><th class="hide-p">نمایش‌داده‌شده اینجا</th><th>اختلاف</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
-      <p class="fine mt" style="color:rgba(255,255,255,0.5);margin:12px 0 0;font-size:0.85rem;line-height:1.6">قیمت‌ها مستقیماً از صرافی دریافت شده و با همان تعداد اعشاری که صرافی اعلام می‌کند نمایش داده می‌شوند[cite: 5]. اختلاف‌های کوچک ناشی از ثانیه‌های بین دو خوانش است، نه گرد کردن اعداد[cite: 5].
-      ساعت: دستگاه شما <b>${Math.abs(skew)} میلی‌ثانیه ${skew >= 0 ? 'عقب‌تر' : 'جلوتر'}</b> از صرافی است و اپلیکیشن آن را اصلاح می‌کند، بنابراین تمام زمان‌ها در سایت بر اساس ساعت صرافی هستند[cite: 5].
-      واحد پول: ۱ دلار آمریکا = ${Number.isFinite(fx?.rate) ? fx.rate.toFixed(4) : '—'} ${esc(fx?.code || '')}، بر اساس فید نرخ زنده[cite: 5].</p>
-      <p class="fine" style="color:rgba(255,255,255,0.5);margin:8px 0 0;font-size:0.85rem"><b>موارد غیردقیق:</b> پیش‌بینی‌ها[cite: 5]. قیمت‌ها واقعیت هستند؛ پیش‌بینی یک احتمال است و دقت اندازه‌گیری‌شده آن در زیر منتشر شده است — هرگز به سمت بالا گرد نمی‌شود[cite: 5].</p>`
-      : '<div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="margin:0;font-size:1.15rem;color:#fff">بررسی داده‌های زنده</h3><span class="chip warn" style="padding:4px 10px;border-radius:8px;font-size:0.8rem">دسترسی به صرافی میسر نشد</span></div><p class="fine" style="color:rgba(255,255,255,0.5);margin:0;font-size:0.85rem">این بررسی نیازمند اتصال زنده به صرافی است[cite: 5]. اجرا نشد، بنابراین هیچ ادعایی مطرح نمی‌شود[cite: 5].</p>';
+      <p class="fine mt" style="color:rgba(255,255,255,0.5);margin:12px 0 0;font-size:0.85rem;line-height:1.6">قیمت‌ها مستقیماً از صرافی دریافت شده و با همان تعداد اعشاری که صرافی اعلام می‌کند نمایش داده می‌شوند. اختلاف‌های کوچک ناشی از ثانیه‌های بین دو خوانش است، نه گرد کردن اعداد.
+      ساعت: دستگاه شما <b>${Math.abs(skew)} میلی‌ثانیه ${skew >= 0 ? 'عقب‌تر' : 'جلوتر'}</b> از صرافی است و اپلیکیشن آن را اصلاح می‌کند، بنابراین تمام زمان‌ها در سایت بر اساس ساعت صرافی هستند.
+      واحد پول: ۱ دلار آمریکا = ${Number.isFinite(fx?.rate) ? fx.rate.toFixed(4) : '—'} ${esc(fx?.code || '')}، بر اساس فید نرخ زنده.</p>
+      <p class="fine" style="color:rgba(255,255,255,0.5);margin:8px 0 0;font-size:0.85rem"><b>موارد غیردقیق:</b> پیش‌بینی‌ها. قیمت‌ها واقعیت هستند؛ پیش‌بینی یک احتمال است و دقت اندازه‌گیری‌شده آن در زیر منتشر شده است — هرگز به سمت بالا گرد نمی‌شود.</p>`
+      : '<div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="margin:0;font-size:1.15rem;color:#fff">بررسی داده‌های زنده</h3><span class="chip warn" style="padding:4px 10px;border-radius:8px;font-size:0.8rem">دسترسی به صرافی میسر نشد</span></div><p class="fine" style="color:rgba(255,255,255,0.5);margin:0;font-size:0.85rem">این بررسی نیازمند اتصال زنده به صرافی است. اجرا نشد، بنابراین هیچ ادعایی مطرح نمی‌شود.</p>';
   })();
 
   if (!backendEnabled()) {
-    $('#body', el).innerHTML = '<div class="ap-card empty" style="text-align:center;padding:40px"><h3 style="color:#fff;margin-bottom:8px">ردیابی زنده پیکربندی نشده است</h3><p style="color:rgba(255,255,255,0.6)">بک‌اند مربوط به ثبت و امتیازبندی سیگنال‌ها در این نسخه متصل نیست[cite: 5].</p></div>';
+    $('#body', el).innerHTML = '<div class="ap-card empty" style="text-align:center;padding:40px"><h3 style="color:#fff;margin-bottom:8px">ردیابی زنده پیکربندی نشده است</h3><p style="color:rgba(255,255,255,0.6)">بک‌اند مربوط به ثبت و امتیازبندی سیگنال‌ها در این نسخه متصل نیست.</p></div>';
     return () => { disposed = true; };
   }
 
@@ -382,7 +382,7 @@ export async function render(el) {
       $('#body', el).innerHTML = `
         <div class="ap-card empty" style="text-align:center;padding:40px">
           <h3 style="color:#fff;margin-bottom:8px">سابقه عملکرد بارگیری نشد</h3>
-          <p style="color:rgba(255,255,255,0.6);margin-bottom:16px">سروری که سیگنال‌ها را ثبت و امتیازبندی می‌کند پاسخ نداد[cite: 5].</p>
+          <p style="color:rgba(255,255,255,0.6);margin-bottom:16px">سروری که سیگنال‌ها را ثبت و امتیازبندی می‌کند پاسخ نداد.</p>
           <button type="button" class="btn" id="retryTrackBtn" style="padding:8px 18px;border-radius:10px;cursor:pointer">تلاش مجدد</button>
         </div>`;
       $('#retryTrackBtn', el)?.addEventListener('click', () => loadRecordData());
@@ -404,9 +404,9 @@ export async function render(el) {
       return ms ? new Date(ms).toISOString().slice(0, 10) : '—';
     };
     return `<div class="ap-card mt">
-      <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap"><h3 style="margin:0;font-size:1.15rem;color:#fff">سیگنال هوش مصنوعی، زنده</h3><span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem">وضعیت‌های خرید/نگهداری/فروش در صفحات رمزارز، ثبت‌شده توسط سرور در زمان بسته شدن هر کندل[cite: 5]</span></div>
+      <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap"><h3 style="margin:0;font-size:1.15rem;color:#fff">سیگنال هوش مصنوعی، زنده</h3><span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem">وضعیت‌های خرید/نگهداری/فروش در صفحات رمزارز، ثبت‌شده توسط سرور در زمان بسته شدن هر کندل</span></div>
       ${!ivs.length
-        ? `<p class="fine" style="color:rgba(255,255,255,0.6);font-size:0.9rem">${aiRows ? 'شروع شده — اولین کندل‌ها در حال ثبت هستند و هنوز نتیجه‌ای نمره‌دهی نشده است[cite: 5].' : 'هنوز در این نسخه فعال نشده است[cite: 5].'} هر کندل ۴ ساعته و روزانه بسته‌شده از رمزارزهای ردیابی‌شده یک ردیف دریافت می‌کند که پیش از مشخص شدن آینده نوشته شده و بر اساس قیمت چند کندل بعد نمره‌دهی می‌شود[cite: 5].</p>`
+        ? `<p class="fine" style="color:rgba(255,255,255,0.6);font-size:0.9rem">${aiRows ? 'شروع شده — اولین کندل‌ها در حال ثبت هستند و هنوز نتیجه‌ای نمره‌دهی نشده است.' : 'هنوز در این نسخه فعال نشده است.'} هر کندل ۴ ساعته و روزانه بسته‌شده از رمزارزهای ردیابی‌شده یک ردیف دریافت می‌کند که پیش از مشخص شدن آینده نوشته شده و بر اساس قیمت چند کندل بعد نمره‌دهی می‌شود.</p>`
         : `
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">نمودار</th><th>تعداد ثبت‌شده</th><th>قیمت بالاتر پس از خرید</th><th>…پس از هر کندل</th><th>تست‌شده (قبل از انتشار زنده)</th><th>معاملات بسته شده</th><th>پوزیشن‌های باز فعلی</th></tr></thead><tbody>
         ${ivs.map((iv) => {
@@ -422,7 +422,7 @@ export async function render(el) {
           </tr>`;
         }).join('')}
       </tbody></table></div>
-      <p class="fine" style="margin:12px 0 0;color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6">امتیازبندی بر اساس قیمت ۶ کندل (۴h) یا ۷ روز (۱d) پس از هر ردیف انجام می‌شود[cite: 5]. معاملات فقط پس از شروع ردیابی آن رمزارز و پس از کسر کارمزد شمرده می‌شوند[cite: 5]. نمونه کوچک اهمیت کمی دارد؛ ارقام تست‌شده معیاری هستند که باید شکست داده شوند و قبل از انتشار زنده، خریدها هیچ کندلی را شکست ندادند[cite: 5].</p>`}
+      <p class="fine" style="margin:12px 0 0;color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6">امتیازبندی بر اساس قیمت ۶ کندل (۴h) یا ۷ روز (۱d) پس از هر ردیف انجام می‌شود. معاملات فقط پس از شروع ردیابی آن رمزارز و پس از کسر کارمزد شمرده می‌شوند. نمونه کوچک اهمیت کمی دارد؛ ارقام تست‌شده معیاری هستند که باید شکست داده شوند و قبل از انتشار زنده، خریدها هیچ کندلی را شکست ندادند.</p>`}
     </div>`;
   };
 
@@ -495,18 +495,18 @@ export async function render(el) {
 
       <div class="ap-card mt" ${acc !== null && !beatsBaseline ? 'style="border-color:var(--warn)"' : ''}>
         <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap"><h3 style="margin:0;font-size:1.15rem;color:#fff">چگونه این آمار را بخوانیم</h3>${acc === null ? '' : `<span class="chip ${beatsBaseline ? 'up' : 'warn'}" style="padding:4px 10px;border-radius:8px;font-size:0.8rem">${beatsBaseline ? `پیش افتادن از خط مبنا به میزان ${(acc - baseline).toFixed(1)} امتیاز` : `${(baseline - acc).toFixed(1)} امتیاز عقب‌تر از خط مبنا`}</span>`}</div>
-        ${acc === null ? '<p class="fine" style="color:rgba(255,255,255,0.6)">هنوز هیچ موردی تعیین‌تکلیف نشده است[cite: 5].</p>' : `
-        <p style="color:rgba(255,255,255,0.8);line-height:1.6;margin:0 0 12px 0">در طول این ${fc.length} پیش‌بینی تعیین‌تکلیف‌شده، بازار در ${rosePct.toFixed(1)}٪ مواقع صعود کرده است[cite: 5]. بنابراین هرکسی که مدل را کاملاً نادیده می‌گرفت و در هر بار می‌گفت «${baselineCall}»، در <b>${baseline.toFixed(1)}٪</b> مواقع حق داشت[cite: 5]. موتور امتیاز ${acc.toFixed(1)}٪ کسب کرده است[cite: 5].
+        ${acc === null ? '<p class="fine" style="color:rgba(255,255,255,0.6)">هنوز هیچ موردی تعیین‌تکلیف نشده است.</p>' : `
+        <p style="color:rgba(255,255,255,0.8);line-height:1.6;margin:0 0 12px 0">در طول این ${fc.length} پیش‌بینی تعیین‌تکلیف‌شده، بازار در ${rosePct.toFixed(1)}٪ مواقع صعود کرده است. بنابراین هرکسی که مدل را کاملاً نادیده می‌گرفت و در هر بار می‌گفت «${baselineCall}»، در <b>${baseline.toFixed(1)}٪</b> مواقع حق داشت. موتور امتیاز ${acc.toFixed(1)}٪ کسب کرده است.
         ${beatsBaseline
-          ? 'این نتیجه بالاتر از خط مبنا است که تنها مقایسه‌ی معنادار محسوب می‌شود — اما برتری کوچکی در یک نمونه‌ی کوتاه است و دلیلی برای افزایش حجم معاملات نیست[cite: 5].'
-          : 'این نتیجه <b>پایین‌تر</b> از خط مبنا است[cite: 5]. در این نمونه، مدل کارایی خود را ثابت نکرده است: یک پاسخ ثابت عملکرد بهتری داشت و هیچ‌چیز بالاتر از ۵۰٪ بودن این حقیقت را تغییر نمی‌دهد[cite: 5].'}</p>
-        <p class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6;margin:8px 0">دو عامل باعث می‌شود این نمونه ضعیف‌تر از تعداد ردیف‌هایش به نظر برسد[cite: 5]. ردیف‌ها شامل ${spanDays} روز از یک بازار واحد هستند و رمزارزها با هم حرکت می‌کنند — ریزش ۱۲ رمزارز در یک هفته بیشتر شبیه یک مشاهده است تا ۱۲ مشاهده مستقل[cite: 5]. تمام ارقام این صفحه را تا زمانی که نمونه شامل شرایط مختلف بازار شود به عنوان مقادیر موقتی در نظر بگیرید[cite: 5].${filtered.length - done.length > 0 ? ` ${filtered.length - done.length} سیگنال همچنان باز است و در هیچ‌یک از درصدهای اینجا شمرده نشده است[cite: 5].` : ''}</p>
-        <p class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6;margin:8px 0">طرح‌های معاملاتی دقیقاً مطابق قوانین مدیریت پوزیشن امتیازبندی می‌شوند: نیمی از پوزیشن در هدف ۱ بسته می‌شود و حد ضرر باقی‌مانده به قیمت ورود منتقل می‌گردد؛ بقیه پوزیشن در هدف ۲، قیمت ورود یا بسته شدن کندل در انتهای افق زمانی بسته می‌شود[cite: 5]. زمانی که یک کندل هم حد ضرر و هم هدف را لمس کند، فرض بر این است که حد ضرر اول رخ داده است[cite: 5]. کارمزدها لحاظ نشده‌اند[cite: 5]. تا تاریخ ۱۲ اکتبر ۲۰۲۶ قانون متفاوتی استفاده می‌شد — حد ضرر پس از هدف ۱ به عنوان زیان کامل شمرده می‌شد و طرحی که به هدف ۲ می‌رسید انگار کل پوزیشن آنجا بسته شده است — و طرح‌های قدیمی چندتا چندتا تحت قوانین جدید مجدداً امتیازبندی می‌شوند${oldRule ? `: <b>${oldRule} مورد از ${plans.length} طرح نمایش‌داده‌شده در اینجا</b> همچنان با سیستم امتیازبندی قدیمی هستند` : '؛ تمام طرح‌های نمایش‌داده‌شده به‌روز هستند'}[cite: 5].</p>
-        <p class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6;margin:8px 0">تست آفلاین، اجرا شده روی ${TESTED_ACCURACY.tests} پیش‌بینی روی ${TESTED_ACCURACY.coins} رمزارز پیش از انتشار زنده، دقت ${tested ? `${tested}٪` : '—'} را در این تایم‌فریم ثبت کرده است[cite: 5]. هر جا که عدد زنده با آن اختلاف داشته باشد، عدد زنده ملاک است[cite: 5].</p>`}
+          ? 'این نتیجه بالاتر از خط مبنا است که تنها مقایسه‌ی معنادار محسوب می‌شود — اما برتری کوچکی در یک نمونه‌ی کوتاه است و دلیلی برای افزایش حجم معاملات نیست.'
+          : 'این نتیجه <b>پایین‌تر</b> از خط مبنا است. در این نمونه، مدل کارایی خود را ثابت نکرده است: یک پاسخ ثابت عملکرد بهتری داشت و هیچ‌چیز بالاتر از ۵۰٪ بودن این حقیقت را تغییر نمی‌دهد.'}</p>
+        <p class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6;margin:8px 0">دو عامل باعث می‌شود این نمونه ضعیف‌تر از تعداد ردیف‌هایش به نظر برسد. ردیف‌ها شامل ${spanDays} روز از یک بازار واحد هستند و رمزارزها با هم حرکت می‌کنند — ریزش ۱۲ رمزارز در یک هفته بیشتر شبیه یک مشاهده است تا ۱۲ مشاهده مستقل. تمام ارقام این صفحه را تا زمانی که نمونه شامل شرایط مختلف بازار شود به عنوان مقادیر موقتی در نظر بگیرید.${filtered.length - done.length > 0 ? ` ${filtered.length - done.length} سیگنال همچنان باز است و در هیچ‌یک از درصدهای اینجا شمرده نشده است.` : ''}</p>
+        <p class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6;margin:8px 0">طرح‌های معاملاتی دقیقاً مطابق قوانین مدیریت پوزیشن امتیازبندی می‌شوند: نیمی از پوزیشن در هدف ۱ بسته می‌شود و حد ضرر باقی‌مانده به قیمت ورود منتقل می‌گردد؛ بقیه پوزیشن در هدف ۲، قیمت ورود یا بسته شدن کندل در انتهای افق زمانی بسته می‌شود. زمانی که یک کندل هم حد ضرر و هم هدف را لمس کند، فرض بر این است که حد ضرر اول رخ داده است. کارمزدها لحاظ نشده‌اند. تا تاریخ ۱۲ اکتبر ۲۰۲۶ قانون متفاوتی استفاده می‌شد — حد ضرر پس از هدف ۱ به عنوان زیان کامل شمرده می‌شد و طرحی که به هدف ۲ می‌رسید انگار کل پوزیشن آنجا بسته شده است — و طرح‌های قدیمی چندتا چندتا تحت قوانین جدید مجدداً امتیازبندی می‌شوند${oldRule ? `: <b>${oldRule} مورد از ${plans.length} طرح نمایش‌داده‌شده در اینجا</b> همچنان با سیستم امتیازبندی قدیمی هستند` : '؛ تمام طرح‌های نمایش‌داده‌شده به‌روز هستند'}.</p>
+        <p class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6;margin:8px 0">تست آفلاین، اجرا شده روی ${TESTED_ACCURACY.tests} پیش‌بینی روی ${TESTED_ACCURACY.coins} رمزارز پیش از انتشار زنده، دقت ${tested ? `${tested}٪` : '—'} را در این تایم‌فریم ثبت کرده است. هر جا که عدد زنده با آن اختلاف داشته باشد، عدد زنده ملاک است.</p>`}
       </div>
 
       ${checks.length ? `<div class="ap-card mt">
-        <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap"><h3 style="margin:0;font-size:1.15rem;color:#fff">آیا جهت‌گیری پیش‌بینی در حالت زنده ارزشی دارد؟</h3><span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem">معیاری که اعتماد صفحه رمزارز را تنظیم می‌کند[cite: 5]</span></div>
+        <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap"><h3 style="margin:0;font-size:1.15rem;color:#fff">آیا جهت‌گیری پیش‌بینی در حالت زنده ارزشی دارد؟</h3><span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem">معیاری که اعتماد صفحه رمزارز را تنظیم می‌کند</span></div>
         <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">تایم‌فریم</th><th>نمره‌دهی‌شده</th><th>کندل‌های مجزا</th><th>بهترین ضریب اعتماد</th><th>شواهد (نیاز به ${LIVE_PROOF_NATS})</th><th>نرخ برد · خط مبنا</th><th>اعتماد استفاده‌شده اینجا</th></tr></thead><tbody>
         ${checks.map((c) => `<tr style="cursor:default">
           <td class="l"><b>${esc(c.interval)}</b></td><td>${c.n}</td><td>${c.candles}</td><td>${c.s.toFixed(2)}</td>
@@ -514,13 +514,13 @@ export async function render(el) {
           <td class="${c.hit > c.baseline ? 'up' : 'down'}">${(c.hit * 100).toFixed(1)}٪ · ${(c.baseline * 100).toFixed(1)}٪</td>
           <td>${directionTrustFor(c.interval).trust.toFixed(2)}</td></tr>`).join('')}
         </tbody></table></div>
-        <p class="fine mt" style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6;margin:12px 0 0">ضریب اعتماد میزان دوری احتمال رشد پیش‌بینی از ۵۰٪ را نشان می‌دهد: در صفر، احتمال ۵۰٪ نمایش داده شده و صفحه رمزارز اعلام می‌کند جهت قابل اعتمادی وجود ندارد؛ در ۱، دقیقاً همان مقداری که مدل خروجی داده نشان داده می‌شود[cite: 5]. ${checks.some((c) => c.proven)
-          ? 'هرجا که شرط برقرار باشد و خط مبنا را شکست دهد، سابقه زنده از نمایش جهت در آنجا حمایت می‌کند[cite: 5].'
-          : `هیچ تایم‌فریمی در اینجا نتوانسته ${LIVE_PROOF_NATS} را با شکست دادن خط مبنا کسب کند، بنابراین سابقه زنده با غیرفعال کردن جهت در مواردی که تست انتشار جهتی نیافته است، هم‌راستاست[cite: 5].`}</p>
+        <p class="fine mt" style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6;margin:12px 0 0">ضریب اعتماد میزان دوری احتمال رشد پیش‌بینی از ۵۰٪ را نشان می‌دهد: در صفر، احتمال ۵۰٪ نمایش داده شده و صفحه رمزارز اعلام می‌کند جهت قابل اعتمادی وجود ندارد؛ در ۱، دقیقاً همان مقداری که مدل خروجی داده نشان داده می‌شود. ${checks.some((c) => c.proven)
+          ? 'هرجا که شرط برقرار باشد و خط مبنا را شکست دهد، سابقه زنده از نمایش جهت در آنجا حمایت می‌کند.'
+          : `هیچ تایم‌فریمی در اینجا نتوانسته ${LIVE_PROOF_NATS} را با شکست دادن خط مبنا کسب کند، بنابراین سابقه زنده با غیرفعال کردن جهت در مواردی که تست انتشار جهتی نیافته است، هم‌راستاست.`}</p>
       </div>` : ''}
 
       ${actionRows.length ? `<div class="ap-card mt">
-        <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap"><h3 style="margin:0;font-size:1.15rem;color:#fff">عملکرد هر نوع سیگنال</h3><span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem">برچسب سایت در مقایسه با عملکرد واقعی قیمت[cite: 5]</span></div>
+        <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap"><h3 style="margin:0;font-size:1.15rem;color:#fff">عملکرد هر نوع سیگنال</h3><span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem">برچسب سایت در مقایسه با عملکرد واقعی قیمت</span></div>
         <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">سیگنال</th><th>تعداد ثبت‌شده</th><th>تشخیص صحیح جهت</th><th>رشد واقعی قیمت</th><th>میانگین نتیجه طرح</th></tr></thead><tbody>
         ${actionRows.map(([a, e]) => `<tr style="cursor:default">
           <td class="l"><span class="chip ${toneOf(a)}" style="padding:4px 10px;border-radius:8px;font-size:0.8rem">${esc(readable(a))}</span></td>
@@ -529,10 +529,10 @@ export async function render(el) {
           <td class="${rate(e.rose, e.n) >= 50 ? 'up' : 'down'}">${rate(e.rose, e.n).toFixed(0)}٪</td>
           <td class="${e.retN && e.ret / e.retN > 0 ? 'up' : e.retN ? 'down' : ''}">${e.retN ? pct(e.ret / e.retN) : '—'}</td></tr>`).join('')}
         </tbody></table></div>
-        <p class="fine mt" style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6;margin:12px 0 0">ستون «رشد واقعی قیمت» را در برابر قدرت سیگنال بررسی کنید[cite: 5]. اگر قوی‌ترین برچسب بهترین ردیف ستون نباشد، امتیاز بالاتر به معنای سیگنال بهتر نیست[cite: 5].</p>
+        <p class="fine mt" style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.6;margin:12px 0 0">ستون «رشد واقعی قیمت» را در برابر قدرت سیگنال بررسی کنید. اگر قوی‌ترین برچسب بهترین ردیف ستون نباشد، امتیاز بالاتر به معنای سیگنال بهتر نیست.</p>
       </div>` : ''}
 
-      ${symRows.length ? `<div class="ap-card mt"><div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap"><h3 style="margin:0;font-size:1.15rem;color:#fff">بر اساس رمزارز</h3><span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem">رمزارزهای دارای ۵ پیش‌بینی تعیین‌تکلیف‌شده یا بیشتر[cite: 5]</span></div>
+      ${symRows.length ? `<div class="ap-card mt"><div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap"><h3 style="margin:0;font-size:1.15rem;color:#fff">بر اساس رمزارز</h3><span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.85rem">رمزارزهای دارای ۵ پیش‌بینی تعیین‌تکلیف‌شده یا بیشتر</span></div>
         <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">رمزارز</th><th>تعیین‌تکلیف‌شده</th><th>صحیح</th><th>دقت</th></tr></thead><tbody>
         ${symRows.map(([s, e]) => `<tr data-sym="${esc(s)}" style="cursor:pointer"><td class="l"><a class="ap-coin-link" href="#/coin/${encodeURIComponent(s)}">${esc(s)}</a></td><td>${e.n}</td><td>${e.hit}</td><td class="${rate(e.hit, e.n) >= 55 ? 'up' : rate(e.hit, e.n) < 45 ? 'down' : ''}"><b>${rate(e.hit, e.n).toFixed(0)}٪</b></td></tr>`).join('')}
         </tbody></table></div></div>` : ''}
