@@ -124,6 +124,124 @@ export async function render(el, [symParam]) {
         color: #fff;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       }
+    
+      /* Mobile Apple-style optimization & zero horizontal overflow */
+      .ap-coin-wrap,
+      .ap-coin-wrap *,
+      .ap-coin-wrap *::before,
+      .ap-coin-wrap *::after {
+        box-sizing: border-box;
+        min-width: 0;
+      }
+      .ap-coin-wrap {
+        width: 100%;
+        overflow-x: clip;
+      }
+      .ap-hero-card,
+      .ap-card,
+      .ap-coin-wrap .tbl-wrap {
+        max-width: 100%;
+      }
+      .ap-coin-wrap .tbl-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      @media (max-width: 767px) {
+        .ap-coin-wrap {
+          padding-bottom: 76px;
+        }
+        .ap-hero-card {
+          padding: 18px 16px !important;
+          border-radius: 22px !important;
+          margin-bottom: 16px !important;
+        }
+        .ap-hero-card h1 {
+          font-size: 1.55rem !important;
+          line-height: 1.25 !important;
+        }
+        .ap-hero-card .price {
+          font-size: 1.32rem !important;
+        }
+        .ap-hero-card .row[style*="margin-left:auto"] {
+          margin-left: 0 !important;
+          width: 100%;
+        }
+        .ap-hero-card .row[style*="margin-left:auto"] > .btn {
+          flex: 1 1 auto;
+          justify-content: center;
+          padding: 8px 12px !important;
+          font-size: 0.82rem;
+        }
+        .ap-bento-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 10px !important;
+          margin-bottom: 16px !important;
+        }
+        .ap-card {
+          padding: 15px 14px !important;
+          border-radius: 18px !important;
+          margin-bottom: 14px !important;
+        }
+        .ap-card h3 {
+          font-size: 0.98rem !important;
+        }
+        .ap-coin-wrap .chart-card {
+          padding: 14px 12px !important;
+        }
+        .ap-coin-wrap #chart {
+          height: 310px !important;
+        }
+        .ap-coin-wrap #ivSeg button {
+          padding: 6px 9px !important;
+          font-size: 0.78rem;
+        }
+        .ap-coin-wrap #tabs button {
+          padding: 7px 11px !important;
+          font-size: 0.78rem !important;
+          white-space: nowrap;
+        }
+        .ap-coin-wrap .mtf {
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+        .ap-coin-wrap .plan,
+        .ap-coin-wrap .fc-grid,
+        .ap-coin-wrap .grid.g2,
+        .ap-coin-wrap .grid.g3,
+        .ap-coin-wrap .grid.g4 {
+          grid-template-columns: 1fr !important;
+          gap: 10px !important;
+        }
+        .ap-coin-wrap .season-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          gap: 6px !important;
+        }
+        .ap-coin-wrap .book {
+          grid-template-columns: 1fr !important;
+        }
+        .ap-coin-wrap p,
+        .ap-coin-wrap li,
+        .ap-coin-wrap dd,
+        .ap-coin-wrap .fine {
+          font-size: 0.82rem !important;
+          line-height: 1.65 !important;
+          overflow-wrap: anywhere;
+        }
+        .ap-coin-wrap .tbl th,
+        .ap-coin-wrap .tbl td {
+          padding: 9px 8px !important;
+          font-size: 0.78rem !important;
+          white-space: nowrap;
+        }
+      }
+      @media (max-width: 420px) {
+        .ap-bento-grid {
+          grid-template-columns: 1fr !important;
+        }
+        .ap-coin-wrap #chart {
+          height: 270px !important;
+        }
+      }
+
     </style>
 
     <div class="ap-coin-wrap" dir="rtl">
