@@ -441,6 +441,6 @@ const notes = [];
     if (oiChange > 5) notes.push(`سود باز (Open Interest) در ۱۲ ساعت گذشته ${oiChange.toFixed(1)}% افزایش یافته — پوزیشن‌های اهرمی جدیدی در حال باز شدن هستند.`);
     else if (oiChange < -5) notes.push(`سود باز (Open Interest) در ۱۲ ساعت گذشته ${Math.abs(oiChange).toFixed(1)}% کاهش یافته — پوزیشن‌ها در حال بسته شدن یا لیکوئید شدن هستند.`);
   }
-  if (longPct !== null) notes.push(`${longPct.toFixed(0)}% of ${String(f.source || 'Binance').replace(/ Futures$/, '')} futures accounts are long.`);
+  if (longPct !== null) notes.push(`${longPct.toFixed(0)}% از حساب‌های فیوچرز ${String(f.source || 'Binance').replace(/ Futures$/, '')} در پوزیشن لانگ (Long) هستند.`);
   return { fundingPct, annualisedFundingPct: annual, fundingIntervalHours: intervalHours, oiChange12hPct: oiChange, longAccountsPct: longPct, notes };
 }
