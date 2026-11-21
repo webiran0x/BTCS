@@ -318,6 +318,11 @@ export async function render(el, [symParam]) {
     const status = aiState.status;
     const opts = CONFIG.LLM_MODELS.map((m) => `<option value="${m.id}" ${(s.llmModel || '').startsWith(m.id.split('-q4')[0]) ? 'selected' : ''}>${m.label} · ${m.size}</option>`).join('');
     const base = `<p style="margin:0 0 8px 0"><span class="chip up" style="background:rgba(48,209,88,0.12);color:#30d158;padding:4px 10px;border-radius:8px;font-size:0.8rem">● آماده</span></p><p class="fine" style="color:rgba(255,255,255,0.62);margin:0;font-size:0.85rem;line-height:1.55">پاسخ‌دهی آنی از روی قیمت‌های زنده و مدل‌های تست‌شده اپلیکیشن، روی همین دستگاه. بدون نیاز به دانلود، حساب کاربری یا کلید API.</p>`;
+
+    const maxBuf = support.maxStorageBuffers ?? 0;
+    const reqBuf = 10;
+    const specsLine = `وضعیت دستگاه: WebGPU=${support.webgpu ? 'فعال و سازگار' : 'ناسازگار'} · Storage Buffer مجاز: <span dir="ltr">${maxBuf} / ${reqBuf}</span> · نیمه‌دقیق (<span dir="ltr">F16</span>): ${support.f16 ? 'بله' : 'خیر'}${support.memoryGB ? ` · رم گزارش‌شده: <span dir="ltr">${support.memoryGB}GB</span>` : ''}`;
+
     let extra = '';
     if (customReady()) {
       extra = customState.reached
@@ -328,11 +333,26 @@ export async function render(el, [symParam]) {
     } else if (status === 'loading') {
       extra = `<p class="row mt" style="margin-top:12px;display:flex;align-items:center;gap:8px"><span class="spinner"></span><b>در حال بارگیری مدل زبانی…</b></p><div class="meter" style="background:rgba(255,255,255,0.08);height:6px;border-radius:3px;margin:8px 0;overflow:hidden"><i style="display:block;height:100%;background:var(--accent);width:${Math.round(aiState.progress * 100)}%"></i></div><p class="fine mt" style="color:rgba(255,255,255,0.5);font-size:0.8rem">${esc(aiState.text.slice(0, 140))}</p>`;
     } else if (support.webgpu) {
-      extra = `<details class="mt" style="margin-top:12px"><summary class="fine" style="cursor:pointer;color:var(--accent)">اختیاری: مدل زبانی مرورگر (WebGPU)</summary>
-        <p class="fine mt" style="color:rgba(255,255,255,0.6);margin:8px 0;font-size:0.85rem">یک مدل رایگان که داخل مرورگر شما اجرا می‌شود. یک بار دانلود می‌شود و سپس از حافظه پنهان بارگیری می‌شود.</p>
+      extra = `<details class="mt" style="margin-top:12px" open><summary class="fine" style="cursor:pointer;color:var(--accent)">مدل زبانی مرورگر (WebGPU) — روی سیستم شما قابل اجراست</summary>
+        <p class="fine mt" style="color:rgba(30,215,96,0.9);margin:8px 0 4px;font-size:0.84rem;line-height:1.6">✓ سیستم شما امکان اجرای مدل داخل مرورگر را دارد. یک بار دانلود می‌شود و سپس از کش مرورگر اجرا می‌گردد.</p>
+        <p class="fine" style="color:rgba(255,255,255,0.55);margin:0 0 8px;font-size:0.78rem;line-height:1.55">${specsLine}</p>
         <label class="fld mt" style="display:flex;flex-direction:column;gap:6px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">مدل</span><select class="inp" id="modelSel">${opts}</select></label>
         <button class="btn mt" id="startAi" style="width:100%;margin-top:10px;padding:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#fff">${icon('chip', 16)} بارگیری مدل زبانی</button></details>`;
+    } else {
+      const reasonDetail = !('gpu' in navigator)
+        ? 'مرورگر یا محیط فعلی از WebGPU (`navigator.gpu`) پشتیبانی نمی‌کند.'
+        : maxBuf > 0 && maxBuf < reqBuf
+          ? `محدودیت سخت‌افزاری/درایور گرافیک روی این سیستم اجازه نمی‌دهد: شیدرهای مدل به حداقل <span dir="ltr">${reqBuf}</span> بافر ذخیره‌سازی (<span dir="ltr">maxStorageBuffersPerShaderStage</span>) نیاز دارند، اما این دستگاه حداکثر <span dir="ltr">${maxBuf}</span> بافر پشتیبانی می‌کند.`
+          : 'آداپتور گرافیکی سازگار برای اجرای مدل‌های WebGPU در مرورگر یافت نشد.';
+      extra = `<details class="mt" style="margin-top:12px" open><summary class="fine" style="cursor:pointer;color:#ff9f0a">مدل زبانی مرورگر (WebGPU) — روی این سیستم امکان‌پذیر نیست</summary>
+        <div style="margin-top:8px;padding:10px 12px;border-radius:12px;background:rgba(255,159,10,0.08);border:1px solid rgba(255,159,10,0.22);font-size:0.82rem;line-height:1.65;color:rgba(255,255,255,0.82)">
+          <div style="font-weight:600;color:#ff9f0a;margin-bottom:4px">✕ امکان اجرای مدل محلی روی این سیستم وجود ندارد</div>
+          <p style="margin:0 0 6px">${reasonDetail}</p>
+          <p style="margin:0 0 6px;color:rgba(255,255,255,0.62);font-size:0.78rem">${specsLine}</p>
+          <p style="margin:0;color:rgba(255,255,255,0.72);font-size:0.8rem">راه جایگزین: دستیار همین حالا با <b>تحلیل‌گر داخلی</b> کار می‌کند یا می‌توانید از بخش <b>«سرور هوش مصنوعی شخصی»</b> به Ollama یا API سازگار با OpenAI متصل شوید.</p>
+        </div></details>`;
     }
+
     const body = base + extra;
     card.innerHTML = `<div class="card-h" style="margin-bottom:14px"><h3 style="margin:0;font-size:1.1rem;color:#fff">${icon('ai', 16)} هوش مصنوعی بی تی سی اس · داخلی</h3></div>${body}
       <details class="mt" style="margin-top:14px"><summary class="fine" style="cursor:pointer;color:var(--accent)">پیشرفته: سرور هوش مصنوعی شخصی</summary>
