@@ -244,9 +244,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; font-vari
 .meter > i { display: block; height: 100%; border-radius: 99px; background: var(--gold-grad); }
 
 /* ============================================================ toasts & modals */
-#toasts { position: fixed; right: 16px; bottom: 76px; z-index: 100; display: flex; flex-direction: column; gap: 8px; }
-.toast { padding: 11px 14px; border-radius: 10px; background: var(--glass-strong); border: 1px solid var(--line-strong); box-shadow: var(--shadow-lg); max-width: 340px; transition: opacity .3s, transform .3s; backdrop-filter: blur(16px); }
-.toast.up { border-left: 4px solid var(--up); } .toast.down { border-left: 4px solid var(--down); } .toast.info { border-left: 4px solid var(--accent); }
+#toasts { position: fixed; right: 16px; bottom: 76px; z-index: 100; display: flex; flex-direction: column; gap: 8px;direction: rtl; }
+.toast {direction: rtl; padding: 11px 14px; border-radius: 10px; background: var(--glass-strong); border: 1px solid var(--line-strong); box-shadow: var(--shadow-lg); max-width: 340px; transition: opacity .3s, transform .3s; backdrop-filter: blur(16px); }
+.toast.up { border-right: 4px solid var(--up); border-left: none; } .toast.down { border-right: 4px solid var(--down); border-left: none; } .toast.info { border-right: 4px solid var(--accent); border-left: none; }
 .toast.out { opacity: 0; transform: translateY(8px); }
 .modal-bg { position: fixed; inset: 0; z-index: 90; background: rgba(4, 7, 13, 0.72); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 16px; }
 .modal { position: relative; width: min(520px, 100%); max-height: 90vh; overflow: auto; background: var(--glass-strong); border: 1px solid var(--line-strong); border-radius: 16px; padding: 22px; box-shadow: var(--shadow-lg); backdrop-filter: blur(16px); }
