@@ -144,7 +144,15 @@ export async function sendEmail(to: string, subject: string, html: string) {
     body: JSON.stringify({ from, to: [to], subject, html }),
   });
   const body = await r.json().catch(() => ({}));
-  return { ok: r.ok, ...body };
+  if (!r.ok) {
+    return {
+      ok: false,
+      status: r.status,
+      error: body?.message || body?.name || `Resend HTTP ${r.status}`,
+      ...body,
+    };
+  }
+  return { ok: true, status: r.status, ...body };
 }
 
 // ------------------------------------------------------------------ market data
