@@ -1,5 +1,5 @@
 // ابزارها: مبدل ارز و رمزارز، شبیه‌ساز میانگین هزینه دلاری (DCA) بر اساس داده‌های تاریخی واقعی،
-// و ماشین‌حساب اندازه پوزیشن. هیچ معامله‌ای در اینجا ثبت نمی‌شود[cite: 6].
+// و ماشین‌حساب اندازه پوزیشن. هیچ معامله‌ای در اینجا ثبت نمی‌شود.
 import { CONFIG } from '../config.js';
 import { markets, findCoin, getCandles, isStable } from '../api/market.js';
 import { fx, rates } from '../api/fx.js';
@@ -20,15 +20,15 @@ const qty = (n) => (Math.abs(n) >= 1 ? amount(n) : price(n));
 const TOOLS_FAQS = [
   {
     q: 'خرید منظم (DCA) چیست و چه تفاوتی با خرید یکجا دارد؟',
-    a: 'در روش DCA مبلغ مشخصی در بازه‌های زمانی منظم (هفتگی، دو هفته‌ای یا ماهانه) سرمایه‌گذاری می‌شود تا میانگین قیمت خرید در نوسانات بازار تعدیل شود[cite: 6].',
+    a: 'در روش DCA مبلغ مشخصی در بازه‌های زمانی منظم (هفتگی، دو هفته‌ای یا ماهانه) سرمایه‌گذاری می‌شود تا میانگین قیمت خرید در نوسانات بازار تعدیل شود.',
   },
   {
     q: 'ماشین‌حساب اندازه پوزیشن چگونه حجم معامله را محاسبه می‌کند؟',
-    a: 'بر اساس موجودی حساب، درصد ریسک مجاز در هر معامله و فاصله قیمت ورود تا حد ضرر، مقدار واحد و ارزش پوزیشن را طوری تعیین می‌کند که در صورت فعال شدن حد ضرر، زیان از سقف تعیین‌شده بیشتر نشود[cite: 6].',
+    a: 'بر اساس موجودی حساب، درصد ریسک مجاز در هر معامله و فاصله قیمت ورود تا حد ضرر، مقدار واحد و ارزش پوزیشن را طوری تعیین می‌کند که در صورت فعال شدن حد ضرر، زیان از سقف تعیین‌شده بیشتر نشود.',
   },
   {
     q: 'آیا نتایج شبیه‌ساز DCA تضمینی برای سود در آینده است؟',
-    a: 'خیر؛ شبیه‌ساز DCA بر اساس داده‌های تاریخی قیمت محاسبه می‌شود و عملکرد گذشته تضمینی برای آینده نیست[cite: 6].',
+    a: 'خیر؛ شبیه‌ساز DCA بر اساس داده‌های تاریخی قیمت محاسبه می‌شود و عملکرد گذشته تضمینی برای آینده نیست.',
   },
 ];
 
@@ -49,7 +49,7 @@ function injectToolsJsonLd() {
         operatingSystem: 'Web',
         inLanguage: 'fa-IR',
         isPartOf: { '@id': `${origin}#website` },
-        description: 'مبدل زنده ارز و رمزارز، شبیه‌ساز خرید منظم (DCA) بر اساس داده‌های تاریخی و ماشین‌حساب مدیریت ریسک و اندازه پوزیشن[cite: 6].',
+        description: 'مبدل زنده ارز و رمزارز، شبیه‌ساز خرید منظم (DCA) بر اساس داده‌های تاریخی و ماشین‌حساب مدیریت ریسک و اندازه پوزیشن.',
       },
       {
         '@type': 'FAQPage',
@@ -277,7 +277,7 @@ export async function render(el, [section]) {
     <div class="ap-tools-wrap" dir="rtl">
       <header class="ap-hero-card">
         <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">ابزارها و ماشین‌حساب‌ها</h1>
-        <p style="color:rgba(255,255,255,0.72);font-size:1.05rem;line-height:1.65;margin:0;max-width:900px">تبدیل ارزها، بررسی نتیجه خرید منظم (DCA) بر اساس داده‌های تاریخی واقعی، و محاسبه حجم پوزیشن بر اساس ریسک و حد ضرر[cite: 6]. این ابزارها صرفاً ماشین‌حساب هستند و مشاوره مالی محسوب نمی‌شوند[cite: 6].</p>
+        <p style="color:rgba(255,255,255,0.72);font-size:1.05rem;line-height:1.65;margin:0;max-width:900px">تبدیل ارزها، بررسی نتیجه خرید منظم (DCA) بر اساس داده‌های تاریخی واقعی، و محاسبه حجم پوزیشن بر اساس ریسک و حد ضرر. این ابزارها صرفاً ماشین‌حساب هستند و مشاوره مالی محسوب نمی‌شوند.</p>
         <nav class="ap-tool-links" aria-label="دسترسی سریع به ابزارها و بازار">
           <a href="#/tools/convert">مبدل ارز</a>
           <a href="#/tools/dca">شبیه‌ساز DCA</a>
@@ -291,7 +291,7 @@ export async function render(el, [section]) {
         <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap">
           <h2 style="margin:0;font-size:1.15rem;color:#fff">${icon('compare', 16)} مبدل ارز</h2>
           <div style="display:flex;align-items:center;gap:10px">
-            <span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.8rem">قیمت‌های زنده بازار[cite: 6]</span>
+            <span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.8rem">قیمت‌های زنده بازار</span>
             <button type="button" class="ap-copy-btn" id="cvCopy">کپی نتیجه</button>
           </div>
         </div>
@@ -308,7 +308,7 @@ export async function render(el, [section]) {
         <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap">
           <h2 style="margin:0;font-size:1.15rem;color:#fff">${icon('history', 16)} شبیه‌ساز خرید منظم (DCA)</h2>
           <div style="display:flex;align-items:center;gap:10px">
-            <span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.8rem">بر اساس قیمت‌های بسته شدن روزانه[cite: 6]</span>
+            <span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.8rem">بر اساس قیمت‌های بسته شدن روزانه</span>
             <a id="dcaCoinLink" href="#/coin/BTC" class="ap-copy-btn" style="text-decoration:none">صفحه تحلیل ارز</a>
           </div>
         </div>
@@ -330,7 +330,7 @@ export async function render(el, [section]) {
         <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap">
           <h2 style="margin:0;font-size:1.15rem;color:#fff">${icon('bolt', 16)} محاسبه حجم پوزیشن بر اساس حد ضرر</h2>
           <div style="display:flex;align-items:center;gap:10px">
-            <span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.8rem">مدیریت ریسک معامله[cite: 6]</span>
+            <span class="fine" style="color:rgba(255,255,255,0.5);font-size:0.8rem">مدیریت ریسک معامله</span>
             <button type="button" class="ap-copy-btn" id="rkCopy">کپی حجم</button>
           </div>
         </div>
@@ -343,7 +343,7 @@ export async function render(el, [section]) {
           <label class="fld" style="display:flex;flex-direction:column;gap:6px"><span style="font-size:0.85rem;color:rgba(255,255,255,0.6)">حد سود، اختیاری (<span class="curCode">${esc(fx.code)}</span>)</span><input class="inp" id="rkTarget" type="number" step="any" min="0" inputmode="decimal"></label>
         </div>
         <div class="mt" id="rkOut" aria-live="polite" style="margin-top:16px"></div>
-        <p class="fine mt" style="color:rgba(255,255,255,0.4);font-size:0.8rem;line-height:1.6;margin-top:16px">این ابزار صرفاً یک ماشین‌حساب است و توصیه مالی محسوب نمی‌شود[cite: 6].</p>
+        <p class="fine mt" style="color:rgba(255,255,255,0.4);font-size:0.8rem;line-height:1.6;margin-top:16px">این ابزار صرفاً یک ماشین‌حساب است و توصیه مالی محسوب نمی‌شود.</p>
       </section>
 
       <section class="ap-card mt" aria-label="سوالات متداول درباره ابزارها">
@@ -467,7 +467,7 @@ export async function render(el, [section]) {
       <div class="stat"><span class="k" style="color:rgba(255,255,255,0.5);font-size:0.8rem">سود / زیان</span><span class="v ${res.pnl >= 0 ? 'up' : 'down'}" style="font-size:1.2rem;font-weight:700;display:block;margin:4px 0">${res.pnl >= 0 ? '+' : '−'}${money(Math.abs(res.pnl))}</span><span class="s ${res.pnl >= 0 ? 'up' : 'down'}" style="font-size:0.75rem">${pct(res.pnlPct)}</span></div>
       <div class="stat"><span class="k" style="color:rgba(255,255,255,0.5);font-size:0.8rem">میانگین خرید</span><span class="v" style="font-size:1.2rem;font-weight:700;color:#fff;display:block;margin:4px 0">${money(res.avgCost)}</span><span class="s fine" style="color:rgba(255,255,255,0.4);font-size:0.75rem">اکنون ${money(res.lastPrice)}</span></div>`;
     const first = res.rows[0]?.t;
-    $('#dcaNote', el).innerHTML = `خرید ${EVERY[st.dca.every]} به مبلغ ${money(amtUsd)} از ${esc(dateTime(first, false))}. سرمایه‌گذاری یکجا در روز اول اکنون <b>${money(res.lump.value)}</b> ارزش داشت؛ بنابراین خرید منظم عملکرد ${beat ? '<b class="up">بهتری</b>' : '<b class="down">ضعیف‌تری</b>'} داشته است. نتایج گذشته تضمینی برای آینده نیست[cite: 6].`;
+    $('#dcaNote', el).innerHTML = `خرید ${EVERY[st.dca.every]} به مبلغ ${money(amtUsd)} از ${esc(dateTime(first, false))}. سرمایه‌گذاری یکجا در روز اول اکنون <b>${money(res.lump.value)}</b> ارزش داشت؛ بنابراین خرید منظم عملکرد ${beat ? '<b class="up">بهتری</b>' : '<b class="down">ضعیف‌تری</b>'} داشته است. نتایج گذشته تضمینی برای آینده نیست.`;
     if (!st.chart) {
       $('#dcaChart', el).innerHTML = '';
       st.chart = new LineChart($('#dcaChart', el), {
