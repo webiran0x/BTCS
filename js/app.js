@@ -100,7 +100,6 @@ function openMore() {
   const rest = navItems().filter((n) => !MOBILE.includes(n.path));
   const m = modal(`
     <div dir="rtl" style="text-align:right">
-      <h3>${esc(t('منو'))}</h3>
       <div class="sheet-grid">${rest.map((n) => `<a href="#/${n.path}" class="sheet-item ${cur === n.path ? 'on' : ''}">${icon(n.icon, 20)}<span>${esc(t(n.label))}</span></a>`).join('')}</div>
       <div class="sheet-grid mt">
         <a href="#/account" class="sheet-item">${icon('wallet', 20)}<span>${esc(t('حساب کاربری'))}</span></a>
