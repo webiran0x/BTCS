@@ -81,12 +81,22 @@ export async function render(el) {
         direction: rtl;
         text-align: right;
         max-width: 1280px;
+        width: 100%;
+        box-sizing: border-box;
         margin: 0 auto;
-        padding-bottom: 48px;
+        padding-bottom: 56px;
+        overflow-x: clip;
+      }
+      .mk-wrap *,
+      .mk-wrap *::before,
+      .mk-wrap *::after {
+        box-sizing: border-box;
+        min-width: 0;
       }
       .apple-hero {
         position: relative;
-        padding: 40px 34px;
+        overflow: hidden;
+        padding: 38px 34px;
         background:
           radial-gradient(circle at 88% 12%, rgba(10, 132, 255, 0.16), transparent 46%),
           radial-gradient(circle at 12% 88%, rgba(48, 209, 88, 0.08), transparent 45%),
@@ -95,7 +105,7 @@ export async function render(el) {
         border-radius: 26px;
         backdrop-filter: blur(26px) saturate(1.45);
         -webkit-backdrop-filter: blur(26px) saturate(1.45);
-        margin-bottom: 24px;
+        margin-bottom: 22px;
         box-shadow: var(--shadow-lg);
       }
       .apple-hero .eyebrow {
@@ -105,13 +115,14 @@ export async function render(el) {
         margin: 0 0 12px 0;
         display: inline-flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 8px;
       }
       .apple-hero h1 {
-        font-size: clamp(1.9rem, 3.2vw, 2.55rem);
+        font-size: clamp(1.85rem, 3.2vw, 2.55rem);
         font-weight: 800;
         letter-spacing: -0.025em;
-        line-height: 1.2;
+        line-height: 1.22;
         margin: 0 0 14px 0;
         background: linear-gradient(180deg, var(--ivory) 0%, rgba(214, 221, 230, 0.78) 100%);
         -webkit-background-clip: text;
@@ -124,16 +135,16 @@ export async function render(el) {
         -webkit-text-fill-color: transparent;
       }
       .apple-hero .lede {
-        font-size: 1.04rem;
+        font-size: 1.02rem;
         color: var(--text);
         max-width: 780px;
-        line-height: 1.7;
+        line-height: 1.75;
         margin: 0 0 12px 0;
       }
       .seo-pulse-note {
-        font-size: 0.94rem;
+        font-size: 0.93rem;
         color: var(--text-2);
-        line-height: 1.7;
+        line-height: 1.75;
         margin: 0 0 16px 0;
         max-width: 820px;
       }
@@ -147,15 +158,16 @@ export async function render(el) {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 7px 14px;
+        padding: 8px 14px;
         border-radius: 999px;
-        font-size: 0.84rem;
+        font-size: 0.83rem;
         font-weight: 600;
         color: var(--text);
         background: var(--surface-2);
         border: 1px solid var(--line);
         text-decoration: none;
         transition: all 0.2s var(--ease);
+        max-width: 100%;
       }
       .seo-quick-links a:hover {
         border-color: var(--accent);
@@ -163,14 +175,18 @@ export async function render(el) {
         transform: translateY(-1px);
       }
       .apple-hero .key-hint {
-        font-size: 0.85rem;
+        font-size: 0.84rem;
         color: var(--text-muted);
-        line-height: 1.65;
+        line-height: 1.7;
         border-right: 2px solid var(--accent);
         padding-right: 12px;
         margin: 16px 0 0 0;
+        overflow-wrap: anywhere;
       }
       .apple-card {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
         background: var(--glass);
         border: 1px solid var(--line);
         border-radius: 22px;
@@ -183,25 +199,70 @@ export async function render(el) {
         border-color: var(--line-strong);
         box-shadow: var(--shadow-lg);
       }
+      .apple-card .card-h {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
       .apple-card .card-h h3,
       .apple-card .card-h h2 {
-        font-size: 1.1rem;
+        font-size: 1.06rem;
         font-weight: 700;
         letter-spacing: -0.01em;
         color: var(--ivory);
         margin: 0;
       }
+      .apple-card .hl-list a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 10px;
+        margin: 4px -10px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: background 0.18s var(--ease);
+      }
+      .apple-card .hl-list a:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .apple-card .hl-list .nm {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1 1 auto;
+      }
       .apple-controls {
         display: flex;
         flex-direction: column;
-        gap: 14px;
-        margin-bottom: 20px;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .apple-controls-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        width: 100%;
+      }
+      .apple-filter-inp {
+        flex: 1 1 190px;
+        min-width: 0;
+        border-radius: 12px;
       }
       @media (min-width: 768px) {
         .apple-controls {
           flex-direction: row;
           justify-content: space-between;
           align-items: center;
+        }
+        .apple-controls-right {
+          width: auto;
+        }
+        .apple-filter-inp {
+          flex: 0 1 210px;
         }
       }
       .coin-link {
@@ -214,7 +275,7 @@ export async function render(el) {
       }
       .seo-faq-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 14px;
         margin-top: 16px;
       }
@@ -223,42 +284,98 @@ export async function render(el) {
         border: 1px solid var(--line-soft);
         border-radius: 16px;
         padding: 16px;
+        min-width: 0;
       }
       .seo-faq-item h3 {
-        font-size: 0.96rem;
+        font-size: 0.95rem;
         font-weight: 700;
         color: var(--ivory);
         margin: 0 0 8px 0;
+        line-height: 1.5;
       }
       .seo-faq-item p {
-        font-size: 0.87rem;
+        font-size: 0.86rem;
         color: var(--text-2);
-        line-height: 1.65;
+        line-height: 1.7;
         margin: 0;
       }
       .mk-wrap .tbl-wrap {
         border-radius: 16px;
         border: 1px solid var(--line-soft);
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
       }
       .mk-wrap .tbl th {
         background: var(--surface-2);
         font-weight: 700;
         color: var(--text-2);
         padding: 12px 14px;
+        white-space: nowrap;
       }
       .mk-wrap .tbl td {
         padding: 12px 14px;
         border-bottom: 1px solid var(--line-soft);
+        white-space: nowrap;
       }
       .mk-wrap .tbl tr:last-child td { border-bottom: 0; }
-      #globalStrip { min-height: 92px; margin-bottom: 20px; }
+      #globalStrip { min-height: 92px; margin-bottom: 18px; }
       #fng { min-height: 132px; }
       #trending, #gainers, #losers { min-height: 185px; }
-      #tableArea { min-height: 420px; }
-      @media (max-width: 640px) {
-        .apple-hero { padding: 24px 18px; border-radius: 20px; }
-        .apple-card { padding: 16px; border-radius: 18px; }
+      #tableArea { min-height: 360px; }
+
+      @media (max-width: 767px) {
+        .mk-wrap {
+          padding-bottom: 72px;
+        }
+        .apple-hero {
+          padding: 22px 16px;
+          border-radius: 20px;
+          margin-bottom: 16px;
+        }
+        .apple-hero h1 {
+          font-size: 1.65rem;
+        }
+        .apple-hero .lede {
+          font-size: 0.94rem;
+        }
+        .seo-quick-links {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+        }
+        .seo-quick-links a {
+          justify-content: center;
+          text-align: center;
+          padding: 9px 10px;
+          font-size: 0.78rem;
+          border-radius: 14px;
+        }
+        .apple-card {
+          padding: 16px 14px;
+          border-radius: 18px;
+        }
+        .apple-controls .seg {
+          width: 100%;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .apple-controls .seg button {
+          justify-content: center;
+        }
+        .apple-filter-inp {
+          flex: 1 1 100%;
+          width: 100%;
+        }
+        .mk-wrap .tbl th,
+        .mk-wrap .tbl td {
+          padding: 10px 10px;
+          font-size: 0.84rem;
+        }
+        .seo-faq-grid {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
       }
     </style>
 
@@ -291,8 +408,8 @@ export async function render(el) {
       <section class="apple-card" aria-label="جدول و نقشه حرارتی رمزارزها">
         <div class="apple-controls">
           <div class="seg" id="scope"><button data-v="all" class="on">همه ارزها</button><button data-v="watch">${icon('star', 13)} واچ‌لیست</button></div>
-          <div class="row" style="gap:12px; flex-wrap: wrap;">
-            <input class="inp" id="filter" placeholder="جستجوی سریع ارز..." aria-label="جستجوی سریع ارز" style="width:190px; border-radius:12px;">
+          <div class="apple-controls-right">
+            <input class="inp apple-filter-inp" id="filter" placeholder="جستجوی سریع ارز..." aria-label="جستجوی سریع ارز">
             <div class="seg" id="mode"><button data-v="table" class="on">جدول</button><button data-v="heatmap">نقشه حرارتی</button></div>
           </div>
         </div>
@@ -304,7 +421,7 @@ export async function render(el) {
           <h2>راهنمای خواندن داده‌های بازار رمزارزها</h2>
           <span class="fine">به‌روزرسانی خودکار داده‌ها</span>
         </div>
-        <p class="fine" style="line-height:1.7;margin:6px 0 0">برای بررسی عمیق‌تر هر رمزارز، روی نام یا نماد آن در جدول کلیک کنید تا نمودار چندتایم‌فریمی، اندیکاتورها، سطوح کلیدی و سوابق مدل را ببینید. اطلاعات نمایش‌داده‌شده جنبه تحلیلی و آموزشی دارند و مشاوره سرمایه‌گذاری محسوب نمی‌شوند.</p>
+        <p class="fine" style="line-height:1.75;margin:8px 0 0">برای بررسی عمیق‌تر هر رمزارز، روی نام یا نماد آن در جدول کلیک کنید تا نمودار چندتایم‌فریمی، اندیکاتورها، سطوح کلیدی و سوابق مدل را ببینید. اطلاعات نمایش‌داده‌شده جنبه تحلیلی و آموزشی دارند و مشاوره سرمایه‌گذاری محسوب نمی‌شوند.</p>
         <div class="seo-faq-grid">
           ${SEO_FAQS.map((item) => `
             <article class="seo-faq-item">
