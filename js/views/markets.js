@@ -377,6 +377,67 @@ export async function render(el) {
           gap: 10px;
         }
       }
+    
+      /* Mobile Apple-style refinement & zero horizontal clipping on hl-list */
+      .apple-card .hl-list a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        padding: 7px 6px;
+        margin: 2px 0;
+        border-radius: 11px;
+        text-decoration: none;
+        min-width: 0;
+      }
+      .apple-card .hl-list a > *:last-child {
+        flex-shrink: 0;
+        white-space: nowrap;
+        direction: ltr;
+        font-variant-numeric: tabular-nums;
+      }
+      .apple-card .hl-list .nm {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      @media (max-width: 767px) {
+        .apple-card {
+          padding: 13px 12px !important;
+          border-radius: 18px !important;
+        }
+        .apple-card .card-h h3,
+        .apple-card .card-h h2 {
+          font-size: 0.92rem !important;
+          letter-spacing: -0.015em;
+        }
+        .apple-card .card-h .fine {
+          font-size: 0.72rem !important;
+        }
+        .apple-card .hl-list a {
+          gap: 5px;
+          padding: 6px 4px;
+          font-size: 0.76rem;
+        }
+        .apple-card .hl-list .nm {
+          font-size: 0.74rem;
+        }
+        .apple-card .hl-list .nm .muted {
+          display: none;
+        }
+        .apple-card .hl-list a > *:last-child {
+          font-size: 0.72rem;
+          font-weight: 600;
+        }
+        #fng .row.spread.fine {
+          font-size: 0.72rem !important;
+          gap: 4px;
+          flex-wrap: wrap;
+        }
+      }
+
     </style>
 
     <div class="mk-wrap" dir="rtl">
