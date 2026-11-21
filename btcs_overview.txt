@@ -1,0 +1,995 @@
+=== ROUTES & VIEWS ===
+js/app.js:1:// App shell: router, navigation, search, live ticker, theme, currency, language,
+js/app.js:32:  { path: '', label: 'بازارها', icon: 'markets', short: 'بازارها' },
+js/app.js:33:  // { path: 'advice', label: 'اسکن بازار', icon: 'bolt', short: 'اسکن' },
+js/app.js:34:  { path: 'trader', label: 'معاملات', icon: 'forecast', short: 'معاملات' },
+js/app.js:35:  { path: 'ai', label: 'دستیار هوشمند', icon: 'ai', short: 'پرسش' },
+js/app.js:36:  { path: 'learn', label: 'یادگیری هوش مصنوعی', icon: 'ai', short: 'یادگیری' },
+js/app.js:37:  { path: 'scanner', label: 'اسکنر', icon: 'scanner', short: 'اسکنر' },
+js/app.js:38:  { path: 'track', label: 'سابقه عملکرد', icon: 'forecast', short: 'سوابق' },
+js/app.js:39:  { path: 'futures', label: 'فیوچرز', icon: 'bolt', short: 'فیوچرز' },
+js/app.js:40:  { path: 'compare', label: 'مقایسه', icon: 'compare', short: 'مقایسه' },
+js/app.js:41:  { path: 'tools', label: 'ابزارها', icon: 'calc', short: 'ابزارها' },
+js/app.js:42:  { path: 'exchanges', label: 'صرافی‌ها', icon: 'exchanges', short: 'صرافی‌ها' },
+js/app.js:43:  { path: 'wallet', label: 'کیف پول', icon: 'wallet', short: 'کیف پول' },
+js/app.js:44:  { path: 'alerts', label: 'اعلان ها', icon: 'alerts', short: 'اعلان ها' },
+js/app.js:45:  { path: 'premium', label: 'اشتراک ویژه', icon: 'star', short: 'ویژه' },
+js/app.js:47:const ADMIN_NAV = { path: 'admin', label: 'مدیریت', icon: 'chip', short: 'مدیریت' };
+js/app.js:50:// نگاشت مسیرها به ماژول‌های صفحه در js/views/[cite: 11]
+js/app.js:74:let routeSeq = 0;
+js/app.js:80:function renderNav() {
+js/app.js:85:      `<a href="#/${n.path}" class="${cur === n.path ? 'on' : ''}"${cur === n.path ? ' aria-current="page"' : ''}>${icon(n.icon)}<span>${esc(t(n.label))}</span>${n.badge ? `<em class="badge">${esc(n.badge)}</em>` : ''}</a>`).join('');
+js/app.js:90:      const n = NAV.find((x) => x.path === p);
+js/app.js:100:  const rest = navItems().filter((n) => !MOBILE.includes(n.path));
+js/app.js:103:      <div class="sheet-grid">${rest.map((n) => `<a href="#/${n.path}" class="sheet-item ${cur === n.path ? 'on' : ''}">${icon(n.icon, 20)}<span>${esc(t(n.label))}</span></a>`).join('')}</div>
+js/app.js:125:async function route(opts) {
+js/app.js:126:  const seq = ++routeSeq;
+js/app.js:129:  const file = `views/${VIEWS[name] || VIEWS['']}.js`;
+js/app.js:131:  window.dispatchEvent(new CustomEvent('cv:route', { detail: { name: document.documentElement.dataset.page, params } }));
+js/app.js:133:  renderNav();
+js/app.js:136:  const view = $('#view');
+js/app.js:138:    view.innerHTML = `<div class="card empty" dir="rtl"><h3>صفحه پیدا نشد</h3><p>صفحه‌ای در مسیر <code dir="ltr">#/${esc(name)}</code> وجود ندارد. ممکن است لینک قدیمی باشد یا اشتباه تایپ شده باشد.</p><a class="btn primary" href="#/">بازگشت به بازارها</a></div>`;
+js/app.js:143:  view.innerHTML = '<div class="skel-wrap"><div class="skel" style="height:28px;width:220px"></div><div class="skel" style="height:360px"></div></div>';
+js/app.js:146:    if (seq !== routeSeq) return;
+js/app.js:149:    view.replaceChildren(host);
+js/app.js:150:    const done = await mod.render(host, params);
+js/app.js:151:    if (seq !== routeSeq) { if (typeof done === 'function') done(); return; }
+js/app.js:156:    if (seq === routeSeq) {
+js/app.js:157:      view.innerHTML = `<div class="card empty" dir="rtl"><h3>خطایی رخ داد</h3><p>${esc(err.message)}</p><button class="btn" id="errReload">بارگذاری مجدد</button></div>`;
+js/app.js:161:  if (keep !== null) { if (seq === routeSeq) window.scrollTo({ top: keep }); return; }
+js/app.js:166:document.querySelector('.skip-link')?.addEventListener('click', (e) => { e.preventDefault(); $('#view').focus(); });
+js/app.js:228:    route();
+js/app.js:242:    renderNav();
+js/app.js:245:    if (!auth.user) { (await import('./views/auth.js')).openAuth(); return; }
+js/app.js:291:          route({ keepScroll: true });
+js/app.js:295:    const view = location.hash.replace(/^#\/?/, '').split('/')[0];
+js/app.js:296:    if (redrawAll || keys.some((k) => (SHOWN_ON[view] || []).includes(k))) route({ keepScroll: !redrawAll });
+js/app.js:486:{ const entry = document.documentElement.dataset.route; if (entry && !location.hash) history.replaceState(null, '', entry); }
+js/app.js:524:window.addEventListener('hashchange', route);
+js/app.js:526:initSelectors().then(route).catch(route).finally(startWorld);
+js/views/account.js:286:  const baseUrl = `${location.origin}${location.pathname}`;
+js/views/account.js:328:export async function render(el, [flag]) {
+js/views/account.js:670:        view_coin: 'باز شده',
+js/views/admin.js:10:export async function render(el) {
+js/views/admin.js:47:          ${card('بازدیدکنندگان · ۳۰ روز گذشته', compact(s.visitors, ''), `${compact(s.views, '')} بازدید صفحه${s.viewsCapped ? ' — حداقل میزان، شمارش محدود شده است' : ''}`)}
+js/views/admin.js:70:      const [{ data: profs }, { data: views }, { data: subs }] = await Promise.all([
+js/views/admin.js:72:        client.from('page_views').select('path,created_at,device,session_id,referrer').gte('created_at', since).order('created_at', { ascending: false }).limit(VIEW_CAP),
+js/views/admin.js:75:      const users = profs || [], vs = views || [];
+js/views/admin.js:76:      const viewsCapped = vs.length >= VIEW_CAP;
+js/views/admin.js:97:        const m = /#\/coin\/([A-Z0-9]+)/i.exec(v.path || '');
+js/views/admin.js:124:          <div class="card"><div class="stat"><span class="k">نشست‌ها · ۹۰ روز گذشته</span><span class="v">${viewsCapped ? '≥' : ''}${compact(sessions.length, '')}</span><span class="s fine">${viewsCapped ? 'حداقل ' : ''}${compact(vs.length, '')} بازدید صفحه${viewsCapped ? ` — خواندن اطلاعات در ${compact(VIEW_CAP, '')} سطر متوقف شد` : ''}</span></div></div>
+js/views/advice.js:52:  const baseUrl = `${window.location.origin}${window.location.pathname}`;
+js/views/advice.js:90:export async function render(el) {
+js/views/alerts.js:11:export async function render(el, [preset]) {
+js/views/assistant.js:60:export async function render(el, [symParam]) {
+js/views/auth.js:470:        await sendResetLink(email, `${location.origin}${location.pathname}`);
+js/views/coin.js:24:import { forecastForDisplay, forecastFacts, moveSizeCall, FORECAST_TESTED } from '../lib/forecastview.js';
+js/views/coin.js:39:export async function render(el, [symParam]) {
+js/views/coin.js:43:  if (!coin) { el.innerHTML = await notFound(sym, () => render(el, [symParam])); return; }
+js/views/coin.js:354:  logActivity('view_coin', coin.symbol, { name: coin.name });
+js/views/coin.js:894:        if (fc.ok && Number.isFinite(fc.probUp) && fc.path?.length) {
+js/views/coin.js:898:            horizonBars: fc.horizon, horizonAt: fc.path[fc.path.length - 1]?.t,
+js/views/coin.js:919:        horizonAt: fc.path[fc.path.length - 1]?.t, modelAccuracy: fc.ensemble?.accuracy ?? null,
+js/views/coin.js:927:    chart.setProjection(st.fcView.path, { leanRemoved: Boolean(st.fcView.leanRemoved), seed: `${coin.symbol}:${iv}:${st.candles[st.candles.length - 1]?.t}` });
+js/views/coin.js:1094:      { name: 'مسیر مورد انتظار', color: cssVar('--accent'), width: 2.6, data: t.path.map((p) => ({ x: p.t, y: p.price })) },
+js/views/coin.js:1097:      bands: [{ color: cssVar('--accent'), alpha: 0.14, data: t.path.map((p) => ({ x: p.t, lo: p.lo, hi: p.hi })) }],
+js/views/coin.js:1247:      const bandPts = [{ x: last.t, lo: last.c, hi: last.c }, ...fc.path.map((p) => ({ x: p.t, lo: p.p10, hi: p.p90 }))];
+js/views/coin.js:1248:      const band50 = [{ x: last.t, lo: last.c, hi: last.c }, ...fc.path.map((p) => ({ x: p.t, lo: p.p25, hi: p.p75 }))];
+js/views/coin.js:1251:        ...(fc.leanRemoved ? [] : [{ name: 'پیش‌بینی میانه هوش مصنوعی', color: accent, dash: true, data: [{ x: last.t, y: last.c }, ...fc.path.map((p) => ({ x: p.t, y: p.p50 }))], width: 2.2 }]),
+js/views/coin.js:1281:        fc.ok && { name: 'پیش‌بینی هوش مصنوعی', color: accent, dash: true, width: 2.4, data: [{ x: W - 1, y: 100 }, ...fc.path.map((p, k) => ({ x: W + k, y: (p.p50 / fc.lastPrice) * 100 }))] },
+js/views/compare.js:12:export async function render(el, [preset]) {
+js/views/exchanges.js:59:  const canonicalUrl = `${window.location.origin}${window.location.pathname}#/exchanges/${encodeURIComponent(base)}`;
+js/views/exchanges.js:69:          { '@type': 'ListItem', position: 1, name: 'بازارها', item: `${window.location.origin}${window.location.pathname}#/` },
+js/views/exchanges.js:70:          { '@type': 'ListItem', position: 2, name: 'مقایسه صرافی‌ها', item: `${window.location.origin}${window.location.pathname}#/exchanges` },
+js/views/exchanges.js:98:export async function render(el, [preset]) {
+js/views/futures.js:3:import { futuresOverview, futuresSnapshot, liquidationStream, interpretFutures, annualiseFunding } from '../api/futures.js';
+js/views/futures.js:48:  const baseUrl = `${window.location.origin}${window.location.pathname}`;
+js/views/futures.js:82:export async function render(el, [symParam]) {
+js/views/futures.js:392:    const rows = await futuresOverview(list.map((c) => c.symbol));
+js/views/learn.js:10:import { activeLessons, reviewTrades } from '../lib/tradelearn.js';
+js/views/learn.js:12:import { FORECAST_TESTED } from '../lib/forecastview.js';
+js/views/learn.js:39:  const baseUrl = `${location.origin}${location.pathname}`;
+js/views/learn.js:70:export async function render(el) {
+js/views/learn.js:281:      { name: 'معاملات هوش مصنوعی', r: reviewTrades(closedOf('traderState')) },
+js/views/learn.js:282:      { name: 'خریدهای آزمایشی شما', r: reviewTrades(closedOf('myDemoState'), { includeManual: true }) },
+js/views/learn.js:283:      { name: 'معاملات واقعی شما', r: reviewTrades(closedOf('realTradeState'), { includeManual: true }) },
+js/views/legal.js:428:  const baseUrl = `${location.origin}${location.pathname}`;
+js/views/legal.js:457:export async function render(el, [page = 'terms']) {
+js/views/markets.js:75:export async function render(el) {
+js/views/news.js:8:export async function render(el, [coinParam]) {
+js/views/premium.js:72:  const baseUrl = `${window.location.origin}${window.location.pathname}`;
+js/views/premium.js:112:export async function render(el) {
+js/views/scanner.js:7:import { forecastForDisplay } from '../lib/forecastview.js';
+js/views/scanner.js:52:  const baseUrl = `${window.location.origin}${window.location.pathname}`;
+js/views/scanner.js:85:export async function render(el) {
+js/views/tools.js:102:export async function render(el, [section]) {
+js/views/track.js:98:export async function render(el) {
+js/views/trader.js:4:import { reviewTrades, activeLessons, diagnose, MIN_TRADES } from '../lib/tradelearn.js';
+js/views/trader.js:5:import { configFrom, ownRulesOn as ownRulesFor, runConfig, heldOffList, backfillNeeds, checkAccount, reviewStep } from '../lib/traderrun.js';
+js/views/trader.js:41:export async function render(el) {
+js/views/trader.js:680:        if (fc?.ok && Number.isFinite(fc.probUp) && fc.path?.length) {
+js/views/trader.js:683:            horizonBars: fc.horizon, horizonAt: fc.path[fc.path.length - 1]?.t,
+js/views/trader.js:710:      if (e.kind === 'review') return `<b>خودارزیابی</b> — ${esc(e.c.text)}`;
+js/views/trader.js:718:    const replayed = ev.filter((e) => !['check', 'review', 'settings'].includes(e.kind) && e.t < liveSince).length;
+js/views/trader.js:722:      ${ev.length ? `<ul class="fine" style="list-style:none;padding:0;margin:0">${ev.slice(0, 30).map((e) => `<li style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span class="muted" style="display:inline-block;min-width:155px">${dateTime(e.t)}</span>${!['check', 'review', 'settings'].includes(e.kind) && e.t < liveSince ? '<span class="chip" style="margin-left:8px">بازپخش‌شده</span>' : ''}${line(e)}</li>`).join('')}</ul>`
+js/views/trader.js:728:  function selfReview() {
+js/views/trader.js:731:    const { review, changes } = reviewStep(state, cfg, lessons);
+js/views/trader.js:738:    return { review, changes };
+js/views/trader.js:741:  function reviewCard() {
+js/views/trader.js:743:    const review = reviewTrades(state.closed);
+js/views/trader.js:747:    const o = review.overall;
+js/views/trader.js:748:    return `<div class="card mt" id="reviewCard">
+
+=== VIEW HEADINGS / TITLES / TABS ===
+js/views/account.js:41:      font-variant-numeric: tabular-nums;
+js/views/account.js:335:      <section class="ap26-ac-empty" aria-labelledby="acGuestTitle">
+js/views/account.js:336:        <h1 id="acGuestTitle">شما وارد حساب کاربری خود نشده‌اید</h1>
+js/views/account.js:339:      </section>
+js/views/account.js:359:          <h1 class="ap26-ac-h1">حساب کاربری</h1>
+js/views/account.js:366:        <section class="ap26-ac-card" aria-labelledby="sec-profile">
+js/views/account.js:367:          <h2 id="sec-profile">پروفایل</h2>
+js/views/account.js:374:        </section>
+js/views/account.js:376:        <section class="ap26-ac-card" aria-labelledby="sec-plan">
+js/views/account.js:377:          <h2 id="sec-plan">${premium ? 'اشتراک ویژه' : 'طرح فعلی'}</h2>
+js/views/account.js:393:        </section>
+js/views/account.js:395:        <section class="ap26-ac-card" aria-labelledby="sec-email">
+js/views/account.js:396:          <h2 id="sec-email">هشدارهای ایمیلی</h2>
+js/views/account.js:398:        </section>
+js/views/account.js:400:        <section class="ap26-ac-card" aria-labelledby="sec-tg">
+js/views/account.js:401:          <h2 id="sec-tg">هشدارهای تلگرامی</h2>
+js/views/account.js:403:        </section>
+js/views/account.js:405:        <section class="ap26-ac-card ap26-ac-span-2" aria-labelledby="sec-digest">
+js/views/account.js:406:          <h2 id="sec-digest">خلاصه روزانه لیست پیگیری</h2>
+js/views/account.js:412:        </section>
+js/views/account.js:414:        <section class="ap26-ac-card ap26-ac-span-2" aria-labelledby="sec-activity">
+js/views/account.js:416:            <h2 id="sec-activity">فعالیت‌های شما</h2>
+js/views/account.js:420:        </section>
+js/views/account.js:422:        <section class="ap26-ac-card" aria-labelledby="sec-data">
+js/views/account.js:423:          <h2 id="sec-data">داده‌های شما</h2>
+js/views/account.js:429:        </section>
+js/views/account.js:431:        <section class="ap26-ac-card" aria-labelledby="sec-danger">
+js/views/account.js:432:          <h2 id="sec-danger">منطقه خطر</h2>
+js/views/account.js:437:        </section>
+js/views/account.js:439:        <section class="ap26-ac-card ap26-ac-span-2" aria-labelledby="sec-security">
+js/views/account.js:440:          <div class="ap26-ac-head"><h2 id="sec-security">امنیت</h2></div>
+js/views/account.js:442:        </section>
+js/views/account.js:579:      <h3 style="margin:0 0 10px">حذف حساب کاربری؟</h3>
+js/views/account.js:612:          <h3 class="fine" style="margin:0 0 10px">رمز عبور و نشست‌ها</h3>
+js/views/account.js:686:        ${fcs.length ? `<h3 class="fine" style="margin-top:16px">پیش‌بینی‌های نمایش‌داده‌شده به شما</h3>
+js/views/account.js:687:          <div class="ap26-ac-tbl-wrap"><table class="tbl"><thead><tr><th class="l">ارز</th><th>تایم‌فریم</th><th class="l">زمان نمایش</th><th>قیمت آن زمان</th><th>رشد هوش مصنوعی</th><th>قیمت پس از آن</th><th>نتیجه</th></tr></thead><tbody>
+js/views/account.js:695:          </tbody></table></div>` : '<p class="fine" style="margin-top:10px">هنوز پیش‌بینی ثبت نشده است؛ صفحه یک ارز را باز کنید تا ثبت شود.</p>'}
+js/views/account.js:697:        ${acts.length ? `<h3 class="fine" style="margin-top:18px">فعالیت‌های اخیر</h3>
+js/views/admin.js:13:    el.innerHTML = '<div class="card empty"><h3>فقط مخصوص مدیران</h3><p>این صفحه فقط برای مدیران سایت قابل دسترس است.</p><a class="btn" href="#/">بازگشت به بازارها</a></div>';
+js/views/admin.js:18:    <div class="page-head"><div><h1>مدیریت</h1><p>وارد شده با حساب ${esc(auth.user.email)}</p></div></div>
+js/views/admin.js:19:    <div class="tabs" id="tabs">
+js/views/admin.js:20:      <button data-tab="stats" class="on">نمای کلی</button>
+js/views/admin.js:21:      <button data-tab="growth">تحلیل آمار</button>
+js/views/admin.js:22:      <button data-tab="users">کاربران</button>
+js/views/admin.js:23:      <button data-tab="content">محتوا</button>
+js/views/admin.js:24:      <button data-tab="settings">تنظیمات</button>
+js/views/admin.js:25:      <button data-tab="keys">کلیدهای API</button>
+js/views/admin.js:26:      <button data-tab="jobs">وظایف (Jobs)</button>
+js/views/admin.js:40:      catch (err) { panel.innerHTML = `<div class="card empty"><h3>بارگیری نمای کلی امکان‌پذیر نیست</h3><p>${esc(err.message)}</p></div>`; return; }
+js/views/admin.js:55:          <div class="card"><h3>بازدیدهای صفحه در روز</h3><div class="bars mt">${days.map((d) => `<i style="height:${(s.byDay[d] / max) * 100}%" title="${esc(d)}: ${s.byDay[d]}"></i>`).join('')}</div><p class="fine mt">${days[0] || ''} ← ${days.at(-1) || ''}</p></div>
+js/views/admin.js:56:          <div class="card"><h3>صفحات برتر</h3><dl class="kv mt">${Object.entries(s.byPath).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([p, n]) => `<dt>${esc(p)}</dt><dd>${n}</dd>`).join('')}</dl>
+js/views/admin.js:57:            <h3 class="mt">دستگاه‌ها</h3><dl class="kv">${Object.entries(s.byDevice).map(([d, n]) => `<dt>${esc(d)}</dt><dd>${n}</dd>`).join('')}</dl></div>
+js/views/admin.js:59:        <div class="card mt"><h3>جدیدترین حساب‌ها</h3><div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">ایمیل</th><th class="l">نام</th><th>تاریخ عضویت</th><th>اشتراک ویژه</th></tr></thead><tbody>
+js/views/admin.js:61:        </tbody></table></div></div>`;
+js/views/admin.js:129:          <div class="card"><h3>ثبت‌نام‌ها در هر هفته</h3>
+js/views/admin.js:132:          <div class="card"><h3>ارزهای پربازدید</h3>
+js/views/admin.js:137:        <div class="card mt"><h3>منبع ورودی بازدیدکنندگان</h3>
+js/views/admin.js:147:          <div class="card-h"><h3>کاربران</h3><div class="row" style="gap:8px"><input class="inp" id="q" placeholder="جستجوی ایمیل…" style="max-width:220px"><button class="btn sm" id="grant">${icon('star', 14)} اعطای اشتراک ویژه</button></div></div>
+js/views/admin.js:161:        $('#ulist', el).innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">ایمیل</th><th class="l">نام</th><th>تاریخ عضویت</th><th>اشتراک ویژه تا</th><th>تلگرام</th><th>مدیر</th><th></th></tr></thead><tbody>
+js/views/admin.js:170:        </tbody></table></div>`;
+js/views/admin.js:174:        const m = modal(`<h3>${esc(email)}</h3>
+js/views/admin.js:210:        const m = modal(`<h3>اعطای اشتراک ویژه</h3><div class="stack mt" style="gap:10px">
+js/views/admin.js:232:          <div class="card-h"><h3>پست‌ها و ایده‌های معاملاتی</h3><button class="btn sm" id="new">${icon('plus', 14)} پست جدید</button></div>
+js/views/admin.js:240:        const m = modal(`<h3>${p.id ? 'ویرایش پست' : 'پست جدید'}</h3>
+js/views/admin.js:267:              title: f.title.value.trim(), kind: f.kind.value, body: f.body.value,
+js/views/admin.js:301:          <div class="card"><h3>طرح اشتراک ویژه</h3>
+js/views/admin.js:314:          <div class="card"><h3>سایت</h3>
+js/views/admin.js:359:        <div class="card"><h3>کلیدهای API</h3>
+js/views/admin.js:383:        <div class="card"><h3>وظایف پس‌زمینه</h3>
+js/views/admin.js:403:  bindTabs($('#tabs', el), (t) => TABS[t]().catch((e) => { panel.innerHTML = `<div class="card empty"><p>${esc(e.message)}</p></div>`; }));
+js/views/advice.js:2:import { markets, getCandles, isStable, isTestedSource, INTERVAL_MS } from '../api/market.js';
+js/views/advice.js:112:        font-variant-numeric: tabular-nums;
+js/views/advice.js:365:    <section class="ap26-adv-wrap" aria-labelledby="advice-h1">
+js/views/advice.js:369:          <h1 class="ap26-adv-h1" id="advice-h1">اسکن بازار</h1>
+js/views/advice.js:380:    </section>`;
+js/views/advice.js:448:      ${held.length ? `<h2 class="ap26-adv-sec-title">دارایی‌های شما</h2>
+js/views/advice.js:451:      <h2 class="ap26-adv-sec-title">قوی‌ترین شواهد بازار</h2>
+js/views/advice.js:454:        : `<div class="ap26-adv-panel" style="text-align:center;padding:36px"><h3 style="margin:0 0 8px">هیچ ارزی از حد نصاب شواهد عبور نکرد</h3><p style="margin:0;color:var(--adv-sub)">این یک پاسخ شفاف و محافظه‌کارانه است؛ زمانی که بازار مزیت آماری قطعی نداشته باشد، برچسب ورود صادر نمی‌شود.</p></div>`}
+js/views/advice.js:456:      ${avoid.length ? `<h2 class="ap26-adv-sec-title">ضعیف‌ترین خوانش‌ها</h2>
+js/views/advice.js:460:        <h3 style="margin:0 0 10px;font-size:1.12rem">میزان اعتماد به نتایج</h3>
+js/views/advice.js:477:          <h3 style="margin:0 0 12px">محل معامله <span class="ltr-num">${esc(sym)}</span></h3>
+js/views/advice.js:499:      list = (await markets()).filter((c) => !isStable(c.symbol)).slice(0, st.count);
+js/views/advice.js:502:      $('#body', el).innerHTML = '<div class="ap26-adv-panel" style="text-align:center;padding:36px"><h3 style="margin:0 0 8px">خطا در بارگیری بازار</h3><p style="margin:0;color:var(--adv-sub)">فید بازار پاسخ نداد.</p></div>';
+js/views/advice.js:548:      $('#body', el).innerHTML = `<div class="ap26-adv-panel" style="text-align:center;padding:36px"><h3 style="margin:0 0 8px">داده‌ای یافت نشد</h3><p style="margin:0;color:var(--adv-sub)">هیچ کندل معتبر و تست‌شده‌ای برای این تایم‌فریم دریافت نشد.</p></div>`;
+js/views/alerts.js:1:import { markets, isStable } from '../api/market.js';
+js/views/alerts.js:13:  const coins = all.filter((c) => c.binance && !isStable(c.symbol));
+js/views/alerts.js:92:        <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">مرکز هشدارها</h1>
+js/views/alerts.js:97:        <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:1.15rem;color:#fff">هشدار سیگنال</h3><span class="chip warn" style="background:rgba(255,159,10,0.12);color:#ff9f0a;padding:4px 10px;border-radius:8px;font-size:0.8rem">اجرا روی سرور</span></div>
+js/views/alerts.js:102:        <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:1.15rem;color:#fff">هشدار سیگنال هوش مصنوعی</h3><span class="chip warn" style="background:rgba(255,159,10,0.12);color:#ff9f0a;padding:4px 10px;border-radius:8px;font-size:0.8rem">اجرا روی سرور</span></div>
+js/views/alerts.js:108:          <h3 style="margin-bottom:16px;font-size:1.15rem;color:#fff">هشدار قیمت جدید</h3>
+js/views/alerts.js:122:          <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="margin:0;font-size:1.15rem;color:#fff">هشدارهای شما</h3><button class="btn sm ghost" id="clear" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:6px 12px;border-radius:10px;cursor:pointer;font-size:0.85rem">پاک کردن موارد فعال‌شده</button></div>
+js/views/assistant.js:2:import { markets, isStable } from '../api/market.js';
+js/views/assistant.js:220:            <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0 0 8px 0">دستیار هوش مصنوعی</h1>
+js/views/assistant.js:246:            <div class="card-h" style="margin-bottom:14px"><h3 style="margin:0;font-size:1.1rem;color:#fff">ارز در مرکز توجه</h3></div>
+js/views/assistant.js:248:              <select class="inp" id="coinSel" aria-label="ارز در مرکز توجه" style="width:100%">${all.filter((c) => !isStable(c.symbol)).slice(0, 150).map((c) => `<option value="${esc(c.symbol)}" ${c.symbol === st.symbol ? 'selected' : ''}>${esc(c.symbol)} · ${esc(c.name)}</option>`).join('')}</select>
+js/views/assistant.js:357:    card.innerHTML = `<div class="card-h" style="margin-bottom:14px"><h3 style="margin:0;font-size:1.1rem;color:#fff">${icon('ai', 16)} هوش مصنوعی بی تی سی اس · داخلی</h3></div>${body}
+js/views/auth.js:9:    title: 'خوش آمدید',
+js/views/auth.js:15:    title: 'ایجاد حساب کاربری',
+js/views/auth.js:21:    title: 'بازیابی رمز عبور',
+js/views/auth.js:64:        font-variant-numeric: tabular-nums;
+js/views/auth.js:364:        <h3>${esc(f.title)}</h3>
+js/views/coin.js:1:import { findCoin, markets, dataStatus, getCandles, exchangeCandles, getCoinProfile, getDepth, getTrades, getTickSize, isTestedSource, isStable, INTERVAL_MS, isSecondInterval, MAX_BARS } from '../api/market.js';
+js/views/coin.js:47:    candles: [], source: '', signal: null, forecast: null, horizon: null, tab: 'forecast', disposed: false, unsub: [], charts: [],
+js/views/coin.js:51:  const stable = isStable(coin.symbol);
+js/views/coin.js:198:        .ap-coin-wrap #tabs button {
+js/views/coin.js:253:              <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0">${esc(coin.name)}</h1>
+js/views/coin.js:272:      ${stable ? `<div class="ap-card" style="border-color:var(--warn);margin-bottom:24px"><p style="margin:0"><b>${esc(coin.symbol)} یک استیبل‌کوین است</b> که برای حفظ ارزش ۱ دلاری طراحی شده است. پیش‌بینی‌ها و ستاپ‌های خرید یا فروش برای آن معنایی ندارند، بنابراین اطلاعات زیر صرفاً جنبه مرجع داشته و هیچ‌چیز از این صفحه در سابقه پیش‌بینی شما یا بخش یادگیری هوش مصنوعی ثبت نمی‌شود.</p></div>` : ''}
+js/views/coin.js:315:        <div class="ap-card c-tabs" style="padding:16px">
+js/views/coin.js:316:          <div class="tabs scroll-x" role="tablist" id="tabs" style="display:flex;gap:8px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:12px;margin-bottom:16px">
+js/views/coin.js:317:            <button data-tab="forecast" class="on" style="background:rgba(255,255,255,0.08);border:0;color:#fff;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('forecast', 16)} پیش‌بینی هوش مصنوعی</button>
+js/views/coin.js:318:            <button data-tab="patterns" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('compare', 16)} مقایسه الگوها</button>
+js/views/coin.js:319:            <button data-tab="history" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('markets', 16)} تاریخچه و چرخه‌ها</button>
+js/views/coin.js:320:            <button data-tab="news" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('info', 16)} اخبار</button>
+js/views/coin.js:321:            <button data-tab="periods" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">مقایسه دوره‌ها</button>
+js/views/coin.js:322:            <button data-tab="backtest" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">آزمایش گذشته (Backtest)</button>
+js/views/coin.js:323:            ${pair ? '<button data-tab="book" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">دفتر سفارش (Order Book)</button>' : ''}
+js/views/coin.js:324:            <button data-tab="exchanges" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">صرافی‌ها</button>
+js/views/coin.js:325:            <button data-tab="about" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">درباره</button>
+js/views/coin.js:327:          <div id="tabBody"></div>
+js/views/coin.js:340:      <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0;font-size:1.1rem;color:#fff">اخبار ${esc(coin.symbol)}</h3><button class="btn sm ghost" id="allNews" style="background:rgba(255,255,255,0.06);border:0;color:#fff;padding:4px 10px;border-radius:8px">مشاهده همه</button></div>
+js/views/coin.js:348:      const btn = $$('[data-tab]', el).find((b) => b.dataset.tab === 'news');
+js/views/coin.js:369:    modal(`<h3>معامله ${esc(coin.symbol)}</h3>
+js/views/coin.js:380:      <h3 class="mt">ابتدا با معامله آزمایشی (Demo) امتحان کنید</h3>
+js/views/coin.js:631:      $('#signalCard', el).innerHTML = `<h3>خوانش اندیکاتور در دسترس نیست</h3><p class="muted">${esc(err.message || 'منبع کندل داده‌های کافی را برنگرداند.')}</p><p class="fine">${err.notListed ? 'قیمت آن در بالا از کوین‌گکو گرفته شده که برای آن هم کندلی ندارد. معامله‌گر هوش مصنوعی نیز از این ارز صرف‌نظر می‌کند.' : 'بازه زمانی دیگری را امتحان کنید، یا زمانی که منبع بازار در دسترس بود دوباره تلاش کنید.'}</p>`;
+js/views/coin.js:632:      $('#fcCard', el).innerHTML = '<h3>پیش‌بینی هوش مصنوعی در دسترس نیست</h3><p class="muted">پیش‌بینی نیازمند همان تاریخچه کندل‌های نمودار است، بنابراین هیچ پیش‌بینی‌ای تولید نشد.</p>';
+js/views/coin.js:712:        <div class="tbl-wrap"><table class="tbl fit fine"><thead><tr><th class="l">خرید</th><th class="l hide-p">فروش</th><th class="hide-p">ورود → خروج</th><th>نتیجه</th><th class="l">دلیل فروش</th></tr></thead><tbody>
+js/views/coin.js:714:        </tbody></table></div>
+js/views/coin.js:782:      sumCard.innerHTML = html ? `<div class="card-h" style="margin-bottom:12px"><h3 style="margin:0;color:#fff">${icon('ai', 16)} به زبان ساده · ${esc(st.interval)}</h3></div>${html.replace('<div class="summary mt">', '<div class="summary">')}` : '';
+js/views/coin.js:785:    if (!sig.ok) { card.innerHTML = `<h3>سیگنال</h3><p class="muted">${esc(sig.reason)}</p>`; return; }
+js/views/coin.js:802:      <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="margin:0;font-size:1.15rem;color:#fff">${icon('bolt', 16)} سیگنال معاملاتی · ${st.interval}</h3><span class="fine" style="color:rgba(255,255,255,0.5)">کندل‌های ${INTERVAL_LABEL[st.interval]}</span></div>
+js/views/coin.js:819:        <h3 class="mt" style="margin:16px 0 8px 0;font-size:1.1rem;color:#fff">${esc(plan.title)}</h3>
+js/views/coin.js:833:      : `<h3 class="mt" style="margin:16px 0 8px 0;font-size:1.1rem;color:#fff">بدون معامله — منتظر تریگر بمانید</h3><ul class="reasons" style="padding-right:18px;color:rgba(255,255,255,0.7)">${sig.waitFor.map((w) => `<li class="b" style="margin-bottom:6px">${esc(w)}</li>`).join('')}</ul>`}
+js/views/coin.js:869:      $('#fcCard', el).innerHTML = `<h3>پیش‌بینی هوش مصنوعی</h3><p class="muted">حداقل به ۲۰۰ کندل تاریخچه در این بازه زمانی نیاز است.</p>`;
+js/views/coin.js:870:      if (st.tab === 'forecast' || st.tab === 'patterns') drawTab();
+js/views/coin.js:880:      $('#fcCard', el).innerHTML = `<h3>پیش‌بینی هوش مصنوعی در دسترس نیست</h3><p class="muted">${esc(st.forecast.reason)}</p><p class="fine">خوانش اندیکاتور در بالا همچنان معتبر است؛ هیچ مقدار پیش‌بینی‌نشده‌ای ساخته نشده است.</p>`;
+js/views/coin.js:881:      if (st.tab === 'forecast' || st.tab === 'patterns') drawTab();
+js/views/coin.js:890:      const learn = st.tested && !stable;
+js/views/coin.js:908:    const cloudRec = st.tested && !stable ? (await cloudLearning().catch(() => null))?.[iv] || null : null;
+js/views/coin.js:910:    st.learned = st.tested && !stable ? learnFromChart({ symbol: coin.symbol, interval: iv, candles: st.candles, forecastProb: fc.ok ? fc.probUp : null, cloud: cloudRec }) : null;
+js/views/coin.js:913:    if (fc.ok && st.tested && !stable) {
+js/views/coin.js:926:    if (!fc.ok) { $('#fcCard', el).innerHTML = `<h3>پیش‌بینی هوش مصنوعی</h3><p class="muted">${esc(fc.reason)}</p>`; return; }
+js/views/coin.js:929:    if (st.tab === 'forecast' || st.tab === 'patterns') drawTab();
+js/views/coin.js:997:      <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="margin:0;font-size:1.15rem;color:#fff">${icon('ai', 16)} پیش‌بینی هوش مصنوعی</h3><span class="chip ${conf === 'High' ? 'up' : conf === 'Moderate' ? 'warn' : ''}" title="${esc(confWhy)}" style="font-weight:600">اطمینان جهت: ${conf.toLowerCase()}</span></div>
+js/views/coin.js:1062:      <h3 class="mt" style="margin:20px 0 8px 0;font-size:1.15rem;color:#fff">مدت زمان دوام حرکت — و زمان تغییر روند</h3>
+js/views/coin.js:1159:      $$('#tabs [data-tab]', el).forEach((b) => b.classList.toggle('on', b.dataset.tab === 'history'));
+js/views/coin.js:1160:      st.tab = 'history';
+js/views/coin.js:1162:      $('#tabs', el).scrollIntoView({ behavior: 'smooth', block: 'start' });
+js/views/coin.js:1172:    if (st.tab === 'backtest') drawTab();
+js/views/coin.js:1175:  let tabCleanup = null;
+js/views/coin.js:1178:    if (tabCleanup) { tabCleanup(); tabCleanup = null; }
+
+=== ALL VIEW FILES ===
+--- js/views/account.js (     738 lines) ---
+// صفحه حساب کاربری: پروفایل، کانال‌های هشدار (ایمیل + تلگرام)، وضعیت اشتراک ویژه، داده‌ها، امنیت و فعالیت‌ها.
+import { $, $$, icon, toast, modal } from '../ui.js';
+import { esc, money, safeUrl, dateTime, pct, ago } from '../format.js';
+import { load, settings } from '../store.js';
+import { myActivity, myForecasts, forecastScore, resolveDueForecasts, clearMyActivity } from '../api/activity.js';
+import { changePassword, signOutEverywhere } from '../api/security.js';
+import { findCoin, closeAtTime } from '../api/market.js';
+import { auth, sb, isPremium, isAdmin, callFn, updateProfile, refreshProfile, signOut } from '../api/backend.js';
+import { CONFIG } from '../config.js';
+import { openAuth } from './auth.js';
+
+export const title = 'حساب کاربری';
+
+const APP_NAME = CONFIG.APP_NAME || 'BTCS';
+const PAGE_TITLE = `حساب کاربری | ${APP_NAME}`;
+const PAGE_DESC = `مدیریت پروفایل، اشتراک ویژه، هشدارهای ایمیلی و تلگرامی، امنیت نشست‌ها، سوابق پیش‌بینی و خروجی داده‌ها در ${APP_NAME}.`;
+
+const STYLES = `
+  <style>
+    .ap26-ac-wrap {
+      --ac-surface: rgba(22, 22, 26, 0.74);
+      --ac-card: rgba(255, 255, 255, 0.035);
+      --ac-card-hover: rgba(255, 255, 255, 0.055);
+      --ac-line: rgba(255, 255, 255, 0.09);
+      --ac-line-strong: rgba(255, 255, 255, 0.18);
+      --ac-ink: #f5f5f7;
+      --ac-sub: rgba(245, 245, 247, 0.68);
+      --ac-muted: rgba(245, 245, 247, 0.44);
+      --ac-gold: #ffd60a;
+      --ac-green: #30d158;
+      --ac-blue: #0a84ff;
+      --ac-red: #ff6961;
+      direction: rtl;
+      text-align: right;
+      max-width: 1120px;
+--- js/views/admin.js (     404 lines) ---
+// پنل مدیریت: ترافیک، کاربران، اعطای اشتراک ویژه، محتوا، تنظیمات سایت، کلیدهای API و وظایف زمان‌بندی‌شده (Cron).
+// تمامی عملیات مجدداً در سمت سرور بررسی می‌شوند — این صفحه صرفاً برای راحتی کار است، نه امنیت.
+import { $, $$, bindTabs, toast, skeleton, modal, icon } from '../ui.js';
+import { esc, dateTime, compact } from '../format.js';
+import { auth, sb, isAdmin, callFn, getPosts, savePost, deletePost, forgetAppSettings } from '../api/backend.js';
+import { CONFIG } from '../config.js';
+
+export const title = 'مدیریت';
+
+export async function render(el) {
+  await sb();
+  if (!isAdmin()) {
+    el.innerHTML = '<div class="card empty"><h3>فقط مخصوص مدیران</h3><p>این صفحه فقط برای مدیران سایت قابل دسترس است.</p><a class="btn" href="#/">بازگشت به بازارها</a></div>';
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="page-head"><div><h1>مدیریت</h1><p>وارد شده با حساب ${esc(auth.user.email)}</p></div></div>
+    <div class="tabs" id="tabs">
+      <button data-tab="stats" class="on">نمای کلی</button>
+      <button data-tab="growth">تحلیل آمار</button>
+      <button data-tab="users">کاربران</button>
+      <button data-tab="content">محتوا</button>
+      <button data-tab="settings">تنظیمات</button>
+      <button data-tab="keys">کلیدهای API</button>
+      <button data-tab="jobs">وظایف (Jobs)</button>
+    </div>
+    <div id="panel">${skeleton(6, 24)}</div>`;
+
+  const panel = $('#panel', el);
+  // یک اقدام مدیریتی ممکن است تنظیمات عمومی را تغییر داده باشد: سایر صفحات باید دوباره سوال کنند
+  const call = (action, extra = {}) => callFn('admin', { action, ...extra }).finally(forgetAppSettings);
+
+  const TABS = {
+    // ------------------------------------------------------------ نمای کلی
+--- js/views/advice.js (     587 lines) ---
+// اسکن بازار: خوانش مبتنی بر شواهد برای هر ارز، با سئو ۲۰۲۶ و طراحی شیشه‌ای مینیمال اپل.
+import { markets, getCandles, isStable, isTestedSource, INTERVAL_MS } from '../api/market.js';
+import { generateSignal, SCORE_BUCKETS_TESTED } from '../lib/signals.js';
+import { runForecast } from '../lib/compute.js';
+import { timingOutlook } from '../lib/timing.js';
+import { adviseCoin, rankAdvice, ADVICE_DISCLAIMER } from '../lib/advice.js';
+import { TESTED_ACCURACY } from '../lib/predict.js';
+import { directionTrustFor } from '../lib/selfimprove.js';
+import { DEFAULT_HORIZON } from '../ai/context.js';
+import { venuesFor, tradable, TRADE_DISCLAIMER } from '../lib/trade.js';
+import { $, $$, icon, coinLogo, skeleton, bindSeg, modal } from '../ui.js';
+import { esc, safeUrl, pct, money, horizonText, changeHtml } from '../format.js';
+import { load } from '../store.js';
+
+export const title = 'اسکن بازار';
+
+function setMeta(nameOrProp, content, isProp = false) {
+  if (!content) return;
+  const attr = isProp ? 'property' : 'name';
+  let tag = document.head.querySelector(`meta[${attr}="${nameOrProp}"]`);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute(attr, nameOrProp);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute('content', content);
+}
+
+function setCanonical(url) {
+  let link = document.head.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.setAttribute('rel', 'canonical');
+    document.head.appendChild(link);
+  }
+--- js/views/alerts.js (     350 lines) ---
+import { markets, isStable } from '../api/market.js';
+import { $, $$, icon, toast, coinLogo, skeleton } from '../ui.js';
+import { esc, price, ago, money } from '../format.js';
+import { load, save } from '../store.js';
+import { fx } from '../api/fx.js';
+import { auth, backendEnabled, serverAlerts, createServerAlert, deleteServerAlert, serverAiAlerts, createAiAlert, deleteAiAlert } from '../api/backend.js';
+import { openAuth } from './auth.js';
+
+export const title = 'هشدارها';
+
+export async function render(el, [preset]) {
+  const all = await markets().catch(() => []);
+  const coins = all.filter((c) => c.binance && !isStable(c.symbol));
+  const perm = typeof Notification !== 'undefined' ? Notification.permission : 'unsupported';
+  
+  el.innerHTML = `
+    <style>
+      .ap-alerts-wrap {
+        direction: rtl;
+        text-align: right;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding-bottom: 60px;
+      }
+      .ap-hero-card {
+        background: radial-gradient(circle at top right, rgba(94, 92, 230, 0.09), transparent 50%),
+                    radial-gradient(circle at bottom left, rgba(50, 215, 75, 0.07), transparent 50%),
+                    rgba(24, 24, 29, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 28px;
+        padding: 32px;
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        margin-bottom: 24px;
+        box-shadow: 0 24px 54px rgba(0, 0, 0, 0.35);
+--- js/views/assistant.js (     643 lines) ---
+import { CONFIG } from '../config.js';
+import { markets, isStable } from '../api/market.js';
+import { live } from '../api/live.js';
+import { analyzeCoin, analystContext, llmData, detectSymbol, portfolioSummary, scanMarket, marketContext, scanMarketMulti, marketContextMulti, compareCoins } from '../ai/context.js';
+import { ruleBasedAnswer, isMarketWide, detectCompare, namedCoins, horizonChart, SELL_ALL, AI_SYSTEM_PROMPT } from '../lib/analyst.js';
+import { unsupportedFigures, materialFigures } from '../lib/grounding.js';
+import { conversationalAnswer, termsIn } from '../lib/glossary.js';
+import { traderAnswer, TRADER_Q, isTraderFollowUp } from '../lib/traderchat.js';
+import { aiState, deviceSupport, loadLocalModel, askLLM, localReady, customReady, customState, recommendedModelId, checkCustomAI, AI_HOSTS } from '../ai/engine.js';
+import { $, $$, icon, markdown, bindSeg, toast } from '../ui.js';
+import { esc, price, changeHtml, money } from '../format.js';
+import { settings, load, save } from '../store.js';
+
+export const title = 'دستیار هوش مصنوعی';
+const HISTORY_KEY = 'assistantHistory';
+const KEEP = 30;
+const history = [];
+
+function restoreHistory() {
+  const saved = load(HISTORY_KEY, null);
+  history.length = 0;
+  for (const m of Array.isArray(saved?.messages) ? saved.messages : []) {
+    if (m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string') {
+      history.push(m);
+    }
+  }
+  history.lastSymbol = (typeof saved?.lastSymbol === 'string' && /^[\p{L}\p{N}_]{1,20}$/u.test(saved.lastSymbol) ? saved.lastSymbol : null) || history.lastSymbol;
+}
+
+let savingHere = false;
+function saveHistory() {
+  const value = {
+    messages: history.slice(-KEEP).map((m) => ({
+      role: m.role,
+      content: String(m.content).slice(0, 6000),
+--- js/views/auth.js (     548 lines) ---
+// ورود / ثبت‌نام / بازیابی رمز عبور — طراحی مدرن، راست‌به‌چپ و الهام‌گرفته از استانداردهای ۲۰۲۶ اپل.
+import { $, icon, modal, toast } from '../ui.js';
+import { esc } from '../format.js';
+import { signIn, signUp, callFn, sendResetLink } from '../api/backend.js';
+
+const FORMS = {
+  in: {
+    eyebrow: 'احراز هویت امن',
+    title: 'خوش آمدید',
+    sub: 'برای همگام‌سازی واچ‌لیست، پرتفوی و هشدارهای لحظه‌ای وارد شوید.',
+    cta: 'ورود به حساب',
+  },
+  up: {
+    eyebrow: 'شروع رایگان',
+    title: 'ایجاد حساب کاربری',
+    sub: 'دسترسی یکپارچه و همگام‌سازی خودکار در تمامی دستگاه‌ها.',
+    cta: 'ساخت حساب کاربری',
+  },
+  reset: {
+    eyebrow: 'بازیابی دسترسی',
+    title: 'بازیابی رمز عبور',
+    sub: 'تنظیم رمز عبور جدید برای بازگشت امن به حساب کاربری.',
+    cta: 'تایید و تغییر رمز عبور',
+  },
+};
+
+export function openAuth(mode = 'in') {
+  const m = modal('<div id="authBody" dir="rtl" class="ap26-auth"></div>');
+  let closed = false;
+  let cooldownTimer = null;
+  let cooldownSec = 0;
+
+  const origClose = m.close.bind(m);
+  m.close = () => {
+    closed = true;
+--- js/views/coin.js (    1647 lines) ---
+import { findCoin, markets, dataStatus, getCandles, exchangeCandles, getCoinProfile, getDepth, getTrades, getTickSize, isTestedSource, isStable, INTERVAL_MS, isSecondInterval, MAX_BARS } from '../api/market.js';
+import { compareExchanges } from '../api/exchanges.js';
+import { live } from '../api/live.js';
+import { streamCandles } from '../api/exstream.js';
+import { generateSignal, confluence, geometryFor, upRateFor, scoreAt } from '../lib/signals.js';
+import { runForecast, runBacktest, runHistory } from '../lib/compute.js';
+import { learnFromChart } from '../lib/learnpass.js';
+import { cloudLearning } from '../lib/cloudlearn.js';
+import { computeAll } from '../lib/indicators.js';
+import { TESTED_ACCURACY, shownProbUp, directionReliable, recheckOverall } from '../lib/predict.js';
+import { timingOutlook, TESTED_TIMING, timingTrust, condenseTiming, bestTimingChart } from '../lib/timing.js';
+import { remember, DEFAULT_HORIZON } from '../ai/context.js';
+import { CandleChart } from '../charts/candles.js';
+import { LineChart } from '../charts/line.js';
+import { $, $$, icon, coinLogo, skeleton, errorBox, bindSeg, bindTabs, modal, toast } from '../ui.js';
+import { esc, safeUrl, usd, compact, pct, amount, changeHtml, dateTime, ago, horizonText, INTERVAL_LABEL, money } from '../format.js';
+import { watchlist, settings, load, save } from '../store.js';
+import { venuesFor, tradable, TRADE_DISCLAIMER } from '../lib/trade.js';
+import { getNews, backendEnabled, getAiRecord } from '../api/backend.js';
+import { aiRecordStats, shareText } from '../lib/airecord.js';
+import { logActivity, logForecastShown } from '../api/activity.js';
+import { tradeSummary } from '../lib/summary.js';
+import { newState, openManual, closeManual, equity, DEFAULT_CONFIG, DEMO_NOTICE, rulesForChart, rulesFor, rulesInWords, entryBlocker, blockerText, PER_COIN_RULES, aiSignal, CHART_TESTED } from '../lib/autotrader.js';
+import { forecastForDisplay, forecastFacts, moveSizeCall, FORECAST_TESTED } from '../lib/forecastview.js';
+import { fx } from '../api/fx.js';
+import {
+  loadLedger, saveLedger, newLedger, recordForecast, resolveDueLedger, directionTrustFor, MIN_GRADED_FOR_TRUST,
+  rollingAccuracy, learningStatus, accuracySparkline, adaptiveWeights, MIN_FAMILY_CALLS,
+  dampenConfidence, threeModelEnsemble, signalMeter, riskWarnings, anomalyFlags,
+  sparklineSvg, TREND_WORDS,
+} from '../lib/selfimprove.js';
+
+export const title = (p) => (p[0] || 'ارز').toUpperCase();
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SERIES = ['--series-1', '--series-2', '--series-3', '--series-5', '--series-7', '--series-4'];
+--- js/views/compare.js (     298 lines) ---
+import { markets, findCoin, getCandles, isStable } from '../api/market.js';
+import { LineChart } from '../charts/line.js';
+import { $, $$, coinLogo, skeleton, bindSeg, icon, errorBox } from '../ui.js';
+import { esc, pct, dateTime } from '../format.js';
+import { historyMatch, backtestAnalog, analogVerdict } from '../lib/analog.js';
+
+export const title = 'مقایسه';
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const COLORS = ['--series-1', '--series-2', '--series-3', '--series-5', '--series-7', '--series-4'];
+const PERIODS = { '7d': ['1h', 168, 24 * 365], '30d': ['4h', 180, 6 * 365], '90d': ['1d', 90, 365], '1y': ['1d', 365, 365], '3y': ['1d', 1095, 365] };
+
+export async function render(el, [preset]) {
+  const st = { coins: preset ? preset.split(',').map((s) => s.toUpperCase()).slice(0, 6) : ['BTC', 'ETH', 'SOL'], period: '30d', chart: null, selfSym: null, selfChart: null, selfSeq: 0, disposed: false };
+  const all = await markets().catch(() => []);
+  el.innerHTML = `
+    <style>
+      .ap-compare-wrap {
+        direction: rtl;
+        text-align: right;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding-bottom: 60px;
+      }
+      .ap-hero-card {
+        background: radial-gradient(circle at top right, rgba(94, 92, 230, 0.09), transparent 50%),
+                    radial-gradient(circle at bottom left, rgba(50, 215, 75, 0.07), transparent 50%),
+                    rgba(24, 24, 29, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 28px;
+        padding: 32px;
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        margin-bottom: 24px;
+        box-shadow: 0 24px 54px rgba(0, 0, 0, 0.35);
+      }
+--- js/views/exchanges.js (     469 lines) ---
+import { markets, isStable } from '../api/market.js';
+import { compareExchanges, EXCHANGE_NAMES } from '../api/exchanges.js';
+import { $, skeleton, icon, errorBox } from '../ui.js';
+import { esc, usd, pct, compact, changeHtml } from '../format.js';
+
+export const title = 'مقایسه صرافی‌ها';
+
+const SYM_FA = {
+  BTC: 'بیت‌کوین',
+  ETH: 'اتریوم',
+  SOL: 'سولانا',
+  BNB: 'بایننس کوین',
+  XRP: 'ریپل',
+  ADA: 'کاردانو',
+  DOGE: 'دوج‌کوین',
+  AVAX: 'آوالانچ',
+  LINK: 'چین‌لینک',
+  TON: 'تون‌کوین',
+};
+
+function setMeta(nameOrProp, content, isProp = false) {
+  if (!content) return;
+  const attr = isProp ? 'property' : 'name';
+  let tag = document.head.querySelector(`meta[${attr}="${nameOrProp}"]`);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute(attr, nameOrProp);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute('content', content);
+}
+
+function setCanonical(url) {
+  let link = document.head.querySelector('link[rel="canonical"]');
+  if (!link) {
+--- js/views/futures.js (     615 lines) ---
+// معاملات فیوچرز و مشتقات: نرخ تأمین مالی، سود باز (Open Interest)، پوزیشن‌های لانگ/شورت و لیکوییدیشن‌های زنده.
+import { markets, isStable } from '../api/market.js';
+import { futuresOverview, futuresSnapshot, liquidationStream, interpretFutures, annualiseFunding } from '../api/futures.js';
+import { LineChart } from '../charts/line.js';
+import { $, $$, skeleton, coinLogo, icon, errorBox } from '../ui.js';
+import { esc, pct, money, compact, num, ago, dateTime } from '../format.js';
+
+export const title = 'فیوچرز';
+
+function setMeta(nameOrProp, content, isProp = false) {
+  if (!content) return;
+  const attr = isProp ? 'property' : 'name';
+  let tag = document.head.querySelector(`meta[${attr}="${nameOrProp}"]`);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute(attr, nameOrProp);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute('content', content);
+}
+
+function setCanonical(url) {
+  let link = document.head.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.setAttribute('rel', 'canonical');
+    document.head.appendChild(link);
+  }
+  link.setAttribute('href', url);
+}
+
+function syncSeo(sym, snap = null) {
+  const cleanSym = (sym || 'BTC').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'BTC';
+  const pageTitle = `فیوچرز و مشتقات ${cleanSym} | فاندینگ ریت، سود باز و لیکوییدیشن زنده | BTCS`;
+  const desc = snap?.markPrice
+--- js/views/learn.js (     413 lines) ---
+// یادگیری هوش مصنوعی: نحوه امتیازدهی هوش مصنوعی به فراخوان‌های خود و تغییر تصمیماتش.
+import { $, $$, icon, toast, bindSeg } from '../ui.js';
+import { esc, dateTime, ago, horizonText } from '../format.js';
+import { load, remove } from '../store.js';
+import { INDICATORS, LEARN_TESTED, SWITCH_MIN, SWITCH_GAP, liveScores } from '../lib/learncenter.js';
+import { learningPass, loadLearn } from '../lib/learnpass.js';
+import { cloudLearning } from '../lib/cloudlearn.js';
+import { DEFAULT_CONFIG, CHART_TESTED, rulesForChart } from '../lib/autotrader.js';
+import { DEFAULT_HORIZON } from '../ai/context.js';
+import { activeLessons, reviewTrades } from '../lib/tradelearn.js';
+import { TESTED_ACCURACY, recheckOverall } from '../lib/predict.js';
+import { FORECAST_TESTED } from '../lib/forecastview.js';
+import { learningStatus, loadLedger, learnedTrust, MIN_GRADED_FOR_TRUST, TREND_WORDS } from '../lib/selfimprove.js';
+import { LEARN_GUIDE } from '../lib/learnguide.js';
+
+export const title = 'AI learning';
+
+const PAGE_TITLE = 'یادگیری هوش مصنوعی و کارنامه تست‌ها — BTCS';
+const PAGE_DESC = 'نحوه امتیازدهی هوش مصنوعی به پیش‌بینی‌ها، اندیکاتورها و معاملات، ضریب اعتماد تایم‌فریم‌ها و نتایج واقعی تست‌های آماری در BTCS.';
+
+function syncSeoMeta() {
+  document.title = PAGE_TITLE;
+  let descEl = document.querySelector('meta[name="description"]');
+  if (!descEl) {
+    descEl = document.createElement('meta');
+    descEl.setAttribute('name', 'description');
+    document.head.appendChild(descEl);
+  }
+  descEl.setAttribute('content', PAGE_DESC);
+
+  let ldEl = document.getElementById('ld-learn-page');
+  if (!ldEl) {
+    ldEl = document.createElement('script');
+    ldEl.type = 'application/ld+json';
+    ldEl.id = 'ld-learn-page';
+--- js/views/legal.js (     521 lines) ---
+// شرایط استفاده، سیاست حفظ حریم خصوصی و افشای ریسک — نسخه مدرن ۲۰۲۶ با رعایت سئو و لحن شفاف و دوستانه.
+import { CONFIG } from '../config.js';
+import { getAppSettings, cachedAppSettings } from '../api/backend.js';
+import { esc } from '../format.js';
+import { TESTED_ACCURACY, recheckOverall } from '../lib/predict.js';
+import { TESTED_TIMING, timingSwing } from '../lib/timing.js';
+import { SCORE_BUCKETS_TESTED } from '../lib/signals.js';
+
+const IVS = ['1m', '5m', '15m', '1h', '4h', '1d'];
+const accuracyLine = () => IVS
+  .filter((iv) => typeof TESTED_ACCURACY[iv] === 'number')
+  .map((iv) => `${iv} معادل ${TESTED_ACCURACY[iv]}٪ در مقایسه با مبنای ${TESTED_ACCURACY.baseline[iv]}٪`)
+  .join('، ');
+const recheckLine = () => IVS
+  .filter((iv) => TESTED_ACCURACY.recheck?.[iv])
+  .map((iv) => `${iv} معادل ${TESTED_ACCURACY.recheck[iv].hit.toFixed(1)}٪ در مقایسه با ${TESTED_ACCURACY.recheck[iv].baseline.toFixed(1)}٪`)
+  .join('، ');
+const timingLine = () => Object.entries(TESTED_TIMING.byInterval)
+  .map(([iv, t]) => `${iv} معادل ${t.hitPct.toFixed(1)}٪ در مقایسه با ${t.baselinePct.toFixed(1)}٪`)
+  .join('، ');
+
+const timingSwingRange = () => {
+  const s = Object.keys(TESTED_TIMING.byInterval).map(timingSwing).filter((v) => v !== null);
+  return s.length ? `${Math.min(...s).toFixed(1)} تا ${Math.max(...s).toFixed(1)}` : null;
+};
+
+const N = CONFIG.APP_NAME;
+
+const META = {
+  terms: {
+    tab: 'شرایط خدمات',
+    title: `شرایط خدمات — ${N}`,
+    description: `شرایط شفاف و دوستانه استفاده از ${N}: ماهیت تحلیلی ابزار، عدم ارائه مشاوره مالی، حساب‌های کاربری، اشتراک ویژه و مسئولیت‌ها.`,
+    updated: 'فروردین ۱۴۰۵',
+  },
+--- js/views/markets.js (     692 lines) ---
+import { markets, cachedMarkets, getGlobal, getFearGreed, getTrending, isStable } from '../api/market.js';
+import { $, $$, icon, coinLogo, skeleton, errorBox, bindSeg, wireSortHeaders } from '../ui.js';
+import { esc, price, compact, pct, changeHtml, money, dateTime } from '../format.js';
+import { sparkline, gauge, treemap, changeColor } from '../charts/small.js';
+import { watchlist } from '../store.js';
+
+export const title = 'بازارها';
+
+const SEO_FAQS = [
+  {
+    q: 'ارزش کل بازار رمزارزها چگونه محاسبه می‌شود؟',
+    a: 'ارزش کل بازار از جمع ضرب قیمت فعلی هر رمزارز در عرضه در گردش آن به دست می‌آید و تصویری کلی از اندازه و نقدینگی بازار ارائه می‌دهد.',
+  },
+  {
+    q: 'دامیننس بیت‌کوین و اتریوم چه کمکی به تحلیل بازار می‌کند؟',
+    a: 'سهم بیت‌کوین یا اتریوم از کل ارزش بازار نشان می‌دهد سرمایه بیشتر در دارایی‌های شاخص متمرکز است یا به سمت آلت‌کوین‌ها حرکت می‌کند.',
+  },
+  {
+    q: 'شاخص ترس و طمع بازار رمزارز چه چیزی را نشان می‌دهد؟',
+    a: 'این شاخص احساسات غالب معامله‌گران را از ترس شدید تا طمع شدید می‌سنجد؛ ترس شدید معمولاً با هیجان فروش و طمع شدید اغلب با هیجان خرید همراه است.',
+  },
+  {
+    q: 'تفاوت حجم معاملات ۲۴ ساعته با ارزش بازار چیست؟',
+    a: 'ارزش بازار اندازه کل دارایی‌های در گردش را نشان می‌دهد، در حالی که حجم معاملات ۲۴ ساعته میزان واقعی خرید و فروش انجام‌شده در شبانه‌روز گذشته را بیان می‌کند.',
+  },
+];
+
+function injectMarketJsonLd() {
+  if (typeof document === 'undefined') return;
+  const scriptId = 'btcs-markets-jsonld';
+  const origin = `${location.origin || 'https://btcs.ir'}/`;
+  const data = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+--- js/views/news.js (      70 lines) ---
+// اخبار رمزارز، که به صورت سرورسااید از فیدهای RSS عمومی هر ۲۰ دقیقه جمع‌آوری می‌شوند.
+import { $, $$, skeleton, bindSeg, icon } from '../ui.js';
+import { esc, ago, safeUrl } from '../format.js';
+import { getNews, backendEnabled } from '../api/backend.js';
+
+export const title = 'اخبار';
+
+export async function render(el, [coinParam]) {
+  el.innerHTML = `
+    <div class="page-head"><div><h1>اخبار</h1><p>سرتیترهای مهم‌ترین رسانه‌های رمزارز، به‌روزرسانی‌شده در هر ۲۰ دقیقه. لینک‌ها در وب‌سایت ناشر باز می‌شوند.</p></div>
+      <input class="inp" id="q" placeholder="فیلتر سرتیترها…" style="max-width:240px"></div>
+    <div id="body">${skeleton(8, 22)}</div>`;
+
+  if (!backendEnabled()) {
+    $('#body', el).innerHTML = '<div class="card empty"><h3>بخش اخبار پیکربندی نشده است</h3><p>این نسخه فاقد بک‌اند است، بنابراین جمع‌آوری‌کننده اخبار فعال نیست.</p></div>';
+    return;
+  }
+
+  // خطای بارگیری قبلاً به یک لیست خالی با عنوان «۰ سرتیتر» منجر می‌شد
+  // که به جای مفهوم «در حال بارگیری نبودن»، این‌طور به نظر می‌رسید که «هیچ خبری وجود ندارد».
+  let rows = null;
+  try {
+    rows = await getNews({ coin: coinParam ? coinParam.toUpperCase() : null, limit: 120 });
+  } catch { rows = null; }
+  if (!rows) {
+    $('#body', el).innerHTML = '<div class="card empty"><h3>بارگیری سرتیترها میسر نشد</h3><p>سرویس اخبار پاسخ نداد. برای تلاش مجدد صفحه را دوباره بارگیری کنید.</p></div>';
+    return;
+  }
+  if (!rows.length) {
+    $('#body', el).innerHTML = `<div class="card empty"><h3>هنوز خبری ذخیره نشده است</h3><p>جمع‌آوری‌کننده هر ۲۰ دقیقه اجرا می‌شود${coinParam ? `، و هیچ مورد جدیدی به ${esc(coinParam.toUpperCase())} اشاره نکرده است` : ''}. لطفاً بعداً سر بزنید.</p></div>`;
+    return;
+  }
+  // زمان انتشار جدیدترین خبر، تا وقفه احتمالی در جمع‌آوری‌کننده به جای اخبار تازه قابل مشاهده باشد.
+  const newest = rows.reduce((max, r) => Math.max(max, Date.parse(r.published_at) || 0), 0);
+  const sources = [...new Set(rows.map((r) => r.source))].sort();
+--- js/views/premium.js (     492 lines) ---
+// صفحه اشتراک ویژه و قیمت‌گذاری — طراحی مدرن ۲۰۲۶ اپل و بهینه‌سازی سئو.
+import { $, icon, toast } from '../ui.js';
+import { esc } from '../format.js';
+import { auth, sb, isPremium, isAdmin, getAppSettings, cachedAppSettings, getPosts, callFn } from '../api/backend.js';
+import { openAuth } from './auth.js';
+
+export const title = 'اشتراک ویژه';
+
+const FREE = [
+  'قیمت‌های لحظه‌ای از ۱۰ صرافی شامل بایننس',
+  'نمودارهای شمعی با ۱۲ اندیکاتور',
+  'تحلیل‌های نمودار با منطقه ورود، حد ضرر و اهداف',
+  'پیش‌بینی هوش مصنوعی در کنار مبنایی که باید آن را شکست دهد',
+  'تاریخچه و چرخه‌ها: مقایسه الگوی گذشته',
+  'همگام‌سازی سبد دارایی، کیف پول‌های فقط-تماشا و لیست پیگیری',
+  '۳ هشدار قیمتی سمت سرور',
+];
+
+const PAID = [
+  'همه امکانات نسخه رایگان',
+  'تا ۵۰ هشدار سمت سرور (ایمیل + تلگرام)',
+  'هشدارهای سیگنال ارسالی از طریق ایمیل و تلگرام در زمان بسته بودن مرورگر',
+  'سوابق کامل به تفکیک هر ارز و خروجی CSV',
+  'دسترسی اولویت‌دار به قابلیت‌های جدید',
+];
+
+function setMeta(nameOrProp, content, isProp = false) {
+  if (!content) return;
+  const attr = isProp ? 'property' : 'name';
+  let tag = document.head.querySelector(`meta[${attr}="${nameOrProp}"]`);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute(attr, nameOrProp);
+    document.head.appendChild(tag);
+  }
+--- js/views/scanner.js (     584 lines) ---
+import { markets, getCandles, isStable, isTestedSource, INTERVAL_MS } from '../api/market.js';
+import { TESTED_ACCURACY, shownProbUp, directionReliable } from '../lib/predict.js';
+import { directionTrustFor } from '../lib/selfimprove.js';
+import { generateSignal, THRESHOLDS, SCORE_BUCKETS_TESTED } from '../lib/signals.js';
+import { runForecast } from '../lib/compute.js';
+import { timingOutlook } from '../lib/timing.js';
+import { forecastForDisplay } from '../lib/forecastview.js';
+import { aiSignal } from '../lib/autotrader.js';
+import { DEFAULT_HORIZON } from '../ai/context.js';
+import { $, $$, coinLogo, skeleton, bindSeg, icon, wireSortHeaders } from '../ui.js';
+import { esc, price, changeHtml, horizonText, money } from '../format.js';
+
+export const title = 'اسکنر';
+
+function setMeta(nameOrProp, content, isProp = false) {
+  if (!content) return;
+  const attr = isProp ? 'property' : 'name';
+  let tag = document.head.querySelector(`meta[${attr}="${nameOrProp}"]`);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute(attr, nameOrProp);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute('content', content);
+}
+
+function setCanonical(url) {
+  let link = document.head.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.setAttribute('rel', 'canonical');
+    document.head.appendChild(link);
+  }
+  link.setAttribute('href', url);
+}
+--- js/views/tools.js (     595 lines) ---
+// ابزارها: مبدل ارز و رمزارز، شبیه‌ساز میانگین هزینه دلاری (DCA) بر اساس داده‌های تاریخی واقعی،
+// و ماشین‌حساب اندازه پوزیشن. هیچ معامله‌ای در اینجا ثبت نمی‌شود.
+import { CONFIG } from '../config.js';
+import { markets, findCoin, getCandles, isStable } from '../api/market.js';
+import { fx, rates } from '../api/fx.js';
+import { LineChart } from '../charts/line.js';
+import { $, $$, icon, skeleton, bindSeg } from '../ui.js';
+import { esc, price, money, pct, amount, compact, dateTime } from '../format.js';
+import { convert, dcaBacktest, positionSize } from '../lib/calc.js';
+
+export const title = 'ابزارها';
+
+const PERIODS = { '6m': 182, '1y': 365, '2y': 730, '3y': 1095 };
+const EVERY = { 7: 'هفتگی', 14: 'هر دو هفته', 30: 'ماهانه' };
+const num = (v) => { const n = parseFloat(String(v).replace(/,/g, '')); return Number.isFinite(n) ? n : NaN; };
+const disp = (v) => (Number.isFinite(v) ? `${fx.symbol}${price(v)}` : '—');
+const cash = (v) => (!Number.isFinite(v) ? '—' : Math.abs(v) >= 1 ? `${fx.symbol}${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : disp(v));
+const qty = (n) => (Math.abs(n) >= 1 ? amount(n) : price(n));
+
+const TOOLS_FAQS = [
+  {
+    q: 'خرید منظم (DCA) چیست و چه تفاوتی با خرید یکجا دارد؟',
+    a: 'در روش DCA مبلغ مشخصی در بازه‌های زمانی منظم (هفتگی، دو هفته‌ای یا ماهانه) سرمایه‌گذاری می‌شود تا میانگین قیمت خرید در نوسانات بازار تعدیل شود.',
+  },
+  {
+    q: 'ماشین‌حساب اندازه پوزیشن چگونه حجم معامله را محاسبه می‌کند؟',
+    a: 'بر اساس موجودی حساب، درصد ریسک مجاز در هر معامله و فاصله قیمت ورود تا حد ضرر، مقدار واحد و ارزش پوزیشن را طوری تعیین می‌کند که در صورت فعال شدن حد ضرر، زیان از سقف تعیین‌شده بیشتر نشود.',
+  },
+  {
+    q: 'آیا نتایج شبیه‌ساز DCA تضمینی برای سود در آینده است؟',
+    a: 'خیر؛ شبیه‌ساز DCA بر اساس داده‌های تاریخی قیمت محاسبه می‌شود و عملکرد گذشته تضمینی برای آینده نیست.',
+  },
+];
+
+function injectToolsJsonLd() {
+--- js/views/track.js (     609 lines) ---
+// سابقه عملکرد عمومی: هر سیگنالی که سرور ثبت کرده و نتیجه واقعی آن.
+// هیچ‌چیز در اینجا گزینشی نیست — ردیف‌های تعیین‌تکلیف‌شده دقیقاً همان‌طور که بسته شده‌اند شمرده می‌شوند.
+import { $, $$, bindSeg, skeleton, icon } from '../ui.js';
+import { esc, pct, money, dateTime } from '../format.js';
+import { markets } from '../api/market.js';
+import { TESTED_ACCURACY } from '../lib/predict.js';
+import { liveDirectionCheck, directionTrustFor, LIVE_PROOF_NATS } from '../lib/selfimprove.js';
+import { getTrackRecord, getAiRecord, backendEnabled } from '../api/backend.js';
+import { aiRecordStats, shareText } from '../lib/airecord.js';
+import { CHART_TESTED } from '../lib/autotrader.js';
+import { CONFIG } from '../config.js';
+import { clockOffsetMs } from '../api/clock.js';
+import { fx } from '../api/fx.js';
+
+export const title = 'سابقه عملکرد';
+
+const rate = (hit, n) => (n ? (hit / n) * 100 : null);
+
+const PLAN_WIN = new Set(['tp1', 'tp2', 'tp3', 'target']);
+const PLAN_LOSS = new Set(['stop']);
+const ACTION_WORDS = {
+  STRONG_BUY: 'رشد قوی تاکنون', BUY: 'صعودی', NEUTRAL: 'بدون روند مشخص', SELL: 'نزولی', STRONG_SELL: 'ریزش قوی تاکنون',
+  EXTENDED_UP: 'رشد قوی تاکنون', LEANING_UP: 'صعودی', NO_TREND: 'بدون روند مشخص', LEANING_DOWN: 'نزولی', EXTENDED_DOWN: 'ریزش قوی تاکنون',
+};
+const readable = (a) => ACTION_WORDS[a] || a || '—';
+const toneOf = (a) => (/UP|BUY/.test(a || '') ? 'up' : /DOWN|SELL/.test(a || '') ? 'down' : '');
+
+const PLAN_WORDS = {
+  tp1: 'هدف ۱',
+  tp2: 'هدف ۲',
+  tp3: 'هدف ۳',
+  stop: 'فعال شدن حد ضرر',
+  expired: 'منقضی شده (خنثی)',
+  none: 'بدون طرح',
+};
+--- js/views/trader.js (    1547 lines) ---
+// معامله‌گر خودکار هوش مصنوعی که با پول شبیه‌سازی‌شده (مجازی) اجرا می‌شود.
+import { markets, getCandles, isStable, isTestedSource, findCoin, INTERVAL_MS, knownVenue, findVenue } from '../api/market.js';
+import { newState, rescaleAccount, stats, equity, closeManual, recordRealTrade, DEFAULT_CONFIG, PULLBACK_RSI, CHART_TESTED, rulesForChart, rulesInWords, PER_COIN_RULES, CUSTOM_DEFAULT, TRADER_CHARTS, MAX_COINS, TESTED_COINS, bestTestedChart, earningsByChart, settingsWarnings, backtestSettings, expectedYield, PAPER_NOTICE, DEMO_NOTICE, REAL_NOTICE, logCheck, VOL_SCALE } from '../lib/autotrader.js';
+import { reviewTrades, activeLessons, diagnose, MIN_TRADES } from '../lib/tradelearn.js';
+import { configFrom, ownRulesOn as ownRulesFor, runConfig, heldOffList, backfillNeeds, checkAccount, reviewStep } from '../lib/traderrun.js';
+import { learningPass } from '../lib/learnpass.js';
+import { cloudLearning } from '../lib/cloudlearn.js';
+import { candleCache } from '../lib/candlecache.js';
+import { parseTradeCsv, matchFills } from '../lib/importer.js';
+import { tradesCsv, downloadText, reportHtml } from '../lib/export.js';
+import { LineChart } from '../charts/line.js';
+import { $, $$, icon, toast, skeleton, coinLogo, modal, bindSeg } from '../ui.js';
+import { esc, pct, money, compact, dateTime, ago, amount, price } from '../format.js';
+import { fx } from '../api/fx.js';
+import { load, save, remove } from '../store.js';
+import { auth, backendEnabled } from '../api/backend.js';
+import { backupFor, restoreBackup, missingTrades } from '../lib/cloudsync.js';
+import { openAuth } from './auth.js';
+import { initialSession, sessionReducer, sessionLabel, newLedger, learningStatus, accuracySparkline, sparklineSvg, LEARN_KEY, loadLedger, saveLedger, recordForecast, resolveDueLedger, TREND_WORDS } from '../lib/selfimprove.js';
+import { runForecast } from '../lib/compute.js';
+import { DEFAULT_HORIZON } from '../ai/context.js';
+
+// اجرای تابع fn روی آیتم‌ها، حداکثر n مورد به صورت همزمان.
+async function pool(items, n, fn) {
+  const queue = [...items];
+  await Promise.all(Array.from({ length: Math.min(n, queue.length) }, async () => { while (queue.length) await fn(queue.shift()); }));
+}
+
+export const title = 'معاملات';
+
+const CFG_KEY = 'traderCfg';
+const STATE_KEY = 'traderState';
+const RUN_KEY = 'traderRunning';
+const SESSION_KEY = 'aiSession';
+const AUTO_KEY = 'traderAutoStarted';
+--- js/views/wallet.js (     321 lines) ---
+import { markets, findCoin, getCandles, walletBalance, CHAINS, isStable, isTestedSource } from '../api/market.js';
+import { generateSignal, adviseHolding } from '../lib/signals.js';
+import { donut } from '../charts/small.js';
+import { $, $$, coinLogo, icon, toast, skeleton, modal } from '../ui.js';
+import { esc, safeUrl, usd, price, pct, amount, changeHtml, compact, money, tone } from '../format.js';
+import { fx } from '../api/fx.js';
+import { load, save } from '../store.js';
+import { connectWallet, injectedWallet, walletLabel, onWalletChange } from '../api/connect.js';
+import { venuesFor, tradable, TRADE_DISCLAIMER } from '../lib/trade.js';
+
+const signedUsd = (v) => {
+  const c = Math.round(v * 100) / 100;
+  return `<span class="v ${tone(c)}">${c > 0 ? '+' : c < 0 ? '−' : ''}${usd(Math.abs(c))}</span>`;
+};
+
+export const title = 'کیف پول';
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const COLORS = ['--series-1', '--series-2', '--series-3', '--series-4', '--series-5', '--series-7', '--series-8', '--series-6'];
+
+export async function render(el) {
+  let disposed = false;
+  const all = await markets().catch(() => []);
+  el.innerHTML = `
+    <style>
+      .ap-wallet-wrap {
+        direction: rtl;
+        text-align: right;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding-bottom: 60px;
+      }
+      .ap-hero-card {
+        background: radial-gradient(circle at top right, rgba(94, 92, 230, 0.09), transparent 50%),
+                    radial-gradient(circle at bottom left, rgba(50, 215, 75, 0.07), transparent 50%),
+                    rgba(24, 24, 29, 0.75);

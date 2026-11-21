@@ -1,0 +1,2314 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="author" content="BTCS Analytics & Trading Simulator Guide" />
+  <meta name="generator" content="BTCS Knowledge Reader 2026" />
+  <meta name="theme-color" content="#0b0c10" id="metaThemeColor" />
+  <meta name="description" content="راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS / CoinLens) شامل مقدمه و ۸ فصل کاربردی از سطح تازه‌کار تا تریدر پیشرفته و مدیر سیستم، همراه با اصول مدیریت ریسک." id="metaDescription" />
+  <meta name="keywords" content="راهنمای BTCS, شبیه‌ساز معاملاتی رمزارز, تحلیل تکنیکال ارز دیجیتال, پیش‌بینی بازه قیمتی هوش مصنوعی, معاملات کاغذی, اسکنر بازار, فیوچرز, مدیریت ریسک رمزارز" id="metaKeywords" />
+
+  <!-- Open Graph Metadata -->
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="fa_IR" />
+  <meta property="og:site_name" content="راهنمای جامع BTCS" />
+  <meta property="og:title" content="راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS)" id="ogTitle" />
+  <meta property="og:description" content="از درک فضای بازار و تحلیل تک‌ارزی تا موتور پیش‌بینی بازه، معاملات کاغذی، یادگیری هوش مصنوعی و مدیریت ریسک در ۸ فصل برای تریدر ساده تا پیشرفته." id="ogDescription" />
+
+  <!-- Twitter Card Metadata -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS)" id="twTitle" />
+  <meta name="twitter:description" content="مقدمه و ۸ فصل عملی برای استفاده اصولی از ابزارهای تحلیلی، شبیه‌ساز معاملاتی و سنجش عملکرد در بازار رمزارزها." id="twDescription" />
+
+  <link rel="canonical" href="#intro" id="canonicalLink" />
+  <title id="pageTitle">راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS) | از تازه‌کار تا پیشرفته</title>
+
+  <!-- Tailwind CSS CDN for responsive spacing & utility scaffolding -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Dynamic JSON-LD Structured Data (2026 SEO: TechArticle + BreadcrumbList + FAQPage) -->
+  <script type="application/ld+json" id="jsonLdData">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "@id": "#guide-article",
+        "headline": "راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS)",
+        "inLanguage": "fa-IR",
+        "datePublished": "2026-11-22",
+        "dateModified": "2026-11-22",
+        "proficiencyLevel": "Beginner to Advanced",
+        "about": [
+          "تحلیل بازار رمزارزها",
+          "شبیه‌ساز معاملات کاغذی",
+          "پیش‌بینی بازه قیمتی هوش مصنوعی",
+          "مدیریت ریسک معاملاتی"
+        ],
+        "description": "راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها شامل مقدمه و ۸ فصل برای تریدرهای تازه‌کار، میان‌رده، پیشرفته و مدیران سیستم."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "#guide-breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "مقدمه راهنما",
+            "item": "#intro"
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "#guide-faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "آیا پلتفرم BTCS صرافی است یا سفارش واقعی ثبت می‌کند؟",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "خیر؛ این پلتفرم یک ابزار تحلیلی، آموزشی و شبیه‌ساز معاملاتی است؛ سفارش واقعی در بازار ثبت نمی‌کند، دارایی نگه نمی‌دارد و برای سنجش رفتار بازار، تمرین بدون ریسک سرمایه واقعی و بررسی سوابق طراحی شده است."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "موتور پیش‌بینی چه تفاوتی با حدس قطعی جهت بازار دارد؟",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "تمرکز موتور پیش‌بینی بر ترسیم بازه‌های احتمالی نوسان، تایمینگ و سنجش شواهد است تا به تریدر در درک دامنه حرکت و تعیین حدود منطقی کمک کند، نه ارائه تضمین یا سیگنال قطعی سود."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    /* Font & Design Tokens — Apple Glassmorphic Minimalism (Dark Default + Light Mode) */
+    @font-face {
+      font-family: 'IRANYekanXCustom';
+      src: local('IRANYekanXVF'), local('IRANYekanX'), local('Vazirmatn');
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    :root {
+      --font-sans: 'IRANYekanXCustom', 'Vazirmatn', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --transition-fast: 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
+      --transition-smooth: 280ms cubic-bezier(0.22, 1, 0.36, 1);
+      --header-h: 72px;
+    }
+
+    :root[data-theme="dark"] {
+      --bg-canvas: #090a0f;
+      --bg-grad-1: radial-gradient(circle at 12% 8%, rgba(10, 132, 255, 0.14), transparent 45%);
+      --bg-grad-2: radial-gradient(circle at 88% 14%, rgba(94, 92, 230, 0.13), transparent 44%);
+      --bg-grad-3: radial-gradient(circle at 50% 95%, rgba(48, 209, 88, 0.08), transparent 52%);
+      --surface-glass: rgba(20, 22, 29, 0.72);
+      --surface-glass-strong: rgba(26, 29, 38, 0.86);
+      --surface-card: rgba(255, 255, 255, 0.035);
+      --surface-card-hover: rgba(255, 255, 255, 0.062);
+      --surface-subtle: rgba(255, 255, 255, 0.05);
+      --border-hairline: rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.17);
+      --ink-primary: #f5f5f7;
+      --ink-secondary: rgba(245, 245, 247, 0.74);
+      --ink-muted: rgba(245, 245, 247, 0.52);
+      --accent-blue: #0a84ff;
+      --accent-indigo: #5e5ce6;
+      --accent-green: #30d158;
+      --accent-amber: #ff9f0a;
+      --accent-gold: #ffd60a;
+      --accent-rose: #ff453a;
+      --highlight-bg: rgba(255, 214, 10, 0.24);
+      --highlight-ink: #fff3b0;
+      --shadow-elevated: 0 22px 54px rgba(0, 0, 0, 0.42);
+      --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.24);
+    }
+
+    :root[data-theme="light"] {
+      --bg-canvas: #f4f5f8;
+      --bg-grad-1: radial-gradient(circle at 12% 8%, rgba(0, 122, 255, 0.09), transparent 45%);
+      --bg-grad-2: radial-gradient(circle at 88% 14%, rgba(88, 86, 214, 0.08), transparent 44%);
+      --bg-grad-3: radial-gradient(circle at 50% 95%, rgba(40, 205, 65, 0.06), transparent 52%);
+      --surface-glass: rgba(255, 255, 255, 0.78);
+      --surface-glass-strong: rgba(255, 255, 255, 0.92);
+      --surface-card: rgba(255, 255, 255, 0.68);
+      --surface-card-hover: rgba(255, 255, 255, 0.92);
+      --surface-subtle: rgba(15, 23, 42, 0.045);
+      --border-hairline: rgba(15, 23, 42, 0.09);
+      --border-strong: rgba(15, 23, 42, 0.16);
+      --ink-primary: #111318;
+      --ink-secondary: rgba(17, 19, 24, 0.76);
+      --ink-muted: rgba(17, 19, 24, 0.54);
+      --accent-blue: #007aff;
+      --accent-indigo: #5856d6;
+      --accent-green: #248a3d;
+      --accent-amber: #c96a00;
+      --accent-gold: #b28700;
+      --accent-rose: #d70015;
+      --highlight-bg: rgba(255, 204, 0, 0.34);
+      --highlight-ink: #111318;
+      --shadow-elevated: 0 20px 46px rgba(15, 23, 42, 0.09);
+      --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-family: var(--font-sans);
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--bg-canvas);
+      background-image: var(--bg-grad-1), var(--bg-grad-2), var(--bg-grad-3);
+      background-attachment: fixed;
+      color: var(--ink-primary);
+      font-family: var(--font-sans);
+      line-height: 1.85;
+      overflow-x: hidden;
+      transition: background-color var(--transition-smooth), color var(--transition-smooth);
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Skip Link for Accessibility */
+    .skip-link {
+      position: fixed;
+      top: -100px;
+      right: 16px;
+      z-index: 100;
+      background: var(--accent-blue);
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      text-decoration: none;
+      transition: top var(--transition-fast);
+    }
+    .skip-link:focus {
+      top: 14px;
+      outline: 2px solid #ffffff;
+      outline-offset: 2px;
+    }
+
+    /* Top Reading Progress Bar */
+    .progress-track {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      z-index: 60;
+      background: transparent;
+      pointer-events: none;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-indigo), var(--accent-green));
+      transition: width 90ms linear;
+    }
+
+    /* Top Glassmorphic Header */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      min-height: var(--header-h);
+      background: var(--surface-glass-strong);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border-bottom: 1px solid var(--border-hairline);
+    }
+
+    .glass-panel {
+      background: var(--surface-glass);
+      backdrop-filter: blur(22px) saturate(150%);
+      -webkit-backdrop-filter: blur(22px) saturate(150%);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-card);
+    }
+
+    .glass-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+    }
+    .glass-card:hover {
+      background: var(--surface-card-hover);
+      border-color: var(--border-strong);
+    }
+
+    .glass-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-hairline);
+      color: var(--ink-primary);
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--transition-fast);
+    }
+    .glass-btn:hover {
+      background: var(--surface-card-hover);
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+    .glass-btn:active {
+      transform: translateY(0);
+    }
+    .glass-btn.active,
+    .glass-btn[aria-pressed="true"] {
+      background: rgba(10, 132, 255, 0.16);
+      border-color: rgba(10, 132, 255, 0.45);
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    /* Level Filter Pills */
+    .level-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-hairline);
+      color: var(--ink-secondary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+    .level-pill:hover {
+      border-color: var(--border-strong);
+      color: var(--ink-primary);
+    }
+    .level-pill.is-active {
+      background: linear-gradient(135deg, rgba(10, 132, 255, 0.22), rgba(94, 92, 230, 0.22));
+      border-color: rgba(10, 132, 255, 0.5);
+      color: var(--ink-primary);
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(10, 132, 255, 0.16);
+    }
+
+    /* Route Chip Badge */
+    .route-chip {
+      display: inline-block;
+      direction: ltr;
+      unicode-bidi: isolate;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.78rem;
+      padding: 1px 7px;
+      border-radius: 7px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-hairline);
+      color: var(--accent-blue);
+      font-weight: 500;
+    }
+
+    /* Search Highlight Mark */
+    mark.search-hit {
+      background: var(--highlight-bg);
+      color: var(--highlight-ink);
+      padding: 1px 4px;
+      border-radius: 5px;
+      font-weight: 600;
+    }
+
+    /* Sidebar Navigation Item */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      text-align: right;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--ink-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+      line-height: 1.5;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .nav-item:hover {
+      background: var(--surface-subtle);
+      color: var(--ink-primary);
+    }
+    .nav-item.is-current {
+      background: rgba(10, 132, 255, 0.14);
+      border-color: rgba(10, 132, 255, 0.36);
+      color: var(--ink-primary);
+      font-weight: 600;
+    }
+
+    /* Mobile Drawer */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-fast);
+    }
+    .drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .mobile-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(86vw, 350px);
+      z-index: 55;
+      background: var(--surface-glass-strong);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border-left: 1px solid var(--border-hairline);
+      transform: translateX(100%);
+      transition: transform var(--transition-smooth);
+      overflow-y: auto;
+      padding: 20px 16px 36px;
+    }
+    .mobile-drawer.open {
+      transform: translateX(0);
+    }
+
+    /* Toast Notification Banner (no alert/confirm) */
+    .toast-banner {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%) translateY(24px);
+      z-index: 80;
+      background: var(--surface-glass-strong);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-strong);
+      color: var(--ink-primary);
+      padding: 11px 20px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-elevated);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-fast), transform var(--transition-smooth);
+      max-width: calc(100vw - 32px);
+      text-align: center;
+    }
+    .toast-banner.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Custom Scrollbar for Subtle Polish */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.25);
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.42);
+    }
+
+    @media print {
+      .site-header, .drawer-backdrop, .mobile-drawer, .no-print, .toast-banner, .progress-track {
+        display: none !important;
+      }
+      body {
+        background: #ffffff !important;
+        color: #111111 !important;
+      }
+      .glass-panel, .glass-card {
+        background: #ffffff !important;
+        border: 1px solid #d4d4d8 !important;
+        box-shadow: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Skip Link -->
+  <a href="#mainContent" class="skip-link">پرش مستقیم به محتوای راهنما</a>
+
+  <!-- Top Reading Progress Bar -->
+  <div class="progress-track" aria-hidden="true">
+    <div class="progress-bar" id="readingProgress"></div>
+  </div>
+
+  <!-- Sticky Glassmorphic Header -->
+  <header class="site-header" id="topHeader">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand & Mobile Drawer Trigger -->
+      <div class="flex items-center gap-3 min-w-0">
+        <button
+          type="button"
+          id="openDrawerBtn"
+          class="lg:hidden glass-btn"
+          aria-label="باز کردن فهرست فصل‌ها"
+          aria-expanded="false"
+          aria-controls="mobileDrawer"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+          <span>فهرست</span>
+        </button>
+
+        <a href="#intro" id="brandHomeLink" class="flex items-center gap-3 no-underline text-inherit group">
+          <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 font-bold text-sm" style="background: linear-gradient(135deg, rgba(10,132,255,0.25), rgba(94,92,230,0.28)); border: 1px solid var(--border-strong); color: var(--accent-blue);">
+            BTCS
+          </div>
+          <div class="min-w-0">
+            <div class="text-sm sm:text-base font-bold truncate" style="color: var(--ink-primary);">
+              راهنمای جامع BTCS
+            </div>
+            <div class="text-xs truncate" style="color: var(--ink-muted);">
+              پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها · ۸ فصل
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Search Input + Actions -->
+      <div class="flex items-center gap-2 sm:gap-2.5 flex-1 sm:flex-initial justify-end max-w-full sm:max-w-md">
+        <div class="relative flex-1 sm:w-64">
+          <label for="guideSearchInput" class="sr-only">جستجو در مقدمه و ۸ فصل راهنما</label>
+          <input
+            type="search"
+            id="guideSearchInput"
+            placeholder="جستجو در فصل‌ها، ابزارها یا مسیرها… (/)"
+            class="w-full h-10 pr-9 pl-8 rounded-xl text-sm outline-none transition"
+            style="background: var(--surface-subtle); border: 1px solid var(--border-hairline); color: var(--ink-primary);"
+            autocomplete="off"
+          />
+          <span class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" style="color: var(--ink-muted);" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+          <button
+            type="button"
+            id="clearSearchBtn"
+            title="پاک کردن جستجو"
+            aria-label="پاک کردن جستجو"
+            class="hidden absolute left-2 top-1/2 -translate-y-1/2 text-xs px-1.5 py-0.5 rounded-md cursor-pointer"
+            style="color: var(--ink-muted); background: transparent; border: 0;"
+          >
+            ✕
+          </button>
+        </div>
+
+        <button
+          type="button"
+          id="themeToggleBtn"
+          class="glass-btn"
+          aria-label="تغییر تم روشن یا تیره"
+          title="تغییر تم روشن / تیره"
+        >
+          <span id="themeIcon" aria-hidden="true">☀️</span>
+          <span class="hidden md:inline" id="themeLabel">تم روشن</span>
+        </button>
+
+        <button
+          type="button"
+          id="copyLinkBtn"
+          class="glass-btn"
+          aria-label="کپی لینک بخش فعلی"
+          title="کپی لینک بخش فعلی"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span class="hidden sm:inline">کپی لینک</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Navigation Drawer & Backdrop -->
+  <div class="drawer-backdrop" id="drawerBackdrop" aria-hidden="true"></div>
+  <aside
+    class="mobile-drawer"
+    id="mobileDrawer"
+    aria-label="فهرست فصل‌های راهنما (موبایل)"
+    aria-hidden="true"
+  >
+    <div class="flex items-center justify-between pb-3 mb-4" style="border-bottom: 1px solid var(--border-hairline);">
+      <span class="font-bold text-sm">فهرست مقدمه و ۸ فصل</span>
+      <button type="button" id="closeDrawerBtn" class="glass-btn" aria-label="بستن فهرست">✕</button>
+    </div>
+    <div id="mobileNavContainer" class="space-y-1"></div>
+  </aside>
+
+  <!-- Main Workspace Layout -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-16">
+    <!-- Filter & Status Bar -->
+    <section class="glass-panel p-4 sm:p-5 mb-6" aria-label="فیلتر سطح معامله‌گر و وضعیت مطالعه">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <!-- Trader Level Filter Tabs -->
+        <div>
+          <div class="text-xs font-medium mb-2" style="color: var(--ink-muted);">
+            نمایش محتوا بر اساس سطح تجربه تریدر:
+          </div>
+          <div class="flex flex-wrap items-center gap-2" role="tablist" aria-label="سطح تجربه تریدر">
+            <button type="button" role="tab" aria-selected="true" data-level="all" class="level-pill is-active">
+              <span>همه سطوح</span>
+            </button>
+            <button type="button" role="tab" aria-selected="false" data-level="beginner" class="level-pill">
+              <span>🌱 تریدر تازه‌کار</span>
+            </button>
+            <button type="button" role="tab" aria-selected="false" data-level="intermediate" class="level-pill">
+              <span>📊 تریدر میان‌رده</span>
+            </button>
+            <button type="button" role="tab" aria-selected="false" data-level="advanced" class="level-pill">
+              <span>⚡ تریدر پیشرفته و مدیر سیستم</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Reading Progress & Bookmark Summary -->
+        <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm" style="color: var(--ink-secondary);">
+          <div class="px-3.5 py-2 rounded-xl tabular-nums" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline);">
+            مطالعه‌شده: <strong id="readCountLabel" style="color: var(--accent-green);">۰ از ۹</strong> بخش
+          </div>
+          <div class="px-3.5 py-2 rounded-xl tabular-nums" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline);">
+            نشان‌شده‌ها: <strong id="bookmarkCountLabel" style="color: var(--accent-amber);">۰</strong>
+          </div>
+          <button type="button" id="resetProgressBtn" class="glass-btn text-xs" style="min-height: 36px; padding: 6px 12px;">
+            ریست وضعیت مطالعه
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Search Status Bar (shown when searching) -->
+      <div id="searchStatusBar" class="hidden mt-4 pt-3 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm" style="border-top: 1px solid var(--border-hairline); color: var(--ink-secondary);">
+        <div id="searchSummaryText"></div>
+        <div class="flex items-center gap-2">
+          <button type="button" id="prevHitBtn" class="glass-btn text-xs" style="min-height: 32px; padding: 4px 10px;">مورد قبلی</button>
+          <button type="button" id="nextHitBtn" class="glass-btn text-xs" style="min-height: 32px; padding: 4px 10px;">مورد بعدی</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Two-Column Grid: Desktop Sidebar TOC + Main Article Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <!-- Desktop Sticky Table of Contents -->
+      <aside class="hidden lg:block lg:col-span-4 xl:col-span-3 sticky top-24" aria-label="فهرست فصل‌های راهنما">
+        <nav class="glass-panel p-4" aria-label="ناوبری فصل‌ها">
+          <div class="flex items-center justify-between px-2 pb-3 mb-2" style="border-bottom: 1px solid var(--border-hairline);">
+            <span class="text-xs font-bold uppercase tracking-wider" style="color: var(--ink-muted);">فهرست راهنما</span>
+            <span class="text-xs tabular-nums" style="color: var(--ink-muted);">مقدمه + ۸ فصل</span>
+          </div>
+          <div id="desktopNavContainer" class="space-y-1 max-h-[68vh] overflow-y-auto pl-1"></div>
+        </nav>
+      </aside>
+
+      <!-- Primary Guide Content -->
+      <main id="mainContent" tabindex="-1" class="lg:col-span-8 xl:col-span-9 space-y-6 outline-none">
+        <!-- Intro Post Article -->
+        <article id="intro" data-section-id="intro" class="glass-panel p-6 sm:p-8 scroll-mt-24">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold" style="background: rgba(10,132,255,0.15); color: var(--accent-blue); border: 1px solid rgba(10,132,255,0.35);">
+                پست اینترو و معرفی جامع
+              </span>
+              <span class="px-3 py-1 rounded-full text-xs" style="background: var(--surface-subtle); color: var(--ink-muted); border: 1px solid var(--border-hairline);">
+                به‌روزرسانی ۱۴۰۵ · ۲۰۲۶
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" class="glass-btn bookmark-toggle text-xs" data-bookmark-id="intro" aria-pressed="false" style="min-height: 34px; padding: 5px 11px;">
+                <span class="bm-icon">☆</span>
+                <span class="bm-text">نشان کردن</span>
+              </button>
+              <button type="button" class="glass-btn read-toggle text-xs" data-read-id="intro" aria-pressed="false" style="min-height: 34px; padding: 5px 11px;">
+                <span class="rd-icon">○</span>
+                <span class="rd-text">خوانده شد</span>
+              </button>
+            </div>
+          </div>
+
+          <h1 class="text-2xl sm:text-3xl font-extrabold leading-snug mb-4" style="color: var(--ink-primary);">
+            راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS)
+          </h1>
+
+          <div class="space-y-4 text-sm sm:text-base" style="color: var(--ink-secondary);">
+            <p class="searchable-text">
+              بازار رمزارزها به‌دلیل حرکت سریع قیمت‌ها و فضای پرهیاهوی سیگنال‌فروشی، بیش از هر چیز به
+              <strong>ابزار سنجش واقع‌گرایانه، تمرین بدون ریسک و انضباط تصمیم‌گیری</strong> نیاز دارد. این پلتفرم صرافی نیست؛ نه سفارش واقعی ثبت می‌کند و نه دارایی شما را نگه می‌دارد. هدف آن این است که داده‌های بازار را در کنار ابزارهای تکنیکال، مدل‌های آماری و هوش مصنوعی، شبیه‌ساز معاملاتی و سوابق عملکرد قرار دهد تا بتوانید رفتار بازار را بهتر درک کنید و استراتژی‌ها را در عمل بیازمایید.
+            </p>
+            <p class="searchable-text">
+              این مجموعه راهنما به زبان ساده تا پیشرفته نوشته شده تا به شما نشان دهد هر بخش از پلتفرم در عمل چه کمکی به یک تریدر می‌کند.
+            </p>
+          </div>
+
+          <!-- Target Audiences Grid -->
+          <section class="mt-7" aria-label="مخاطبان این راهنما">
+            <h2 class="text-lg sm:text-xl font-bold mb-3" style="color: var(--ink-primary);">
+              این راهنما برای چه کسانی نوشته شده است؟
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+              <div class="glass-card p-4" data-level-block="beginner">
+                <div class="font-bold text-sm mb-1.5" style="color: var(--accent-green);">🌱 تریدر تازه‌کار</div>
+                <p class="text-sm m-0 searchable-text" style="color: var(--ink-secondary);">
+                  برای اینکه بدون گم شدن در نمودارها و وعده‌های اغراق‌آمیز، با مفاهیم پایه، خواندن وضعیت بازار، حد ضرر و تمرین با سرمایه مجازی آشنا شوید.
+                </p>
+              </div>
+              <div class="glass-card p-4" data-level-block="intermediate">
+                <div class="font-bold text-sm mb-1.5" style="color: var(--accent-blue);">📊 تریدر میان‌رده</div>
+                <p class="text-sm m-0 searchable-text" style="color: var(--ink-secondary);">
+                  برای اینکه سرعت بررسی بازار را بالا ببرید، رمزارزها و صرافی‌ها را مقایسه کنید، اثر نوسان و مشتقات را بهتر بفهمید و انتخاب‌هایتان را بر پایه سوابق و تست‌ها دقیق‌تر کنید.
+                </p>
+              </div>
+              <div class="glass-card p-4" data-level-block="advanced">
+                <div class="font-bold text-sm mb-1.5" style="color: var(--accent-indigo);">⚡ تریدر پیشرفته و مدیر سیستم</div>
+                <p class="text-sm m-0 searchable-text" style="color: var(--ink-secondary);">
+                  برای اینکه خطای تصمیم و رفتار هیجانی را کم کنید، روی کنترل ریسک و انضباط اجرا تمرکز داشته باشید و (در صورت مدیریت پلتفرم) آمار، کاربران، تنظیمات و وظایف سیستم را پایش کنید.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 8 Chapters Quick Index -->
+          <section class="mt-7" aria-label="فهرست فصل‌های راهنما">
+            <h2 class="text-lg sm:text-xl font-bold mb-3" style="color: var(--ink-primary);">
+              فهرست فصل‌های راهنما
+            </h2>
+            <p class="text-sm mb-3.5 searchable-text" style="color: var(--ink-secondary);">
+              در ادامه، تمام امکانات پلتفرم در <strong>۸ فصل</strong> منظم و کاربردی ارائه می‌شوند:
+            </p>
+            <div id="introChapterIndex" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+          </section>
+
+          <!-- Golden Rule / Pre-Start Warning -->
+          <aside class="mt-7 p-4 sm:p-5 rounded-2xl" style="background: rgba(255, 159, 10, 0.10); border: 1px solid rgba(255, 159, 10, 0.34);">
+            <h2 class="text-base sm:text-lg font-bold mb-2" style="color: var(--accent-amber);">
+              پیش از شروع یک یادآوری مهم
+            </h2>
+            <p class="text-sm sm:text-base m-0 searchable-text" style="color: var(--ink-secondary);">
+              هیچ نمودار، اندیکاتور، اسکنر یا مدل هوش مصنوعی <strong>تضمین سود</strong> نیست. از امکانات این پلتفرم به‌عنوان ابزار کمک‌تحلیل، آزمایش فرض‌ها و تقویت انضباط معاملاتی استفاده کنید و همواره حد ضرر، اندازه منطقی پوزیشن و مدیریت ریسک را در اولویت قرار دهید.
+            </p>
+            <p class="text-xs sm:text-sm mt-2.5 mb-0 searchable-text" style="color: var(--ink-muted);">
+              در ادامه، فصل‌های این راهنما یکی‌یکی منتشر می‌شوند؛ می‌توانید مستقیم سراغ فصل اول بروید یا هر فصلی که بیشتر به نیاز فعلی شما نزدیک است را انتخاب کنید.
+            </p>
+          </aside>
+        </article>
+
+        <!-- Dynamic 8 Chapters Container -->
+        <div id="chaptersContainer" class="space-y-6"></div>
+
+        <!-- Bottom Prev/Next Navigation Bar -->
+        <nav class="glass-panel p-4 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 no-print" aria-label="پیمایش بین بخش‌های راهنما">
+          <button type="button" id="prevSectionBtn" class="glass-btn justify-between sm:justify-center px-5 py-3">
+            <span>← بخش قبلی</span>
+            <span id="prevSectionLabel" class="text-xs opacity-75"></span>
+          </button>
+          <div class="text-center text-xs sm:text-sm py-1 tabular-nums" style="color: var(--ink-muted);" id="currentSectionIndicator">
+            بخش فعلی: مقدمه
+          </div>
+          <button type="button" id="nextSectionBtn" class="glass-btn justify-between sm:justify-center px-5 py-3">
+            <span id="nextSectionLabel" class="text-xs opacity-75"></span>
+            <span>بخش بعدی →</span>
+          </button>
+        </nav>
+
+        <!-- Semantic Footer with 2026 SEO & Risk Notice -->
+        <footer class="glass-panel p-6 text-xs sm:text-sm space-y-3" style="color: var(--ink-muted);">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="font-semibold" style="color: var(--ink-secondary);">
+              راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS)
+            </div>
+            <div class="tabular-nums">
+              میانبرها: <span class="route-chip">/</span> برای جستجو · <span class="route-chip">Alt+←</span> / <span class="route-chip">Alt+→</span> برای جابه‌جایی فصل‌ها
+            </div>
+          </div>
+          <p class="m-0">
+            هشدار ریسک: این محتوا صرفاً جنبه آموزشی و آشنایی با ابزارهای تحلیلی و شبیه‌ساز دارد و توصیه یا تضمین سرمایه‌گذاری محسوب نمی‌شود. پیش از هرگونه تصمیم مالی، قوانین ریسک و حد تحمل زیان خود را بررسی کنید.
+          </p>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast Banner -->
+  <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
+
+  <script>
+    /**
+     * BTCS Comprehensive User Guide Application (2026 SEO + Glassmorphic Reader)
+     * Single-file self-contained implementation with:
+     * - Full Intro Post + All 8 Chapters tailored for Beginner, Intermediate, and Advanced/Admin levels
+     * - Dynamic JSON-LD (TechArticle, BreadcrumbList, FAQPage) & Meta Tags synchronization
+     * - Instant keyword search across all sections with highlighting and hit stepping
+     * - Persistent localStorage state for theme, trader level filter, read chapters, and bookmarks
+     */
+    (function () {
+      'use strict';
+
+      const STORAGE_KEYS = {
+        theme: 'btcs_guide_theme_v1',
+        level: 'btcs_guide_level_v1',
+        read: 'btcs_guide_read_v1',
+        bookmarks: 'btcs_guide_bookmarks_v1',
+        lastSection: 'btcs_guide_last_section_v1'
+      };
+
+      const LEVELS = [
+        { id: 'beginner', title: '۱. تریدر تازه‌کار', badge: 'تازه‌کار', accent: 'var(--accent-green)' },
+        { id: 'intermediate', title: '۲. تریدر میان‌رده', badge: 'میان‌رده', accent: 'var(--accent-blue)' },
+        { id: 'advanced', title: '۳. تریدر پیشرفته و مدیر سیستم', badge: 'پیشرفته و مدیر', accent: 'var(--accent-indigo)' }
+      ];
+
+      /**
+       * Complete 8 Chapters Content (preserving every feature, route, and nuance
+       * without repeating platform architecture in Chapter 1)
+       */
+      const CHAPTERS = [
+        {
+          id: 'chapter-1',
+          num: 1,
+          shortTitle: 'فصل ۱: بازارها و ناوبری',
+          routeLabel: '#/',
+          title: 'فصل اول: بازارها (`#/`) و ناوبری — امکانات چه کمکی به تریدر می‌کنند؟',
+          summaryTitle: 'جمع‌بندی فصل اول برای تریدر',
+          introLead: 'در این فصل، تمرکز صرفاً روی این است که امکانات بخش بازارها (`#/`) و منوهای اصلی در عمل به تریدر چه کمکی می‌کنند؛ از کسی که تازه نمودار می‌بیند تا معامله‌گری که روزانه دنبال فرصت و نظم اجرایی است.',
+          levels: {
+            beginner: {
+              heading: '۱. تریدر تازه‌کار: از سردرگمی به یک نگاه منظم',
+              lead: 'وقتی تازه وارد بازار می‌شوید، بزرگ‌ترین مشکل این است که نمی‌دانید اول باید به کجا نگاه کنید و چطور قیمت‌ها را بخوانید. امکانات این بخش کمک می‌کنند قدم اول را درست بردارید:',
+              points: [
+                {
+                  title: 'فهمیدن فضای کلی بازار قبل از انتخاب ارز:',
+                  text: 'دیدن آمار کلی بازار و شاخص ترس و طمع کمک می‌کند متوجه شوید بازار در حالت هیجان خرید است، ترس و فروش هیجانی دارد یا در وضعیت میانه است. این کار جلوی خریدهای عجولانه در اوج هیجان را می‌گیرد.'
+                },
+                {
+                  title: 'خواندن قیمت‌ها به زبان و واحد پول خودتان:',
+                  text: 'امکان تغییر واحد ارز نمایشی، زبان و تم باعث می‌شود عددها برایتان ملموس‌تر باشند و کمتر در محاسبه ذهنی اشتباه کنید.'
+                },
+                {
+                  title: 'متمرکز ماندن روی چند ارز محدود:',
+                  text: 'به جای سرگردانی بین صدها رمزارز، ساختن لیست پیگیری (`Watchlist`) کمک می‌کند چند ارز منتخب را زیر نظر بگیرید و یاد بگیرید چطور رفتار می‌کنند.'
+                },
+                {
+                  title: 'رفتن مستقیم به صفحه هر ارز:',
+                  text: 'با انتخاب هر رمزارز از جدول بازار، سریع وارد صفحه تحلیل همان ارز می‌شوید تا از همان نقطه یادگیری و بررسی نمودار را شروع کنید.'
+                },
+                {
+                  title: 'جابه‌جایی سرراست بین بخش‌ها:',
+                  text: 'وجود منوی اصلی و دسترسی موبایل کمک می‌کند بدون گم شدن، از نمای بازار به بخش‌هایی مثل معاملات، دستیار هوشمند، اسکنر، سابقه عملکرد، فیوچرز، مقایسه، ابزارها، صرافی‌ها، کیف پول و اعلان‌ها سر بزنید.'
+                }
+              ]
+            },
+            intermediate: {
+              heading: '۲. تریدر میان‌رده: صرفه‌جویی در زمان و ساخت روال روزانه',
+              lead: 'وقتی با مفاهیم پایه آشنا شدید، چالش اصلی وقت‌گیر بودن بررسی‌ها و تصمیم‌های پراکنده است. امکانات این بخش به تریدر میان‌رده کمک می‌کنند سریع‌تر و منظم‌تر عمل کند:',
+              points: [
+                {
+                  title: 'پیدا کردن سریع‌تر ارزهای دارای حرکت:',
+                  text: 'مرتب‌سازی ستون‌ها و فیلترهای جدول بازار کمک می‌کند بدون باز کردن ده‌ها نمودار، ارزهایی را که بیشترین تغییر یا توجه را دارند سریع‌تر پیدا کنید.'
+                },
+                {
+                  title: 'ساختن یک روال مشخص قبل از معامله:',
+                  text: 'می‌توانید یک عادت ثابت بسازید؛ مثلاً اول وضعیت کل بازار و ترس و طمع را ببینید، سپس لیست پیگیری را چک کنید و بعد برای غربال دقیق‌تر سراغ اسکنر یا مقایسه بروید. این نظم باعث می‌شود تصمیم‌ها کمتر سلیقه‌ای باشند.'
+                },
+                {
+                  title: 'ادامه تمرین و بررسی حتی در زمان قطعی لحظه‌ای:',
+                  text: 'اگر ارتباط با فید زنده موقتاً قطع شود، ورود به حالت دمو کمک می‌کند کارتان متوقف نشود و بتوانید بدون وقفه بررسی‌هایتان را ادامه دهید و به محض وصل شدن فید، به داده‌های زنده برگردید.'
+                },
+                {
+                  title: 'دسترسی سریع در هر موقعیت:',
+                  text: 'دسترسی روان از دسکتاپ و موبایل باعث می‌شود وقتی قیمت‌ها حرکت می‌کنند، سریع به ابزارهای مرتبط دسترسی داشته باشید.'
+                }
+              ]
+            },
+            advanced: {
+              heading: '۳. تریدر پیشرفته: انضباط، کاهش خطای تصمیم و پیوستگی داده‌ها',
+              lead: 'برای تریدر باتجربه‌تر، مزیت این امکانات در سرعت سوئیچ بین نماها، حفظ نظم شخصی و تفکیک داده‌ها است:',
+              points: [
+                {
+                  title: 'نقطه شروع سریع برای چرخه تحلیل چندلایه:',
+                  text: 'از نمای بازار می‌توانید با کمترین کلیک بین قیمت لحظه‌ای، مقایسه چند ارز، فیوچرز، اسکنر و سابقه عملکرد جابه‌جا شوید تا یک ایده را از چند زاویه بسنجید، نه فقط از یک چارت.'
+                },
+                {
+                  title: 'حفظ لیست پیگیری و تنظیمات در طول زمان:',
+                  text: 'نگهداری واچ‌لیست و تنظیمات نمایشی — و همگام‌سازی آن‌ها با حساب کاربری — کمک می‌کند محیط کاری‌تان بین دستگاه‌ها و نشست‌های مختلف یکپارچه بماند و درگیر دوباره تنظیم کردن نشوید.'
+                },
+                {
+                  title: 'جلوگیری از تصمیم‌های هیجانی در نوسان‌های تند:',
+                  text: 'داشتن یک نمای کلی و بی‌طرف از وضعیت بازار قبل از ورود به صفحات تخصصی یا شبیه‌ساز معاملات کمک می‌کند تحت تأثیر یک کندل ناگهانی وارد پوزیشن‌های نسنجیده نشوید.'
+                },
+                {
+                  title: 'جداسازی فضای تحلیل و تمرین از صرافی:',
+                  text: 'چون پلتفرم صرافی نیست، به تریدر کمک می‌کند تحلیل، مقایسه و تمرین را در یک محیط مجزا انجام دهد و با ذهن آرام‌تر تصمیم بگیرد.'
+                }
+              ]
+            }
+          },
+          summary: [
+            { badge: 'تازه‌کار', text: 'یاد می‌گیرد اول حال‌وهوای بازار را بفهمد، واحد نمایش را به نفع خودش تنظیم کند و روی چند ارز محدود تمرکز کند.' },
+            { badge: 'میان‌رده', text: 'زمان بررسی بازار را کم می‌کند، یک روال ثابت می‌سازد و در زمان اختلال ارتباط هم ابزار را از دست نمی‌دهد.' },
+            { badge: 'پیشرفته', text: 'سریع‌تر بین نماهای تحلیلی حرکت می‌کند، محیط و لیست‌هایش را یکپارچه نگه می‌دارد و تصمیم‌هایش را منظم‌تر می‌کند.' }
+          ]
+        },
+        {
+          id: 'chapter-2',
+          num: 2,
+          shortTitle: 'فصل ۲: تحلیل تک‌ارزی و نمودارها',
+          routeLabel: '#/coin/...',
+          title: 'فصل دوم: تحلیل تک‌ارزی و نمودارها (`#/coin/...`) — امکانات چه کمکی به تریدر می‌کنند؟',
+          summaryTitle: 'جمع‌بندی فصل دوم برای تریدر',
+          introLead: 'وقتی وارد صفحه اختصاصی یک ارز می‌شوید، از فضای عمومی بازار فاصله می‌گیرید و به «میز کار دقیق» همان رمزارز می‌رسید. در این صفحه، نمودار، اندیکاتورها، سیگنال و پلن معاملاتی، پیش‌بینی و سایر تب‌های تحلیلی کنار هم قرار گرفته‌اند تا ببینید روی یک ارز خاص در عمل چه می‌گذرد.',
+          levels: {
+            beginner: {
+              heading: '۱. تریدر تازه‌کار: یادگیری خواندن چارت و پلن بدون حدس‌زدن',
+              lead: 'وقتی تازه می‌خواهید یک ارز را تحلیل کنید، بیشترین خطا این است که صرفاً به یک کندل سبز یا قرمز نگاه می‌کنید و وارد معامله می‌شوید. امکانات صفحه تک‌ارزی کمک می‌کنند با چارچوب جلو بروید:',
+              points: [
+                {
+                  title: 'فهمیدن وضعیت ارز به زبان ساده و خلاصه:',
+                  text: 'بخش خلاصه وضعیت در تایم‌فریم انتخابی و نمایش وضعیت سیگنال به زبان ساده‌تر کمک می‌کند بفهمید الان روند، مومنتوم یا شرایط ارز در چه حالتی است، به‌جای اینکه در میان ده‌ها عدد گم شوید.'
+                },
+                {
+                  title: 'شناختن مفهوم «منطقه ورود، حد ضرر و اهداف»:',
+                  text: 'وجود پلن معاملاتی با محدوده ورود، حد ضرر و اهداف (یا نمایش دلیل اینکه چرا هنوز باید منتظر تریگر بمانید) به تازه‌کار یاد می‌دهد که معامله یعنی «سناریو و حد ضرر مشخص»، نه صرفاً دکمه خرید زدن.'
+                },
+                {
+                  title: 'درک تفاوت استیبل‌کوین‌ها با ارزهای نوسانی:',
+                  text: 'اگر ارزی استیبل‌کوین باشد، سیستم هشدار می‌دهد که ستاپ خرید و فروش یا پیش‌بینی و ثبت در سابقه یادگیری برای آن معنایی ندارد تا کاربر وقتش را روی ابزار نامرتبط نگذارد.'
+                },
+                {
+                  title: 'آزمایش اولیه با حالت دمو قبل از درگیر شدن:',
+                  text: 'امکان معامله آزمایشی (Demo) در پنجره معامله کمک می‌کند اول دستتان راه بیفتد و اثر حرکت قیمت را روی یک سناریوی آزمایشی ببینید.'
+                }
+              ]
+            },
+            intermediate: {
+              heading: '۲. تریدر میان‌رده: تایید هم‌گرایی، تست گذشته و بررسی عمق بازار',
+              lead: 'وقتی با اندیکاتورها و تایم‌فریم‌ها آشنا شدید، چالش اصلی این است که یک ایده را در گذشته آزمایش کنید و صرفاً به یک زاویه دید بسنده نکنید:',
+              points: [
+                {
+                  title: 'سنجش ایده روی داده‌های گذشته با تب `Backtest`:',
+                  text: 'به جای اینکه ذهنی بگویید «این ستاپ خوب جواب می‌دهد»، می‌توانید در تب آزمایش گذشته ببینید منطق معاملاتی در تاریخچه همان ارز و تایم‌فریم چطور عمل کرده است.'
+                },
+                {
+                  title: 'بررسی هم‌گرایی، هندسه و تایمینگ حرکت:',
+                  text: 'کمک می‌کند صرفاً با یک اندیکاتور تصمیم نگیرید و ببینید ساختار قیمت، هم‌گرایی شرایط و چشم‌انداز زمانی/دوام حرکت با هم هم‌خوانی دارند یا خیر.'
+                },
+                {
+                  title: 'مقایسه الگوها، تاریخچه و دوره‌ها:',
+                  text: 'تب‌های مقایسه الگوها، تاریخچه و چرخه‌ها و مقایسه دوره‌ها کمک می‌کنند رفتار فعلی ارز را با دوره‌های گذشته و الگوهای مشابه بسنجید و بفهمید آیا حرکت فعلی شبیه یک چرخه آشناست یا غیرعادی است.'
+                },
+                {
+                  title: 'دیدن دفتر سفارش (`Order Book`)، صرافی‌ها و اخبار همان ارز:',
+                  text: 'بررسی دفتر سفارش و مقایسه صرافی‌ها کمک می‌کند نقدینگی و رفتار سفارش‌ها را درک کنید، و تب اخبار کمک می‌کند اگر خبر مهمی روی همان ارز اثر گذاشته، بی‌خبر نمانید.'
+                }
+              ]
+            },
+            advanced: {
+              heading: '۳. تریدر پیشرفته: سنجش کیفیت سیگنال، ریسک و خودارزیابی مستمر',
+              lead: 'برای تریدر حرفه‌ای، صفحه هر ارز جای «جمع‌آوری شواهد و کنترل انضباط» است، نه صرفاً دیدن یک پیش‌بینی:',
+              points: [
+                {
+                  title: 'خوانش احتمالاتی و اطمینان جهت به‌جای قطعیت:',
+                  text: 'دیدن خروجی پیش‌بینی همراه با میزان اطمینان جهت و مدت دوام حرکت/تغییر روند کمک می‌کند پیش‌بینی را به‌عنوان «سناریوی احتمالاتی با حدود نوسان» در تحلیل خود بگنجانید، نه فرمان قطعی.'
+                },
+                {
+                  title: 'تشخیص زمان «صبر کردن» به جای معامله اجباری:',
+                  text: 'وقتی سیستم به جای پلن فعال، دلیل انتظار برای تریگر را نشان می‌دهد، برای تریدر باتجربه یک یادآور انضباطی است که در شرایط مبهم یا کم‌مزیت وارد معامله نشود.'
+                },
+                {
+                  title: 'ثبت، پیگیری و یادگیری از سوابق:',
+                  text: 'ارتباط صفحه ارز با ثبت سابقه نمایش پیش‌بینی‌ها، یادگیری و دفترچه ارزیابی کمک می‌کند تریدر بفهمد در کدام تایم‌فریم‌ها و شرایط بازار، خطای کمتری دارد و کجا باید محتاط‌تر باشد.'
+                },
+                {
+                  title: 'بررسی سریع از چند منظر بدون خروج از صفحه ارز:',
+                  text: 'وجود تب‌های متنوع (پیش‌بینی، الگوها، تاریخچه، اخبار، دوره‌ها، بک‌تست، دفتر سفارش، صرافی‌ها و درباره ارز) باعث می‌شود یک ارز را از زاویه تکنیکال، تاریخی، خبری و نقدینگی در یک جا جمع‌بندی کنید.'
+                }
+              ]
+            }
+          },
+          summary: [
+            { badge: 'تازه‌کار', text: 'یاد می‌گیرد چطور وضعیت ارز را ساده بخواند، پلن معاملاتی (ورود، حد ضرر، هدف) را بفهمد و اول با حالت دمو تمرین کند.' },
+            { badge: 'میان‌رده', text: 'با بک‌تست، مقایسه الگوها و دوره‌ها، دفتر سفارش و اخبار، تحلیلش را چندبعدی و واقع‌بینانه‌تر می‌کند.' },
+            { badge: 'پیشرفته', text: 'خروجی‌های احتمالاتی، زمان انتظار برای تریگر و سوابق ارزیابی را برای حفظ انضباط و کاهش معامله‌های کم‌کیفیت به کار می‌گیرد.' }
+          ]
+        },
+        {
+          id: 'chapter-3',
+          num: 3,
+          shortTitle: 'فصل ۳: اسکنر، مقایسه، فیوچرز و اخبار',
+          routeLabel: '#/scanner · #/compare · #/futures',
+          title: 'فصل سوم: اسکنر، اسکن بازار، مقایسه، فیوچرز، صرافی‌ها و اخبار — امکانات چه کمکی به تریدر می‌کنند؟',
+          summaryTitle: 'جمع‌بندی فصل سوم برای تریدر',
+          introLead: 'در فصل‌های قبل دیدید چطور می‌توان از نمای بازار شروع کرد و بعد سراغ تحلیل دقیق یک ارز رفت. در فصل سوم، ابزارهایی کنار هم قرار گرفته‌اند که به شما کمک می‌کنند در کل بازار دنبال فرصت بگردید، گزینه‌ها را کنار هم بسنجید و وضعیت مشتقات، صرافی‌ها و خبرها را زیر نظر بگیرید.',
+          levels: {
+            beginner: {
+              heading: '۱. تریدر تازه‌کار: پیدا کردن مسیر بدون غرق شدن در شلوغی بازار',
+              lead: 'وقتی تازه وارد بازار می‌شوید، نگاه کردن به همه ارزها یا همه شاخص‌ها هم‌زمان فقط خستگی و خطا می‌آورد. ابزارهای این بخش کمک می‌کنند فیلتر اول را ساده و هدفمند بزنید:',
+              points: [
+                {
+                  title: 'غربال سریع با اسکنر به‌جای باز کردن ده‌ها نمودار:',
+                  text: 'به جای اینکه ده‌ها صفحه ارز را یکی‌یکی باز کنید، اسکنر کمک می‌کند ارزهایی را که از نظر شرایط تکنیکال، سیگنال یا حرکت قیمت در وضعیت خاصی هستند سریع‌تر پیدا کنید.'
+                },
+                {
+                  title: 'خواندن اسکن بازار (`advice.js`) با نگاه محافظه‌کارانه:',
+                  text: 'دیدن بخش‌هایی مثل «قوی‌ترین شواهد بازار» و «ضعیف‌ترین خوانش‌ها» یا پیام‌هایی که می‌گویند هیچ ارزی از حد نصاب شواهد عبور نکرده است، به تازه‌کار یاد می‌دهد که همیشه «ورود» اجباری نیست و نبودِ مزیت روشن یعنی صبر کردن.'
+                },
+                {
+                  title: 'مقایسه ساده چند ارز محبوب در یک قاب:',
+                  text: 'مقایسه چند رمزارز کنار هم (مثلاً ارزهای شاخص یا آشنا) کمک می‌کند بفهمید کدام یک در یک بازه زمانی بیشتر رشد کرده یا نوسان بیشتری داشته است.'
+                },
+                {
+                  title: 'آگاهی از خبرهای مهم قبل از تصمیم:',
+                  text: 'بخش اخبار کمک می‌کند اگر یک رویداد یا خبر خاص روی بازار یا یک ارز اثر گذاشته، بدون خبر وارد معامله نشوید.'
+                }
+              ]
+            },
+            intermediate: {
+              heading: '۲. تریدر میان‌رده: کشف تضادها، نقدینگی و رفتار بین‌بازاری',
+              lead: 'وقتی با اصول پایه آشنا شدید، مزیت این ابزارها در بررسی هم‌زمان چند زاویه است تا یک ایده را در محیط واقعی‌تر محک بزنید:',
+              points: [
+                {
+                  title: 'مقایسه عملکرد، روند و الگوهای تاریخی در `#/compare`:',
+                  text: 'مقایسه چند رمزارز در بازه‌های زمانی مختلف و تطابق الگوهای گذشته کمک می‌کند ببینید آیا یک ارز نسبت به بقیه قوی‌تر است، عقب مانده یا الگوی مشابهی با گذشته تکرار می‌کند.'
+                },
+                {
+                  title: 'بررسی تفاوت قیمت و وضعیت بین صرافی‌ها (`#/exchanges`):',
+                  text: 'مقایسه داده‌ها میان صرافی‌های مختلف کمک می‌کند دید دقیق‌تری از رفتار بازار و تفاوت‌های جزئی قیمت یا نقدینگی داشته باشید.'
+                },
+                {
+                  title: 'درک فضای مشتقات در فیوچرز (`#/futures`):',
+                  text: 'دیدن معیارهایی مثل نرخ تأمین مالی (Funding Rate)، سود باز (Open Interest)، پوزیشن‌های لانگ/شورت و لیکوییدیشن‌ها کمک می‌کند بفهمید بازار چقدر اهرمی شده و احتمال نوسان‌های تند یا لیکویید شدن پوزیشن‌ها در کجاست.'
+                },
+                {
+                  title: 'فیلتر کردن خبرها بر اساس نماد یا موضوع:',
+                  text: 'امکان فیلتر سرتیترها یا تمرکز روی یک نماد کمک می‌کند سریع‌تر به خبرهای مرتبط برسید و حواشی غیرمرتبط را کنار بگذارید.'
+                }
+              ]
+            },
+            advanced: {
+              heading: '۳. تریدر پیشرفته: شکار هم‌گرایی شواهد، مدیریت ریسک مشتقات و پرهیز از تله‌ها',
+              lead: 'برای تریدر باتجربه، این بخش‌ها ابزار اعتبارسنجی و زمان‌بندی هستند؛ یعنی کمک می‌کنند ببینید آیا شواهد برای یک حرکت واقعی کافی است یا بازار صرفاً در حال ساختن تله است:',
+              points: [
+                {
+                  title: 'ترکیب شواهد اسکنر، تایمینگ و پیش‌بینی:',
+                  text: 'بررسی هم‌زمان وضعیت سیگنال، چشم‌انداز زمانی/دوام حرکت و خروجی پیش‌بینی کمک می‌کند ارزهایی را که هم‌راستایی بهتری دارند انتخاب کنید و از ورود به ستاپ‌های ضعیف یا شکننده پرهیز کنید.'
+                },
+                {
+                  title: 'خوانش فشار پوزیشن‌ها و لیکوییدیشن در فیوچرز:',
+                  text: 'وقتی سود باز بالا می‌رود، فاندینگ ریت جهت خاصی می‌گیرد یا لیکوییدیشن‌های سنگین رخ می‌دهد، تریدر حرفه‌ای می‌فهمد حرکت بعدی می‌تواند ناشی از تسویه اجباری معامله‌گران اهرمی باشد، نه صرفاً تقاضای طبیعی اسپات.'
+                },
+                {
+                  title: 'استفاده از «محل معامله» و سطوح شواهد به‌عنوان فیلتر انضباطی:',
+                  text: 'در نمای اسکن مبتنی بر شواهد (`advice.js`)، تفکیک دارایی‌های موجود، قوی‌ترین شواهد و ضعیف‌ترین خوانش‌ها کمک می‌کند سرمایه یا توجه را روی نقاط کم‌مزیت هدر ندهید.'
+                },
+                {
+                  title: 'هم‌تراز کردن تحلیل تکنیکال با جریان خبر و مقایسه صرافی‌ها:',
+                  text: 'ترکیب داده‌های بین‌صرافی، مشتقات و اخبار کمک می‌کند در زمان‌های پرنوسان یا خبری، تصمیم‌ها با واقعیت نقدینگی و احساسات بازار هم‌خوانی داشته باشند.'
+                }
+              ]
+            }
+          },
+          summary: [
+            { badge: 'تازه‌کار', text: 'سریع‌تر گزینه‌های قابل بررسی را پیدا می‌کند، یاد می‌گیرد نبودِ سیگنال را هم بپذیرد و با خبرهای مهم آشنا می‌شود.' },
+            { badge: 'میان‌رده', text: 'با مقایسه چند ارز، بررسی صرافی‌ها، نگاه به فیوچرز و فیلتر اخبار، تصویر چندلایه و دقیق‌تری از بازار می‌سازد.' },
+            { badge: 'پیشرفته', text: 'فشار پوزیشن‌های اهرمی، لیکوییدیشن‌ها، هم‌گرایی شواهد و تایمینگ را برای زمان‌بندی بهتر و دوری از تصمیم‌های کم‌مزیت به کار می‌گیرد.' }
+          ]
+        },
+        {
+          id: 'chapter-4',
+          num: 4,
+          shortTitle: 'فصل ۴: پیش‌بینی بازه و هوش مصنوعی',
+          routeLabel: '#/ai · predict & timing',
+          title: 'فصل چهارم: موتور پیش‌بینی بازه قیمتی و هوش مصنوعی (`predict.js`, `forecastview.js`, `timing.js`, `assistant.js`) — امکانات چه کمکی به تریدر می‌کنند؟',
+          summaryTitle: 'جمع‌بندی فصل چهارم برای تریدر',
+          introLead: 'در این فصل، سراغ یکی از حساس‌ترین بخش‌های پلتفرم می‌رویم: پیش‌بینی بازه قیمتی، زمان‌بندی حرکت و دستیار هوشمند. در این سیستم، به جای اینکه یک عدد قطعی یا وعده صددرصدی به شما داده شود، تمرکز روی احتمال، محدوده نوسان، زمان‌بندی و پاسخ تحلیلی مبتنی بر داده است.',
+          levels: {
+            beginner: {
+              heading: '۱. تریدر تازه‌کار: درک تفاوت «بازه نوسان» با «حدس قطعی قیمت»',
+              lead: 'وقتی تازه وارد تحلیل رمزارزها می‌شوید، خیلی راحت در دام پیش‌بینی‌های مطلق می‌افتید («فردا حتماً ۱۰ درصد رشد می‌کند!»). امکانات این بخش کمک می‌کنند نگاهتان واقعی‌تر و امن‌تر شود:',
+              points: [
+                {
+                  title: 'فهمیدن محدوده احتمالی حرکت به‌جای حدس تک‌عددی:',
+                  text: 'موتور پیش‌بینی تلاش می‌کند محدوده‌های احتمالی نوسان قیمت را ترسیم کند تا بفهمید بازار در بازه پیش رو معمولاً تا کجا می‌تواند بالا و پایین برود، نه اینکه یک عدد جادویی تحویل بدهد.'
+                },
+                {
+                  title: 'تنظیم حد ضرر و حد سود منطقی‌تر:',
+                  text: 'وقتی دید بهتری نسبت به دامنه نوسان احتمالی دارید، کمتر حد ضرر را در جاهای بسیار نزدیک و پرنویز می‌گذارید که با یک نوسان عادی فعال شود، و هدف‌ها را هم واقع‌بینانه‌تر می‌چینید.'
+                },
+                {
+                  title: 'پرسیدن سوال‌های ساده از دستیار هوشمند (`#/ai`):',
+                  text: 'اگر معنی یک اصطلاح، وضعیت یک ارز یا کلیت بازار برایتان مبهم است، دستیار هوشمند کمک می‌کند تحلیل را در همان فضا و با تکیه بر داده‌های بازار و واژه‌نامه/توضیحات تحلیلی دنبال کنید.'
+                },
+                {
+                  title: 'پرهیز از اعتماد کورکورانه به جهت حرکت:',
+                  text: 'با دیدن تاکید سیستم بر ماهیت احتمالاتی و عدم معرفی جهت به‌عنوان سیگنال قطعی، از همان ابتدا یاد می‌گیرید که بازار رمزارزها همیشه می‌تواند خلاف انتظار حرکت کند.'
+                }
+              ]
+            },
+            intermediate: {
+              heading: '۲. تریدر میان‌رده: ترکیب مدل‌های چندگانه، تایمینگ و گفتگوی هدفمند',
+              lead: 'وقتی با نمودار و شاخص‌ها آشنا شدید، مزیت این بخش در دیدن چند زاویه در کنار هم است؛ به خصوص ترکیب بازه حرکت، زمان‌بندی و پرسش‌های تحلیلی متمرکز روی یک ارز یا سبد:',
+              points: [
+                {
+                  title: 'بهره‌بردن از ترکیب چند روش تحلیلی:',
+                  text: 'ترکیب الگوریتم‌های مختلف (مثل الگویابی تاریخی، مدل‌های آماری/یادگیری ماشین و مدل روند) باعث می‌شود به جای وابستگی به یک فرمول واحد، رفتار قیمت از چند منظر بررسی شود.'
+                },
+                {
+                  title: 'درک «مدت دوام حرکت» و «زمان تغییر روند» (`timing.js`):',
+                  text: 'در عمل، فقط جهت مهم نیست؛ اینکه یک حرکت چقدر دوام می‌آورد یا چه زمانی احتمال تغییر روند بیشتر می‌شود، در مدیریت معامله نقش تعیین‌کننده‌ای دارد.'
+                },
+                {
+                  title: 'متمرکز کردن دستیار هوشمند روی «ارز در مرکز توجه»:',
+                  text: 'انتخاب یک نماد مشخص در بخش دستیار هوشمند کمک می‌کند پاسخ‌ها و تحلیل‌ها متمرکزتر باشند و بتوانید روی همان ارز سوالات پیگیری بپرسید.'
+                },
+                {
+                  title: 'مقایسه داده‌های بازار، پرتفوی یا چند ارز در گفتگو:',
+                  text: 'استفاده از قابلیت‌های تحلیلی دستیار برای بررسی وضعیت بازار یا مقایسه ارزها باعث می‌شود به جای گشتن پراکنده، جمع‌بندی سریع‌تری بگیرید.'
+                }
+              ]
+            },
+            advanced: {
+              heading: '۳. تریدر پیشرفته: سنجش اطمینان جهت، کانتکست واقعی و کنترل خطای مدل',
+              lead: 'برای تریدر باتجربه، ارزش موتور پیش‌بینی و دستیار هوشمند در سنجش کیفیت شواهد و جلوگیری از خطای تصمیم است، نه پیروی چشم‌بسته از خروجی مدل:',
+              points: [
+                {
+                  title: 'توجه به سطح اطمینان جهت و مبنای مقایسه:',
+                  text: 'دیدن میزان اطمینان جهت و مقایسه عملکرد مدل در برابر مبناهای مرجع کمک می‌کند بفهمید در وضعیت فعلی بازار، خروجی مدل تا چه حد وزن دارد و کجا باید محتاط‌تر باشید.'
+                },
+                {
+                  title: 'هم‌راستا کردن تایمینگ و بازه نوسان با ساختار بازار:',
+                  text: 'تریدر حرفه‌ای بازه پیش‌بینی و چشم‌انداز زمانی/تغییر روند را در کنار سطوح تکنیکال، حجم و شرایط کلان/مشتقات می‌گذارد تا اگر هم‌خوانی نبود، معامله را رد کند.'
+                },
+                {
+                  title: 'استفاده از دستیار هوشمند به‌عنوان «دستیار پژوهش و راستی‌آزمایی»:',
+                  text: 'به جای اینکه از AI بخواهید «بگو بخرم یا بفروشم»، می‌توانید از آن برای جمع‌بندی داده‌های فعلی، بررسی سناریوها یا یادآوری نکات معاملاتی و ریسک استفاده کنید.'
+                },
+                {
+                  title: 'حفظ استقلال تصمیم در شرایط غیرعادی:',
+                  text: 'حتی مدل‌های چندگانه هم در برابر شوک‌های خبری یا نوسانات شدید خطا دارند؛ تریدر پیشرفته خروجی هوش مصنوعی را یک «ورودی کمکی» می‌بیند که تصمیم نهایی را در چارچوب مدیریت سرمایه خود می‌گیرد.'
+                }
+              ]
+            }
+          },
+          summary: [
+            { badge: 'تازه‌کار', text: 'به جای حدس قطعی، با مفهوم بازه نوسان آشنا می‌شود، حد ضرر منطقی‌تری می‌فهمد و سوال‌هایش را در دستیار هوشمند پیگیری می‌کند.' },
+            { badge: 'میان‌رده', text: 'از ترکیب مدل‌ها، چشم‌انداز دوام حرکت/تغییر روند و تمرکز روی ارز انتخابی در دستیار برای تحلیل منظم‌تر استفاده می‌کند.' },
+            { badge: 'پیشرفته', text: 'سطح اطمینان، تایمینگ و کانتکست داده را با تحلیل شخصی و مدیریت ریسک ترکیب می‌کند تا خطای تصمیم را کم کند.' }
+          ]
+        },
+        {
+          id: 'chapter-5',
+          num: 5,
+          shortTitle: 'فصل ۵: یادگیری AI و سابقه عملکرد',
+          routeLabel: '#/learn · #/track',
+          title: 'فصل پنجم: یادگیری هوش مصنوعی، خودارزیابی و سابقه عملکرد (`#/learn`, `#/track`) — امکانات چه کمکی به تریدر می‌کنند؟',
+          summaryTitle: 'جمع‌بندی فصل پنجم برای تریدر',
+          introLead: 'در این فصل سراغ بخش‌هایی می‌رویم که به جای وعده و تبلیغ، حساب و کتاب واقعی را جلوی چشم تریدر می‌گذارند: سیستم یادگیری و امتیازدهی هوش مصنوعی (`#/learn`) و سابقه عملکرد عمومی (`#/track`). در بازاری که همه از «دقت بالای سیگنال‌ها» حرف می‌زنند، این بخش‌ها کمک می‌کنند ببینید در عمل چه اتفاقی افتاده است.',
+          levels: {
+            beginner: {
+              heading: '۱. تریدر تازه‌کار: یادگیری واقع‌گرایی و دوری از توهم «سیگنال بی‌نقص»',
+              lead: 'وقتی تازه شروع می‌کنید، طبیعی است که فکر کنید یک اندیکاتور یا مدل هوش مصنوعی باید همیشه درست بگوید. امکانات این دو بخش کمک می‌کنند نگاهتان از همان ابتدا منطقی شکل بگیرد:',
+              points: [
+                {
+                  title: 'فهمیدن اینکه حتی سیستم تحلیلی هم خطا دارد و خودش را می‌سنجد:',
+                  text: 'دیدن اینکه فراخوان‌ها و پیش‌بینی‌ها امتیازدهی و ارزیابی می‌شوند، به تازه‌کار یاد می‌دهد که هیچ ابزاری صددرصد نیست و خطا بخشی طبیعی از کار با بازار است.'
+                },
+                {
+                  title: 'خواندن سابقه واقعی به جای گزیده‌گویی:',
+                  text: 'در بخش سابقه عملکرد عمومی (`#/track`)، سیگنال‌های ثبت‌شده و نتایج واقعی‌شان (مثل رسیدن به اهداف یا فعال شدن حد ضرر یا انقضا) به‌صورت شفاف نشان داده می‌شوند تا از همان ابتدا با منطق «برد و باخت واقعی» آشنا شوید، نه صرفاً لحظه‌های خوشایند.'
+                },
+                {
+                  title: 'مقایسه ساده عملکردهای مختلف در بخش یادگیری (`#/learn`):',
+                  text: 'تفکیک بررسی معاملات به دسته‌هایی مثل معاملات هوش مصنوعی، خریدهای آزمایشی شما و معاملات واقعی شما کمک می‌کند تفاوت بین «خروجی سیستم»، «تمرین آزمایشی» و «عملکرد واقعی خودتان» را واضح ببینید.'
+                },
+                {
+                  title: 'شناخت مفهوم تایم‌فریم و ضریب اعتماد:',
+                  text: 'تازه‌کار متوجه می‌شود که یک روش یا تایم‌فریم ممکن است اعتماد یا نتیجه متفاوتی نسبت به تایم‌فریم دیگری داشته باشد و نباید همه‌جا با یک چشم به آن نگاه کرد.'
+                }
+              ]
+            },
+            intermediate: {
+              heading: '۲. تریدر میان‌رده: انتخاب آگاهانه‌تر تایم‌فریم، اندیکاتور و استراتژی',
+              lead: 'وقتی با اصول پایه را یاد گرفتید، مشکل اصلی این است که روی ابزارهایی حساب کنید که در تایم‌فریم یا شرایط فعلی بازار عملکرد ضعیفی دارند. این بخش‌ها کمک می‌کنند انتخاب‌هایتان مبتنی بر داده باشد:',
+              points: [
+                {
+                  title: 'بررسی ضریب اعتماد تایم‌فریم‌ها و نتایج تست‌ها:',
+                  text: 'نگاه کردن به ضریب اعتماد تایم‌فریم‌ها و کارنامه تست‌ها کمک می‌کند ببینید در کدام بازه‌های زمانی، اتکا به خروجی‌ها منطقی‌تر است و در کدام‌ها باید محتاط‌تر عمل کنید.'
+                },
+                {
+                  title: 'کشف نقاط ضعف خودتان با مقایسه سه دسته معامله:',
+                  text: 'وقتی عملکرد معاملات هوش مصنوعی، خریدهای آزمایشی و معاملات واقعی‌تان کنار هم دیده می‌شود، سریع‌تر متوجه می‌شوید که مثلاً در تمرین خوب عمل می‌کنید اما در معامله واقعی دچار عجله یا خروج زودهنگام می‌شوید.'
+                },
+                {
+                  title: 'استفاده از سابقه عمومی برای درک رفتار سیگنال‌ها در عمل:',
+                  text: 'بررسی نتایج واقعی سیگنال‌های ثبت‌شده کمک می‌کند بفهمید سیگنال‌ها در شرایط مختلف چطور به هدف می‌رسند، به حد ضرر می‌خورند یا خنثی/منقضی می‌شوند؛ این دید، انتظار شما را از هر معامله واقعی‌تر می‌کند.'
+                },
+                {
+                  title: 'تغییر تصمیم مبتنی بر شواهد، نه احساس:',
+                  text: 'دیدن نحوه امتیازدهی و تغییر تصمیم‌ها بر اساس سوابق ثبت‌شده، به تریدر میان‌رده یاد می‌دهد که خودش هم اگر یک روش در عمل جواب نداد، به جای لجبازی با بازار، رویکردش را اصلاح کند.'
+                }
+              ]
+            },
+            advanced: {
+              heading: '۳. تریدر پیشرفته: اعتبارسنجی آماری، کنترل بایاس و پایش انضباط اجرایی',
+              lead: 'برای تریدر باتجربه، این بخش‌ها نقش آزمایشگاه راستی‌آزمایی و ممیزی عملکرد را دارند تا تصمیم‌ها بر پایه شواهد باشند و خطاهای رفتاری کنترل شوند:',
+              points: [
+                {
+                  title: 'سنجش مزیت آماری و پرهیز از اتکا به نمونه‌های کم:',
+                  text: 'تریدر حرفه‌ای به جای شیفته شدن به یک نتیجه کوتاه‌مدت، به سابقه ثبت‌شده، تعداد نمونه‌ها و میزان برتری واقعی نسبت به مبنا نگاه می‌کند تا بفهمد آیا یک الگو یا تایم‌فریم واقعاً مزیت دارد یا صرفاً در یک بازه محدود شانس آورده است.'
+                },
+                {
+                  title: 'تفکیک خطای «مدل/سیستم» از خطای «اجرای انسانی»:',
+                  text: 'با کنار هم گذاشتن کارنامه معاملات هوش مصنوعی، معاملات آزمایشی و معاملات واقعی، تریدر باتجربه می‌تواند دقیق‌تر تشخیص دهد که زیان یا افت عملکرد ناشی از ضعف ستاپ بوده یا از خطای انسانی در ورود، خروج، حجم یا حد ضرر.'
+                },
+                {
+                  title: 'پایش پیوسته در برابر رژیم‌های مختلف بازار:',
+                  text: 'بازاری که روندی است با بازاری که رنج یا پرنوسان است فرق دارد؛ مرور سوابق و نتایج ثبت‌شده کمک می‌کند ببینید استراتژی‌ها و خوانش‌ها در کدام فازها قابل اتکاترند و کجا باید ریسک را کم کرد.'
+                },
+                {
+                  title: 'حفظ شفافیت و خودانتقادی در دفترچه معامله‌گری:',
+                  text: 'به جای پاک کردن یا فراموش کردن معامله‌های ناموفق، وجود یک سابقه روشن کمک می‌کند تریدر حرفه‌ای الگوی خطاهای تکراری خود را بشناسد و با انضباط بیشتری آن‌ها را اصلاح کند.'
+                }
+              ]
+            }
+          },
+          summary: [
+            { badge: 'تازه‌کار', text: 'به جای دنبال کردن وعده‌های قطعی، با واقعیت خطا، تفاوت تمرین و معامله واقعی و نتایج ثبت‌شده آشنا می‌شود.' },
+            { badge: 'میان‌رده', text: 'با بررسی ضریب اعتماد تایم‌فریم‌ها، کارنامه تست‌ها و سابقه سیگنال‌ها، انتخاب‌های دقیق‌تر و واقع‌بینانه‌تری انجام می‌دهد.' },
+            { badge: 'پیشرفته', text: 'با تکیه بر سوابق، مزیت آماری و تفکیک خطای مدل از خطای اجرا، انضباط معاملاتی و کیفیت تصمیم‌گیری خود را مداوم بهبود می‌دهد.' }
+          ]
+        },
+        {
+          id: 'chapter-6',
+          num: 6,
+          shortTitle: 'فصل ۶: شبیه‌ساز معاملات و ابزارها',
+          routeLabel: '#/trader · #/tools',
+          title: 'فصل ششم: شبیه‌ساز معاملات، تریدر خودکار و ابزارهای محاسباتی (`#/trader`, `#/tools`) — امکانات چه کمکی به تریدر می‌کنند؟',
+          summaryTitle: 'جمع‌بندی فصل ششم برای تریدر',
+          introLead: 'در این فصل سراغ «آزمایشگاه تمرین و حساب‌وکتاب» می‌رویم: بخش معاملات (`#/trader`) برای شبیه‌سازی معاملات و معامله‌گر خودکار مجازی، و بخش ابزارها (`#/tools`) برای محاسبه‌های عملی مثل اندازه پوزیشن، خرید منظم (DCA) و تبدیل ارزها. در این فضا خبری از ریسک سرمایه واقعی نیست و می‌توانید خطاهای تصمیم را کم‌هزینه‌تر کشف کنید.',
+          levels: {
+            beginner: {
+              heading: '۱. تریدر تازه‌کار: تمرین بدون ترس و یادگیری حساب کردن ریسک',
+              lead: 'وقتی تازه شروع می‌کنید، بیشترین زیان‌ها معمولاً از این دو جا می‌آید: ورود عجولانه با حجم نامناسب و عدم شناخت تفاوت تمرین با معامله واقعی. امکانات این بخش کمک می‌کنند این پایه‌ها را درست بچینید:',
+              points: [
+                {
+                  title: 'تمرین با پول شبیه‌سازی‌شده به‌جای ریسک مستقیم:',
+                  text: 'شبیه‌ساز معاملات کمک می‌کند روند ورود، خروج، حد ضرر و اثر نوسان بازار را روی حساب مجازی تجربه کنید تا بدون استرس از دست دادن سرمایه واقعی، با سازوکار معامله آشنا شوید.'
+                },
+                {
+                  title: 'فهمیدن حجم مناسب معامله با ماشین‌حساب اندازه پوزیشن:',
+                  text: 'تازه‌کارها اغلب نمی‌دانند اگر حسابشان مثلاً ۱۰۰۰ دلار است و می‌خواهند حداکثر ۲ درصد ریسک کنند، با توجه به فاصله حد ضرر دقیقاً چه حجمی باید وارد شوند. ماشین‌حساب اندازه پوزیشن این حساب را شفاف می‌کند تا از همان ابتدا درگیر حجم‌های سنگین و غیرقابل‌کنترل نشوید.'
+                },
+                {
+                  title: 'آشنایی با منطق خرید منظم (`DCA`) در برابر خرید یکجا:',
+                  text: 'در بخش ابزارها می‌توانید شبیه‌ساز `DCA` را روی داده‌های تاریخی ببینید تا ملموس‌تر بفهمید خرید مرحله‌ای و منظم در برابر نوسان‌های بلندمدت چطور عمل می‌کند.'
+                },
+                {
+                  title: 'تبدیل سریع واحدها و مبلغ‌ها:',
+                  text: 'مبدل ارز و رمزارز کمک می‌کند ارزش دارایی‌ها یا مبلغ معامله را سریع به واحد دلخواهتان تبدیل کنید و در محاسبه مبلغ اشتباه نکنید.'
+                }
+              ]
+            },
+            intermediate: {
+              heading: '۲. تریدر میان‌رده: آزمایش قواعد، بررسی بازدهی و نظم در ثبت سوابق',
+              lead: 'وقتی اصول پایه را یاد گرفتید، چالش اصلی این است که یک قانون یا ایده را در شرایط شبیه‌سازی‌شده و با دقت بیشتر محک بزنید و ببینید کجاها نیاز به اصلاح دارد:',
+              points: [
+                {
+                  title: 'تست قواعد معامله‌گر خودکار مجازی و بررسی بازدهی:',
+                  text: 'در بخش معاملات، امکان کار با معامله‌گر خودکار شبیه‌سازی‌شده، بررسی آمار و تنظیمات، و دیدن اینکه تغییر قواعد چطور روی نتیجه اثر می‌گذارد کمک می‌کند استراتژی را صرفاً بر اساس حدس تغییر ندهید.'
+                },
+                {
+                  title: 'دیدن خودارزیابی و تاریخچه رویدادها (`بازپخش‌شده` و زنده):',
+                  text: 'مرور رویدادها و خودارزیابی کمک می‌کند بفهمید سیستم در چه شرایطی معامله باز کرده، چرا در نقطه‌ای متوقف یا محتاط شده و تفاوت رفتار بازپخش‌شده با جریان زنده چیست.'
+                },
+                {
+                  title: 'مقایسه داده‌های تاریخی در `DCA` در بازه‌های مختلف:',
+                  text: 'بررسی بازه‌های زمانی متفاوت در ابزار `DCA` کمک می‌کند بفهمید یک استراتژی خرید منظم در دوره‌های صعودی، نزولی یا نوسانی چطور رفتار کرده است.'
+                },
+                {
+                  title: 'مدیریت فایل‌ها، بکاپ و خروجی‌ها:',
+                  text: 'در بخش معاملات امکان ورود/خروج اطلاعات (مثل فایل CSV)، گرفتن گزارش و بکاپ/بازیابی وجود دارد تا اگر روی تنظیمات یا سوابق تمرینی کار می‌کنید، داده‌هایتان منظم و قابل‌پیگیری بماند.'
+                }
+              ]
+            },
+            advanced: {
+              heading: '۳. تریدر پیشرفته: بهینه‌سازی انضباط، کنترل ریسک و ممیزی فرآیند اجرا',
+              lead: 'برای تریدر باتجربه، شبیه‌ساز و ابزارهای محاسباتی نقش آزمایشگاه کنترل کیفیت فرآیند را دارند؛ جایی که می‌توانید فرض‌ها، حدود ریسک و خطاهای اجرایی را پیش از ورود سرمایه واقعی بسنجید:',
+              points: [
+                {
+                  title: 'تنظیم دقیق حدود ریسک و پرهیز از افراط در بهینه‌سازی:',
+                  text: 'تریدر حرفه‌ای از ماشین‌حساب اندازه پوزیشن و بررسی‌های شبیه‌سازی برای حفظ سقف ریسک ثابت در هر معامله استفاده می‌کند و مراقب است استراتژی را طوری بهینه نکند که فقط روی گذشته برازش شده باشد.'
+                },
+                {
+                  title: 'تفکیک خطای استراتژی از خطای رفتار انسانی:',
+                  text: 'با مقایسه عملکرد قواعد شبیه‌سازی‌شده، خودارزیابی‌ها و سوابق معاملات، تریدر باتجربه می‌تواند ببیند آیا ضعف نتیجه از منطق ورود/خروج بوده یا از بی‌نظمی در رعایت حد ضرر و حجم.'
+                },
+                {
+                  title: 'استفاده از بکاپ، بازیابی و گزارش‌ها برای تحلیل منظم:',
+                  text: 'نگهداری بکاپ معاملات و استخراج گزارش/خروجی کمک می‌کند نسخه‌های مختلف تنظیمات یا دوره‌های تمرینی را با هم مقایسه کنید و روند پیشرفتتان را مستند نگه دارید.'
+                },
+                {
+                  title: 'حفظ فاصله منطقی بین «محیط آزمایش» و «بازار واقعی»:',
+                  text: 'حتی بهترین شبیه‌ساز هم جایگزین تجربه روانشناختی و نقدینگیِ بازار واقعی نمی‌شود؛ تریدر پیشرفته از این محیط برای اعتبارسنجی منطق و اندازه ریسک استفاده می‌کند، نه برای توهم سود قطعی.'
+                }
+              ]
+            }
+          },
+          summary: [
+            { badge: 'تازه‌کار', text: 'بدون ریسک سرمایه واقعی تمرین می‌کند، حجم پوزیشن منطقی را یاد می‌گیرد و با خرید منظم (`DCA`) و تبدیل ارز آشنا می‌شود.' },
+            { badge: 'میان‌رده', text: 'قواعد معامله‌گر خودکار شبیه‌سازی‌شده، خودارزیابی و رویدادها را بررسی می‌کند، بازه‌های `DCA` را می‌سنجد و از خروجی/بکاپ برای نظم بیشتر استفاده می‌کند.' },
+            { badge: 'پیشرفته', text: 'ریسک هر پوزیشن را دقیق کنترل می‌کند، خطای منطق را از خطای اجرا جدا می‌سازد و با گزارش‌ها و بکاپ‌ها فرآیند تصمیم‌گیری را پالایش می‌کند.' }
+          ]
+        },
+        {
+          id: 'chapter-7',
+          num: 7,
+          shortTitle: 'فصل ۷: کیف پول، هشدارها و حساب',
+          routeLabel: '#/wallet · #/alerts · #/account · #/premium',
+          title: 'فصل هفتم: کیف پول، هشدارها، حساب کاربری و اشتراک ویژه (`#/wallet`, `#/alerts`, `#/account`, `#/premium`) — امکانات چه کمکی به تریدر می‌کنند؟',
+          summaryTitle: 'جمع‌بندی فصل هفتم برای تریدر',
+          introLead: 'در این فصل سراغ بخش‌هایی می‌رویم که به تریدر کمک می‌کنند دارایی‌ها و واچ‌لیستش را زیر نظر بگیرد، از حرکت‌های مهم به موقع باخبر شود و تنظیمات و سوابقش را در یک حساب منظم نگه دارد. برای کسی که نمی‌خواهد تمام روز به نمودار خیره بماند، این بخش‌ها نقش «گوش‌به‌زنگ و دفترچه شخصی» را بازی می‌کنند.',
+          levels: {
+            beginner: {
+              heading: '۱. تریدر تازه‌کار: نظم دادن به دارایی‌ها و از دست ندادن سطح‌های مهم',
+              lead: 'وقتی تازه وارد بازار می‌شوید، دو مشکل خیلی رایج است: پراکنده بودن اطلاعات دارایی‌ها و چک کردن وسواس‌گونه قیمت‌ها (یا برعکس، بی‌خبری از یک تغییر مهم). امکانات این بخش کمک می‌کنند کارتان ساده‌تر و منظم‌تر شود:',
+              points: [
+                {
+                  title: 'جمع کردن دارایی‌ها و لیست پیگیری در یک نما:',
+                  text: 'در بخش کیف پول (`#/wallet`) می‌توانید دید روشن‌تری از دارایی‌ها و وضعیتشان داشته باشید و به جای گشتن پراکنده، تصویر سبدتان را یکجا ببینید.'
+                },
+                {
+                  title: 'گذاشتن هشدار قیمت به‌جای نگاه مداوم به چارت:',
+                  text: 'به جای اینکه هر پنج دقیقه نمودار را رفرش کنید، می‌توانید در بخش هشدارها (`#/alerts`) برای عبور قیمت از یک سطح مشخص هشدار بگذارید تا فقط وقتی اتفاقی افتاد مطلع شوید.'
+                },
+                {
+                  title: 'آشنایی با تفاوت کارکردهای محلی و حساب کاربری:',
+                  text: 'تازه‌کار یاد می‌گیرد که با ساخت حساب و ورود به آن، داده‌ها و پیگیری‌ها منظم‌تر همراه او می‌مانند و می‌تواند از امکاناتی مثل هشدارهای سرور یا سوابق ثبت‌شده استفاده کند.'
+                },
+                {
+                  title: 'شناخت تفاوت طرح رایگان و اشتراک ویژه:',
+                  text: 'در صفحه اشتراک ویژه (`#/premium`) می‌توانید شفاف ببینید در نسخه رایگان چه امکاناتی هست و اشتراک ویژه (مثل تعداد بیشتر هشدارهای سمت سرور یا ارسال در زمان بسته بودن مرورگر) چه چیزی اضافه می‌کند.'
+                }
+              ]
+            },
+            intermediate: {
+              heading: '۲. تریدر میان‌رده: پیگیری هوشمندتر، هشدار سیگنال و مدیریت کانال‌های اطلاع‌رسانی',
+              lead: 'وقتی با بازار و استراتژی‌های ساده‌تر آشنا شدید، مزیت این بخش در کاهش خطای جا ماندن از موقعیت‌ها و متمرکز کردن اعلان‌ها و سوابق است:',
+              points: [
+                {
+                  title: 'استفاده از هشدار سیگنال و هشدار سیگنال هوش مصنوعی:',
+                  text: 'علاوه بر هشدار قیمت ساده، وجود هشدارهای سیگنال (که روی سرور اجرا می‌شوند) کمک می‌کند بدون باز نگه داشتن مداوم یک صفحه، از شرایط خاص سیگنالی باخبر شوید.'
+                },
+                {
+                  title: 'تنظیم ایمیل، تلگرام و خلاصه روزانه در حساب کاربری:',
+                  text: 'در بخش حساب کاربری (`#/account`) می‌توانید کانال‌های هشدار مثل ایمیل و تلگرام و همچنین خلاصه روزانه لیست پیگیری را مدیریت کنید تا اطلاعات مهم در مسیر درست به دستتان برسد.'
+                },
+                {
+                  title: 'بررسی سوابق پیش‌بینی‌ها و فعالیت‌های خودتان:',
+                  text: 'دیدن تاریخچه پیش‌بینی‌های نمایش‌داده‌شده به شما و نتیجه آن‌ها کمک می‌کند روند تصمیم‌گیری و دقت برداشت‌های خودتان را در طول زمان دنبال کنید.'
+                },
+                {
+                  title: 'بهره‌گیری از مشاوره نگهداری (`adviseHolding`) و اتصال کیف پول در `#/wallet`:',
+                  text: 'اگر دارایی‌هایی را نگه می‌دارید، کمک می‌کند وضعیت نگهداری آن‌ها را دقیق‌تر بسنجید و در صورت نیاز از قابلیت‌های اتصال کیف پول پشتیبانی‌شده استفاده کنید.'
+                }
+              ]
+            },
+            advanced: {
+              heading: '۳. تریدر پیشرفته: پایش ۲۴ ساعته در پس‌زمینه، انضباط واکنش و امنیت حساب',
+              lead: 'برای تریدر باتجربه، این بخش‌ها ابزار اتوماسیون اطلاع‌رسانی، حفظ پیوستگی و امنیت نشست‌ها هستند تا تصمیم‌ها در لحظه و با آرامش بیشتری گرفته شوند:',
+              points: [
+                {
+                  title: 'پایش حتی در زمان بسته بودن مرورگر (در طرح‌های پشتیبانی‌شده):',
+                  text: 'وقتی هشدارها روی سرور اجرا شوند و از طریق کانال‌هایی مثل ایمیل یا تلگرام ارسال شوند، تریدر حرفه‌ای وابسته به باز ماندن یک تب در مرورگر نیست و می‌تواند واکنش خود را طبق پلن از پیش تعیین‌شده تنظیم کند.'
+                },
+                {
+                  title: 'جلوگیری از تصمیم‌های آنی با هشدارهای هدفمند:',
+                  text: 'به جای تصمیم‌گیری صرفاً بر اساس یک حرکت لحظه‌ای در چارت، تعریف هشدار روی سطوح کلیدی یا سیگنال‌ها کمک می‌کند فقط در نقاط از پیش تعریف‌شده وارد بازبینی و تصمیم شوید.'
+                },
+                {
+                  title: 'مدیریت امنیت، نشست‌ها و خروجی داده‌ها در `#/account`:',
+                  text: 'تریدر باتجربه به بخش‌هایی مثل مدیریت رمز عبور و نشست‌ها، کنترل داده‌ها و خروجی گرفتن از سوابق توجه دارد تا هم امنیت حسابش حفظ شود و هم بتواند داده‌هایش را برای تحلیل بیشتر بیرون بکشد.'
+                },
+                {
+                  title: 'تفکیک نقش «دیده‌بانی و هشدار» از «اجرای معامله»:',
+                  text: 'استفاده از این بخش‌ها در کنار شبیه‌ساز یا صرافی شخصی کمک می‌کند اطلاع‌رسانی و مدیریت سبد منظم بماند و بدون هیجان، مرحله به مرحله اجرا شود.'
+                }
+              ]
+            }
+          },
+          summary: [
+            { badge: 'تازه‌کار', text: 'دارایی‌ها و لیست پیگیری را منظم‌تر می‌بیند، با هشدار قیمت از نگاه وسواس‌گونه به نمودار کم می‌کند و با امکانات حساب و طرح‌ها آشنا می‌شود.' },
+            { badge: 'میان‌رده', text: 'از هشدارهای سیگنال، کانال‌های ایمیل/تلگرام، خلاصه روزانه و سوابق پیش‌بینی برای پیگیری منظم‌تر و آگاهانه‌تر استفاده می‌کند.' },
+            { badge: 'پیشرفته', text: 'پایش سمت سرور، امنیت نشست‌ها، مدیریت داده‌ها و خروجی گرفتن را برای انضباط بیشتر و واکنش حساب‌شده به کار می‌گیرد.' }
+          ]
+        },
+        {
+          id: 'chapter-8',
+          num: 8,
+          shortTitle: 'فصل ۸: مدیریت ریسک و مدیریت',
+          routeLabel: 'legal.js · #/admin',
+          title: 'فصل هشتم: مدیریت ریسک، قوانین استفاده و پنل مدیریت (`legal.js`, `admin.js`) — امکانات چه کمکی به تریدر می‌کنند؟',
+          summaryTitle: 'جمع‌بندی فصل هشتم و کل راهنما',
+          introLead: 'فصل پایانی سراغ دو روی مهم اما کمتر دیده‌شده پلتفرم می‌رود: قوانین، افشای ریسک و چارچوب استفاده ایمن (`legal.js`) برای همه کاربران و تریدرها، و پنل مدیریت (`admin.js`) برای راهبران و مدیران سیستم. در بازار رمزارزها، دانستن «حدود ابزار» و «حفظ سلامت و کنترل سیستم» به اندازه خود تحلیل اهمیت دارد.',
+          levels: {
+            beginner: {
+              heading: '۱. تریدر تازه‌کار: درک خط قرمزها و پرهیز از تصمیم‌های پرریسک',
+              lead: 'وقتی تازه وارد بازار می‌شوید، بزرگ‌ترین خطر این است که ابزار تحلیلی را «دستور قطعی سود» تصور کنید یا بدون شناخت ریسک وارد پوزیشن شوید. بخش قوانین و بیانیه ریسک کمک می‌کند از همان ابتدا زمین بازی را درست بشناسید:',
+              points: [
+                {
+                  title: 'فهمیدن ماهیت تحلیلی ابزار و عدم ارائه مشاوره مالی:',
+                  text: 'شفاف بودن شرایط استفاده و بیانیه ریسک به تازه‌کار یادآوری می‌کند که خروجی نمودارها، اندیکاتورها و مدل‌ها ابزار کمک‌تحلیلی و آموزشی است، نه توصیه قطعی سرمایه‌گذاری یا تضمین سود.'
+                },
+                {
+                  title: 'آشنایی با واقعیت خطای مدل‌ها و نوسان بازار:',
+                  text: 'دیدن اینکه حتی مدل‌ها و تایمینگ‌های آزموده‌شده هم در برابر مبنا و نوسانات بازار خطا و محدودیت دارند، جلوی اعتماد کورکورانه و ورود با کل سرمایه را می‌گیرد.'
+                },
+                {
+                  title: 'رعایت اصول پایه حفظ سرمایه:',
+                  text: 'تأکید بر حد ضرر، مدیریت حجم و استفاده از پولی که توان از دست دادن آن را دارید، به تازه‌کار کمک می‌کند اول «زنده ماندن در بازار» را یاد بگیرد و بعد به دنبال رشد باشد.'
+                },
+                {
+                  title: 'اطلاع از حریم خصوصی و نحوه کارکرد حساب:',
+                  text: 'شناخت قوانین حریم خصوصی و شرایط استفاده باعث می‌شود با خیال راحت‌تر و آگاهانه‌تر از حساب کاربری و امکانات پلتفرم استفاده کنید.'
+                }
+              ]
+            },
+            intermediate: {
+              heading: '۲. تریدر میان‌رده: انطباق با واقعیت آمار و پرهیز از اتکای بیش‌ازحد',
+              lead: 'وقتی کمی با بازار و ابزارها جلوتر رفتید، خطر جدید این است که به دلیل دیدن چند نتیجه خوب، بیش‌ازحد به یک سیگنال یا مدل اعتماد کنید:',
+              points: [
+                {
+                  title: 'نگاه واقع‌گرایانه به آمارهای تست‌شده:',
+                  text: 'مقایسه نرخ‌های ثبت‌شده در برابر خط مبنا (`baseline`) به تریدر میان‌رده کمک می‌کند ببیند «برتری آماری واقعی» با «وعده اغراق‌آمیز» چه فرقی دارد.'
+                },
+                {
+                  title: 'حفظ انضباط در زمان تردید یا سیگنال ضعیف:',
+                  text: 'وقتی شرایط بازار مبهم است یا مزیت روشنی دیده نمی‌شود، قواعد مدیریت ریسک و بیانیه ریسک یادآور می‌شوند که معامله نکردن هم یک تصمیم فعال و درست است.'
+                },
+                {
+                  title: 'ترکیب ابزارها بدون نادیده گرفتن ریسک‌های بیرونی:',
+                  text: 'حتی بهترین تحلیل تکنیکال یا پیش‌بینی هم نمی‌تواند شوک‌های ناگهانی یا تغییر ناگهانی نقدینگی را خنثی کند؛ رعایت حدود ریسک کمک می‌کند یک حرکت غیرمنتظره کل حساب را به خطر نیندازد.'
+                }
+              ]
+            },
+            advanced: {
+              heading: '۳. تریدر پیشرفته و مدیر پلتفرم: کنترل ریسک کلان و پایش عملیاتی سیستم',
+              lead: 'در سطح پیشرفته، هم برای تریدر باتجربه و هم برای مدیر/اپراتور پلتفرم (`admin.js`)، پایداری، شفافیت و کنترل سیستم اهمیت کلیدی دارد:',
+              points: [
+                {
+                  title: 'برای تریدر پیشرفته — اولویت دادن به بقا و مدیریت Drawdown:',
+                  text: 'تریدر حرفه‌ای بیانیه ریسک و حدود آماری را به‌عنوان «قفل ایمنی» در استراتژی خود لحاظ می‌کند؛ یعنی اندازه پوزیشن، حد ضرر و سقف زیان را طوری می‌چیند که خطای اجتناب‌ناپذیر مدل‌ها یا بازار، ساختار حساب را از بین نبرد.'
+                },
+                {
+                  title: 'برای مدیر پلتفرم (`#/admin`) — پایش سلامت و رشد سیستم:',
+                  text: 'تب‌های نمای کلی و تحلیل آمار کمک می‌کنند بازدیدها، نشست‌ها، دستگاه‌ها، صفحات و ارزهای پربازدید، ثبت‌نام‌ها و منابع ورودی بررسی شوند تا تصمیم‌های محصول و محتوا بر پایه داده واقعی باشد.'
+                },
+                {
+                  title: 'مدیریت کاربران، اشتراک‌ها و محتوا:',
+                  text: 'در بخش‌های کاربران و محتوا، امکان جستجوی کاربر، مدیریت وضعیت تلگرام/مدیر/اشتراک ویژه و انتشار یا ویرایش پست‌ها و ایده‌های معاملاتی فراهم است.'
+                },
+                {
+                  title: 'کنترل تنظیمات، کلیدهای API و وظایف پس‌زمینه (`Jobs`):',
+                  text: 'تب‌های تنظیمات، کلیدهای API و وظایف (Jobs) به مدیر کمک می‌کنند پیکربندی سایت و اشتراک ویژه، ارتباطات API و سلامت جاب‌های زمان‌بندی‌شده را زیر نظر بگیرد و از کارکرد روان سرویس‌ها مطمئن شود.'
+                }
+              ]
+            }
+          },
+          summary: [
+            { badge: 'تازه‌کار', text: 'با خط قرمزهای ریسک آشنا می‌شود، می‌فهمد ابزار جایگزین مدیریت سرمایه نیست و از همان ابتدا اصول محافظت از حساب را یاد می‌گیرد.' },
+            { badge: 'میان‌رده', text: 'با نگاه واقع‌گرایانه به آمار و محدودیت‌ها، از اتکای هیجانی پرهیز می‌کند و تصمیم‌های منظم‌تری می‌گیرد.' },
+            { badge: 'پیشرفته و مدیر', text: 'تریدر روی کنترل افت سرمایه و انضباط اجرایی تمرکز می‌کند و مدیر سیستم با پایش آمار، کاربران، محتوا، تنظیمات، APIها و Jobs، پایداری پلتفرم را حفظ می‌کند.' }
+          ]
+        }
+      ];
+
+      // Section list in order (intro + 8 chapters)
+      const ALL_SECTIONS = [
+        { id: 'intro', shortTitle: 'مقدمه راهنما', title: 'راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS)' },
+        ...CHAPTERS.map((ch) => ({ id: ch.id, shortTitle: ch.shortTitle, title: ch.title }))
+      ];
+
+      // Application State
+      const state = {
+        theme: 'dark',
+        level: 'all',
+        read: new Set(),
+        bookmarks: new Set(),
+        currentSection: 'intro',
+        searchQuery: '',
+        hitIndex: 0
+      };
+
+      // Safe localStorage helpers
+      function safeGet(key, fallback) {
+        try {
+          const val = localStorage.getItem(key);
+          return val !== null ? val : fallback;
+        } catch {
+          return fallback;
+        }
+      }
+
+      function safeSet(key, val) {
+        try {
+          localStorage.setItem(key, val);
+        } catch {
+          // Ignore storage quota or private mode errors
+        }
+      }
+
+      // Toast notification (never uses alert/confirm)
+      let toastTimer = null;
+      function showToast(msg) {
+        const el = document.getElementById('toastBanner');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          el.classList.remove('show');
+        }, 2800);
+      }
+
+      // Escape HTML & format inline `code` chips
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function formatInlineCode(rawText) {
+        const escaped = escapeHtml(rawText);
+        return escaped.replace(/`([^`]+)`/g, (_, codePart) => {
+          return `<span class="route-chip">${codePart}</span>`;
+        });
+      }
+
+      // Apply search highlighting inside a container without breaking tags
+      function highlightTextNodes(rootEl, query) {
+        const trimmed = query.trim();
+        if (!trimmed) return [];
+
+        const lowerQ = trimmed.toLocaleLowerCase('fa');
+        const hits = [];
+        const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, {
+          acceptNode(node) {
+            if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+            const parentTag = node.parentElement ? node.parentElement.tagName : '';
+            if (['SCRIPT', 'STYLE', 'MARK', 'TEXTAREA', 'INPUT'].includes(parentTag)) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        });
+
+        const textNodes = [];
+        let currentNode;
+        while ((currentNode = walker.nextNode())) {
+          textNodes.push(currentNode);
+        }
+
+        for (const node of textNodes) {
+          const content = node.nodeValue;
+          const lowerContent = content.toLocaleLowerCase('fa');
+          let searchFrom = 0;
+          let foundIdx = lowerContent.indexOf(lowerQ, searchFrom);
+          if (foundIdx === -1) continue;
+
+          const frag = document.createDocumentFragment();
+          while (foundIdx !== -1) {
+            if (foundIdx > searchFrom) {
+              frag.appendChild(document.createTextNode(content.slice(searchFrom, foundIdx)));
+            }
+            const mark = document.createElement('mark');
+            mark.className = 'search-hit';
+            mark.textContent = content.slice(foundIdx, foundIdx + trimmed.length);
+            frag.appendChild(mark);
+            hits.push(mark);
+
+            searchFrom = foundIdx + trimmed.length;
+            foundIdx = lowerContent.indexOf(lowerQ, searchFrom);
+          }
+
+          if (searchFrom < content.length) {
+            frag.appendChild(document.createTextNode(content.slice(searchFrom)));
+          }
+
+          if (node.parentNode) {
+            node.parentNode.replaceChild(frag, node);
+          }
+        }
+
+        return hits;
+      }
+
+      // Render Intro Chapter Quick Index Cards
+      function renderIntroChapterIndex() {
+        const container = document.getElementById('introChapterIndex');
+        if (!container) return;
+
+        container.innerHTML = CHAPTERS.map((ch) => {
+          const isRead = state.read.has(ch.id);
+          const isBm = state.bookmarks.has(ch.id);
+          return `
+            <a href="#${ch.id}" data-jump-section="${ch.id}" class="glass-card p-3.5 no-underline flex flex-col justify-between gap-2" style="color: var(--ink-primary);">
+              <div class="flex items-start justify-between gap-2">
+                <span class="font-bold text-sm leading-snug searchable-text">${escapeHtml(ch.shortTitle)}</span>
+                <span class="route-chip shrink-0">${escapeHtml(ch.routeLabel)}</span>
+              </div>
+              <p class="text-xs m-0 line-clamp-2 searchable-text" style="color: var(--ink-muted);">
+                ${escapeHtml(ch.introLead)}
+              </p>
+              <div class="flex items-center gap-3 text-[11px]" style="color: var(--ink-muted);">
+                <span>${isRead ? '✓ خوانده‌شده' : '○ خوانده‌نشده'}</span>
+                ${isBm ? '<span style="color: var(--accent-amber);">★ نشان‌شده</span>' : ''}
+              </div>
+            </a>
+          `;
+        }).join('');
+      }
+
+      // Render all 8 Chapters according to current level filter
+      function renderChapters() {
+        const container = document.getElementById('chaptersContainer');
+        if (!container) return;
+
+        const levelOrder = state.level === 'all'
+          ? ['beginner', 'intermediate', 'advanced']
+          : [state.level];
+
+        container.innerHTML = CHAPTERS.map((ch) => {
+          const isRead = state.read.has(ch.id);
+          const isBm = state.bookmarks.has(ch.id);
+
+          const levelSectionsHtml = levelOrder.map((lvlKey) => {
+            const lvlData = ch.levels[lvlKey];
+            const lvlMeta = LEVELS.find((l) => l.id === lvlKey);
+            if (!lvlData || !lvlMeta) return '';
+
+            const pointsHtml = lvlData.points.map((pt) => `
+              <li class="glass-card p-4">
+                <div class="font-bold text-sm sm:text-base mb-1 searchable-text" style="color: var(--ink-primary);">
+                  ${formatInlineCode(pt.title)}
+                </div>
+                <p class="text-sm sm:text-[0.95rem] m-0 searchable-text" style="color: var(--ink-secondary);">
+                  ${formatInlineCode(pt.text)}
+                </p>
+              </li>
+            `).join('');
+
+            return `
+              <section class="mt-6" aria-label="${escapeHtml(lvlData.heading)}">
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline); color: ${lvlMeta.accent};">
+                    ${escapeHtml(lvlMeta.badge)}
+                  </span>
+                  <h2 class="text-lg sm:text-xl font-bold m-0 searchable-text" style="color: var(--ink-primary);">
+                    ${formatInlineCode(lvlData.heading)}
+                  </h2>
+                </div>
+                <p class="text-sm sm:text-base mb-3.5 searchable-text" style="color: var(--ink-secondary);">
+                  ${formatInlineCode(lvlData.lead)}
+                </p>
+                <ul class="list-none p-0 m-0 space-y-2.5">
+                  ${pointsHtml}
+                </ul>
+              </section>
+            `;
+          }).join('');
+
+          const summaryCardsHtml = ch.summary.map((item) => `
+            <div class="glass-card p-3.5">
+              <div class="text-xs font-bold mb-1" style="color: var(--accent-blue);">${escapeHtml(item.badge)}</div>
+              <p class="text-xs sm:text-sm m-0 searchable-text" style="color: var(--ink-secondary);">
+                ${formatInlineCode(item.text)}
+              </p>
+            </div>
+          `).join('');
+
+          return `
+            <article id="${ch.id}" data-section-id="${ch.id}" class="glass-panel p-6 sm:p-8 scroll-mt-24">
+              <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-3 py-1 rounded-full text-xs font-bold tabular-nums" style="background: rgba(10,132,255,0.14); color: var(--accent-blue); border: 1px solid rgba(10,132,255,0.32);">
+                    فصل ${ch.num} از ۸
+                  </span>
+                  <span class="route-chip">${escapeHtml(ch.routeLabel)}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" class="glass-btn bookmark-toggle text-xs" data-bookmark-id="${ch.id}" aria-pressed="${isBm}" style="min-height: 34px; padding: 5px 11px;">
+                    <span class="bm-icon">${isBm ? '★' : '☆'}</span>
+                    <span class="bm-text">${isBm ? 'نشان‌شده' : 'نشان کردن'}</span>
+                  </button>
+                  <button type="button" class="glass-btn read-toggle text-xs" data-read-id="${ch.id}" aria-pressed="${isRead}" style="min-height: 34px; padding: 5px 11px;">
+                    <span class="rd-icon">${isRead ? '✓' : '○'}</span>
+                    <span class="rd-text">${isRead ? 'خوانده‌شده' : 'خوانده شد'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <h2 class="text-xl sm:text-2xl font-extrabold leading-snug mb-3 searchable-text" style="color: var(--ink-primary);">
+                ${formatInlineCode(ch.title)}
+              </h2>
+
+              <p class="text-sm sm:text-base searchable-text" style="color: var(--ink-secondary);">
+                ${formatInlineCode(ch.introLead)}
+              </p>
+
+              ${levelSectionsHtml}
+
+              <section class="mt-7 pt-5" style="border-top: 1px solid var(--border-hairline);" aria-label="${escapeHtml(ch.summaryTitle)}">
+                <h3 class="text-base sm:text-lg font-bold mb-3" style="color: var(--ink-primary);">
+                  ${escapeHtml(ch.summaryTitle)}
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  ${summaryCardsHtml}
+                </div>
+              </section>
+            </article>
+          `;
+        }).join('');
+
+        bindArticleButtons();
+      }
+
+      // Render Navigation Lists (Desktop & Mobile)
+      function renderNavigationLists() {
+        const buildItemsHtml = () => ALL_SECTIONS.map((sec) => {
+          const isCurrent = state.currentSection === sec.id;
+          const isRead = state.read.has(sec.id);
+          const isBm = state.bookmarks.has(sec.id);
+
+          return `
+            <button
+              type="button"
+              data-nav-target="${sec.id}"
+              class="nav-item ${isCurrent ? 'is-current' : ''}"
+              aria-current="${isCurrent ? 'page' : 'false'}"
+            >
+              <span class="truncate">${escapeHtml(sec.shortTitle)}</span>
+              <span class="flex items-center gap-1.5 shrink-0 text-xs">
+                ${isBm ? '<span title="نشان‌شده" style="color: var(--accent-amber);">★</span>' : ''}
+                <span title="${isRead ? 'خوانده‌شده' : 'خوانده‌نشده'}" style="color: ${isRead ? 'var(--accent-green)' : 'var(--ink-muted)'};">${isRead ? '✓' : '○'}</span>
+              </span>
+            </button>
+          `;
+        }).join('');
+
+        const desktopNav = document.getElementById('desktopNavContainer');
+        const mobileNav = document.getElementById('mobileNavContainer');
+        const html = buildItemsHtml();
+        if (desktopNav) desktopNav.innerHTML = html;
+        if (mobileNav) mobileNav.innerHTML = html;
+
+        document.querySelectorAll('[data-nav-target]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-nav-target');
+            navigateToSection(targetId, true);
+            closeMobileDrawer();
+          });
+        });
+      }
+
+      // Update Read & Bookmark counters
+      function updateCounters() {
+        const readEl = document.getElementById('readCountLabel');
+        const bmEl = document.getElementById('bookmarkCountLabel');
+        if (readEl) readEl.textContent = `${state.read.size} از ${ALL_SECTIONS.length}`;
+        if (bmEl) bmEl.textContent = `${state.bookmarks.size}`;
+      }
+
+      // Bind bookmark and read toggles on articles
+      function bindArticleButtons() {
+        document.querySelectorAll('.bookmark-toggle').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-bookmark-id');
+            if (!id) return;
+            if (state.bookmarks.has(id)) {
+              state.bookmarks.delete(id);
+              showToast('نشان از این بخش برداشته شد');
+            } else {
+              state.bookmarks.add(id);
+              showToast('این بخش به نشان‌ها اضافه شد');
+            }
+            safeSet(STORAGE_KEYS.bookmarks, JSON.stringify([...state.bookmarks]));
+            syncAllViews();
+          });
+        });
+
+        document.querySelectorAll('.read-toggle').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-read-id');
+            if (!id) return;
+            if (state.read.has(id)) {
+              state.read.delete(id);
+              showToast('وضعیت خوانده‌شده برداشته شد');
+            } else {
+              state.read.add(id);
+              showToast('به عنوان خوانده‌شده ثبت شد');
+            }
+            safeSet(STORAGE_KEYS.read, JSON.stringify([...state.read]));
+            syncAllViews();
+          });
+        });
+      }
+
+      // Update Prev/Next section buttons
+      function updatePrevNextControls() {
+        const idx = ALL_SECTIONS.findIndex((s) => s.id === state.currentSection);
+        const safeIdx = idx === -1 ? 0 : idx;
+        const prevSec = safeIdx > 0 ? ALL_SECTIONS[safeIdx - 1] : null;
+        const nextSec = safeIdx < ALL_SECTIONS.length - 1 ? ALL_SECTIONS[safeIdx + 1] : null;
+
+        const prevBtn = document.getElementById('prevSectionBtn');
+        const nextBtn = document.getElementById('nextSectionBtn');
+        const prevLbl = document.getElementById('prevSectionLabel');
+        const nextLbl = document.getElementById('nextSectionLabel');
+        const indEl = document.getElementById('currentSectionIndicator');
+
+        if (prevBtn && prevLbl) {
+          prevBtn.disabled = !prevSec;
+          prevBtn.style.opacity = prevSec ? '1' : '0.45';
+          prevLbl.textContent = prevSec ? `(${prevSec.shortTitle})` : '';
+          prevBtn.onclick = () => prevSec && navigateToSection(prevSec.id, true);
+        }
+
+        if (nextBtn && nextLbl) {
+          nextBtn.disabled = !nextSec;
+          nextBtn.style.opacity = nextSec ? '1' : '0.45';
+          nextLbl.textContent = nextSec ? `(${nextSec.shortTitle})` : '';
+          nextBtn.onclick = () => nextSec && navigateToSection(nextSec.id, true);
+        }
+
+        if (indEl) {
+          indEl.textContent = `بخش فعلی: ${ALL_SECTIONS[safeIdx].shortTitle} (${safeIdx + 1} از ${ALL_SECTIONS.length})`;
+        }
+      }
+
+      // Dynamic 2026 SEO Meta & JSON-LD synchronization
+      function syncSeoMetadata(sectionId, searchQuery) {
+        const secObj = ALL_SECTIONS.find((s) => s.id === sectionId) || ALL_SECTIONS[0];
+        const chapterObj = CHAPTERS.find((c) => c.id === sectionId);
+        const levelLabel = state.level === 'beginner'
+          ? 'سطح تازه‌کار'
+          : state.level === 'intermediate'
+          ? 'سطح میان‌رده'
+          : state.level === 'advanced'
+          ? 'سطح پیشرفته و مدیر سیستم'
+          : 'همه سطوح';
+
+        const cleanTitle = secObj.title.replace(/`/g, '');
+        const titleStr = searchQuery.trim()
+          ? `جستجوی «${searchQuery.trim()}» | ${cleanTitle} | BTCS`
+          : `${cleanTitle} (${levelLabel}) | راهنمای جامع BTCS`;
+
+        const descStr = chapterObj
+          ? `${chapterObj.introLead} — ${levelLabel} در راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی BTCS.`
+          : 'راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS) شامل اینترو و ۸ فصل کاربردی برای تریدر تازه‌کار، میان‌رده، پیشرفته و مدیر سیستم.';
+
+        document.title = titleStr;
+        document.getElementById('pageTitle').textContent = titleStr;
+        document.getElementById('metaDescription').setAttribute('content', descStr);
+        document.getElementById('ogTitle').setAttribute('content', titleStr);
+        document.getElementById('ogDescription').setAttribute('content', descStr);
+        document.getElementById('twTitle').setAttribute('content', titleStr);
+        document.getElementById('twDescription').setAttribute('content', descStr);
+        document.getElementById('canonicalLink').setAttribute('href', `#${secObj.id}`);
+
+        const jsonLdEl = document.getElementById('jsonLdData');
+        if (jsonLdEl) {
+          const breadcrumbItems = [
+            { '@type': 'ListItem', position: 1, name: 'مقدمه راهنما', item: '#intro' }
+          ];
+          if (secObj.id !== 'intro') {
+            breadcrumbItems.push({
+              '@type': 'ListItem',
+              position: 2,
+              name: secObj.shortTitle,
+              item: `#${secObj.id}`
+            });
+          }
+
+          const ldPayload = {
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'TechArticle',
+                '@id': '#guide-article',
+                'headline': titleStr,
+                'inLanguage': 'fa-IR',
+                'datePublished': '2026-11-22',
+                'dateModified': '2026-11-22',
+                'proficiencyLevel': levelLabel,
+                'description': descStr,
+                'url': `#${secObj.id}`
+              },
+              {
+                '@type': 'BreadcrumbList',
+                '@id': '#guide-breadcrumb',
+                'itemListElement': breadcrumbItems
+              },
+              {
+                '@type': 'FAQPage',
+                '@id': '#guide-faq',
+                'mainEntity': [
+                  {
+                    '@type': 'Question',
+                    'name': 'آیا پلتفرم BTCS صرافی است یا سفارش واقعی ثبت می‌کند؟',
+                    'acceptedAnswer': {
+                      '@type': 'Answer',
+                      'text': 'خیر؛ این پلتفرم صرافی نیست و سفارش واقعی ثبت نمی‌کند یا دارایی نگه نمی‌دارد؛ هدف آن تحلیل بازار، شبیه‌سازی معاملات و سنجش واقع‌گرایانه عملکرد است.'
+                    }
+                  },
+                  {
+                    '@type': 'Question',
+                    'name': 'چگونه می‌توان از این راهنما در سطوح مختلف ترید استفاده کرد؟',
+                    'acceptedAnswer': {
+                      '@type': 'Answer',
+                      'text': 'هر فصل برای سه سطح تریدر تازه‌کار، تریدر میان‌رده و تریدر پیشرفته و مدیر سیستم دسته‌بندی شده و همراه با جمع‌بندی عملی ارائه شده است.'
+                    }
+                  }
+                ]
+              }
+            ]
+          };
+          jsonLdEl.textContent = JSON.stringify(ldPayload, null, 2);
+        }
+      }
+
+      // Apply current search query & step through hits
+      let activeHits = [];
+      function applySearchHighlights(scrollToHit = false) {
+        const mainEl = document.getElementById('mainContent');
+        const statusBar = document.getElementById('searchStatusBar');
+        const summaryText = document.getElementById('searchSummaryText');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        if (!mainEl) return;
+
+        // Remove previous <mark> elements and normalize text nodes
+        mainEl.querySelectorAll('mark.search-hit').forEach((mark) => {
+          const parent = mark.parentNode;
+          if (parent) {
+            parent.replaceChild(document.createTextNode(mark.textContent || ''), mark);
+            parent.normalize();
+          }
+        });
+
+        const q = state.searchQuery.trim();
+        if (clearBtn) {
+          clearBtn.classList.toggle('hidden', !q);
+        }
+
+        if (!q) {
+          activeHits = [];
+          state.hitIndex = 0;
+          if (statusBar) statusBar.classList.add('hidden');
+          syncSeoMetadata(state.currentSection, '');
+          return;
+        }
+
+        activeHits = highlightTextNodes(mainEl, q);
+        if (activeHits.length === 0) {
+          state.hitIndex = 0;
+          if (statusBar) statusBar.classList.remove('hidden');
+          if (summaryText) summaryText.textContent = `هیچ نتیجه‌ای برای «${q}» در بخش‌های نمایش‌داده‌شده پیدا نشد.`;
+          syncSeoMetadata(state.currentSection, q);
+          return;
+        }
+
+        if (state.hitIndex >= activeHits.length) state.hitIndex = 0;
+        if (state.hitIndex < 0) state.hitIndex = activeHits.length - 1;
+
+        activeHits.forEach((m, idx) => {
+          m.style.outline = idx === state.hitIndex ? '2px solid var(--accent-blue)' : 'none';
+          m.style.outlineOffset = '1px';
+        });
+
+        if (statusBar) statusBar.classList.remove('hidden');
+        if (summaryText) {
+          summaryText.textContent = `${activeHits.length} مورد برای «${q}» یافت شد (مورد ${state.hitIndex + 1} از ${activeHits.length}).`;
+        }
+
+        if (scrollToHit && activeHits[state.hitIndex]) {
+          activeHits[state.hitIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        syncSeoMetadata(state.currentSection, q);
+      }
+
+      // Navigate to a specific section
+      function navigateToSection(sectionId, shouldScroll = false) {
+        const exists = ALL_SECTIONS.some((s) => s.id === sectionId);
+        state.currentSection = exists ? sectionId : 'intro';
+        safeSet(STORAGE_KEYS.lastSection, state.currentSection);
+
+        if (location.hash !== `#${state.currentSection}`) {
+          try {
+            history.replaceState(null, '', `#${state.currentSection}`);
+          } catch {
+            location.hash = `#${state.currentSection}`;
+          }
+        }
+
+        renderNavigationLists();
+        updatePrevNextControls();
+        syncSeoMetadata(state.currentSection, state.searchQuery);
+
+        if (shouldScroll) {
+          const targetEl = document.getElementById(state.currentSection);
+          if (targetEl) {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      }
+
+      // Full re-render of dynamic sections
+      function syncAllViews(preserveScroll = true) {
+        const prevScrollY = window.scrollY;
+        renderIntroChapterIndex();
+        renderChapters();
+        renderNavigationLists();
+        updateCounters();
+        updatePrevNextControls();
+        applySearchHighlights(false);
+        syncSeoMetadata(state.currentSection, state.searchQuery);
+
+        if (preserveScroll) {
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: prevScrollY, behavior: 'instant' });
+          });
+        }
+      }
+
+      // Theme management (Dark default, Light toggle)
+      function applyTheme(themeName) {
+        state.theme = themeName === 'light' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', state.theme);
+        safeSet(STORAGE_KEYS.theme, state.theme);
+
+        const metaTheme = document.getElementById('metaThemeColor');
+        const iconEl = document.getElementById('themeIcon');
+        const labelEl = document.getElementById('themeLabel');
+
+        if (state.theme === 'dark') {
+          if (metaTheme) metaTheme.setAttribute('content', '#090a0f');
+          if (iconEl) iconEl.textContent = '☀️';
+          if (labelEl) labelEl.textContent = 'تم روشن';
+        } else {
+          if (metaTheme) metaTheme.setAttribute('content', '#f4f5f8');
+          if (iconEl) iconEl.textContent = '🌙';
+          if (labelEl) labelEl.textContent = 'تم تیره';
+        }
+      }
+
+      // Mobile drawer open/close
+      function openMobileDrawer() {
+        const drawer = document.getElementById('mobileDrawer');
+        const backdrop = document.getElementById('drawerBackdrop');
+        const btn = document.getElementById('openDrawerBtn');
+        if (drawer) {
+          drawer.classList.add('open');
+          drawer.setAttribute('aria-hidden', 'false');
+        }
+        if (backdrop) backdrop.classList.add('open');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+      }
+
+      function closeMobileDrawer() {
+        const drawer = document.getElementById('mobileDrawer');
+        const backdrop = document.getElementById('drawerBackdrop');
+        const btn = document.getElementById('openDrawerBtn');
+        if (drawer) {
+          drawer.classList.remove('open');
+          drawer.setAttribute('aria-hidden', 'true');
+        }
+        if (backdrop) backdrop.classList.remove('open');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }
+
+      // Reading progress bar & active section tracking on scroll
+      function handleScroll() {
+        const docEl = document.documentElement;
+        const scrollTop = window.scrollY || docEl.scrollTop || 0;
+        const scrollHeight = docEl.scrollHeight - docEl.clientHeight;
+        const pctRead = scrollHeight > 0 ? Math.min(100, Math.max(0, (scrollTop / scrollHeight) * 100)) : 0;
+
+        const bar = document.getElementById('readingProgress');
+        if (bar) bar.style.width = `${pctRead.toFixed(1)}%`;
+
+        // Detect section closest to top offset
+        const headerOffset = 135;
+        let activeId = state.currentSection;
+        for (const sec of ALL_SECTIONS) {
+          const el = document.getElementById(sec.id);
+          if (!el) continue;
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= headerOffset) {
+            activeId = sec.id;
+          }
+        }
+
+        if (activeId !== state.currentSection) {
+          state.currentSection = activeId;
+          safeSet(STORAGE_KEYS.lastSection, activeId);
+          renderNavigationLists();
+          updatePrevNextControls();
+          syncSeoMetadata(activeId, state.searchQuery);
+        }
+      }
+
+      // Copy current section link helper (with clipboard API + execCommand fallback)
+      function copyCurrentLink() {
+        const url = `${window.location.origin}${window.location.pathname}#${state.currentSection}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(
+            () => showToast('لینک این بخش در کلیپ‌بورد کپی شد'),
+            () => fallbackCopy(url)
+          );
+        } else {
+          fallbackCopy(url);
+        }
+      }
+
+      function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          showToast('لینک این بخش کپی شد');
+        } catch {
+          showToast('کپی خودکار در این مرورگر امکان‌پذیر نیست');
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initialize all event listeners & saved state
+      function init() {
+        applyTheme(safeGet(STORAGE_KEYS.theme, 'dark'));
+        state.level = safeGet(STORAGE_KEYS.level, 'all');
+
+        try {
+          const savedRead = JSON.parse(safeGet(STORAGE_KEYS.read, '[]'));
+          if (Array.isArray(savedRead)) state.read = new Set(savedRead);
+        } catch { state.read = new Set(); }
+
+        try {
+          const savedBm = JSON.parse(safeGet(STORAGE_KEYS.bookmarks, '[]'));
+          if (Array.isArray(savedBm)) state.bookmarks = new Set(savedBm);
+        } catch { state.bookmarks = new Set(); }
+
+        const hashId = (location.hash || '').replace(/^#/, '');
+        const lastId = safeGet(STORAGE_KEYS.lastSection, 'intro');
+        state.currentSection = ALL_SECTIONS.some((s) => s.id === hashId)
+          ? hashId
+          : ALL_SECTIONS.some((s) => s.id === lastId)
+          ? lastId
+          : 'intro';
+
+        // Level filter buttons
+        document.querySelectorAll('.level-pill').forEach((pill) => {
+          const lvl = pill.getAttribute('data-level');
+          const active = lvl === state.level;
+          pill.classList.toggle('is-active', active);
+          pill.setAttribute('aria-selected', String(active));
+
+          pill.addEventListener('click', () => {
+            state.level = lvl || 'all';
+            safeSet(STORAGE_KEYS.level, state.level);
+            document.querySelectorAll('.level-pill').forEach((p) => {
+              const isSel = p.getAttribute('data-level') === state.level;
+              p.classList.toggle('is-active', isSel);
+              p.setAttribute('aria-selected', String(isSel));
+            });
+            syncAllViews(true);
+            showToast(`نمایش سطح: ${pill.textContent.trim()}`);
+          });
+        });
+
+        // Search input & stepping
+        const searchInput = document.getElementById('guideSearchInput');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const prevHitBtn = document.getElementById('prevHitBtn');
+        const nextHitBtn = document.getElementById('nextHitBtn');
+
+        if (searchInput) {
+          searchInput.addEventListener('input', (e) => {
+            state.searchQuery = e.target.value || '';
+            state.hitIndex = 0;
+            applySearchHighlights(false);
+          });
+          searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && activeHits.length > 0) {
+              e.preventDefault();
+              applySearchHighlights(true);
+            } else if (e.key === 'Escape') {
+              state.searchQuery = '';
+              searchInput.value = '';
+              applySearchHighlights(false);
+              searchInput.blur();
+            }
+          });
+        }
+
+        if (clearSearchBtn && searchInput) {
+          clearSearchBtn.addEventListener('click', () => {
+            state.searchQuery = '';
+            searchInput.value = '';
+            state.hitIndex = 0;
+            applySearchHighlights(false);
+            searchInput.focus();
+          });
+        }
+
+        if (prevHitBtn) {
+          prevHitBtn.addEventListener('click', () => {
+            if (!activeHits.length) return;
+            state.hitIndex = (state.hitIndex - 1 + activeHits.length) % activeHits.length;
+            applySearchHighlights(true);
+          });
+        }
+
+        if (nextHitBtn) {
+          nextHitBtn.addEventListener('click', () => {
+            if (!activeHits.length) return;
+            state.hitIndex = (state.hitIndex + 1) % activeHits.length;
+            applySearchHighlights(true);
+          });
+        }
+
+        // Theme & Copy Link
+        document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
+          applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+          showToast(state.theme === 'dark' ? 'تم تیره فعال شد' : 'تم روشن فعال شد');
+        });
+
+        document.getElementById('copyLinkBtn')?.addEventListener('click', copyCurrentLink);
+
+        // Reset progress button (non-blocking reset with toast)
+        document.getElementById('resetProgressBtn')?.addEventListener('click', () => {
+          state.read.clear();
+          state.bookmarks.clear();
+          safeSet(STORAGE_KEYS.read, '[]');
+          safeSet(STORAGE_KEYS.bookmarks, '[]');
+          syncAllViews(true);
+          showToast('وضعیت خوانده‌شده‌ها و نشان‌ها پاک شد');
+        });
+
+        // Mobile Drawer
+        document.getElementById('openDrawerBtn')?.addEventListener('click', openMobileDrawer);
+        document.getElementById('closeDrawerBtn')?.addEventListener('click', closeMobileDrawer);
+        document.getElementById('drawerBackdrop')?.addEventListener('click', closeMobileDrawer);
+
+        // Brand Home Link
+        document.getElementById('brandHomeLink')?.addEventListener('click', (e) => {
+          e.preventDefault();
+          navigateToSection('intro', true);
+        });
+
+        // Keyboard shortcuts: '/' focuses search; Alt+ArrowLeft / Alt+ArrowRight navigates sections
+        document.addEventListener('keydown', (e) => {
+          const tag = document.activeElement ? document.activeElement.tagName : '';
+          const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+
+          if (e.key === '/' && !isTyping && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            searchInput?.focus();
+            return;
+          }
+
+          if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+            e.preventDefault();
+            const idx = ALL_SECTIONS.findIndex((s) => s.id === state.currentSection);
+            const curIdx = idx === -1 ? 0 : idx;
+            // In RTL: ArrowLeft moves to next section, ArrowRight moves to previous section
+            const targetIdx = e.key === 'ArrowLeft'
+              ? Math.min(ALL_SECTIONS.length - 1, curIdx + 1)
+              : Math.max(0, curIdx - 1);
+            navigateToSection(ALL_SECTIONS[targetIdx].id, true);
+          }
+        });
+
+        // Hashchange & Scroll listeners
+        window.addEventListener('hashchange', () => {
+          const h = (location.hash || '').replace(/^#/, '');
+          if (ALL_SECTIONS.some((s) => s.id === h)) {
+            navigateToSection(h, true);
+          }
+        });
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        // Initial render
+        syncAllViews(false);
+        if (state.currentSection !== 'intro') {
+          requestAnimationFrame(() => {
+            document.getElementById(state.currentSection)?.scrollIntoView({ behavior: 'instant' });
+          });
+        }
+        handleScroll();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
