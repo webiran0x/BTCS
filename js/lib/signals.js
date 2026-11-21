@@ -1,4 +1,4 @@
-// موتور سیگنال: اندیکاتورها را به یک امتیاز خرید/فروش، یک برنامه معاملاتی 
+// موتور سیگنال: اندیکاتورها را به یک امتیاز خرید/فروش، یک برنامه معاملاتی
 // (ورود، حد ضرر، اهداف سود) و یک بَک‌تست (آزمایش گذشته‌نگار) از همان قوانین تبدیل می‌کند.
 // این‌ها سیگنال‌های فنی مبتنی بر قانون هستند، نه توصیه مالی.
 
@@ -15,11 +15,11 @@ export const THRESHOLDS = { strong: 45, normal: 18 };
  * تنها در حدود یک چهارم مواقع محقق می‌شود. این همان دلیل ریاضی پشت بک‌تست هفتگی منفی ۶۰٪ است،
  * و هیچ مدل پیش‌بینی‌ای نمی‌تواند برنامه‌ای را نجات دهد که خروج‌های آن سودآور نیستند.
  *
- * مقدار `ev` ارزش مورد انتظار اندازه‌گیری‌شده به ازای هر معامله بر حسب واحد ریسک (R)، پس از کسر کارمزد، 
- * در هنگام ورود در هر کندل از نیمه جدیدتر کندل‌های هر رمزارز است. یک عدد منفی یعنی خود هندسه زیان‌ده است — 
+ * مقدار `ev` ارزش مورد انتظار اندازه‌گیری‌شده به ازای هر معامله بر حسب واحد ریسک (R)، پس از کسر کارمزد،
+ * در هنگام ورود در هر کندل از نیمه جدیدتر کندل‌های هر رمزارز است. یک عدد منفی یعنی خود هندسه زیان‌ده است —
  * رابط کاربری این موضوع را اعلام می‌کند به جای اینکه سطح‌هایی را چاپ کند که بی‌سرصدا پول کاربر را هدر می‌دهند.
  * مجدداً در تاریخ 2026-10-15 روی تمام ۱۰۶ رمزارز اندازه‌گیری شد (تست signals، دو اجرا با اختلاف چند ساعت، نتیجه بعدی نمایش داده شده):
- * 15m معادل -0.002 و -0.004R، ‏ 1h معادل +0.084 و +0.053R، ‏ 4h معادل -0.033 و -0.038R، ‏ 1d معادل -0.036 و -0.033R.
+ * 15m معادل -0.002 و -0.004R، 1h معادل +0.084 و +0.053R، 4h معادل -0.033 و -0.038R، 1d معادل -0.036 و -0.033R.
  * برنامه روزانه که روی ۱۲ رمزارز +0.058R بود، روی ۱۰۶ رمزارز زیان‌ده است. در هیچ نموداری جفت حد ضرر/هدف دیگری
  * عملکردی بهتر از 0.01R نداشت، که کاملاً در محدوده نوسان بین دو اجرای تست قرار دارد، بنابراین سطوح تغییری نکرده‌اند.
  */
@@ -29,23 +29,28 @@ export const TRADE_GEOMETRY = {
   '4h':  { stopAtr: 1, rr: 1, ev: -0.038, tested: true },
   '1d':  { stopAtr: 1, rr: 2, ev: -0.033, tested: true },
 };
+
 /** تعداد نقاط ورود و رمزارزهایی که ارقام `ev` در بالا بر پایه آن‌ها بنا شده‌اند. */
-export const GEOMETRY_TESTED = { coins: 106, measuredOn: '2026-10-15', entries: { '15m': 51359, '1h': 33128, '4h': 53599, '1d': 22146 } };
+export const GEOMETRY_TESTED = {
+  coins: 106,
+  measuredOn: '2026-10-15',
+  entries: { '15m': 51359, '1h': 33128, '4h': 53599, '1d': 22146 },
+};
 
 /**
  * امتیاز چیست و چه چیزی نیست — که با اندازه‌گیری مشخص شده است.
  *
- * دو تست انجام شد و نتایج آن‌ها با هم اختلاف داشتند. تست ضعیف‌تر ابتدا منتشر شد 
+ * دو تست انجام شد و نتایج آن‌ها با هم اختلاف داشتند. تست ضعیف‌تر ابتدا منتشر شد
  * و این کامنت وجود دارد تا آن اشتباه تکرار نشود.
  *
- * تست ۱ — میانگین‌های دسته‌ای (`tools/evaluate-signal-edge.mjs`). هر کندل را بر اساس 
- * امتیازی که نشان داده دسته‌بندی کنید، سپس نتیجه را میانگین بگیرید. در نمودار ۱ ساعته، 
- * امتیازهای ۴۵ تا ۵۹ در ۳۵.۴٪ مواقع به هدف خوردند در حالی که نرخ پایه ۲۷.۵٪ بود: 
+ * تست ۱ — میانگین‌های دسته‌ای (`tools/evaluate-signal-edge.mjs`). هر کندل را بر اساس
+ * امتیازی که نشان داده دسته‌بندی کنید، سپس نتیجه را میانگین بگیرید. در نمودار ۱ ساعته،
+ * امتیازهای ۴۵ تا ۵۹ در ۳۵.۴٪ مواقع به هدف خوردند در حالی که نرخ پایه ۲۷.۵٪ بود:
  * افزایشی معادل ۱.۲۹ برابر روی ۴۸۶ نمونه، که به نظر می‌آید یک مزیت واقعی باشد.
  *
- * تست ۲ — معامله کردن با آن (`tools/evaluate-band-strategy.mjs`). فقط همان سیگنال‌ها را بگیرید، 
- * به ترتیب، یک پوزیشن در هر زمان، با احتساب کارمزد، و آن‌ها را با ورود در هر کندل از همان بازه 
- * با خروج‌های یکسان مقایسه کنید. تست مجدد در تاریخ 2026-10-16 روی تمام ۱۰۶ رمزارز، روی هر دو نیمه 
+ * تست ۲ — معامله کردن با آن (`tools/evaluate-band-strategy.mjs`). فقط همان سیگنال‌ها را بگیرید،
+ * به ترتیب، یک پوزیشن در هر زمان، با احتساب کارمزد، و آن‌ها را با ورود در هر کندل از همان بازه
+ * با خروج‌های یکسان مقایسه کنید. تست مجدد در تاریخ 2026-10-16 روی تمام ۱۰۶ رمزارز، روی هر دو نیمه
  * کندل‌های هر رمزارز، با بهترین بازه ظاهری هر نمودار (بازه 1d که از روی نیمه جدیدتر انتخاب شده بود):
  *
  *                        نیمه جدیدتر              نیمه قدیمی‌تر
@@ -53,15 +58,15 @@ export const GEOMETRY_TESTED = { coins: 106, measuredOn: '2026-10-15', entries: 
  *   4h، امتیازهای 18 تا 29 :  +0.039R در برابر −0.024R      −0.012R در برابر −0.011R
  *   1d، امتیازهای 60 تا 100:  +0.176R در برابر −0.014R      −0.076R در برابر −0.032R
  *
- * هر بازه در نیمه‌ای که ظاهر خوبی داشت توانست ورودی‌های هر کندل را شکست دهد و در نیمه دیگر نتوانست؛ 
+ * هر بازه در نیمه‌ای که ظاهر خوبی داشت توانست ورودی‌های هر کندل را شکست دهد و در نیمه دیگر نتوانست؛
  * بازه روزانه که قوی‌ترین بود، در نیمه‌ای که برای انتخاب آن استفاده نشده بود، عملکردی بدتر از ورودی تصادفی هر کندل داشت.
  *
- * میانگین دسته‌ای توسط دو چیز که یک حساب واقعی به آن‌ها دسترسی ندارد تورم پیدا کرده بود: 
- * پوزیشن‌های هم‌پوشانی‌دار که هرگز نمی‌توانستند به طور هم‌زمان نگه داشته شوند، و اعتبار جزئی برای معاملاتی 
+ * میانگین دسته‌ای توسط دو چیز که یک حساب واقعی به آن‌ها دسترسی ندارد تورم پیدا کرده بود:
+ * پوزیشن‌های هم‌پوشانی‌دار که هرگز نمی‌توانستند به طور هم‌زمان نگه داشته شوند، و اعتبار جزئی برای معاملاتی
  * که صرفاً کمی مثبت به پایان رسیده‌ بودند. هیچ‌کدام در مواجهه با توالی زمانی زنده نمی‌مانند.
  *
- * بنابراین: هیچ بازه امتیازی به عنوان قابل معامله اثبات نشده است. امتیاز فقط توصیف می‌کند 
- * که اندیکاتورها در حال حاضر چقدر با هم موافق هستند. سود را پیش‌بینی نمی‌کند، یک شیب خطی نیست، 
+ * بنابراین: هیچ بازه امتیازی به عنوان قابل معامله اثبات نشده است. امتیاز فقط توصیف می‌کند
+ * که اندیکاتورها در حال حاضر چقدر با هم موافق هستند. سود را پیش‌بینی نمی‌کند، یک شیب خطی نیست،
  * و رابط کاربری این را صراحتاً می‌گوید تا مفهوم دیگری را القا نکند.
  */
 export const SIGNAL_EDGE_TESTED = {
@@ -71,7 +76,7 @@ export const SIGNAL_EDGE_TESTED = {
 };
 
 /**
- * هیچ بازه‌ای به عنوان سند قطعی ارائه نمی‌شود، زیرا هیچ‌کدام واجد شرایط آن نشدند. 
+ * هیچ بازه‌ای به عنوان سند قطعی ارائه نمی‌شود، زیرا هیچ‌کدام واجد شرایط آن نشدند.
  * نتیجه تست را برای این تایم‌فریم برمی‌گرداند تا رابط کاربری بتواند بگوید چه چیزی تلاش شده و چه چیزی یافت شده است.
  */
 export function edgeBand(interval, score) {
@@ -86,7 +91,7 @@ export const geometryFor = (interval) => TRADE_GEOMETRY[interval] || DEFAULT_GEO
 /**
  * معنای یک امتیاز، که به جای فرض کردن، اندازه‌گیری شده است.
  *
- * هر کندل از هر رمزارز بر اساس امتیاز خود مرتب شده و بررسی می‌شود که آیا قیمت H کندل بعد 
+ * هر کندل از هر رمزارز بر اساس امتیاز خود مرتب شده و بررسی می‌شود که آیا قیمت H کندل بعد
  * بالاتر بوده است یا خیر (افق صفحه رمزارز)، با کمک ابزار `tools/evaluate-score-buckets.mjs`.
  * اولین تست روی ۱۲ رمزارز (۲۴۴,۰۰۰ کندل)؛ روی تمامی ۱۰۶ رمزارز در تاریخ 2026-10-15 (۱,۵۷۶,۰۷۰ کندل):
  *
@@ -97,23 +102,25 @@ export const geometryFor = (interval) => TRADE_GEOMETRY[interval] || DEFAULT_GEO
  *   4h           51.0%     48.6%       47.9%       47.7%     45.3%
  *   1d           47.0%     46.6%       45.4%       46.9%     45.1%
  *
- * در هر نمودار، خوانشِ «صعود شدید» در کمترین تعداد دفعات با صعود قیمت دنبال شده است، 
- * و در هیچ‌کدام از نیمه‌های داده‌ها نتوانست خوانش «سقوط شدید» را شکست دهد. 
- * بنابراین کندل‌هایی که این موتور بیشترین امتیاز را به آن‌ها داده بود، آن‌هایی بودند که 
+ * در هر نمودار، خوانشِ «صعود شدید» در کمترین تعداد دفعات با صعود قیمت دنبال شده است،
+ * و در هیچ‌کدام از نیمه‌های داده‌ها نتوانست خوانش «سقوط شدید» را شکست دهد.
+ * بنابراین کندل‌هایی که این موتور بیشترین امتیاز را به آن‌ها داده بود، آن‌هایی بودند که
  * «کمترین احتمال» را برای صعود داشتند.
- * این‌ها اندیکاتورهای روند هستند و در این افق‌های زمانی، بازار کریپتو به سمت میانگین بازمی‌گردد: 
- * امتیاز بالا یعنی «این حرکت از پیش انجام شده است»، که با «این حرکت ادامه خواهد یافت» تفاوت دارد. 
- * نامیدن آن به عنوان خرید — و امتیاز بزرگ‌تر به عنوان «خرید قوی» — دقیقا خلاف آماری را به کاربر می‌گوید 
+ * این‌ها اندیکاتورهای روند هستند و در این افق‌های زمانی، بازار کریپتو به سمت میانگین بازمی‌گردد:
+ * امتیاز بالا یعنی «این حرکت از پیش انجام شده است»، که با «این حرکت ادامه خواهد یافت» تفاوت دارد.
+ * نامیدن آن به عنوان خرید — و امتیاز بزرگ‌تر به عنوان «خرید قوی» — دقیقا خلاف آماری را به کاربر می‌گوید
  * که داده‌ها نشان می‌دهند، و به همین دلیل است که یک حساب آزمایشی پیرو این برچسب‌ها با وین‌ریت ۱۹٪ ضرر کرد.
  *
- * معکوس کردن برچسب‌ها نیز مشکل را حل نمی‌کند. هر دو جهت روی یک نیمه نگه داشته‌شده از داده‌ها با حد ضرر ۱.۵ ATR، 
+ * معکوس کردن برچسب‌ها نیز مشکل را حل نمی‌کند. هر دو جهت روی یک نیمه نگه داشته‌شده از داده‌ها با حد ضرر ۱.۵ ATR،
  * اهداف R و کارمزد ۰.۱٪ به ازای هر طرف معامله شدند: هیچ‌کدام امید ریاضی مثبتی که در هر دو نیمه حفظ شود تولید نکردند.
  *
- * بنابراین برچسب منصفانه، توصیفی از میزان کشیدگی روند است، بدون هیچ‌گونه دستورالعمل یا توصیه‌ای. 
+ * بنابراین برچسب منصفانه، توصیفی از میزان کشیدگی روند است، بدون هیچ‌گونه دستورالعمل یا توصیه‌ای.
  * رنگ‌ها (tone) به صورت صعودی/نزولی به عنوان رنگ نمودار باقی می‌مانند — آن‌ها جهت تمایل اندیکاتورها را توصیف می‌کنند، نه یک توصیه.
  */
 export const SCORE_BUCKETS_TESTED = {
-  bars: 1576070, coins: 106, measuredOn: '2026-10-15',
+  bars: 1576070,
+  coins: 106,
+  measuredOn: '2026-10-15',
   upRateByBucket: {
     '5m': { extendedDown: 50.0, leaningDown: 51.4, noTrend: 49.7, leaningUp: 47.1, extendedUp: 45.4 },
     '15m': { extendedDown: 53.2, leaningDown: 51.2, noTrend: 50.0, leaningUp: 48.5, extendedUp: 46.1 },
@@ -125,7 +132,7 @@ export const SCORE_BUCKETS_TESTED = {
   invertingItAlsoFails: true,
 };
 
-// کلمات ساده برای آنچه اندیکاتورها تاکنون درباره حرکت نشان می‌دهند. 
+// کلمات ساده برای آنچه اندیکاتورها تاکنون درباره حرکت نشان می‌دهند.
 // کدهای اکشن بدون تغییر باقی می‌مانند تا رکوردهای ثبت‌شده معنی خود را حفظ کنند.
 export function labelFor(score) {
   if (score >= THRESHOLDS.strong) return { action: 'EXTENDED_UP', text: 'صعود شدید تا این لحظه', tone: 'up' };
@@ -146,117 +153,6 @@ export function upRateFor(interval, score) {
   return { bucket: key, upRatePct: t[key], bars: SCORE_BUCKETS_TESTED.bars, coins: SCORE_BUCKETS_TESTED.coins };
 }
 
-// امتیازدهی به یک کندل منفرد. متغیر `ind` خروجی تابع computeAll(candles) است.
-export function scoreAt(candles, ind, i) {
-  const c = candles[i];
-  const parts = [];
-  let max = 0;
-  const add = (key, label, points, weight, group) => { parts.push({ key, label, points, group }); max += weight; };
-
-  const e20 = ind.ema20[i], e50 = ind.ema50[i], e200 = ind.ema200[i];
-  const adxV = ind.adx.adx[i];
-  const trendMult = adxV === null ? 1 : adxV > 25 ? 1.25 : adxV < 18 ? 0.7 : 1;
-
-  // ۱. روند بلندمدت
-  if (e200 !== null) {
-    add('ema200', c.c > e200 ? 'قیمت بالای EMA 200 — روند صعودی بلندمدت' : 'قیمت پایین EMA 200 — روند نزولی بلندمدت',
-      (c.c > e200 ? 1.5 : -1.5) * trendMult, 1.5, 'trend');
-  }
-  // ۲. رژیم EMA50 / EMA200 + تقاطع‌های تازه
-  if (e50 !== null && e200 !== null) {
-    let pts = e50 > e200 ? 1 : -1;
-    let label = e50 > e200 ? 'میانگین ۵۰ بالاتر از ۲۰۰ (رژیم صعودی)' : 'میانگین ۵۰ پایین‌تر از ۲۰۰ (رژیم نزولی)';
-    for (let k = 1; k <= 5 && i - k >= 0; k++) {
-      const p50 = ind.ema50[i - k], p200 = ind.ema200[i - k];
-      if (p50 === null || p200 === null) break;
-      if (p50 <= p200 && e50 > e200) { pts = 1.5; label = 'صلیب طلایی (Golden Cross): میانگین ۵۰ از بالای ۲۰۰ عبور کرد'; break; }
-      if (p50 >= p200 && e50 < e200) { pts = -1.5; label = 'صلیب مرگ (Death Cross): میانگین ۵۰ از پایین ۲۰۰ عبور کرد'; break; }
-    }
-    add('cross', label, pts * trendMult, 1.5, 'trend');
-  }
-  // ۳. روند کوتاه‌مدت
-  if (e20 !== null && e50 !== null) {
-    const bull = (c.c > e20 ? 1 : 0) + (e20 > e50 ? 1 : 0);
-    const pts = bull === 2 ? 1 : bull === 0 ? -1 : 0;
-    const label = pts > 0 ? 'قیمت > EMA 20 > EMA 50 — روند صعودی کوتاه‌مدت'
-      : pts < 0 ? 'قیمت < EMA 20 < EMA 50 — روند نزولی کوتاه‌مدت' : 'میانگین‌های متحرک کوتاه‌مدت مختلط هستند';
-    add('ema20', label, pts * trendMult, 1, 'trend');
-  }
-  // ۴. مومنتوم MACD
-  const h = ind.macd.hist[i], hp = ind.macd.hist[i - 1];
-  if (h !== null && hp !== null && hp !== undefined) {
-    let pts, label;
-    let crossed = 0;
-    for (let k = 0; k < 3 && i - k - 1 >= 0; k++) {
-      const a = ind.macd.hist[i - k], b = ind.macd.hist[i - k - 1];
-      if (a === null || b === null) break;
-      if (b <= 0 && a > 0) { crossed = 1; break; }
-      if (b >= 0 && a < 0) { crossed = -1; break; }
-    }
-    const atrNow = ind.atr[i] || c.c * 0.01;
-    const flat = Math.abs(h) < atrNow * 0.03; 
-    if (flat) { pts = 0; label = 'اندیکاتور MACD مسطح در اطراف خط صفر (بدون مومنتوم)'; }
-    else if (crossed === 1 && h > 0) { pts = 1.25; label = 'تقاطع صعودی MACD'; }
-    else if (crossed === -1 && h < 0) { pts = -1.25; label = 'تقاطع نزولی MACD'; }
-    else if (h > 0) { pts = h >= hp ? 1 : 0.4; label = h >= hp ? 'MACD مثبت و رو به رشد' : 'MACD مثبت اما در حال کاهش'; }
-    else { pts = h <= hp ? -1 : -0.4; label = h <= hp ? 'MACD منفی و در حال افت بیشتر' : 'MACD منفی اما در حال بهبودی'; }
-    add('macd', label, pts, 1.5, 'momentum');
-  }
-  // ۵. RSI
-  const r = ind.rsi[i], rp = ind.rsi[i - 1];
-  if (r !== null) {
-    let pts = 0, label = `RSI ${r.toFixed(0)} — خنثی`;
-    const rising = rp !== null && rp !== undefined && r > rp;
-    const up = e50 !== null && c.c > e50;
-    if (r < 25) { pts = 1.5; label = `RSI ${r.toFixed(0)} — کاملاً اشباع فروش`; }
-    else if (r < 30) { pts = 1; label = `RSI ${r.toFixed(0)} — اشباع فروش`; }
-    else if (r < 45) { pts = rising ? 0.5 : -0.3; label = `RSI ${r.toFixed(0)} — ضعیف${rising ? ' اما رو به رشد' : ''}`; }
-    else if (r <= 55) { pts = 0; }
-    else if (r <= 70) { pts = up ? 0.6 : 0.2; label = `RSI ${r.toFixed(0)} — مومنتوم صعودی`; }
-    else if (r <= 80) { pts = -1; label = `RSI ${r.toFixed(0)} — اشباع خرید`; }
-    else { pts = -1.5; label = `RSI ${r.toFixed(0)} — به‌ شدت اشباع خرید، ریسک اصلاح`; }
-    add('rsi', label, pts, 1.5, 'momentum');
-  }
-  // ۶. باندهای بولینگر (Bollinger Bands)
-  const up = ind.bb.upper[i], lo = ind.bb.lower[i];
-  if (up !== null && lo !== null) {
-    let pts = 0, label = 'قیمت درون باندهای بولینگر است';
-    if (c.c < lo) { pts = 1; label = 'بسته شدن زیر باند پایینی بولینگر (کشیدگی نزولی)'; }
-    else if (c.c > up) { pts = -1; label = 'بسته شدن بالای باند بالایی بولینگر (کشیدگی صعودی)'; }
-    add('bb', label, pts, 1, 'volatility');
-  }
-  // ۷. استوکاستیک RSI (Stochastic RSI)
-  const k = ind.stoch.k[i], d = ind.stoch.d[i];
-  if (k !== null && d !== null) {
-    let pts = 0, label = `Stoch RSI ${k.toFixed(0)}`;
-    if (k < 20 && k > d) { pts = 1; label = `Stoch RSI ${k.toFixed(0)} — تقاطع صعودی در منطقه اشباع فروش`; }
-    else if (k > 80 && k < d) { pts = -1; label = `Stoch RSI ${k.toFixed(0)} — تقاطع نزولی در منطقه اشباع خرید`; }
-    add('stoch', label, pts, 1, 'momentum');
-  }
-  // ۸. تأیید حجم معاملات
-  const vs = ind.volSma[i];
-  if (vs) {
-    let pts = 0, label = 'حجم نرمال';
-    if (c.v > vs * 1.5) {
-      pts = c.c >= c.o ? 0.5 : -0.5;
-      label = `جهش حجم (${(c.v / vs).toFixed(1)} برابر میانگین) روی یک کندل ${c.c >= c.o ? 'سبز' : 'قرمز'}`;
-    }
-    add('volume', label, pts, 0.5, 'volume');
-  }
-  // ۹. حرکت جهشی (Directional Movement)
-  const pdi = ind.adx.plusDI[i], mdi = ind.adx.minusDI[i];
-  if (pdi !== null && mdi !== null && adxV !== null) {
-    const strength = adxV > 25 ? 'قوی' : adxV < 18 ? 'ضعیف / رِنج' : 'متوسط';
-    add('adx', `ADX ${adxV.toFixed(0)} (روند ${strength})، ${pdi > mdi ? 'شاخص +DI برتر است' : 'شاخص -DI برتر است'}`,
-      pdi > mdi ? 0.5 : -0.5, 0.5, 'trend');
-  }
-
-  const raw = parts.reduce((s, p) => s + p.points, 0);
-  const score = max === 0 ? 0 : Math.max(-100, Math.min(100, Math.round((raw / max) * 100)));
-  return { score, parts };
-}
-
-// تعداد اعشار برای خوانا نگه داشتن قیمت.
 function decimalsFor(p) {
   const a = Math.abs(p);
   if (a >= 1000) return 2;
@@ -272,46 +168,326 @@ function round(v, price) {
   return r === 0 && v !== 0 ? Number(v.toPrecision(4)) : r;
 }
 
-// در پوزیشن شورت (فروش)، اهداف قیمتی زیر صفر معتبر نیستند.
+function num(v) {
+  return v === null || v === undefined || !isFinite(v) ? null : +v.toPrecision(8);
+}
+
+export function fmtNum(v) {
+  if (v === null || v === undefined || !isFinite(v)) return '—';
+  const dp = decimalsFor(v);
+  return Number(v.toFixed(dp)).toLocaleString('en-US', { maximumFractionDigits: dp });
+}
+
+function intervalNoiseScale(interval) {
+  if (!interval) return 1;
+  if (['1s', '5s', '10s', '1m', '5m'].includes(interval)) return 0.85;
+  if (interval === '15m') return 0.92;
+  if (['4h', '1d', '1w'].includes(interval)) return 1.08;
+  return 1;
+}
+
+// امتیازدهی به یک کندل منفرد. متغیر `ind` خروجی تابع computeAll(candles) است.
+export function scoreAt(candles, ind, i, { interval = '' } = {}) {
+  const c = candles[i];
+  const parts = [];
+  let max = 0;
+  const tfScale = intervalNoiseScale(interval);
+  const add = (key, label, points, weight, group) => {
+    const w = weight * tfScale;
+    parts.push({ key, label, points: points * tfScale, group });
+    max += w;
+  };
+
+  const ema20Arr = ind.ema20 || [];
+  const ema50Arr = ind.ema50 || [];
+  const ema200Arr = ind.ema200 || [];
+  const atrArr = ind.atr || [];
+  const volSmaArr = ind.volSma || [];
+  const adxObj = ind.adx || {};
+  const macdObj = ind.macd || {};
+  const bbObj = ind.bb || {};
+  const stochObj = ind.stoch || {};
+
+  const e20 = ema20Arr[i] ?? null;
+  const e50 = ema50Arr[i] ?? null;
+  const e200 = ema20Arr[i] ?? ema200Arr[i] ?? null;
+  const adxV = adxObj.adx?.[i] ?? null;
+  const isStrongTrend = adxV !== null && adxV > 25;
+  const isRange = adxV !== null && adxV < 18;
+  const trendMult = adxV === null ? 1 : isStrongTrend ? 1.25 : isRange ? 0.7 : 1;
+
+  // ۱. روند بلندمدت
+  if (e200 !== null) {
+    add(
+      'ema200',
+      c.c > e200 ? 'قیمت بالای EMA 200 — روند صعودی بلندمدت' : 'قیمت پایین EMA 200 — روند نزولی بلندمدت',
+      (c.c > e200 ? 1.5 : -1.5) * trendMult,
+      1.5,
+      'trend'
+    );
+  }
+
+  // ۲. رژیم EMA50 / EMA200 + تقاطع‌های تازه با کاهش وزن تدریجی
+  if (e50 !== null && e200 !== null) {
+    let pts = e50 > e200 ? 1 : -1;
+    let label = e50 > e200 ? 'میانگین ۵۰ بالاتر از ۲۰۰ (رژیم صعودی)' : 'میانگین ۵۰ پایین‌تر از ۲۰۰ (رژیم نزولی)';
+    for (let k = 1; k <= 5 && i - k >= 0; k++) {
+      const p50 = ema50Arr[i - k], p200 = ema200Arr[i - k];
+      if (p50 === null || p200 === null) break;
+      const decay = 1 - (k - 1) * 0.1;
+      if (p50 <= p200 && e50 > e200) {
+        pts = 1.5 * decay;
+        label = `صلیب طلایی (Golden Cross): میانگین ۵۰ از بالای ۲۰۰ عبور کرد (${k} کندل قبل)`;
+        break;
+      }
+      if (p50 >= p200 && e50 < e200) {
+        pts = -1.5 * decay;
+        label = `صلیب مرگ (Death Cross): میانگین ۵۰ از پایین ۲۰۰ عبور کرد (${k} کندل قبل)`;
+        break;
+      }
+    }
+    add('cross', label, pts * trendMult, 1.5, 'trend');
+  }
+
+  // ۳. روند کوتاه‌مدت
+  if (e20 !== null && e50 !== null) {
+    const bull = (c.c > e20 ? 1 : 0) + (e20 > e50 ? 1 : 0);
+    const pts = bull === 2 ? 1 : bull === 0 ? -1 : 0;
+    const label = pts > 0 ? 'قیمت > EMA 20 > EMA 50 — روند صعودی کوتاه‌مدت'
+      : pts < 0 ? 'قیمت < EMA 20 < EMA 50 — روند نزولی کوتاه‌مدت' : 'میانگین‌های متحرک کوتاه‌مدت مختلط هستند';
+    add('ema20', label, pts * trendMult, 1, 'trend');
+  }
+
+  // ۴. مومنتوم MACD
+  const h = macdObj.hist?.[i] ?? null;
+  const hp = macdObj.hist?.[i - 1] ?? null;
+  if (h !== null && hp !== null && hp !== undefined) {
+    let pts, label;
+    let crossed = 0;
+    for (let k = 0; k < 3 && i - k - 1 >= 0; k++) {
+      const a = macdObj.hist[i - k], b = macdObj.hist[i - k - 1];
+      if (a === null || b === null) break;
+      if (b <= 0 && a > 0) { crossed = 1; break; }
+      if (b >= 0 && a < 0) { crossed = -1; break; }
+    }
+    const atrNow = atrArr[i] || c.c * 0.01;
+    const flat = Math.abs(h) < atrNow * 0.03;
+    if (flat) {
+      pts = 0;
+      label = 'اندیکاتور MACD مسطح در اطراف خط صفر (بدون مومنتوم)';
+    } else if (crossed === 1 && h > 0) {
+      pts = 1.25;
+      label = 'تقاطع صعودی MACD';
+    } else if (crossed === -1 && h < 0) {
+      pts = -1.25;
+      label = 'تقاطع نزولی MACD';
+    } else if (h > 0) {
+      pts = h >= hp ? 1 : 0.4;
+      label = h >= hp ? 'MACD مثبت و رو به رشد' : 'MACD مثبت اما در حال کاهش';
+    } else {
+      pts = h <= hp ? -1 : -0.4;
+      label = h <= hp ? 'MACD منفی و در حال افت بیشتر' : 'MACD منفی اما در حال بهبودی';
+    }
+    add('macd', label, pts, 1.5, 'momentum');
+  }
+
+  // ۵. RSI (با تعدیل در روندهای خیلی قوی در برابر بازگشت سریع به میانگین)
+  const rsiArr = ind.rsi || [];
+  const r = rsiArr[i] ?? null;
+  const rp = rsiArr[i - 1] ?? null;
+  if (r !== null) {
+    let pts = 0, label = `RSI ${r.toFixed(0)} — خنثی`;
+    const rising = rp !== null && rp !== undefined && r > rp;
+    const up = e50 !== null && c.c > e50;
+    const extremeScale = isStrongTrend ? 0.65 : 1;
+    if (r < 25) {
+      pts = 1.5 * extremeScale;
+      label = `RSI ${r.toFixed(0)} — کاملاً اشباع فروش`;
+    } else if (r < 30) {
+      pts = 1 * extremeScale;
+      label = `RSI ${r.toFixed(0)} — اشباع فروش`;
+    } else if (r < 45) {
+      pts = rising ? 0.5 : -0.3;
+      label = `RSI ${r.toFixed(0)} — ضعیف${rising ? ' اما رو به رشد' : ''}`;
+    } else if (r <= 55) {
+      pts = 0;
+    } else if (r <= 70) {
+      pts = up ? 0.6 : 0.2;
+      label = `RSI ${r.toFixed(0)} — مومنتوم صعودی`;
+    } else if (r <= 80) {
+      pts = -1 * extremeScale;
+      label = `RSI ${r.toFixed(0)} — اشباع خرید`;
+    } else {
+      pts = -1.5 * extremeScale;
+      label = `RSI ${r.toFixed(0)} — به‌ شدت اشباع خرید، ریسک اصلاح`;
+    }
+    add('rsi', label, pts, 1.5, 'momentum');
+  }
+
+  // ۶. باندهای بولینگر
+  const up = bbObj.upper?.[i] ?? null;
+  const lo = bbObj.lower?.[i] ?? null;
+  if (up !== null && lo !== null) {
+    let pts = 0, label = 'قیمت درون باندهای بولینگر است';
+    const rangeScale = isStrongTrend ? 0.6 : 1;
+    if (c.c < lo) {
+      pts = 1 * rangeScale;
+      label = 'بسته شدن زیر باند پایینی بولینگر (کشیدگی نزولی)';
+    } else if (c.c > up) {
+      pts = -1 * rangeScale;
+      label = 'بسته شدن بالای باند بالایی بولینگر (کشیدگی صعودی)';
+    }
+    add('bb', label, pts, 1, 'volatility');
+  }
+
+  // ۷. استوکاستیک RSI
+  const k = stochObj.k?.[i] ?? null;
+  const d = stochObj.d?.[i] ?? null;
+  if (k !== null && d !== null) {
+    let pts = 0, label = `Stoch RSI ${k.toFixed(0)}`;
+    if (k < 20 && k > d) {
+      pts = 1;
+      label = `Stoch RSI ${k.toFixed(0)} — تقاطع صعودی در منطقه اشباع فروش`;
+    } else if (k > 80 && k < d) {
+      pts = -1;
+      label = `Stoch RSI ${k.toFixed(0)} — تقاطع نزولی در منطقه اشباع خرید`;
+    }
+    add('stoch', label, pts, 1, 'momentum');
+  }
+
+  // ۸. تأیید حجم معاملات
+  const vs = volSmaArr[i] ?? null;
+  if (vs) {
+    let pts = 0, label = 'حجم نرمال';
+    if (c.v > vs * 1.5) {
+      pts = c.c >= c.o ? 0.5 : -0.5;
+      label = `جهش حجم (${(c.v / vs).toFixed(1)} برابر میانگین) روی یک کندل ${c.c >= c.o ? 'سبز' : 'قرمز'}`;
+    }
+    add('volume', label, pts, 0.5, 'volume');
+  }
+
+  // ۹. حرکت جهشی (Directional Movement)
+  const pdi = adxObj.plusDI?.[i] ?? null;
+  const mdi = adxObj.minusDI?.[i] ?? null;
+  if (pdi !== null && mdi !== null && adxV !== null) {
+    const strength = isStrongTrend ? 'قوی' : isRange ? 'ضعیف / رِنج' : 'متوسط';
+    add(
+      'adx',
+      `ADX ${adxV.toFixed(0)} (روند ${strength})، ${pdi > mdi ? 'شاخص +DI برتر است' : 'شاخص -DI برتر است'}`,
+      pdi > mdi ? 0.5 : -0.5,
+      0.5,
+      'trend'
+    );
+  }
+
+  const raw = parts.reduce((s, p) => s + p.points, 0);
+  const score = max === 0 ? 0 : Math.max(-100, Math.min(100, Math.round((raw / max) * 100)));
+  return { score, parts };
+}
+
 function shortTargets(price, raw) {
   const out = [];
   for (const v of raw) {
-    if (v > 0) { out.push(v); continue; }
+    if (v > 0 && v < price) {
+      out.push(v);
+      continue;
+    }
     if (!out.length) return [];
-    const prev = out[out.length - 1], before = out.length > 1 ? out[out.length - 2] : price;
-    out.push(prev * (prev / before));
+    const prev = out[out.length - 1];
+    const before = out.length > 1 ? out[out.length - 2] : price;
+    const ratio = before > 0 && prev > 0 ? Math.max(0.5, Math.min(0.98, prev / before)) : 0.92;
+    const next = prev * ratio;
+    if (!(next > 0) || next >= prev) return [];
+    out.push(next);
   }
   return out;
 }
 
+function pickNearestLevel(levels, predicate) {
+  for (const l of levels || []) {
+    if (l && Number.isFinite(l.price) && predicate(l.price)) return l.price;
+  }
+  return null;
+}
+
+function entryStop(atrStop, levelStop, side, price, atrV) {
+  if (levelStop === null || !Number.isFinite(levelStop)) return atrStop;
+  if (side === 'long') {
+    if (levelStop >= price) return atrStop;
+    const s = Math.min(atrStop, levelStop);
+    return price - s > 3 * atrV ? atrStop : s;
+  }
+  if (levelStop <= price) return atrStop;
+  const s = Math.max(atrStop, levelStop);
+  return s - price > 3 * atrV ? atrStop : s;
+}
+
+function exitList(list) {
+  const exits = list.filter(Boolean);
+  return {
+    exits,
+    exitRules: exits.map((e) => (e.price != null ? e.text.replace('{price}', fmtNum(e.price)) : e.text)),
+  };
+}
+
+function buildEdgeMeta(interval, score) {
+  const upInfo = upRateFor(interval, score);
+  const bandInfo = edgeBand(interval, score);
+  const geo = geometryFor(interval);
+  return {
+    interval,
+    scoreBucketsTested: SCORE_BUCKETS_TESTED.upRateByBucket[interval] ? {
+      upRatePct: upInfo?.upRatePct ?? null,
+      bucket: upInfo?.bucket ?? null,
+      bars: SCORE_BUCKETS_TESTED.bars,
+      coins: SCORE_BUCKETS_TESTED.coins,
+      measuredOn: SCORE_BUCKETS_TESTED.measuredOn,
+      higherScoreMeansHigherChance: SCORE_BUCKETS_TESTED.higherScoreMeansHigherChance,
+    } : null,
+    edgeBandTested: bandInfo.tested,
+    geometry: geo,
+  };
+}
+
 // سیگنال کامل برای آخرین کندل، به همراه برنامه معاملاتی.
-export function generateSignal(candles, { interval = '' } = {}) {
+export function generateSignal(candles, { interval = '', feePct = 0.1 } = {}) {
   if (!candles || candles.length < 60) {
     return { ok: false, reason: 'تاریخچه قیمتی کافی برای تولید سیگنال وجود ندارد (حداقل به ۶۰ کندل نیاز است).' };
   }
   const ind = computeAll(candles);
   const i = candles.length - 1;
   const price = candles[i].c;
-  const { score, parts } = scoreAt(candles, ind, i);
+  if (!(price > 0) || !Number.isFinite(price)) {
+    return { ok: false, reason: 'آخرین قیمت معتبر نیست.' };
+  }
+
+  const { score, parts } = scoreAt(candles, ind, i, { interval });
   const label = labelFor(score);
-  const atrV = ind.atr[i] ?? price * 0.02;
+  const atrV = ind.atr?.[i] ?? price * 0.02;
   const sr = supportResistance(candles.slice(-300));
-  const s1 = sr.supports[0]?.price ?? null;
-  const r1 = sr.resistances[0]?.price ?? null;
+  const s1 = pickNearestLevel(sr.supports, (p) => p < price);
+  const r1 = pickNearestLevel(sr.resistances, (p) => p > price);
 
   const geo = geometryFor(interval);
   let plan = null;
+
   if (score >= THRESHOLDS.normal) {
-    let stop = entryStop(price - geo.stopAtr * atrV, s1 !== null ? s1 - 0.25 * atrV : null, 'long', price, atrV);
+    const stop = entryStop(price - geo.stopAtr * atrV, s1 !== null ? s1 - 0.25 * atrV : null, 'long', price, atrV);
     const risk = price - stop;
-    const tp3Candidate = sr.resistances.find((l) => l.price > price + geo.rr * risk)?.price;
+    const minEntryFloor = stop + Math.max(0.25 * atrV, risk * 0.25);
+    const entryLow = Math.min(price, Math.max(minEntryFloor, Math.max(price - 0.5 * atrV, s1 ?? -Infinity)));
+    const tp1Raw = price + geo.rr * 0.6 * risk;
+    const tp2Raw = price + geo.rr * risk;
+    const tp3Candidate = pickNearestLevel(sr.resistances, (p) => p > price + geo.rr * risk);
+    const tp3Raw = tp3Candidate ?? price + geo.rr * 1.6 * risk;
+
     plan = {
       side: 'long',
       title: 'سطوح قیمتی در صورت خرید',
       entry: round(price, price),
-      entryZone: [round(Math.max(price - 0.5 * atrV, s1 ?? -Infinity), price), round(price, price)],
+      entryZone: [round(entryLow, price), round(price, price)],
       stopLoss: round(stop, price),
-      takeProfits: [price + geo.rr * 0.6 * risk, price + geo.rr * risk, tp3Candidate ?? price + geo.rr * 1.6 * risk].map((v) => round(v, price)),
+      takeProfits: [tp1Raw, tp2Raw, tp3Raw].map((v) => round(v, price)),
       riskPct: +((risk / price) * 100).toFixed(2),
       rewardRisk: geo.rr,
       expectancyR: geo.ev,
@@ -319,21 +495,29 @@ export function generateSignal(candles, { interval = '' } = {}) {
       ...exitList([
         { text: 'در صورتی که قیمت پایین‌تر از حد ضرر بسته شد خارج شوید ({price})', price: round(stop, price) },
         { text: 'سیو سود جزئی در هدف اول (TP1) و انتقال حد ضرر به نقطه ورود' },
-        ind.ema50[i] !== null ? { text: 'خروج روندی: بسته شدن کندل زیر EMA 50 ({price})', price: round(ind.ema50[i], price) } : null,
+        ind.ema50?.[i] !== null && ind.ema50?.[i] !== undefined
+          ? { text: 'خروج روندی: بسته شدن کندل زیر EMA 50 ({price})', price: round(ind.ema50[i], price) }
+          : null,
         { text: 'در صورت عبور RSI از ۷۵ و تضعیف مومنتوم، خارج شوید یا حد ضرر را سفت کنید' },
       ]),
     };
   } else if (score <= -THRESHOLDS.normal) {
-    let stop = entryStop(price + geo.stopAtr * atrV, r1 !== null ? r1 + 0.25 * atrV : null, 'short', price, atrV);
+    const stop = entryStop(price + geo.stopAtr * atrV, r1 !== null ? r1 + 0.25 * atrV : null, 'short', price, atrV);
     const risk = stop - price;
-    const tp3Candidate = sr.supports.find((l) => l.price < price - geo.rr * risk)?.price;
+    const maxEntryCeiling = stop - Math.max(0.25 * atrV, risk * 0.25);
+    const entryHigh = Math.max(price, Math.min(maxEntryCeiling, Math.min(price + 0.5 * atrV, r1 ?? Infinity)));
+    const tp1Raw = price - geo.rr * 0.6 * risk;
+    const tp2Raw = price - geo.rr * risk;
+    const tp3Candidate = pickNearestLevel(sr.supports, (p) => p < price - geo.rr * risk);
+    const tp3Raw = tp3Candidate ?? price - geo.rr * 1.6 * risk;
+
     plan = {
       side: 'short',
       title: 'سطوح قیمتی در صورت فروش یا پوزیشن شورت',
       entry: round(price, price),
-      entryZone: [round(price, price), round(Math.min(price + 0.5 * atrV, r1 ?? Infinity), price)],
+      entryZone: [round(price, price), round(entryHigh, price)],
       stopLoss: round(stop, price),
-      takeProfits: shortTargets(price, [price - geo.rr * 0.6 * risk, price - geo.rr * risk, tp3Candidate ?? price - geo.rr * 1.6 * risk]).map((v) => round(v, price)),
+      takeProfits: shortTargets(price, [tp1Raw, tp2Raw, tp3Raw]).map((v) => round(v, price)),
       riskPct: +((risk / price) * 100).toFixed(2),
       rewardRisk: geo.rr,
       expectancyR: geo.ev,
@@ -341,12 +525,14 @@ export function generateSignal(candles, { interval = '' } = {}) {
       ...exitList([
         { text: 'دارندگان اسپات: بستن یا کاهش حجم پوزیشن را در نظر بگیرید' },
         { text: 'پوزیشن شورت با بسته شدن کندل بالای {price} نامعتبر می‌شود', price: round(stop, price) },
-        ind.ema50[i] !== null ? { text: 'سوگیری نزولی با بسته شدن کندل بالای EMA 50 ({price}) پایان می‌یابد', price: round(ind.ema50[i], price) } : null,
+        ind.ema50?.[i] !== null && ind.ema50?.[i] !== undefined
+          ? { text: 'سوگیری نزولی با بسته شدن کندل بالای EMA 50 ({price}) پایان می‌یابد', price: round(ind.ema50[i], price) }
+          : null,
       ]),
     };
   }
 
-  const MIN_TRADEABLE_MOVE = 0.003;
+  const roundTripCostFrac = Math.max(0.003, (Math.max(0, feePct) * 2) / 100 + 0.001);
   let noEdgeReason = null;
   if (plan && (!(plan.stopLoss > 0) || plan.takeProfits.length < 3)) {
     noEdgeReason = `نوسانات قیمت در این چارت برای ستاپ ${plan.side} بیش از حد شدید است: سطوح آن نیازمند سقوط قیمت به صفر هستند که امکان‌پذیر نیست. این خوانش را به عنوان یک هشدار در نظر بگیرید یا از چارت دیگری استفاده کنید.`;
@@ -356,7 +542,7 @@ export function generateSignal(candles, { interval = '' } = {}) {
     const target = plan.takeProfits[0];
     const move = Math.abs(target - price) / price;
     const riskFrac = plan.riskPct / 100;
-    if (move < MIN_TRADEABLE_MOVE || riskFrac < 0.001) {
+    if (move < roundTripCostFrac || riskFrac < 0.001) {
       noEdgeReason = `حرکت قیمت در این تایم‌فریم برای معامله بسیار کوچک است: فاصله اولین هدف ${(move * 100).toFixed(3)}٪ است که کارمزد و اسپرد آن را می‌بلعد. برای ورود واقعی از تایم‌فریم کندتری استفاده کنید.`;
       plan = null;
     }
@@ -385,96 +571,235 @@ export function generateSignal(candles, { interval = '' } = {}) {
     waitFor,
     reasons: { bullish: bull.map((p) => p.label), bearish: bear.map((p) => p.label) },
     parts,
+    edgeMeta: buildEdgeMeta(interval, score),
     levels: {
-      supports: sr.supports.map((l) => round(l.price, price)),
-      resistances: sr.resistances.map((l) => round(l.price, price)),
+      supports: (sr.supports || []).map((l) => round(l.price, price)),
+      resistances: (sr.resistances || []).map((l) => round(l.price, price)),
     },
     indicators: {
-      rsi: num(last(ind.rsi)), macd: num(last(ind.macd.line)), macdSignal: num(last(ind.macd.signal)),
-      macdHist: num(last(ind.macd.hist)), ema20: num(ind.ema20[i]), ema50: num(ind.ema50[i]), ema200: num(ind.ema200[i]),
-      bbUpper: num(ind.bb.upper[i]), bbLower: num(ind.bb.lower[i]), atr: num(atrV), atrPct: +((atrV / price) * 100).toFixed(2),
-      adx: num(ind.adx.adx[i]), stochK: num(ind.stoch.k[i]), volumeRatio: ind.volSma[i] ? +(candles[i].v / ind.volSma[i]).toFixed(2) : null,
-      mfi: num(ind.mfi?.[i]), cci: num(ind.cci?.[i]), willR: num(ind.willr?.[i]),
-      supertrend: num(ind.supertrend?.line[i]), supertrendDir: ind.supertrend?.dir[i] ?? null,
-      donchianHigh: num(ind.donchian?.upper[i]), donchianLow: num(ind.donchian?.lower[i]),
+      rsi: num(last(ind.rsi)),
+      macd: num(last(ind.macd?.line)),
+      macdSignal: num(last(ind.macd?.signal)),
+      macdHist: num(last(ind.macd?.hist)),
+      ema20: num(ind.ema20?.[i]),
+      ema50: num(ind.ema50?.[i]),
+      ema200: num(ind.ema200?.[i]),
+      bbUpper: num(ind.bb?.upper?.[i]),
+      bbLower: num(ind.bb?.lower?.[i]),
+      atr: num(atrV),
+      atrPct: +((atrV / price) * 100).toFixed(2),
+      adx: num(ind.adx?.adx?.[i]),
+      stochK: num(ind.stoch?.k?.[i]),
+      volumeRatio: ind.volSma?.[i] ? +(candles[i].v / ind.volSma[i]).toFixed(2) : null,
+      mfi: num(ind.mfi?.[i]),
+      cci: num(ind.cci?.[i]),
+      willR: num(ind.willr?.[i]),
+      supertrend: num(ind.supertrend?.line?.[i]),
+      supertrendDir: ind.supertrend?.dir?.[i] ?? null,
+      donchianHigh: num(ind.donchian?.upper?.[i]),
+      donchianLow: num(ind.donchian?.lower?.[i]),
     },
   };
 }
 
-function entryStop(atrStop, levelStop, side, price, atrV) {
-  if (levelStop === null) return atrStop;
-  if (side === 'long') {
-    const s = Math.min(atrStop, levelStop);
-    return price - s > 3 * atrV ? atrStop : s;
-  }
-  const s = Math.max(atrStop, levelStop);
-  return s - price > 3 * atrV ? atrStop : s;
-}
-
-function exitList(list) {
-  const exits = list.filter(Boolean);
-  return { exits, exitRules: exits.map((e) => (e.price != null ? e.text.replace('{price}', fmtNum(e.price)) : e.text)) };
-}
-
-function num(v) { return v === null || v === undefined || !isFinite(v) ? null : +v.toPrecision(8); }
-export function fmtNum(v) {
-  if (v === null || v === undefined || !isFinite(v)) return '—';
-  const dp = decimalsFor(v);
-  return Number(v.toFixed(dp)).toLocaleString('en-US', { maximumFractionDigits: dp });
-}
-
-// بَک‌تست فقط لانگ از همان قوانین امتیازدهی.
-export function backtest(candles, { interval = null, entryScore = THRESHOLDS.normal, exitScore = -THRESHOLDS.normal, atrStop = null, rMultiple = null, feePct = 0.1, breakEvenAtR = null } = {}) {
+// بَک‌تست از همان قوانین امتیازدهی با پشتیبانی از لانگ، شورت یا هر دو و احتساب کارمزد و اسلیپیج.
+export function backtest(
+  candles,
+  {
+    interval = null,
+    side = 'long',
+    entryScore = THRESHOLDS.normal,
+    exitScore = -THRESHOLDS.normal,
+    atrStop = null,
+    rMultiple = null,
+    feePct = 0.1,
+    slippagePct = 0.02,
+    breakEvenAtR = null,
+  } = {}
+) {
   const geo = interval ? geometryFor(interval) : null;
   atrStop = atrStop ?? geo?.stopAtr ?? 1.5;
   rMultiple = rMultiple ?? geo?.rr ?? 2.5;
-  const n = candles.length;
+  const n = candles?.length ?? 0;
   if (n < 80) return { ok: false, reason: 'تاریخچه کافی برای بک‌تست وجود ندارد' };
+
   const ind = computeAll(candles);
   const start = n >= 260 ? 200 : 50;
-  const fee = feePct / 100;
+  const fee = Math.max(0, feePct) / 100;
+  const slip = Math.max(0, slippagePct) / 100;
   const trades = [];
   let pos = null;
   let equity = 1, peak = 1, maxDD = 0;
   const curve = [];
+
+  const allowLong = side === 'long' || side === 'both';
+  const allowShort = side === 'short' || side === 'both';
+
   for (let i = start; i < n; i++) {
     const c = candles[i];
     if (pos) {
-      let exit = null, why = '';
-      if (c.l <= pos.stop) { exit = Math.min(pos.stop, c.o); why = pos.stop >= pos.entry ? 'breakeven' : 'stop'; }
-      else if (c.h >= pos.target) { exit = Math.max(pos.target, c.o); why = 'target'; }
-      else {
-        const { score } = scoreAt(candles, ind, i);
-        pos.weak = score <= exitScore ? pos.weak + 1 : 0;
-        if (pos.weak >= 2) { exit = c.c; why = 'signal'; }
-        else if (breakEvenAtR !== null && breakEvenAtR !== undefined && c.c >= pos.entry + breakEvenAtR * pos.risk) pos.stop = Math.max(pos.stop, pos.entry);
-      }
-      if (exit !== null) {
-        const ret = (exit / pos.entry) * (1 - fee) * (1 - fee) - 1;
-        equity *= 1 + ret;
-        trades.push({ entryTime: pos.t, exitTime: c.t, entryIndex: pos.i, exitIndex: i, entry: pos.entry, exit, returnPct: +(ret * 100).toFixed(2), reason: why });
-        pos = null;
+      let exitRaw = null, why = '';
+      if (pos.side === 'long') {
+        if (c.l <= pos.stop) {
+          exitRaw = Math.min(pos.stop, c.o);
+          why = pos.stop >= pos.entry ? 'breakeven' : 'stop';
+        } else if (c.h >= pos.target) {
+          exitRaw = Math.max(pos.target, c.o);
+          why = 'target';
+        } else {
+          const { score } = scoreAt(candles, ind, i, { interval });
+          pos.weak = score <= exitScore ? pos.weak + 1 : 0;
+          if (pos.weak >= 2) {
+            exitRaw = c.c;
+            why = 'signal';
+          } else if (breakEvenAtR !== null && breakEvenAtR !== undefined && c.c >= pos.entry + breakEvenAtR * pos.risk) {
+            pos.stop = Math.max(pos.stop, pos.entry);
+          }
+        }
+        if (exitRaw !== null) {
+          const execExit = exitRaw * (1 - slip);
+          const ret = (execExit / pos.entry) * (1 - fee) * (1 - fee) - 1;
+          const rUnit = pos.risk > 0 ? (execExit - pos.entry) / pos.risk : 0;
+          equity = Math.max(1e-9, equity * (1 + ret));
+          trades.push({
+            side: 'long',
+            entryTime: pos.t,
+            exitTime: c.t,
+            entryIndex: pos.i,
+            exitIndex: i,
+            barsHeld: i - pos.i,
+            entry: pos.entry,
+            exit: execExit,
+            returnPct: +(ret * 100).toFixed(2),
+            rMultiple: +rUnit.toFixed(2),
+            reason: why,
+          });
+          pos = null;
+        }
+      } else {
+        if (c.h >= pos.stop) {
+          exitRaw = Math.max(pos.stop, c.o);
+          why = pos.stop <= pos.entry ? 'breakeven' : 'stop';
+        } else if (c.l <= pos.target) {
+          exitRaw = Math.min(pos.target, c.o);
+          why = 'target';
+        } else {
+          const { score } = scoreAt(candles, ind, i, { interval });
+          pos.weak = score >= -exitScore ? pos.weak + 1 : 0;
+          if (pos.weak >= 2) {
+            exitRaw = c.c;
+            why = 'signal';
+          } else if (breakEvenAtR !== null && breakEvenAtR !== undefined && c.c <= pos.entry - breakEvenAtR * pos.risk) {
+            pos.stop = Math.min(pos.stop, pos.entry);
+          }
+        }
+        if (exitRaw !== null && exitRaw > 0) {
+          const execExit = exitRaw * (1 + slip);
+          const ret = (pos.entry / execExit) * (1 - fee) * (1 - fee) - 1;
+          const rUnit = pos.risk > 0 ? (pos.entry - execExit) / pos.risk : 0;
+          equity = Math.max(1e-9, equity * (1 + ret));
+          trades.push({
+            side: 'short',
+            entryTime: pos.t,
+            exitTime: c.t,
+            entryIndex: pos.i,
+            exitIndex: i,
+            barsHeld: i - pos.i,
+            entry: pos.entry,
+            exit: execExit,
+            returnPct: +(ret * 100).toFixed(2),
+            rMultiple: +rUnit.toFixed(2),
+            reason: why,
+          });
+          pos = null;
+        }
       }
     } else {
-      const a = ind.atr[i];
-      if (a) {
-        const { score } = scoreAt(candles, ind, i);
-        if (score >= entryScore) {
-          pos = { entry: c.c, stop: c.c - atrStop * a, risk: atrStop * a, target: c.c + atrStop * a * rMultiple, t: c.t, i, weak: 0 };
+      const a = ind.atr?.[i];
+      if (a && a > 0 && c.c > 0) {
+        const { score } = scoreAt(candles, ind, i, { interval });
+        if (allowLong && score >= entryScore) {
+          const execEntry = c.c * (1 + slip);
+          const risk = atrStop * a;
+          pos = {
+            side: 'long',
+            entry: execEntry,
+            stop: execEntry - risk,
+            risk,
+            target: execEntry + risk * rMultiple,
+            t: c.t,
+            i,
+            weak: 0,
+          };
+        } else if (allowShort && score <= -entryScore) {
+          const execEntry = c.c * (1 - slip);
+          const risk = atrStop * a;
+          const target = execEntry - risk * rMultiple;
+          if (target > 0) {
+            pos = {
+              side: 'short',
+              entry: execEntry,
+              stop: execEntry + risk,
+              risk,
+              target,
+              t: c.t,
+              i,
+              weak: 0,
+            };
+          }
         }
       }
     }
-    const mark = pos ? equity * (c.c / pos.entry) : equity;
+
+    const mark = pos
+      ? (pos.side === 'long'
+        ? equity * ((c.c * (1 - slip)) / pos.entry)
+        : equity * (pos.entry / (c.c * (1 + slip))))
+      : equity;
     peak = Math.max(peak, mark);
     maxDD = Math.max(maxDD, (peak - mark) / peak);
     curve.push({ t: c.t, v: mark });
   }
-  const openTrade = pos ? { entryTime: pos.t, entryIndex: pos.i, entry: pos.entry, stop: pos.stop, target: pos.target, unrealizedPct: +((candles[n - 1].c / pos.entry - 1) * 100).toFixed(2) } : null;
+
+  const openTrade = pos ? {
+    side: pos.side,
+    entryTime: pos.t,
+    entryIndex: pos.i,
+    entry: pos.entry,
+    stop: pos.stop,
+    target: pos.target,
+    unrealizedPct: +(((pos.side === 'long' ? candles[n - 1].c / pos.entry : pos.entry / candles[n - 1].c) - 1) * 100).toFixed(2),
+  } : null;
+
   const wins = trades.filter((t) => t.returnPct > 0);
   const grossWin = wins.reduce((s, t) => s + t.returnPct, 0);
   const grossLoss = trades.filter((t) => t.returnPct <= 0).reduce((s, t) => s - t.returnPct, 0);
+
+  let maxConsecLosses = 0, curLosses = 0;
+  for (const t of trades) {
+    if (t.returnPct <= 0) {
+      curLosses += 1;
+      maxConsecLosses = Math.max(maxConsecLosses, curLosses);
+    } else {
+      curLosses = 0;
+    }
+  }
+
+  const barReturns = [];
+  for (let k = 1; k < curve.length; k++) {
+    const prevV = curve[k - 1].v;
+    if (prevV > 0) barReturns.push((curve[k].v - prevV) / prevV);
+  }
+  const meanRet = barReturns.length ? barReturns.reduce((a, b) => a + b, 0) / barReturns.length : 0;
+  const variance = barReturns.length > 1
+    ? barReturns.reduce((s, r) => s + (r - meanRet) ** 2, 0) / (barReturns.length - 1)
+    : 0;
+  const stdRet = Math.sqrt(variance);
+  const sharpeLike = stdRet > 0 ? +((meanRet / stdRet) * Math.sqrt(barReturns.length)).toFixed(2) : null;
+
   return {
     ok: true,
+    side,
     bars: n - start,
     from: candles[start].t,
     to: candles[n - 1].t,
@@ -485,36 +810,70 @@ export function backtest(candles, { interval = null, entryScore = THRESHOLDS.nor
     totalReturnPct: +((equity - 1) * 100).toFixed(2),
     buyHoldPct: +((candles[n - 1].c / candles[start].c - 1) * 100).toFixed(2),
     maxDrawdownPct: +(maxDD * 100).toFixed(2),
-    profitFactor: grossLoss > 0 ? +(grossWin / grossLoss).toFixed(2) : trades.length ? null : null,
+    profitFactor: grossLoss > 0 ? +(grossWin / grossLoss).toFixed(2) : null,
     avgTradePct: trades.length ? +(trades.reduce((s, t) => s + t.returnPct, 0) / trades.length).toFixed(2) : null,
+    avgRMultiple: trades.length ? +(trades.reduce((s, t) => s + t.rMultiple, 0) / trades.length).toFixed(3) : null,
+    avgBarsHeld: trades.length ? +(trades.reduce((s, t) => s + t.barsHeld, 0) / trades.length).toFixed(1) : null,
+    maxConsecutiveLosses: maxConsecLosses,
+    sharpeLike,
     curve,
   };
 }
 
-// ترکیب چندین تایم‌فریم در یک نمایهمگرا.
+// ترکیب چندین تایم‌فریم در یک نمای همگرا.
 export function confluence(signalsByInterval) {
   const weights = { '15m': 0.5, '1h': 1, '4h': 1.5, '1d': 2, '1w': 2 };
-  let sum = 0, wsum = 0;
-  for (const [iv, s] of Object.entries(signalsByInterval)) {
+  let sum = 0, wsum = 0, active = 0, aligned = 0;
+  const valid = [];
+
+  for (const [iv, s] of Object.entries(signalsByInterval || {})) {
     if (!s?.ok) continue;
     const w = weights[iv] ?? 1;
-    sum += s.score * w; wsum += w;
+    sum += s.score * w;
+    wsum += w;
+    active += 1;
+    valid.push(s.score);
   }
   if (!wsum) return null;
+
   const score = Math.round(sum / wsum);
-  return { score, ...labelFor(score) };
+  const lbl = labelFor(score);
+  if (score > 0) aligned = valid.filter((sc) => sc > 0).length;
+  else if (score < 0) aligned = valid.filter((sc) => sc < 0).length;
+  else aligned = valid.filter((sc) => Math.abs(sc) < THRESHOLDS.normal).length;
+
+  return {
+    score,
+    ...lbl,
+    agreementPct: active ? Math.round((aligned / active) * 100) : 0,
+    timeframesUsed: active,
+  };
 }
 
 // توصیه‌های تحلیلی برای رمزارزی که کاربر از قبل هولد کرده است.
 export function adviseHolding({ signal, avgBuyPrice, price }) {
   if (!signal?.ok) return { text: 'داده‌های کافی وجود ندارد', tone: 'flat' };
-  const pnl = avgBuyPrice ? (price / avgBuyPrice - 1) * 100 : null;
-  const rsiV = signal.indicators.rsi;
-  if (signal.score <= -THRESHOLDS.strong) return { text: 'سقوط شدید تا این لحظه — بررسی کنید که حد ضررتان در محل مناسبی قرار داشته باشد', tone: 'down' };
-  if (signal.score <= -THRESHOLDS.normal) {
-    return { text: pnl !== null && pnl > 0 ? 'روند نزولی — شما در سود هستید، تصمیم بگیرید که آیا می‌خواهید بخشی از آن را ذخیره کنید' : 'روند نزولی — حد ضرر خود را بررسی کنید', tone: 'down' };
+  const pnl = avgBuyPrice > 0 ? (price / avgBuyPrice - 1) * 100 : null;
+  const rsiV = signal.indicators?.rsi ?? null;
+  const nearestSupport = signal.levels?.supports?.[0] ?? null;
+  const supportNote = nearestSupport ? ` (نزدیک‌ترین حمایت: ${fmtNum(nearestSupport)})` : '';
+
+  if (signal.score <= -THRESHOLDS.strong) {
+    return { text: `سقوط شدید تا این لحظه${supportNote} — بررسی کنید که حد ضررتان در محل مناسبی قرار داشته باشد`, tone: 'down' };
   }
-  if (rsiV !== null && rsiV > 75 && pnl !== null && pnl > 15) return { text: 'اشباع خرید در حالت سود — سیو سود جزئی را در نظر بگیرید', tone: 'warn' };
-  if (signal.score >= THRESHOLDS.normal) return { text: 'روند صعودی — یک حد ضرر زیر سطح حمایت از سود شما در برابر برگشت قیمت محافظت می‌کند', tone: 'up' };
-  return { text: 'بدون روند مشخص — سطوح کلیدی را زیر نظر داشته باشید', tone: 'flat' };
+  if (signal.score <= -THRESHOLDS.normal) {
+    return {
+      text: pnl !== null && pnl > 0
+        ? `روند نزولی (${pnl >= 0 ? '+' : ''}${pnl.toFixed(1)}٪) — شما در سود هستید، تصمیم بگیرید که آیا می‌خواهید بخشی از آن را ذخیره کنید`
+        : `روند نزولی${supportNote} — حد ضرر خود را بررسی کنید`,
+      tone: 'down',
+    };
+  }
+  if (rsiV !== null && rsiV > 75 && pnl !== null && pnl > 15) {
+    return { text: `اشباع خرید در حالت سود (+${pnl.toFixed(1)}٪) — سیو سود جزئی را در نظر بگیرید`, tone: 'warn' };
+  }
+  if (signal.score >= THRESHOLDS.normal) {
+    return { text: `روند صعودی — یک حد ضرر زیر سطح حمایت${supportNote} از سود شما در برابر برگشت قیمت محافظت می‌کند`, tone: 'up' };
+  }
+  return { text: `بدون روند مشخص${supportNote} — سطوح کلیدی را زیر نظر داشته باشید`, tone: 'flat' };
 }
