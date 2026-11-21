@@ -30,49 +30,58 @@ async function codeHash(email: string, code: string) {
 }
 
 
-function emailHtml(title: string, intro: string, code?: string): string {
-  const codeBlock = code ? `
-    <tr>
-      <td align="center" style="padding:8px 28px 24px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;background:#f5f5f7;border:1px solid #e8e8ed;border-radius:16px;width:100%;">
-          <tr><td align="center" style="padding:18px 12px 8px;color:#6e6e73;font-family:Tahoma,Arial,sans-serif;font-size:13px;">کد اختصاصی شما</td></tr>
-          <tr><td align="center" dir="ltr" style="padding:0 12px 8px;color:#1d1d1f;font-family:Arial,Tahoma,sans-serif;font-size:34px;font-weight:700;letter-spacing:8px;line-height:1.5;">${code}</td></tr>
-          <tr><td align="center" style="padding:0 12px 18px;color:#86868b;font-family:Tahoma,Arial,sans-serif;font-size:12px;">این کد تا ۱۵ دقیقه معتبر است.</td></tr>
-        </table>
-      </td>
-    </tr>` : '';
-
-  const closing = code
-    ? 'اگر شما این درخواست را ثبت نکرده‌اید، نیازی به انجام کاری نیست؛ کافی است این ایمیل را نادیده بگیرید.'
-    : 'از اینکه BTCS IR را انتخاب کرده‌اید، سپاسگزاریم.';
+function renderAppleEmail(opts: {
+  badge: string;
+  title: string;
+  greeting?: string;
+  lead: string;
+  code?: string;
+  codeCaption?: string;
+  footerNote: string;
+}) {
+  const safeCode = opts.code ? escHtml(opts.code) : "";
+  const codeBlock = safeCode
+    ? `<div style="margin:24px 0;padding:20px 16px;border-radius:18px;background:#1c1c21;border:1px solid rgba(255,255,255,0.1);text-align:center;">
+        <div style="font-size:12px;color:rgba(245,245,247,0.58);margin-bottom:8px;">${escHtml(opts.codeCaption || "کد تایید شما")}</div>
+        <div dir="ltr" style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:32px;font-weight:700;letter-spacing:8px;color:#ffffff;">${safeCode}</div>
+      </div>`
+    : "";
 
   return `<!doctype html>
 <html lang="fa" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
-<body dir="rtl" style="margin:0;padding:0;background:#f5f5f7;color:#1d1d1f;font-family:Tahoma,Arial,sans-serif;-webkit-text-size-adjust:100%;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${intro}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f7;border-collapse:collapse;">
-    <tr><td align="center" style="padding:32px 14px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #e8e8ed;border-radius:22px;overflow:hidden;border-collapse:separate;">
-        <tr><td align="center" style="padding:28px 24px 20px;border-bottom:1px solid #f0f0f2;">
-          <div dir="ltr" style="font-family:Arial,Tahoma,sans-serif;font-size:23px;font-weight:800;letter-spacing:1px;color:#1d1d1f;">BTCS <span style="color:#0a84ff;">IR</span></div>
-          <div style="padding-top:7px;color:#86868b;font-size:11px;letter-spacing:1px;">SMARTER MARKET INSIGHTS</div>
-        </td></tr>
-        <tr><td align="center" style="padding:30px 28px 10px;">
-          <div style="font-size:21px;font-weight:700;line-height:1.8;color:#1d1d1f;">${title}</div>
-          <div style="padding-top:8px;font-size:14px;line-height:2;color:#6e6e73;">${intro}</div>
-        </td></tr>
-        ${codeBlock}
-        <tr><td align="center" style="padding:0 28px 28px;">
-          <div style="font-size:12px;line-height:2;color:#86868b;">${closing}</div>
-        </td></tr>
-        <tr><td align="center" style="padding:18px 20px;background:#fafafa;border-top:1px solid #f0f0f2;">
-          <div style="font-size:12px;color:#6e6e73;line-height:1.9;">با آرزوی تجربه‌ای بهتر در بازارهای مالی</div>
-          <div style="font-size:12px;font-weight:700;color:#1d1d1f;">تیم BTCS IR</div>
-          <div style="padding-top:8px;font-size:10px;color:#a1a1a6;">این پیام به‌صورت خودکار ارسال شده است.</div>
-        </td></tr>
-      </table>
-    </td></tr>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${escHtml(opts.title)}</title>
+</head>
+<body style="margin:0;padding:0;background:#0b0b0d;color:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',Tahoma,sans-serif;direction:rtl;text-align:right;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0b0b0d;padding:32px 14px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:540px;background:#141418;border:1px solid rgba(255,255,255,0.1);border-radius:26px;overflow:hidden;">
+          <tr>
+            <td style="padding:28px 28px 8px;">
+              <span style="display:inline-block;padding:5px 12px;border-radius:999px;background:rgba(41,151,255,0.14);border:1px solid rgba(41,151,255,0.3);color:#64b5ff;font-size:12px;font-weight:600;">${escHtml(opts.badge)}</span>
+              <div style="margin-top:16px;font-size:22px;font-weight:700;line-height:1.4;color:#ffffff;">${escHtml(opts.title)}</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 24px;font-size:15px;line-height:1.85;color:rgba(245,245,247,0.82);">
+              ${opts.greeting ? `<p style="margin:0 0 12px;color:#ffffff;font-weight:600;">${escHtml(opts.greeting)}</p>` : ""}
+              <p style="margin:0;">${escHtml(opts.lead)}</p>
+              ${codeBlock}
+              <p style="margin:18px 0 0;font-size:13px;line-height:1.75;color:rgba(245,245,247,0.56);">${escHtml(opts.footerNote)}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px 24px;border-top:1px solid rgba(255,255,255,0.08);font-size:12px;line-height:1.7;color:rgba(245,245,247,0.44);">
+              <div style="font-weight:600;color:rgba(245,245,247,0.68);">BTCS · دستیار و تحلیلگر هوشمند بازار</div>
+              <div>این پیام به‌صورت خودکار ارسال شده است؛ اگر این درخواست را شما ثبت نکرده‌اید، با خیال راحت آن را نادیده بگیرید.</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
   </table>
 </body>
 </html>`;
@@ -125,21 +134,27 @@ export async function account(req: Request): Promise<Response> {
         if (!data) return json({ ok: true });
       }
       const code = randomCode(6);
-      const h = await codeHash(email, code);
       await admin.from('auth_codes').insert({ 
         email, 
         purpose, 
-        code_hash: h, 
+        code_hash: await codeHash(email, code), 
         expires_at: new Date(Date.now() + 15 * 60e3).toISOString() 
       });
-      const title = purpose === 'verify' ? 'ایمیل شما را تأیید کنیم؟' : 'بازیابی رمز عبور';
-      const intro = purpose === 'verify'
-        ? 'خوشحالیم که در BTCS IR همراه ما هستید. برای تکمیل تأیید ایمیل، کد زیر را در صفحه حساب کاربری وارد کنید.'
-        : 'برای انتخاب رمز عبور جدید، کد زیر را در صفحه بازیابی رمز عبور وارد کنید.';
-      const subject = purpose === 'verify' ? 'کد تأیید ایمیل شما | BTCS IR' : 'کد بازیابی رمز عبور | BTCS IR';
-      const mail = await sendEmail(email, subject, emailHtml(title, intro, code));
+      const isVerify = purpose === 'verify';
+      const title = isVerify ? 'تایید نشانی ایمیل' : 'بازیابی رمز عبور';
+      const html = renderAppleEmail({
+        badge: isVerify ? 'تایید حساب کاربری' : 'امنیت و بازیابی',
+        title,
+        greeting: 'سلام دوست عزیز 👋',
+        lead: isVerify
+          ? 'خوشحالیم که همراه ما هستید. برای تکمیل تایید ایمیل و دریافت هشدارهای لحظه‌ای، کد زیر را در صفحه حساب کاربری وارد کنید:'
+          : 'درخواست تغییر رمز عبور برای حساب شما ثبت شد. برای ادامه، کد زیر را در پنجره بازیابی رمز عبور وارد کنید:',
+        code,
+        codeCaption: 'کد یک‌بارمصرف ۶ رقمی (معتبر تا ۱۵ دقیقه)',
+        footerNote: 'این کد فقط تا ۱۵ دقیقه معتبر است و جهت حفظ امنیت حساب، در اختیار دیگران قرار ندهید.',
+      });
+      const mail = await sendEmail(email, `${title} در BTCS — کد ${code}`, html);
       if (!mail?.ok) {
-        await admin.from('auth_codes').delete().eq('email', email).eq('purpose', purpose).eq('code_hash', h);
         throw new HttpError(mail?.error || mail?.message || 'ارسال ایمیل ناموفق بود.', 502);
       }
       return json({ ok: true });
@@ -192,8 +207,14 @@ export async function account(req: Request): Promise<Response> {
       if (p?.email_verified && p?.email_alerts) {
         const mail = await sendEmail(
           p.email,
-          'همه‌چیز آماده است | BTCS IR',
-          emailHtml('ایمیل شما با موفقیت متصل شد', 'عالیه! از این به بعد می‌توانید هشدارهای ایمیلی BTCS IR را دریافت کنید.')
+          'هشدار تستی BTCS · همه‌چیز آماده است',
+          renderAppleEmail({
+            badge: 'تست ارتباط ایمیلی',
+            title: 'هشدارهای ایمیلی شما فعال است ✨',
+            greeting: 'سلام! پیام تستی با موفقیت رسید.',
+            lead: 'کانال ایمیل شما به درستی متصل و تایید شده است. از این پس هنگام رسیدن قیمت ارزها به محدوده مدنظرتان یا ارسال خلاصه روزانه، فوراً باخبر می‌شوید.',
+            footerNote: 'مدیریت وضعیت هشدارها و خلاصه روزانه همیشه از بخش «حساب کاربری» در دسترس است.',
+          }),
         );
         results.email = mail;
         if (!mail?.ok && !p?.telegram_chat_id) {
