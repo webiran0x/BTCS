@@ -6,6 +6,8 @@ import { CONFIG } from '../config.js';
 import { settings } from '../store.js';
 import { AI_SYSTEM_PROMPT } from '../lib/analyst.js';
 
+export const MIN_STORAGE_BUFFERS = 10;
+
 export const aiState = new EventTarget();
 aiState.status = 'idle'; // idle | unsupported | loading | ready | error
 aiState.progress = 0;
@@ -22,11 +24,22 @@ function emit(status, extra = {}) {
 }
 
 export async function deviceSupport() {
-  const info = { webgpu: false, f16: false, mobile: /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent), memoryGB: navigator.deviceMemory || null };
+  const info = {
+    webgpu: false,
+    f16: false,
+    maxStorageBuffers: 0,
+    mobile: /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent),
+    memoryGB: navigator.deviceMemory || null,
+  };
   if (!('gpu' in navigator)) return info;
   try {
     const adapter = await navigator.gpu.requestAdapter();
-    if (adapter) { info.webgpu = true; info.f16 = adapter.features.has('shader-f16'); }
+    if (adapter) {
+      const maxBuf = adapter.limits?.maxStorageBuffersPerShaderStage ?? 0;
+      info.maxStorageBuffers = maxBuf;
+      info.f16 = adapter.features.has('shader-f16');
+      info.webgpu = maxBuf >= MIN_STORAGE_BUFFERS;
+    }
   } catch { /* بدون آداپتور */ }
   return info;
 }
@@ -48,8 +61,11 @@ export async function loadLocalModel(modelId) {
   loadingPromise = (async () => {
     const support = await deviceSupport();
     if (!support.webgpu) {
-      emit('unsupported', { text: 'این مرورگر/دستگاه از WebGPU پشتیبانی نمی‌کند، بنابراین مدل محلی نمی‌تواند اجرا شود. به جای آن از تحلیل‌گر قانون‌محور استفاده می‌شود.' });
-      throw new Error('WebGPU در دسترس نیست');
+      const reason = support.maxStorageBuffers > 0 && support.maxStorageBuffers < MIN_STORAGE_BUFFERS
+        ? `محدودیت گرافیکی دستگاه شما (maxStorageBuffersPerShaderStage=${support.maxStorageBuffers}، نیاز=${MIN_STORAGE_BUFFERS}) اجازه اجرای مدل‌های WebLLM را نمی‌دهد. از تحلیل‌گر قانون‌محور یا سرور هوش مصنوعی (مانند Ollama) استفاده کنید.`
+        : 'این مرورگر/دستگاه از WebGPU پشتیبانی نمی‌کند، بنابراین مدل محلی نمی‌تواند اجرا شود. به جای آن از تحلیل‌گر قانون‌محور استفاده می‌شود.';
+      emit('unsupported', { text: reason });
+      throw new Error(reason);
     }
     emit('loading', { progress: 0, text: 'در حال بارگذاری موتور هوش مصنوعی...' });
     try {
