@@ -29,6 +29,55 @@ async function codeHash(email: string, code: string) {
   return sha256Hex(`${email.toLowerCase()}:${code}:${(await secret('cron_secret')) || ''}`);
 }
 
+
+function emailHtml(title: string, intro: string, code?: string): string {
+  const codeBlock = code ? `
+    <tr>
+      <td align="center" style="padding:8px 28px 24px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;background:#f5f5f7;border:1px solid #e8e8ed;border-radius:16px;width:100%;">
+          <tr><td align="center" style="padding:18px 12px 8px;color:#6e6e73;font-family:Tahoma,Arial,sans-serif;font-size:13px;">کد اختصاصی شما</td></tr>
+          <tr><td align="center" dir="ltr" style="padding:0 12px 8px;color:#1d1d1f;font-family:Arial,Tahoma,sans-serif;font-size:34px;font-weight:700;letter-spacing:8px;line-height:1.5;">${code}</td></tr>
+          <tr><td align="center" style="padding:0 12px 18px;color:#86868b;font-family:Tahoma,Arial,sans-serif;font-size:12px;">این کد تا ۱۵ دقیقه معتبر است.</td></tr>
+        </table>
+      </td>
+    </tr>` : '';
+
+  const closing = code
+    ? 'اگر شما این درخواست را ثبت نکرده‌اید، نیازی به انجام کاری نیست؛ کافی است این ایمیل را نادیده بگیرید.'
+    : 'از اینکه BTCS IR را انتخاب کرده‌اید، سپاسگزاریم.';
+
+  return `<!doctype html>
+<html lang="fa" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+<body dir="rtl" style="margin:0;padding:0;background:#f5f5f7;color:#1d1d1f;font-family:Tahoma,Arial,sans-serif;-webkit-text-size-adjust:100%;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${intro}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f7;border-collapse:collapse;">
+    <tr><td align="center" style="padding:32px 14px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #e8e8ed;border-radius:22px;overflow:hidden;border-collapse:separate;">
+        <tr><td align="center" style="padding:28px 24px 20px;border-bottom:1px solid #f0f0f2;">
+          <div dir="ltr" style="font-family:Arial,Tahoma,sans-serif;font-size:23px;font-weight:800;letter-spacing:1px;color:#1d1d1f;">BTCS <span style="color:#0a84ff;">IR</span></div>
+          <div style="padding-top:7px;color:#86868b;font-size:11px;letter-spacing:1px;">SMARTER MARKET INSIGHTS</div>
+        </td></tr>
+        <tr><td align="center" style="padding:30px 28px 10px;">
+          <div style="font-size:21px;font-weight:700;line-height:1.8;color:#1d1d1f;">${title}</div>
+          <div style="padding-top:8px;font-size:14px;line-height:2;color:#6e6e73;">${intro}</div>
+        </td></tr>
+        ${codeBlock}
+        <tr><td align="center" style="padding:0 28px 28px;">
+          <div style="font-size:12px;line-height:2;color:#86868b;">${closing}</div>
+        </td></tr>
+        <tr><td align="center" style="padding:18px 20px;background:#fafafa;border-top:1px solid #f0f0f2;">
+          <div style="font-size:12px;color:#6e6e73;line-height:1.9;">با آرزوی تجربه‌ای بهتر در بازارهای مالی</div>
+          <div style="font-size:12px;font-weight:700;color:#1d1d1f;">تیم BTCS IR</div>
+          <div style="padding-top:8px;font-size:10px;color:#a1a1a6;">این پیام به‌صورت خودکار ارسال شده است.</div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export async function account(req: Request): Promise<Response> {
   const body = await req.json().catch(() => ({}));
   const action = String(body.action || '');
@@ -76,14 +125,23 @@ export async function account(req: Request): Promise<Response> {
         if (!data) return json({ ok: true });
       }
       const code = randomCode(6);
+      const h = await codeHash(email, code);
       await admin.from('auth_codes').insert({ 
         email, 
         purpose, 
-        code_hash: await codeHash(email, code), 
+        code_hash: h, 
         expires_at: new Date(Date.now() + 15 * 60e3).toISOString() 
       });
-      const title = purpose === 'verify' ? 'تایید ایمیل شما' : 'بازیابی رمز عبور';
-      await sendEmail(email, `${title} — کد: ${code}`, `<div style="font-family:Tahoma,sans-serif; direction:rtl; text-align:right;"><h2>${title}</h2><p>کد تایید شما در پلتفرم:</p><p style="font-size:28px;font-weight:800;letter-spacing:4px">${code}</p><p>این کد پس از ۱۵ دقیقه منقضی می‌شود. اگر خودتان این درخواست را نداده‌اید، این ایمیل را نادیده بگیرید.</p></div>`);
+      const title = purpose === 'verify' ? 'ایمیل شما را تأیید کنیم؟' : 'بازیابی رمز عبور';
+      const intro = purpose === 'verify'
+        ? 'خوشحالیم که در BTCS IR همراه ما هستید. برای تکمیل تأیید ایمیل، کد زیر را در صفحه حساب کاربری وارد کنید.'
+        : 'برای انتخاب رمز عبور جدید، کد زیر را در صفحه بازیابی رمز عبور وارد کنید.';
+      const subject = purpose === 'verify' ? 'کد تأیید ایمیل شما | BTCS IR' : 'کد بازیابی رمز عبور | BTCS IR';
+      const mail = await sendEmail(email, subject, emailHtml(title, intro, code));
+      if (!mail?.ok) {
+        await admin.from('auth_codes').delete().eq('email', email).eq('purpose', purpose).eq('code_hash', h);
+        throw new HttpError(mail?.error || mail?.message || 'ارسال ایمیل ناموفق بود.', 502);
+      }
       return json({ ok: true });
     }
 
@@ -131,7 +189,17 @@ export async function account(req: Request): Promise<Response> {
       const p = await getProfile(user.id);
       const results: Record<string, unknown> = {};
       if (p?.telegram_chat_id) results.telegram = await sendTelegram(p.telegram_chat_id, '✅ <b>هشدار تستی</b>\nهشدارک‌های تلگرام شما به درستی کار می‌کنند.');
-      if (p?.email_verified && p?.email_alerts) results.email = await sendEmail(p.email, 'هشدار تستی', '<p>✅ هشدارک‌های ایمیلی شما به درستی کار می‌کنند.</p>');
+      if (p?.email_verified && p?.email_alerts) {
+        const mail = await sendEmail(
+          p.email,
+          'همه‌چیز آماده است | BTCS IR',
+          emailHtml('ایمیل شما با موفقیت متصل شد', 'عالیه! از این به بعد می‌توانید هشدارهای ایمیلی BTCS IR را دریافت کنید.')
+        );
+        results.email = mail;
+        if (!mail?.ok && !p?.telegram_chat_id) {
+          throw new HttpError(mail?.error || mail?.message || 'ارسال ایمیل تستی ناموفق بود.', 502);
+        }
+      }
       if (!Object.keys(results).length) throw new HttpError('لطفاً ابتدا تلگرام را متصل کرده یا ایمیل خود را تایید کنید.');
       return json({ ok: true, results });
     }
