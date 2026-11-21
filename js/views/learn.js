@@ -1,11 +1,10 @@
 // یادگیری هوش مصنوعی: نحوه امتیازدهی هوش مصنوعی به فراخوان‌های خود و تغییر تصمیماتش.
 import { $, $$, icon, toast, bindSeg } from '../ui.js';
 import { esc, dateTime, ago, horizonText } from '../format.js';
-import { load } from '../store.js';
+import { load, remove } from '../store.js';
 import { INDICATORS, LEARN_TESTED, SWITCH_MIN, SWITCH_GAP, liveScores } from '../lib/learncenter.js';
 import { learningPass, loadLearn } from '../lib/learnpass.js';
 import { cloudLearning } from '../lib/cloudlearn.js';
-import { remove } from '../store.js';
 import { DEFAULT_CONFIG, CHART_TESTED, rulesForChart } from '../lib/autotrader.js';
 import { DEFAULT_HORIZON } from '../ai/context.js';
 import { activeLessons, reviewTrades } from '../lib/tradelearn.js';
@@ -16,10 +15,63 @@ import { LEARN_GUIDE } from '../lib/learnguide.js';
 
 export const title = 'AI learning';
 
+const PAGE_TITLE = 'یادگیری هوش مصنوعی و کارنامه تست‌ها — BTCS';
+const PAGE_DESC = 'نحوه امتیازدهی هوش مصنوعی به پیش‌بینی‌ها، اندیکاتورها و معاملات، ضریب اعتماد تایم‌فریم‌ها و نتایج واقعی تست‌های آماری در BTCS.';
+
+function syncSeoMeta() {
+  document.title = PAGE_TITLE;
+  let descEl = document.querySelector('meta[name="description"]');
+  if (!descEl) {
+    descEl = document.createElement('meta');
+    descEl.setAttribute('name', 'description');
+    document.head.appendChild(descEl);
+  }
+  descEl.setAttribute('content', PAGE_DESC);
+
+  let ldEl = document.getElementById('ld-learn-page');
+  if (!ldEl) {
+    ldEl = document.createElement('script');
+    ldEl.type = 'application/ld+json';
+    ldEl.id = 'ld-learn-page';
+    document.head.appendChild(ldEl);
+  }
+
+  const baseUrl = `${location.origin}${location.pathname}`;
+  ldEl.textContent = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        name: PAGE_TITLE,
+        description: PAGE_DESC,
+        inLanguage: 'fa-IR',
+        url: `${baseUrl}#/learn`,
+        isPartOf: {
+          '@type': 'WebSite',
+          name: 'BTCS',
+          url: baseUrl,
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'BTCS', item: `${baseUrl}#/` },
+          { '@type': 'ListItem', position: 2, name: 'یادگیری هوش مصنوعی', item: `${baseUrl}#/learn` },
+        ],
+      },
+    ],
+  });
+}
+
+function cleanupSeoMeta() {
+  document.getElementById('ld-learn-page')?.remove();
+}
+
 export async function render(el) {
+  syncSeoMeta();
   const st = { interval: '1h', running: false, disposed: false, last: null, cloud: null };
   const CHARTS = ['1m', '5m', '15m', '1h', '4h', '1d'];
-  
+
   el.innerHTML = `
     <!-- استایل‌های اختصاصی مدرن اپل ۲۰۲۶ -->
     <style>
@@ -180,7 +232,7 @@ export async function render(el) {
     </div>`;
 
   const soon = (at) => { const m = Math.max(1, Math.round((at - Date.now()) / 60e3)); return m < 90 ? `${m} دقیقه` : `${Math.round(m / 60)} ساعت`; };
-  
+
   const pctTxt = (s, waiting = { n: 0, next: null }) => {
     if (s && s.rate !== null) return `<b>${s.rate}%</b> <span class="fine">(${s.hits}/${s.n} · بازه ۹۵٪: ${s.lo}–${s.hi}٪)</span>`;
     if (!waiting.n) return '<span class="muted">هنوز فراخوانی ثبت نشده است</span>';
@@ -211,7 +263,7 @@ export async function render(el) {
     const waitF = C ? { n: C.waiting.forecast, next: C.waiting.nextAt } : waitingOf(L.rows, 'forecastProb');
     const waitB = C ? { n: C.waiting.blend, next: C.waiting.nextAt } : waitingOf(L.rows, 'blendProb');
     const where = C ? `سابقه ابری در ${esc(st.interval)}` : 'این مرورگر';
-    
+
     const saved = load('traderCfg', {}) || {};
     const lessons = load('traderLessons', []) || [];
     const traderIv = load('traderState', null)?.interval || saved.interval || DEFAULT_CONFIG.interval;
@@ -223,7 +275,7 @@ export async function render(el) {
       ...((C ? Object.values(st.cloud).flatMap((x) => x.changes || []) : L.changes) || []).map((c) => ({ at: c.at, text: c.text, tag: c.kind === 'champion' ? `سازنده سیگنال · ${c.interval}` : `اندیکاتورها · ${c.interval}` })),
       ...lessons.map((l) => ({ at: l.at, text: l.text, tag: 'معامله‌گر' })),
     ].sort((a, b) => b.at - a.at).slice(0, 25);
-    
+
     const closedOf = (key) => (load(key, null)?.closed || []);
     const accounts = [
       { name: 'معاملات هوش مصنوعی', r: reviewTrades(closedOf('traderState')) },
@@ -231,6 +283,28 @@ export async function render(el) {
       { name: 'معاملات واقعی شما', r: reviewTrades(closedOf('realTradeState'), { includeManual: true }) },
     ];
     const voting = Object.entries(weights).filter(([, w]) => w).map(([k, w]) => `${INDICATORS[k].name} (${w > 0 ? '+' : ''}${w})`);
+
+    const big = Object.values(FORECAST_TESTED.centred).filter((x) => x.coins >= 20);
+    const c80 = big.map((x) => x.band80);
+    const n80 = big.reduce((a, x) => a + x.tests, 0);
+    const ro = recheckOverall();
+    const coinKeys = big.map((x) => x.coins);
+    const coinLo = coinKeys.length ? Math.min(...coinKeys) : 0;
+    const coinHi = coinKeys.length ? Math.max(...coinKeys) : 0;
+    const coinRangeLabel = coinLo === coinHi ? `${coinHi}` : `${coinLo}–${coinHi}`;
+
+    const byIntervalEntries = Object.entries(LEARN_TESTED.byInterval);
+    const betterIvs = byIntervalEntries.filter(([, [f, b]]) => b > f).map(([k]) => k);
+    const worseIvs = byIntervalEntries.filter(([, [f, b]]) => b < f).map(([k]) => k);
+    const championNote = `در آخرین آزمون (${LEARN_TESTED.tests.toLocaleString()} پیش‌بینی روی ${LEARN_TESTED.coins} رمزارز)، ترکیب هوشمند امتیاز ${LEARN_TESTED.blend}٪ را در مقابل ${LEARN_TESTED.forecast}٪ موتور پیش‌بینی گرفت${betterIvs.length ? `: عملکرد بهتر در تایم‌فریم‌های ${betterIvs.join(', ')}` : ''}${worseIvs.length ? `${betterIvs.length ? ' و ' : ': '}عملکرد ضعیف‌تر در ${worseIvs.join(', ')}` : ''}. این اختلاف هنوز برای تغییر فوری کافی نیست؛ پس فعلاً به عنوان رقیب وارد میدان شده و باید اول در ${where} شایستگی‌اش را ثابت کند.`;
+
+    const chartTestedEntry = CHART_TESTED[cfg.interval];
+    const chartTestedSummary = chartTestedEntry
+      ? (() => {
+          const t = chartTestedEntry.adopt ? chartTestedEntry.own : chartTestedEntry.standard;
+          return `${t.ret}٪ سود در هر ${chartTestedEntry.block} (در مقایسه با ${t.hold}٪ برای خرید و نگهداری ساده همان ارزها)`;
+        })()
+      : 'هنوز نتیجه تست‌شده‌ای ثبت نشده';
 
     $('#status', el).textContent = C
       ? `یادگیری ابری به صورت شبانه‌روز و با بسته بودن تمام مرورگرها: ${C.coins} ارز، هر تایم‌فریم به نوبت. در ${st.interval}: آخرین بررسی در ${ago(C.lastPass)} · ${C.calls.toLocaleString('en-US')} فراخوان ثبت‌شده · ${C.scored.toLocaleString('en-US')} امتیازدهی‌شده${C.expired ? ` · ${C.expired} مورد غیرقابل ارزیابی (کندل خارج از دسترس)` : ''}. سابقه یکسان روی تمام دستگاه‌ها.`
@@ -248,21 +322,15 @@ export async function render(el) {
             <dt>ترکیب هوشمند (زنده)</dt><dd>${pctTxt(liveCall.blend, waitB)}</dd>
             <dt>نتیجه تست اولیه</dt><dd>پیش‌بینی ${LEARN_TESTED.forecast}٪ · ترکیب ${LEARN_TESTED.blend}٪ <span class="fine">(${LEARN_TESTED.tests.toLocaleString()} پیش‌بینی${tested ? `; تایم‌فریم ${esc(st.interval)}: ${tested[0]}٪ در برابر ${tested[1]}٪` : ''})</span></dd>
           </dl>
-          <p class="fine mt" style="line-height:1.65">${(() => { const by = Object.entries(LEARN_TESTED.byInterval); const better = by.filter(([, [f, b]]) => b > f).map(([k]) => k), worse = by.filter(([, [f, b]]) => b < f).map(([k]) => k); return `در آخرین آزمون (${LEARN_TESTED.tests.toLocaleString()} پیش‌بینی روی ${LEARN_TESTED.coins} رمزارز)، ترکیب هوشمند امتیاز ${LEARN_TESTED.blend}٪ را در مقابل ${LEARN_TESTED.forecast}٪ موتور پیش‌بینی گرفت${better.length ? `: عملکرد بهتر در تایم‌فریم‌های ${better.join(', ')}` : ''}${worse.length ? `${better.length ? ' و ' : ': '}عملکرد ضعیف‌تر در ${worse.join(', ')}` : ''}. این اختلاف هنوز برای تغییر فوری کافی نیست؛ پس فعلاً به عنوان رقیب وارد میدان شده و باید اول در ${where} شایستگی‌اش را ثابت کند.`; })()}${C?.reason ? ` ${esc(C.reason)}` : ''}</p>
+          <p class="fine mt" style="line-height:1.65">${championNote}${C?.reason ? ` ${esc(C.reason)}` : ''}</p>
         </div>
 
         <div class="ap-learn-card">
           <div class="card-h"><h3>${icon('forecast', 16)} کارنامه و سابقه پیش‌بینی‌ها</h3><span class="chip">${esc(TREND_WORDS[fl.trend] || fl.trend)}</span></div>
           <dl class="kv">
-            ${(() => {
-              const big = Object.values(FORECAST_TESTED.centred).filter((x) => x.coins >= 20);
-              const c80 = big.map((x) => x.band80);
-              const n80 = big.reduce((a, x) => a + x.tests, 0);
-              const ro = recheckOverall();
-              return `${ro ? `<dt>دقت جهت (آخرین آزمون)</dt><dd>${ro.hit}٪ <span class="fine">در مقایسه با خط مبنای ${ro.baseline}٪ · ${ro.tests.toLocaleString('en-US')} آزمون روی ${ro.coins} ارز (${esc(ro.measuredOn)})</span></dd>` : ''}
+            ${ro ? `<dt>دقت جهت (آخرین آزمون)</dt><dd>${ro.hit}٪ <span class="fine">در مقایسه با خط مبنای ${ro.baseline}٪ · ${ro.tests.toLocaleString('en-US')} آزمون روی ${ro.coins} ارز (${esc(ro.measuredOn)})</span></dd>` : ''}
             <dt>دقت جهت (تست اولیه)</dt><dd>${TESTED_ACCURACY.all}٪ <span class="fine">در مقایسه با خط مبنای ${TESTED_ACCURACY.allBaseline}٪ · ${TESTED_ACCURACY.tests.toLocaleString()} آزمون</span></dd>
-            <dt>دقت بازه ۸۰٪</dt><dd>${c80.length ? `${Math.min(...c80)}–${Math.max(...c80)}٪` : '—'} <span class="fine">(هدف: ۸۰٪ · بر اساس تایم‌فریم و قیمت روز در ${n80.toLocaleString('en-US')} آزمون روی ${(() => { const k = big.map((x) => x.coins); const lo = Math.min(...k), hi = Math.max(...k); return lo === hi ? hi : `${lo}–${hi}`; })()} ارز، ${esc(FORECAST_TESTED.centredMeasuredOn)}؛ و ${TESTED_ACCURACY.bandsAll.band80}٪ در تست اولیه)</span></dd>`;
-            })()}
+            <dt>دقت بازه ۸۰٪</dt><dd>${c80.length ? `${Math.min(...c80)}–${Math.max(...c80)}٪` : '—'} <span class="fine">(هدف: ۸۰٪ · بر اساس تایم‌فریم و قیمت روز در ${n80.toLocaleString('en-US')} آزمون روی ${coinRangeLabel} ارز، ${esc(FORECAST_TESTED.centredMeasuredOn)}؛ و ${TESTED_ACCURACY.bandsAll.band80}٪ در تست اولیه)</span></dd>
             <dt>دقت بازه ۹۰٪</dt><dd>${TESTED_ACCURACY.bandsAll.band90}٪ <span class="fine">(هدف: ۹۰٪)</span></dd>
             <dt>کارنامه شما (۵۰ پیش‌بینی اخیر)</dt><dd>${fl.windows[50].pct === null ? '<span class="muted">هنوز به حد نصاب نرسیده</span>' : `${fl.windows[50].pct}٪ <span class="fine">(${fl.windows[50].hits} موفق از ${fl.windows[50].total})</span>`}</dd>
           </dl>
@@ -302,7 +370,7 @@ export async function render(el) {
 
       <div class="ap-learn-card mt">
         <div class="card-h"><h3>${icon('bolt', 16)} ربات معامله‌گر و فیلترهای هوشمند</h3><a class="btn sm" href="#/trader">ورود به بخش معامله‌گر</a></div>
-        <p class="fine" style="margin-top:0; line-height:1.65">معامله‌گر هوش مصنوعی بعد از هر دور بررسی، کارنامه معاملاتش را مرور می‌کند. هر زمان متوجه شود یک شرایط خاص در بازار مدام ضرر می‌سازد، یک فیلتر محافظتی فعال می‌کند و اگر نتیجه بهتر نشد، آن فیلتر را برمی‌دارد. قوانین این ربات روی داده‌های قدیمی انتخاب شده و سه بار روی کندل‌های جدید و دیده‌نشده تست شده‌اند: در تایم‌فریم ${esc(cfg.interval)} به طور میانگین ${CHART_TESTED[cfg.interval] ? (() => { const x = CHART_TESTED[cfg.interval], t = x.adopt ? x.own : x.standard; return `${t.ret}٪ سود در هر ${x.block} (در مقایسه با ${x.hold}٪ برای خرید و نگهداری ساده همان ارزها)`; })() : 'هنوز نتیجه تست‌شده‌ای ثبت نشده'} به دست آمده است.</p>
+        <p class="fine" style="margin-top:0; line-height:1.65">معامله‌گر هوش مصنوعی بعد از هر دور بررسی، کارنامه معاملاتش را مرور می‌کند. هر زمان متوجه شود یک شرایط خاص در بازار مدام ضرر می‌سازد، یک فیلتر محافظتی فعال می‌کند و اگر نتیجه بهتر نشد، آن فیلتر را برمی‌دارد. قوانین این ربات روی داده‌های قدیمی انتخاب شده و سه بار روی کندل‌های جدید و دیده‌نشده تست شده‌اند: در تایم‌فریم ${esc(cfg.interval)} به طور میانگین ${chartTestedSummary} به دست آمده است.</p>
         <p class="fine" style="margin-bottom:0"><b>قوانین و فیلترهای فعال:</b> ${esc((activeLessons(cfg).join(' · ')) || 'استراتژی پایه')}.</p>
       </div>
 
@@ -338,5 +406,9 @@ export async function render(el) {
   draw();
   pass();
   const timer = setInterval(() => { if (!st.disposed && !document.hidden) pass(); }, 2 * 60e3);
-  return () => { st.disposed = true; clearInterval(timer); };
+  return () => {
+    st.disposed = true;
+    clearInterval(timer);
+    cleanupSeoMeta();
+  };
 }
