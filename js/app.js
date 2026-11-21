@@ -41,7 +41,7 @@ const NAV = [
   { path: 'tools', label: 'ابزارها', icon: 'calc', short: 'ابزارها' },
   { path: 'exchanges', label: 'صرافی‌ها', icon: 'exchanges', short: 'صرافی‌ها' },
   { path: 'wallet', label: 'کیف پول', icon: 'wallet', short: 'کیف پول' },
-  { path: 'alerts', label: 'هشدارها', icon: 'alerts', short: 'هشدارها' },
+  { path: 'alerts', label: 'اعلان ها', icon: 'alerts', short: 'اعلان ها' },
   { path: 'premium', label: 'اشتراک ویژه', icon: 'star', short: 'ویژه' },
 ];
 const ADMIN_NAV = { path: 'admin', label: 'مدیریت', icon: 'chip', short: 'مدیریت' };
@@ -571,7 +571,7 @@ async function checkForUpdate({ whenIdle = false } = {}) {
 }
 
 window.addEventListener('cv:store-failed', (e) => {
-  toast(`امکان ذخیره‌سازی در این دستگاه وجود ندارد — ${e.detail.reason}. واچ‌لیست، هشدارها و معاملات شما پس از بستن تب از بین خواهند رفت.`, 'down', 9000);
+  toast(`امکان ذخیره‌سازی در این دستگاه وجود ندارد — ${e.detail.reason}. واچ‌لیست، اعلان ها و معاملات شما پس از بستن تب از بین خواهند رفت.`, 'down', 9000);
 });
 
 if (location.protocol === 'https:') {
