@@ -26,4 +26,4 @@ export function venuesFor(symbol) {
   return VENUES.map((v) => ({ ...v, href: v.url(s), pair: `${s}/${v.quote}` }));
 }
 
-export const TRADE_DISCLAIMER = 'These open the exchange in a new tab. BTCS never places the order, never holds your funds, and never asks for exchange API keys, private keys or seed phrases.';
+export const TRADE_DISCLAIMER = 'این لینک‌ها صرافی را در یک تب جدید باز می‌کنند. بی تی سی اس هرگز سفارشی ثبت نمی‌کند، دارایی شما را نگه نمی‌دارد و هرگز کلید API صرافی، کلید خصوصی یا عبارت بازیابی (Seed Phrase) را درخواست نمی‌کند.';
