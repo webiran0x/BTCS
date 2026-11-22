@@ -478,9 +478,10 @@ function page(p) {
     html = html.replace("</head>", `  ${__ldBlock}\n</head>`);
   }
 
+  const guideHref = p.path === 'guide/' ? '/guide/' : p.route;
   const links = p.coin
     ? `<a class="btn primary" href="${esc(p.route)}">مشاهده نمودار زنده ${esc(p.coin)}</a> <a class="btn" href="#/trader">شبیه‌ساز معاملات هوش مصنوعی</a> <a class="btn" href="#/learn">آموزش</a>`
-    : `<a class="btn primary" href="${esc(p.route)}">مشاهده ${esc(p.h1)}</a>${p.route === '#/learn' ? '' : ' <a class="btn" href="#/learn">آموزش</a>'}`;
+    : `<a class="btn primary" href="${esc(guideHref)}">مشاهده ${esc(p.h1)}</a>${p.route === '#/learn' ? '' : ' <a class="btn" href="#/learn">آموزش</a>'}`;
 
   const n = (t) => `\n          ${t}`;
   const more = p.more
