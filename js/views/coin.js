@@ -24,79 +24,17 @@ import { newState, openManual, closeManual, equity, DEFAULT_CONFIG, DEMO_NOTICE,
 import { forecastForDisplay, forecastFacts, moveSizeCall, FORECAST_TESTED } from '../lib/forecastview.js';
 import { fx } from '../api/fx.js';
 import {
-  loadLedger, saveLedger, recordForecast, resolveDueLedger, directionTrustFor, MIN_GRADED_FOR_TRUST,
-  learningStatus, accuracySparkline, MIN_FAMILY_CALLS,
-  threeModelEnsemble, signalMeter, riskWarnings, anomalyFlags,
+  loadLedger, saveLedger, newLedger, recordForecast, resolveDueLedger, directionTrustFor, MIN_GRADED_FOR_TRUST,
+  rollingAccuracy, learningStatus, accuracySparkline, adaptiveWeights, MIN_FAMILY_CALLS,
+  dampenConfidence, threeModelEnsemble, signalMeter, riskWarnings, anomalyFlags,
   sparklineSvg, TREND_WORDS,
 } from '../lib/selfimprove.js';
 
-export const title = (p) => `تحلیل و قیمت ${(p[0] || 'ارز').toUpperCase()} | BTCS`;
+export const title = (p) => (p[0] || 'ارز').toUpperCase();
 const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const SERIES = ['--series-1', '--series-2', '--series-3', '--series-5', '--series-7', '--series-4'];
 const INTERVALS = ['1s', '5s', '10s', '1m', '5m', '15m', '1h', '4h', '1d', '1w'];
 const UNMEASURED = ['1s', '5s', '10s'];
-
-function applySeo2026(coin) {
-  const prevTitle = document.title;
-  const sym = coin.symbol.toUpperCase();
-  const pageTitle = `قیمت لحظه‌ای و تحلیل تکنیکال ${coin.name} (${sym}) | BTCS`;
-  const desc = `تحلیل لحظه‌ای، نمودار کندل‌استیک، سیگنال‌های تکنیکال، بک‌تست و پیش‌بینی احتمالی ${coin.name} (${sym}) با قیمت ${usd(coin.price)} و تغییرات ۲۴ ساعته ${pct(coin.change24h)}.`;
-
-  document.title = pageTitle;
-  document.documentElement.setAttribute('lang', 'fa');
-  document.documentElement.setAttribute('dir', 'rtl');
-
-  let metaDesc = document.querySelector('meta[name="description"]');
-  const prevDesc = metaDesc?.getAttribute('content') ?? null;
-  if (!metaDesc) {
-    metaDesc = document.createElement('meta');
-    metaDesc.name = 'description';
-    document.head.appendChild(metaDesc);
-  }
-  metaDesc.setAttribute('content', desc);
-
-  let canonical = document.querySelector('link[rel="canonical"]');
-  const prevCanonical = canonical?.getAttribute('href') ?? null;
-  const canonHref = `${location.origin}${location.pathname}#/coin/${encodeURIComponent(sym)}`;
-  if (!canonical) {
-    canonical = document.createElement('link');
-    canonical.rel = 'canonical';
-    document.head.appendChild(canonical);
-  }
-  canonical.setAttribute('href', canonHref);
-
-  const schemaId = 'btcs-coin-jsonld-2026';
-  document.getElementById(schemaId)?.remove();
-  const ld = document.createElement('script');
-  ld.id = schemaId;
-  ld.type = 'application/ld+json';
-  ld.textContent = JSON.stringify({
-    '@context': 'https://schema.org',
-    '@type': 'FinancialProduct',
-    name: `${coin.name} (${sym})`,
-    description: desc,
-    url: canonHref,
-    dateModified: new Date().toISOString(),
-    provider: {
-      '@type': 'Organization',
-      name: 'BTCS',
-    },
-  });
-  document.head.appendChild(ld);
-
-  return () => {
-    document.title = prevTitle;
-    if (metaDesc) {
-      if (prevDesc !== null) metaDesc.setAttribute('content', prevDesc);
-      else metaDesc.remove();
-    }
-    if (canonical) {
-      if (prevCanonical !== null) canonical.setAttribute('href', prevCanonical);
-      else canonical.remove();
-    }
-    document.getElementById(schemaId)?.remove();
-  };
-}
 
 export async function render(el, [symParam]) {
   const sym = (symParam || 'BTC').toUpperCase();
@@ -104,25 +42,11 @@ export async function render(el, [symParam]) {
   const coin = await findCoin(sym);
   if (!coin) { el.innerHTML = await notFound(sym, () => render(el, [symParam])); return; }
 
-  const restoreSeo = applySeo2026(coin);
-  const uiSessionKey = `btcs_coin_ui_${coin.symbol}`;
-  const savedUi = (() => {
-    try { return JSON.parse(sessionStorage.getItem(uiSessionKey) || 'null') || {}; } catch { return {}; }
-  })();
-  const persistUi = (patch) => {
-    try {
-      const cur = JSON.parse(sessionStorage.getItem(uiSessionKey) || 'null') || {};
-      sessionStorage.setItem(uiSessionKey, JSON.stringify({ ...cur, ...patch }));
-    } catch { /* ignore */ }
-  };
-
   const st = {
-    interval: INTERVALS.includes(savedUi.interval) ? savedUi.interval : (INTERVALS.includes(settings.get().interval) ? settings.get().interval : '1h'),
-    candles: [], source: '', signal: null, forecast: null, horizon: null,
-    tab: savedUi.tab || 'forecast', btFilter: 'all', lastTickAt: Date.now(),
-    disposed: false, unsub: [], charts: [],
+    interval: INTERVALS.includes(settings.get().interval) ? settings.get().interval : '1h',
+    candles: [], source: '', signal: null, forecast: null, horizon: null, tab: 'forecast', disposed: false, unsub: [], charts: [],
   };
-  st.horizon = savedUi.horizon || DEFAULT_HORIZON[st.interval] || 12;
+  st.horizon = DEFAULT_HORIZON[st.interval] || 12;
   const pair = coin.binance;
   const stable = isStable(coin.symbol);
 
@@ -133,109 +57,75 @@ export async function render(el, [symParam]) {
         text-align: right;
         max-width: 1360px;
         margin: 0 auto;
-        padding-bottom: 64px;
-        font-family: inherit;
+        padding-bottom: 60px;
       }
       .ap-hero-card {
-        background: radial-gradient(circle at top right, rgba(94, 92, 230, 0.12), transparent 52%),
-                    radial-gradient(circle at bottom left, rgba(48, 209, 88, 0.08), transparent 52%),
-                    rgba(22, 22, 27, 0.78);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: radial-gradient(circle at top right, rgba(94, 92, 230, 0.09), transparent 50%),
+                    radial-gradient(circle at bottom left, rgba(50, 215, 75, 0.07), transparent 50%),
+                    rgba(24, 24, 29, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.09);
         border-radius: 28px;
-        padding: 30px;
-        backdrop-filter: blur(28px) saturate(160%);
-        -webkit-backdrop-filter: blur(28px) saturate(160%);
-        margin-bottom: 18px;
-        box-shadow: 0 24px 54px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-      }
-      .ap-glance-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.075);
-        border-radius: 18px;
-        padding: 12px 18px;
-        margin-bottom: 20px;
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        font-size: 0.85rem;
+        padding: 32px;
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        margin-bottom: 24px;
+        box-shadow: 0 24px 54px rgba(0, 0, 0, 0.35);
       }
       .ap-bento-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 16px;
-        margin-bottom: 22px;
+        margin-bottom: 24px;
       }
       @media(max-width: 960px) {
         .ap-bento-grid { grid-template-columns: repeat(2, 1fr); }
       }
       .ap-card {
-        background: rgba(255, 255, 255, 0.032);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.075);
         border-radius: 22px;
         padding: 22px;
-        backdrop-filter: blur(22px) saturate(150%);
-        -webkit-backdrop-filter: blur(22px) saturate(150%);
-        transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
       }
       .ap-card:hover {
-        border-color: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.15);
         box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
       }
       .ap-coin-wrap .btn {
-        border-radius: 14px;
+        border-radius: 13px;
         font-weight: 500;
-        min-height: 40px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-      }
-      .ap-coin-wrap .btn:active {
-        transform: scale(0.97);
+        transition: all 0.2s ease;
       }
       .ap-coin-wrap .btn.primary {
-        background: linear-gradient(135deg, #5e5ce6 0%, #3d3ad1 100%);
-        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: linear-gradient(135deg, #5e5ce6 0%, #3634a3 100%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         color: #fff;
-        box-shadow: 0 8px 20px rgba(94, 92, 230, 0.32);
+        box-shadow: 0 6px 18px rgba(94, 92, 230, 0.3);
       }
       .ap-coin-wrap .btn.primary:hover {
         filter: brightness(1.08);
         transform: translateY(-1px);
       }
       .ap-coin-wrap .seg {
-        background: rgba(255, 255, 255, 0.055);
+        background: rgba(255, 255, 255, 0.05);
         padding: 4px;
         border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.07);
       }
       .ap-coin-wrap .seg button {
         border-radius: 10px;
         font-weight: 500;
-        min-height: 34px;
-        transition: all 0.2s ease;
-      }
-      .ap-coin-wrap .seg button:active {
-        transform: scale(0.96);
+        transition: all 0.2s;
       }
       .ap-coin-wrap .seg button.on {
-        background: rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.15);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.22);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       }
-      .ap-calc-box {
-        background: rgba(94, 92, 230, 0.06);
-        border: 1px solid rgba(94, 92, 230, 0.22);
-        border-radius: 14px;
-        padding: 14px;
-        margin-top: 14px;
-      }
-
-      /* Mobile App-Like Experience & Zero Overflow */
+    
+      /* Mobile Apple-style optimization & zero horizontal overflow */
       .ap-coin-wrap,
       .ap-coin-wrap *,
       .ap-coin-wrap *::before,
@@ -249,7 +139,6 @@ export async function render(el, [symParam]) {
       }
       .ap-hero-card,
       .ap-card,
-      .ap-glance-bar,
       .ap-coin-wrap .tbl-wrap {
         max-width: 100%;
       }
@@ -259,21 +148,15 @@ export async function render(el, [symParam]) {
       }
       @media (max-width: 767px) {
         .ap-coin-wrap {
-          padding-bottom: 92px;
+          padding-bottom: 76px;
         }
         .ap-hero-card {
           padding: 18px 16px !important;
-          border-radius: 24px !important;
-          margin-bottom: 12px !important;
-        }
-        .ap-glance-bar {
-          padding: 10px 12px !important;
-          border-radius: 16px !important;
-          margin-bottom: 14px !important;
-          gap: 8px !important;
+          border-radius: 22px !important;
+          margin-bottom: 16px !important;
         }
         .ap-hero-card h1 {
-          font-size: 1.5rem !important;
+          font-size: 1.55rem !important;
           line-height: 1.25 !important;
         }
         .ap-hero-card .price {
@@ -286,18 +169,17 @@ export async function render(el, [symParam]) {
         .ap-hero-card .row[style*="margin-left:auto"] > .btn {
           flex: 1 1 auto;
           justify-content: center;
-          padding: 9px 12px !important;
+          padding: 8px 12px !important;
           font-size: 0.82rem;
-          min-height: 44px;
         }
         .ap-bento-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           gap: 10px !important;
-          margin-bottom: 14px !important;
+          margin-bottom: 16px !important;
         }
         .ap-card {
           padding: 15px 14px !important;
-          border-radius: 20px !important;
+          border-radius: 18px !important;
           margin-bottom: 14px !important;
         }
         .ap-card h3 {
@@ -306,47 +188,17 @@ export async function render(el, [symParam]) {
         .ap-coin-wrap .chart-card {
           padding: 14px 12px !important;
         }
-        .ap-coin-wrap .chart-tools {
-          position: sticky;
-          top: 6px;
-          z-index: 12;
-          background: rgba(20, 20, 26, 0.9);
-          backdrop-filter: blur(18px);
-          -webkit-backdrop-filter: blur(18px);
-          padding: 8px;
-          border-radius: 16px;
-          border: 1px solid rgba(255,255,255,0.08);
-        }
-        .ap-coin-wrap #ivSeg {
-          scroll-snap-type: x mandatory;
-          width: 100%;
+        .ap-coin-wrap #chart {
+          height: 310px !important;
         }
         .ap-coin-wrap #ivSeg button {
-          scroll-snap-align: start;
-          padding: 7px 11px !important;
-          font-size: 0.8rem;
-          min-height: 38px;
-        }
-        .ap-coin-wrap #chart {
-          height: 300px !important;
-        }
-        .ap-coin-wrap #tabs {
-          position: sticky;
-          top: 6px;
-          z-index: 11;
-          background: rgba(20, 20, 26, 0.92);
-          backdrop-filter: blur(18px);
-          -webkit-backdrop-filter: blur(18px);
-          scroll-snap-type: x mandatory;
-          border-radius: 14px;
-          padding: 8px !important;
+          padding: 6px 9px !important;
+          font-size: 0.78rem;
         }
         .ap-coin-wrap #tabs button {
-          scroll-snap-align: start;
-          padding: 8px 12px !important;
-          font-size: 0.8rem !important;
+          padding: 7px 11px !important;
+          font-size: 0.78rem !important;
           white-space: nowrap;
-          min-height: 40px;
         }
         .ap-coin-wrap .mtf {
           grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -386,49 +238,39 @@ export async function render(el, [symParam]) {
           grid-template-columns: 1fr !important;
         }
         .ap-coin-wrap #chart {
-          height: 265px !important;
+          height: 270px !important;
         }
       }
+
     </style>
 
-    <article class="ap-coin-wrap" dir="rtl" itemscope itemtype="https://schema.org/FinancialProduct">
+    <div class="ap-coin-wrap" dir="rtl">
       <div class="ap-hero-card">
         <div class="coin-head" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
           ${coinLogo(coin, 52)}
           <div>
-            <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
-              <h1 itemprop="name" style="font-size:2.1rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0">${esc(coin.name)}</h1>
+            <div class="row" style="align-items:center;gap:10px">
+              <h1 style="font-size:2.2rem;font-weight:700;letter-spacing:-0.02em;color:#fff;margin:0">${esc(coin.name)}</h1>
               <span class="chip" style="background:rgba(255,255,255,0.08);border-radius:99px;padding:4px 12px">${esc(coin.symbol)}</span>
               ${coin.rank ? `<span class="chip" style="background:rgba(255,255,255,0.08);border-radius:99px;padding:4px 12px">#${coin.rank}</span>` : ''}
               <button class="star ${watchlist.has(coin.symbol) ? 'on' : ''}" id="star" aria-pressed="${watchlist.has(coin.symbol)}" aria-label="${watchlist.has(coin.symbol) ? 'حذف از فهرست پیگیری' : 'افزودن به فهرست پیگیری'}" style="background:transparent;border:0;cursor:pointer;color:${watchlist.has(coin.symbol) ? '#ffd60a' : 'rgba(255,255,255,0.5)'}">${icon('star', 22)}</button>
             </div>
-            <div class="row" style="align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
+            <div class="row" style="align-items:center;gap:14px;margin-top:8px">
               <span class="price num" id="px" style="font-size:1.75rem;font-weight:600;color:#fff">${money(coin.price)}</span>
               <span id="pxChg" style="font-size:16px">${changeHtml(coin.change24h)}</span>
               <span class="chip" id="srcChip" style="font-size:0.85rem">…</span>
-              <span class="fine" id="freshnessTag" style="color:rgba(255,255,255,0.45)">به‌روزرسانی لحظه‌ای</span>
             </div>
           </div>
-          <div class="row" style="margin-left:auto;gap:8px;flex-wrap:wrap">
-            <button class="btn" id="copyPxBtn" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:9px 14px" title="کپی قیمت زنده و لینک">${icon('copy', 15)} کپی قیمت</button>
-            <a class="btn" href="#/alerts/${esc(coin.symbol)}" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:9px 14px">${icon('alerts', 16)} هشدار</a>
-            ${tradable(coin.symbol) ? `<button class="btn" id="tradeBtn" type="button" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:9px 14px">${icon('exchanges', 16)} معامله</button>` : ''}
-            <a class="btn primary" id="askAi" href="#/ai/${esc(coin.symbol)}" style="padding:9px 16px">${icon('ai', 16)} پرسش از هوش مصنوعی درباره ${esc(coin.symbol)}</a>
+          <div class="row" style="margin-left:auto;gap:10px;flex-wrap:wrap">
+            <a class="btn" href="#/alerts/${esc(coin.symbol)}" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:10px 16px">${icon('alerts', 16)} هشدار</a>
+            ${tradable(coin.symbol) ? `<button class="btn" id="tradeBtn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:10px 16px">${icon('exchanges', 16)} معامله</button>` : ''}
+            <a class="btn primary" id="askAi" href="#/ai/${esc(coin.symbol)}" style="padding:10px 18px">${icon('ai', 16)} پرسش از هوش مصنوعی درباره ${esc(coin.symbol)}</a>
           </div>
         </div>
-      </div>
-
-      <div class="ap-glance-bar" id="glanceBar">
-        <div class="row" style="gap:8px;flex-wrap:wrap">
-          <span class="chip" style="background:rgba(255,255,255,0.06)">بازه فعال: <b id="glanceIv">${esc(st.interval)}</b></span>
-          <span class="chip" id="glanceSig" style="background:rgba(255,255,255,0.06)">سیگنال: در حال محاسبه…</span>
-          <span class="chip" id="glanceWatch" style="background:rgba(255,255,255,0.06)">واچ‌لیست: ${watchlist.has(coin.symbol) ? 'فعال' : 'غیرفعال'}</span>
-        </div>
-        <span class="fine" style="color:rgba(255,255,255,0.5)">حالت اپلیکیشنی موبایل · بدون ریسک واقعی</span>
       </div>
 
       ${stable ? `<div class="ap-card" style="border-color:var(--warn);margin-bottom:24px"><p style="margin:0"><b>${esc(coin.symbol)} یک استیبل‌کوین است</b> که برای حفظ ارزش ۱ دلاری طراحی شده است. پیش‌بینی‌ها و ستاپ‌های خرید یا فروش برای آن معنایی ندارند، بنابراین اطلاعات زیر صرفاً جنبه مرجع داشته و هیچ‌چیز از این صفحه در سابقه پیش‌بینی شما یا بخش یادگیری هوش مصنوعی ثبت نمی‌شود.</p></div>` : ''}
-
+      
       <div class="ap-bento-grid">
         <div class="ap-card stat"><span class="k" style="color:rgba(255,255,255,0.6);font-size:0.9rem">ارزش بازار</span><span class="v" style="font-size:1.3rem;font-weight:600;color:#fff;margin-top:6px;display:block">${compact(coin.marketCap)}</span></div>
         <div class="ap-card stat"><span class="k" style="color:rgba(255,255,255,0.6);font-size:0.9rem">حجم معاملات ۲۴ ساعت</span><span class="v" style="font-size:1.3rem;font-weight:600;color:#fff;margin-top:6px;display:block">${compact(coin.volume24h)}</span></div>
@@ -442,8 +284,8 @@ export async function render(el, [symParam]) {
             <div class="chart-tools" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
               <div class="seg scroll-x" id="ivSeg">${INTERVALS.map((iv) => `<button data-v="${iv}" class="${iv === st.interval ? 'on' : ''}" title="کندل‌های ${esc(INTERVAL_LABEL[iv] || iv)}" style="padding:6px 12px;border:0;background:transparent;color:rgba(255,255,255,0.7);cursor:pointer">${iv}</button>`).join('')}</div>
               <div class="row" style="gap:8px">
-                <button class="btn sm ghost only-s" id="indBtn" type="button" aria-expanded="false" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff">${icon('chart', 14)} اندیکاتورها</button>
-                <button class="btn sm ghost" id="drawBtn" type="button" aria-expanded="false" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff">${icon('compare', 14)} ترسیم</button>
+                <button class="btn sm ghost only-s" id="indBtn" aria-expanded="false" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff">${icon('chart', 14)} اندیکاتورها</button>
+                <button class="btn sm ghost" id="drawBtn" aria-expanded="false" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff">${icon('compare', 14)} ترسیم</button>
               </div>
               <div class="toggles" id="toggles" style="display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:8px"></div>
             </div>
@@ -455,7 +297,7 @@ export async function render(el, [symParam]) {
                 <button data-tool="fib">فیبوناچی</button>
                 <button data-tool="erase">پاک کردن</button>
               </div>
-              <button class="btn sm ghost" id="clearDraw" type="button">پاک کردن همه</button>
+              <button class="btn sm ghost" id="clearDraw">پاک کردن همه</button>
               <span class="fine" id="drawHint">برای رسم خط روند، دو نقطه روی نمودار لمس کنید.</span>
             </div>
             <div class="chart-box" id="chart" style="height:460px"></div>
@@ -472,39 +314,20 @@ export async function render(el, [symParam]) {
 
         <div class="ap-card c-tabs" style="padding:16px">
           <div class="tabs scroll-x" role="tablist" id="tabs" style="display:flex;gap:8px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:12px;margin-bottom:16px">
-            <button data-tab="forecast" class="${st.tab === 'forecast' ? 'on' : ''}" style="background:rgba(255,255,255,0.08);border:0;color:#fff;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('forecast', 16)} پیش‌بینی هوش مصنوعی</button>
-            <button data-tab="patterns" class="${st.tab === 'patterns' ? 'on' : ''}" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('compare', 16)} مقایسه الگوها</button>
-            <button data-tab="history" class="${st.tab === 'history' ? 'on' : ''}" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('markets', 16)} تاریخچه و چرخه‌ها</button>
-            <button data-tab="news" class="${st.tab === 'news' ? 'on' : ''}" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('info', 16)} اخبار</button>
-            <button data-tab="periods" class="${st.tab === 'periods' ? 'on' : ''}" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">مقایسه دوره‌ها</button>
-            <button data-tab="backtest" class="${st.tab === 'backtest' ? 'on' : ''}" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">آزمایش گذشته (Backtest)</button>
-            ${pair ? `<button data-tab="book" class="${st.tab === 'book' ? 'on' : ''}" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">دفتر سفارش (Order Book)</button>` : ''}
-            <button data-tab="exchanges" class="${st.tab === 'exchanges' ? 'on' : ''}" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">صرافی‌ها</button>
-            <button data-tab="about" class="${st.tab === 'about' ? 'on' : ''}" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">درباره</button>
+            <button data-tab="forecast" class="on" style="background:rgba(255,255,255,0.08);border:0;color:#fff;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('forecast', 16)} پیش‌بینی هوش مصنوعی</button>
+            <button data-tab="patterns" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('compare', 16)} مقایسه الگوها</button>
+            <button data-tab="history" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('markets', 16)} تاریخچه و چرخه‌ها</button>
+            <button data-tab="news" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">${icon('info', 16)} اخبار</button>
+            <button data-tab="periods" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">مقایسه دوره‌ها</button>
+            <button data-tab="backtest" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">آزمایش گذشته (Backtest)</button>
+            ${pair ? '<button data-tab="book" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">دفتر سفارش (Order Book)</button>' : ''}
+            <button data-tab="exchanges" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">صرافی‌ها</button>
+            <button data-tab="about" style="background:transparent;border:0;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:500">درباره</button>
           </div>
           <div id="tabBody"></div>
         </div>
       </div>
-    </article>`;
-
-  const freshnessTimer = setInterval(() => {
-    if (st.disposed) return;
-    const tag = $('#freshnessTag', el);
-    if (!tag) return;
-    const sec = Math.max(0, Math.floor((Date.now() - st.lastTickAt) / 1000));
-    tag.textContent = sec < 4 ? 'هم‌اکنون به‌روز شد' : `${sec} ثانیه پیش`;
-  }, 3000);
-
-  $('#copyPxBtn', el)?.addEventListener('click', async () => {
-    const curPx = st.lastPrice ?? coin.price;
-    const payload = `${coin.name} (${coin.symbol}): ${money(curPx, { dp: st.dp })} · ${location.href}`;
-    try {
-      await navigator.clipboard?.writeText(payload);
-      toast(`قیمت و لینک ${coin.symbol} کپی شد.`, 'up');
-    } catch {
-      toast('امکان کپی خودکار در این مرورگر فراهم نشد.', 'info');
-    }
-  });
+    </div>`;
 
   (async () => {
     if (!backendEnabled()) return;
@@ -514,7 +337,7 @@ export async function render(el, [symParam]) {
     if (!card) return;
     card.hidden = false;
     card.innerHTML = `
-      <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0;font-size:1.1rem;color:#fff">اخبار ${esc(coin.symbol)}</h3><button class="btn sm ghost" id="allNews" type="button" style="background:rgba(255,255,255,0.06);border:0;color:#fff;padding:4px 10px;border-radius:8px">مشاهده همه</button></div>
+      <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0;font-size:1.1rem;color:#fff">اخبار ${esc(coin.symbol)}</h3><button class="btn sm ghost" id="allNews" style="background:rgba(255,255,255,0.06);border:0;color:#fff;padding:4px 10px;border-radius:8px">مشاهده همه</button></div>
       <div class="news-mini" style="display:flex;flex-direction:column;gap:10px">${rows.map((r) => `
         <a href="${esc(safeUrl(r.link, '#/news'))}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;display:block;padding:8px;border-radius:10px;background:rgba(255,255,255,0.02);transition:background 0.2s">
           <span style="color:#fff;font-weight:500;display:block;margin-bottom:4px">${esc(r.title)}</span>
@@ -537,9 +360,6 @@ export async function render(el, [symParam]) {
     b.setAttribute('aria-pressed', String(on));
     b.setAttribute('aria-label', on ? 'حذف از فهرست پیگیری' : 'افزودن به فهرست پیگیری');
     b.style.color = on ? '#ffd60a' : 'rgba(255,255,255,0.5)';
-    const gw = $('#glanceWatch', el);
-    if (gw) gw.textContent = `واچ‌لیست: ${on ? 'فعال' : 'غیرفعال'}`;
-    toast(on ? `${coin.symbol} به فهرست پیگیری اضافه شد.` : `${coin.symbol} از فهرست پیگیری حذف شد.`, 'info');
   });
 
   $('#tradeBtn', el)?.addEventListener('click', () => {
@@ -649,28 +469,6 @@ export async function render(el, [symParam]) {
     });
   }
 
-  function wireRiskCalc(container, plan) {
-    const capInp = $('#rkCap', container);
-    const riskInp = $('#rkPct', container);
-    const out = $('#rkOut', container);
-    if (!capInp || !riskInp || !out || !plan) return;
-    const entryMid = (plan.entryZone[0] + plan.entryZone[1]) / 2;
-    const dist = Math.abs(entryMid - plan.stopLoss);
-    const tp1 = plan.takeProfits?.[0];
-    const rr = tp1 && dist > 0 ? Math.abs(tp1 - entryMid) / dist : null;
-    const calc = () => {
-      const cap = Math.max(0, +capInp.value || 0);
-      const rPct = Math.max(0.1, Math.min(50, +riskInp.value || 1));
-      const riskUsd = cap * (rPct / 100);
-      const qty = dist > 0 ? riskUsd / dist : 0;
-      const posUsd = qty * entryMid;
-      out.innerHTML = `ریسک مجاز: <b>${usd(riskUsd)}</b> · حجم تخمینی: <b>${amount(qty)} ${esc(coin.symbol)}</b> (${compact(posUsd)})${rr !== null ? ` · نسبت ریسک/ریوارد (TP1): <b>1 : ${rr.toFixed(2)}</b>` : ''}`;
-    };
-    capInp.addEventListener('input', calc);
-    riskInp.addEventListener('input', calc);
-    calc();
-  }
-
   const chart = new CandleChart($('#chart', el), {});
   const TOGGLES = [['ema20', 'EMA 20', '--series-1'], ['ema50', 'EMA 50', '--series-2'], ['ema200', 'EMA 200', '--series-7'], ['bb', 'بانک‌های بولینگر'], ['vwap', 'VWAP', '--series-4'], ['ichimoku', 'ایچیموکو'], ['supertrend', 'سوپرترند', '--up'], ['keltner', 'کلتنر', '--series-5'], ['donchian', 'دونچیان', '--text-muted'], ['volume', 'حجم'], ['rsi', 'RSI'], ['macd', 'MACD'], ['levels', 'سطوح'], ['markers', 'سیگنال‌ها'], ['projection', 'پیش‌بینی', '--accent']];
   $('#toggles', el).innerHTML = TOGGLES.map(([k, label, c]) => `<button class="toggle ${chart.opts[k] ? 'on' : ''}" data-k="${k}" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);padding:4px 10px;border-radius:8px;font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:6px">${c ? `<i style="width:8px;height:8px;border-radius:50%;background:var(${c})"></i>` : ''}${label}</button>`).join('');
@@ -732,8 +530,6 @@ export async function render(el, [symParam]) {
 
   async function loadInterval() {
     const iv = st.interval;
-    const gIv = $('#glanceIv', el);
-    if (gIv) gIv.textContent = iv;
     st.forecast = null; st.fcView = null; st.moveCall = null;
     chart.setProjection(null); chart.setMarkers([]); chart.setLevels([]);
     chart.setData([]);
@@ -757,7 +553,6 @@ export async function render(el, [symParam]) {
       const r = await getCandles(coin, iv, isSecondInterval(iv) ? (MAX_BARS[iv] || 600) : 1500);
       if (st.disposed || iv !== st.interval) return;
       st.candles = r.candles; st.source = r.source; st.tested = isTestedSource(r);
-      st.lastTickAt = Date.now();
       $('#srcChip', el).textContent = r.source === 'binance' ? `● زنده` : r.venue ? `● ${r.venue} · به‌روزرسانی هر ۲۰ ثانیه` : r.source === 'demo' ? 'داده‌های آزمایشی' : 'کوین‌گکو (با تاخیر)';
       $('#srcChip', el).className = `chip ${r.source === 'binance' || r.venue ? 'up' : r.source === 'demo' ? 'warn' : ''}`;
       chart.setData(r.candles);
@@ -792,7 +587,6 @@ export async function render(el, [symParam]) {
           }
           chart.update(c);
           st.candles = chart.candles;
-          st.lastTickAt = Date.now();
           setPrice(c.c);
           if (closed) refreshSignal();
         });
@@ -808,14 +602,12 @@ export async function render(el, [symParam]) {
           let closed = false;
           for (const c of fresh.candles) { if (c.t >= lastT) { if (c.t > lastT) closed = true; chart.update(c); } }
           st.candles = chart.candles;
-          st.lastTickAt = Date.now();
           setPrice(st.candles[st.candles.length - 1].c);
           if (closed) updateSignal();
         })().finally(() => { filling = null; }));
         const stopStream = streamCandles(r.source, String(coin.symbol).toUpperCase(), iv, (c) => {
           if (st.disposed || iv !== st.interval || filling) return;
           streamedAt = Date.now();
-          st.lastTickAt = streamedAt;
           const lastT = st.candles[st.candles.length - 1]?.t ?? 0;
           if (c.t > lastT + step) { catchUp(); return; }
           if (c.t < lastT) return;
@@ -852,15 +644,11 @@ export async function render(el, [symParam]) {
   function setPrice(p) {
     if (p === null || p === undefined) return;
     st.lastPrice = p;
-    st.lastTickAt = Date.now();
     const node = $('#px', el);
     if (!node) return;
     const text = money(p, { dp: st.dp });
     node.textContent = text;
-    document.title = `${text} · تحلیل ${coin.name} (${coin.symbol}) | BTCS`;
-
-    const tag = $('#freshnessTag', el);
-    if (tag) tag.textContent = 'هم‌اکنون به‌روز شد';
+    document.title = `${coin.symbol} ${text} · BTCS`;
 
     const chg = $('#pxChg', el);
     if (chg && anchor24h) chg.innerHTML = changeHtml((p / anchor24h - 1) * 100);
@@ -878,11 +666,6 @@ export async function render(el, [symParam]) {
     const sig = generateSignal(st.candles, { interval: st.interval });
     st.signal = sig;
     mtfCache[st.interval] = sig;
-    const gSig = $('#glanceSig', el);
-    if (gSig && sig.ok) {
-      gSig.textContent = `سیگنال: ${sig.text} (${sig.score > 0 ? '+' : ''}${sig.score})`;
-      gSig.className = `chip ${sig.tone}`;
-    }
     await Promise.all(['15m', '1h', '4h', '1d'].filter((iv) => !mtfCache[iv]).map(async (iv) => {
       try { const r = await getCandles(coin, iv, 300); mtfCache[iv] = generateSignal(r.candles, { interval: iv }); } catch { /* رد شدن */ }
     }));
@@ -1026,8 +809,8 @@ export async function render(el, [symParam]) {
       <div class="signal-meter mt" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px">
         <div class="row spread"><b style="color:#fff">مومنتوم</b><span class="chip ${meterTone}">${esc(meter.label)}</span></div>
         <div class="meter-track" style="margin-top:10px;background:rgba(255,255,255,0.08);height:6px;border-radius:3px;position:relative"><i class="meter-needle" style="position:absolute;top:-4px;width:4px;height:14px;background:#fff;border-radius:2px;left:${meter.pos}%"></i></div>
-        <div class="meter-labels fine" style="margin-top:6px;color:rgba(255,255,255,0.4);display:flex;justify-content:space-between"><span>سقوط قوی</span><span>نزولی</span><span>خنثی</span><span>صعودی</span><span>صعود قوی</span></div>
-        <p class="fine" style="margin:8px 0 0;color:rgba(255,255,255,0.5)">سنجش‌گر قدرت متعارف برای میزان امتداد یافتن اندیکاتورها. سابقه ارزیابی‌شده جداست: ${(() => { const b = upRateFor(st.interval, sig.score); return b ? `روی ${esc(st.interval)}، خوانش‌هایی مانند این در <b>${b.upRatePct}٪</b> مواقع با قیمت‌های بالاتری دنبال شده‌اند` : `اینکه خوانش‌هایی مانند این چند مرتبه با قیمت‌های بالاتری دنبال شده‌اند روی ${esc(st.interval)} اندازه‌گیری نشده است (این مورد روی ۱۵ دقیقه، ۱ ساعت، ۴ ساعت و ۱ روزه اندازه‌گیری شده است)`; })()} — امتیاز بالا به معنای امتداد یافتن حرکت است، نه لزوماً ادامه آن.</p>
+        <div class="meter-labels fine" style="margin-top:6px;color:rgba(255,255,255,0.4);display:flex;justify-content:space-between"><span>سقوط قوی</span><span>نزولی</span><span>خثی</span><span>صعودی</span><span>صعود قوی</span></div>
+        <p class="fine" style="margin:8px 0 0;color:rgba(255,255,255,0.5)">سنجش‌گر قدرت متعارف برای میزان امتداد یافتن اندیکاتورها. سابقه ارزیابی‌شده جداست: ${(() => { const b = upRateFor(st.interval, sig.score); return b ? `روی ${esc(st.interval)}، خوانش‌هایی مانند این در <b>${b.upRatePct}٪</b> مواقع با قیمت‌های بالاتری دنبال شده‌اند` : `اینکه خوانش‌هایی مانند این چند مرتبه با قیمت بالاتری دنبال شده‌اند روی ${esc(st.interval)} اندازه‌گیری نشده است (این مورد روی ۱۵ دقیقه، ۱ ساعت، ۴ ساعت و ۱ روزه اندازه‌گیری شده است)`; })()} — امتیاز بالا به معنای امتداد یافتن حرکت است، نه لزوماً ادامه آن.</p>
       </div>
       ${warnings.length ? `<div class="risk-list mt" style="display:flex;flex-direction:column;gap:8px;margin-top:14px">${warnings.map((w) => `<div class="risk-item ${w.level}" style="display:flex;align-items:center;gap:8px;background:rgba(255,159,10,0.08);border:1px solid rgba(255,159,10,0.2);padding:10px 12px;border-radius:10px;color:#ff9f0a">${icon('info', 14)}<span>${esc(w.text)}</span></div>`).join('')}</div>` : ''}
       ${conf ? `<p class="combined mt" style="margin-top:14px;color:rgba(255,255,255,0.7)">دیدگاه کلی در تمام بازه‌های زمانی: <b class="${conf.tone}">${conf.text}</b> (${conf.score > 0 ? '+' : ''}${conf.score}). پنل زیر تنها نمودار ${st.interval} را می‌خواند.</p>` : ''}
@@ -1046,21 +829,12 @@ export async function render(el, [symParam]) {
           <div><div class="k" style="font-size:0.8rem;color:rgba(255,255,255,0.5)">حد سود ۱</div><div class="v up" style="font-weight:600">${money(plan.takeProfits[0])}</div></div>
           <div><div class="k" style="font-size:0.8rem;color:rgba(255,255,255,0.5)">حد سود ۲ / ۳</div><div class="v up" style="font-weight:600">${money(plan.takeProfits[1])} / ${money(plan.takeProfits[2])}</div></div>
         </div>
-        <div class="ap-calc-box">
-          <div class="row spread" style="margin-bottom:8px"><b style="color:#fff;font-size:0.9rem">محاسبه‌گر سریع ریسک و حجم</b><span class="fine">آموزشی</span></div>
-          <div class="row" style="gap:8px;flex-wrap:wrap">
-            <label class="fld" style="flex:1;min-width:110px"><span class="fine">سرمایه (USD)</span><input class="inp" id="rkCap" type="number" min="10" step="10" value="1000"></label>
-            <label class="fld" style="flex:1;min-width:90px"><span class="fine">ریسک (٪)</span><input class="inp" id="rkPct" type="number" min="0.1" max="20" step="0.5" value="1"></label>
-          </div>
-          <p class="fine" id="rkOut" style="margin:8px 0 0;color:rgba(255,255,255,0.8)"></p>
-        </div>
         <ul class="reasons mt" style="margin-top:12px;padding-right:18px;color:rgba(255,255,255,0.7)">${(plan.exits || plan.exitRules.map((text) => ({ text }))).map((r) => `<li class="s" style="margin-bottom:6px">${esc(r.text).replace('{price}', r.price != null ? money(r.price) : '')}</li>`).join('')}</ul>`
       : `<h3 class="mt" style="margin:16px 0 8px 0;font-size:1.1rem;color:#fff">بدون معامله — منتظر تریگر بمانید</h3><ul class="reasons" style="padding-right:18px;color:rgba(255,255,255,0.7)">${sig.waitFor.map((w) => `<li class="b" style="margin-bottom:6px">${esc(w)}</li>`).join('')}</ul>`}
       ${aiTraderHtml(sig)}
       <details class="mt" style="margin-top:14px"><summary class="fine" style="cursor:pointer;color:var(--accent)">دلایل این سیگنال (${sig.reasons.bullish.length} صعودی · ${sig.reasons.bearish.length} نزولی)</summary>
         <ul class="reasons mt" style="margin-top:10px;padding-right:18px;color:rgba(255,255,255,0.7)">${sig.reasons.bullish.map((r) => `<li class="b" style="margin-bottom:6px">${esc(r)}</li>`).join('')}${sig.reasons.bearish.map((r) => `<li class="s" style="margin-bottom:6px">${esc(r)}</li>`).join('')}</ul>
       </details>`;
-    if (plan) wireRiskCalc(card, plan);
     fillAiLive();
   }
 
@@ -1197,7 +971,7 @@ export async function render(el, [symParam]) {
     const shown = shownProbUp(fc.probUp, st.interval, trust.trust);
     const reliable = directionReliable(st.interval, trust.trust);
     const dirTxt = !reliable ? '<b class="flat">جهت قابل اعتمادی روی این نمودار وجود ندارد</b>'
-      : shown >= 0.54 ? '<b class="up">احتمالاً بالاتر</b>' : shown <= 0.46 ? '<b class="down">احتمالاً پایین‌تر</b>' : '<b class="flat">خنثی / نامشخص</b>';
+      : shown >= 0.54 ? '<b class="up">احتمالاً بالاتر</b>' : shown <= 0.46 ? '<b class="down">احتمالاً پایین‌تر</b>' : '<b class="flat">خثی / نامشخص</b>';
     const e = fc.ensemble;
     const ledger = st.ledger || loadLedger();
     const ls = learningStatus(ledger);
@@ -1265,7 +1039,7 @@ export async function render(el, [symParam]) {
       <dl class="kv mt" style="margin-top:10px">
         <dt>امتیاز برایر (Brier score - کمتر بهتر است)</dt><dd>${brier !== null ? brier.toFixed(3) : '—'}</dd>
         <dt>شیب کالیبراسیون</dt><dd>${typeof e.calibrationSlope === 'number' ? e.calibrationSlope.toFixed(3) : '—'}</dd>
-        <dt>پوشش اندازه‌گیری‌شده باند ۵۰٪</dt><dd>${band50 !== null ? band50 + '%' : '—'} <span class="muted">هدف ~۵۰٪</span></dd>
+        <dt>پوشش اندازهه‌گیری‌شده باند ۵۰٪</dt><dd>${band50 !== null ? band50 + '%' : '—'} <span class="muted">هدف ~۵۰٪</span></dd>
         <dt>پوشش اندازه‌گیری‌شده باند ۸۰٪</dt><dd>${band80 !== null ? band80 + '%' : '—'} <span class="muted">هدف ~۸۰٪</span></dd>
         <dt>پوشش اندازه‌گیری‌شده باند ۹۰٪</dt><dd>${typeof TESTED_ACCURACY.band90?.[st.interval] === 'number' ? TESTED_ACCURACY.band90[st.interval] + '%' : '—'} <span class="muted">هدف ~۹۰٪</span></dd>
       </dl>
@@ -1273,12 +1047,7 @@ export async function render(el, [symParam]) {
       ${timingCardBlock()}
       <div class="row mt" style="margin-top:16px;display:flex;align-items:center;justify-content:space-between"><span class="fine" style="color:rgba(255,255,255,0.6)">افق زمانی</span><div class="seg" id="hSeg" style="display:flex;gap:4px">${[Math.max(3, Math.round(st.horizon / 2)), DEFAULT_HORIZON[st.interval] || 12, (DEFAULT_HORIZON[st.interval] || 12) * 2].filter((v, i, a) => a.indexOf(v) === i).map((h) => `<button data-v="${h}" class="${h === st.horizon ? 'on' : ''}" style="padding:4px 10px;border-radius:8px;border:0;background:${h === st.horizon ? 'rgba(255,255,255,0.15)' : 'transparent'};color:${h === st.horizon ? '#fff' : 'rgba(255,255,255,0.6)'};cursor:pointer">${horizonText(st.interval, h)}</button>`).join('')}</div></div>
       <div id="histLine" class="mt" style="margin-top:14px"></div>`;
-    bindSeg($('#hSeg', el), (v) => {
-      st.horizon = +v;
-      persistUi({ horizon: st.horizon });
-      $('#fcCard', el).innerHTML = `<div class="row" style="align-items:center;gap:10px"><span class="spinner"></span><b>در حال آموزش مجدد برای افق ${horizonText(st.interval, +v)}…</b></div>`;
-      runAi();
-    });
+    bindSeg($('#hSeg', el), (v) => { st.horizon = +v; $('#fcCard', el).innerHTML = `<div class="row" style="align-items:center;gap:10px"><span class="spinner"></span><b>در حال آموزش مجدد برای افق ${horizonText(st.interval, +v)}…</b></div>`; runAi(); });
     paintHistLine();
   }
 
@@ -1389,7 +1158,6 @@ export async function render(el, [symParam]) {
     $('#openHist', el)?.addEventListener('click', () => {
       $$('#tabs [data-tab]', el).forEach((b) => b.classList.toggle('on', b.dataset.tab === 'history'));
       st.tab = 'history';
-      persistUi({ tab: st.tab });
       drawTab();
       $('#tabs', el).scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -1586,7 +1354,6 @@ export async function render(el, [symParam]) {
           ? `<div class="banner" style="margin:0 0 14px;background:rgba(255,159,10,0.1);border:1px solid rgba(255,159,10,0.3);padding:14px;border-radius:12px;color:#ff9f0a">در این بازه زمانی، سیگنال‌ها عملکردی <b>ضعیف‌تر از روش خرید و نگهداری ساده</b> به میزان ${pct(Math.abs(lag), 1, false)} داشته‌اند. نگهداری دارایی گزینه بهتری در اینجا بوده است.</div>`
           : bt.tradeCount < 10
             ? '<div class="banner" style="margin:0 0 14px;background:rgba(255,255,255,0.05);padding:14px;border-radius:12px;color:rgba(255,255,255,0.7)">کمتر از ۱۰ معامله — حجم نمونه بسیار کوچک است و نمی‌توان نتیجه‌گیری قطعی کرد. این بخش را به عنوان نمونه نمایشی در نظر بگیرید، نه سند قطعی.' : '';
-      const filteredTrades = bt.trades.filter((t) => st.btFilter === 'win' ? t.returnPct >= 0 : st.btFilter === 'loss' ? t.returnPct < 0 : true);
       body.innerHTML = `
         ${verdict}
         <p class="fine" style="margin-bottom:14px;color:rgba(255,255,255,0.6);line-height:1.6">نتیجه احتمالی در صورت اجرای تمام نقاط ورودی این موتور روی ${bt.bars} کندل آخر ${esc(st.interval)} — فقط خرید (Long)، با کارمزد ۰.۱٪ در هر طرف، استفاده از همان حد ضرر و هدف نشان‌داده‌شده در طرح بالا (${geometryFor(st.interval).stopAtr} برابر حد ضرر ATR، هدف ${geometryFor(st.interval).rr}R) و بدون جابجایی به نقطه سربه‌سر (Break-even)، زیرا اندازه‌گیری‌ها نشان داده‌اند انتقال حد ضرر به نقطه سربه‌سر هزینه‌بر است.</p>
@@ -1597,18 +1364,9 @@ export async function render(el, [symParam]) {
           <div class="stat" style="background:rgba(255,255,255,0.02);padding:14px;border-radius:12px"><span class="k" style="font-size:0.75rem;color:rgba(255,255,255,0.5)">حداکثر افت سرمایه</span><span class="v ${bt.maxDrawdownPct > 0 ? 'down' : 'flat'}" style="font-size:1.2rem;font-weight:600;display:block;margin-top:6px">${pct(-bt.maxDrawdownPct)}</span><span class="s muted" style="font-size:0.75rem;color:rgba(255,255,255,0.4)">عامل سود ${bt.profitFactor ?? '—'}</span></div>
         </div>
         <div id="btChart" class="mt" style="height:260px"></div>
-        <div class="row spread mt" style="margin-top:16px;gap:8px;flex-wrap:wrap">
-          <span class="fine" style="color:rgba(255,255,255,0.6)">فیلتر سوابق معاملات (${filteredTrades.length} مورد)</span>
-          <div class="seg" id="btFilterSeg" style="display:flex;gap:4px">
-            <button data-v="all" class="${st.btFilter === 'all' ? 'on' : ''}">همه</button>
-            <button data-v="win" class="${st.btFilter === 'win' ? 'on' : ''}">سودده</button>
-            <button data-v="loss" class="${st.btFilter === 'loss' ? 'on' : ''}">زیان‌ده</button>
-          </div>
-        </div>
-        <div class="tbl-wrap mt" style="margin-top:10px"><table class="tbl"><thead><tr><th class="l">زمان ورود</th><th>قیمت ورود</th><th>قیمت خروج</th><th>نتیجه</th><th>دلیل خروج</th></tr></thead><tbody>
-          ${filteredTrades.slice(-15).reverse().map((t) => `<tr style="cursor:default"><td class="l">${dateTime(t.entryTime)}</td><td>${money(t.entry)}</td><td>${money(t.exit)}</td><td class="${t.returnPct >= 0 ? 'up' : 'down'}">${pct(t.returnPct)}</td><td>${t.reason}</td></tr>`).join('') || '<tr><td colspan="5" class="l muted">هیچ معامله‌ای با این فیلتر یافت نشد.</td></tr>'}
+        <div class="tbl-wrap mt" style="margin-top:16px"><table class="tbl"><thead><tr><th class="l">زمان ورود</th><th>قیمت ورود</th><th>قیمت خروج</th><th>نتیجه</th><th>دلیل خروج</th></tr></thead><tbody>
+          ${bt.trades.slice(-15).reverse().map((t) => `<tr style="cursor:default"><td class="l">${dateTime(t.entryTime)}</td><td>${money(t.entry)}</td><td>${money(t.exit)}</td><td class="${t.returnPct >= 0 ? 'up' : 'down'}">${pct(t.returnPct)}</td><td>${t.reason}</td></tr>`).join('') || '<tr><td colspan="5" class="l muted">هیچ معامله‌ای در این بازه تکمیل نشده است.</td></tr>'}
         </tbody></table></div>`;
-      bindSeg($('#btFilterSeg', body), (v) => { st.btFilter = v; drawTab(); });
       const lc = new LineChart($('#btChart', body), { height: 260, yFormat: (v) => `${v >= 0 ? '+' : ''}${v.toFixed(0)}%`, xFormat: (x) => shortTime(x, st.interval), tooltipX: (x) => dateTime(x), zeroLine: 0 });
       st.charts.push(lc);
       const base = st.candles.slice(-1000);
@@ -1671,7 +1429,7 @@ export async function render(el, [symParam]) {
             ? '<p class="fine muted">هیچ پروفایل مرجعی برای این ارز منتشر نشده است، بنابراین ارقام زیر به جای غایب بودن، نامشخص هستند.</p>'
             : '';
         body.innerHTML = `<div class="grid g2" style="display:grid;grid-template-columns:1.2fr 1fr;gap:24px">
-          <div><h3 style="margin-bottom:10px;color:#fff">درباره ${esc(coin.name)}</h3>${note}<p class="muted" itemprop="description" style="line-height:1.7;color:rgba(255,255,255,0.7)">${esc(p?.description || (loaded ? 'توضیحاتی در دسترس نیست.' : ''))}</p>
+          <div><h3 style="margin-bottom:10px;color:#fff">درباره ${esc(coin.name)}</h3>${note}<p class="muted" style="line-height:1.7;color:rgba(255,255,255,0.7)">${esc(p?.description || (loaded ? 'توضیحاتی در دسترس نیست.' : ''))}</p>
             <div class="row mt" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px">${(p?.categories || []).map((c) => `<span class="chip" style="background:rgba(255,255,255,0.06);padding:4px 10px;border-radius:8px;color:#fff">${esc(c)}</span>`).join('')}</div>
             <div class="row mt" style="display:flex;gap:10px;margin-top:16px">${safeUrl(p?.homepage) ? `<a class="btn sm" target="_blank" rel="noopener noreferrer" href="${esc(safeUrl(p.homepage))}" style="background:rgba(255,255,255,0.08);border:0;color:#fff;padding:6px 14px;border-radius:8px;text-decoration:none">وب‌سایت ↗</a>` : ''}${safeUrl(p?.explorer) ? `<a class="btn sm" target="_blank" rel="noopener noreferrer" href="${esc(safeUrl(p.explorer))}" style="background:rgba(255,255,255,0.08);border:0;color:#fff;padding:6px 14px;border-radius:8px;text-decoration:none">کاوشگر (Explorer) ↗</a>` : ''}</div></div>
           <dl class="kv" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;margin:0">
@@ -1851,10 +1609,9 @@ export async function render(el, [symParam]) {
     return out;
   }
 
-  bindTabs($('#tabs', el), (t) => { st.tab = t; persistUi({ tab: t }); drawTab(); });
+  bindTabs($('#tabs', el), (t) => { st.tab = t; drawTab(); });
   bindSeg($('#ivSeg', el), (iv) => {
     st.interval = iv; st.horizon = DEFAULT_HORIZON[iv] || 12;
-    persistUi({ interval: iv, horizon: st.horizon });
     settings.set({ interval: iv });
     loadInterval().then(drawTab);
   });
@@ -1864,14 +1621,12 @@ export async function render(el, [symParam]) {
 
   return () => {
     st.disposed = true;
-    clearInterval(freshnessTimer);
     if (liveUnsub) liveUnsub();
     if (tabCleanup) tabCleanup();
     clearInterval(signalTimer);
     destroyCharts();
     chart.destroy();
     window.removeEventListener('cv:theme', onTheme);
-    restoreSeo();
   };
 }
 
