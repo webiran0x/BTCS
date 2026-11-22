@@ -143,6 +143,7 @@ function preloadDeps(file) {
 }
 
 async function route(opts) {
+  if (typeof location !== 'undefined' && /^\/guide(\/|$)/i.test(location.pathname || '')) { renderNav(); return; }
   const seq = ++routeSeq;
   const keep = opts?.keepScroll === true ? window.scrollY : null;
   const rawHash = location.hash.replace(/^#\/?/, '');
