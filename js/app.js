@@ -89,7 +89,10 @@ function renderNav() {
   if (navEl) {
     navEl.innerHTML = navItems().map((n) => {
       const href = n.href || `#/${n.path}`;
-      return `<a href="${href}" class="${cur === n.path ? 'on' : ''}"${cur === n.path ? ' aria-current="page"' : ''}${n.target ? ` target="${n.target}" rel="noopener noreferrer"` : ''}>${icon(n.icon)}<span>${esc(t(n.label))}</span>${n.badge ? `<em class="badge">${esc(n.badge)}</em>` : ''}</a>`;
+      const targetAttr = n.target ? ` target="${n.target}" rel="noopener noreferrer"` : '';
+      const curAttr = cur === n.path ? ' aria-current="page"' : '';
+      const cls = cur === n.path ? 'on' : '';
+      return `<a href="${href}" class="${cls}"${curAttr}${targetAttr}>${icon(n.icon)}<span>${esc(t(n.label))}</span>${n.badge ? `<em class="badge">${esc(n.badge)}</em>` : ''}</a>`;
     }).join('');
   }
   const bottomEl = $('#bottombar');
@@ -97,7 +100,11 @@ function renderNav() {
     bottomEl.innerHTML = `${MOBILE.map((p) => {
       const n = NAV.find((x) => x.path === p);
       if (!n) return '';
-      return `<a href="#/${p}" class="${cur === p ? 'on' : ''}"${cur === p ? ' aria-current="page"' : ''}>${icon(n.icon, 22)}<span>${esc(t(n.short))}</span></a>`;
+      const href = n.href || `#/${n.path}`;
+      const targetAttr = n.target ? ` target="${n.target}" rel="noopener noreferrer"` : '';
+      const curAttr = cur === p ? ' aria-current="page"' : '';
+      const cls = cur === p ? 'on' : '';
+      return `<a href="${href}" class="${cls}"${curAttr}${targetAttr}>${icon(n.icon, 22)}<span>${esc(t(n.short))}</span></a>`;
     }).join('')}<button id="moreBtn" type="button" aria-haspopup="dialog" class="${MOBILE.includes(cur) ? '' : 'on'}">${icon('more', 22)}<span>${esc(t('بیشتر'))}</span></button>`;
     $('#moreBtn', bottomEl)?.addEventListener('click', openMore);
   }
@@ -110,7 +117,9 @@ function openMore() {
     <div dir="rtl" style="text-align:right">
       <div class="sheet-grid">${rest.map((n) => {
         const href = n.href || `#/${n.path}`;
-        return `<a href="${href}" class="sheet-item ${cur === n.path ? 'on' : ''}"${n.target ? ` target="${n.target}" rel="noopener noreferrer"` : ''}>${icon(n.icon, 20)}<span>${esc(t(n.label))}</span></a>`;
+        const targetAttr = n.target ? ` target="${n.target}" rel="noopener noreferrer"` : '';
+        const cls = cur === n.path ? 'sheet-item on' : 'sheet-item';
+        return `<a href="${href}" class="${cls}"${targetAttr}>${icon(n.icon, 20)}<span>${esc(t(n.label))}</span></a>`;
       }).join('')}</div>
       <div class="sheet-grid mt">
         <a href="#/account" class="sheet-item">${icon('wallet', 20)}<span>${esc(t('حساب کاربری'))}</span></a>
