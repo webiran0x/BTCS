@@ -43,7 +43,7 @@ const NAV = [
   { path: 'wallet', label: 'کیف پول', icon: 'wallet', short: 'کیف پول' },
   { path: 'alerts', label: 'اعلان ها', icon: 'alerts', short: 'اعلان ها' },
   { path: 'premium', label: 'اشتراک ویژه', icon: 'star', short: 'ویژه' },
-  { path: 'guide', label: 'راهنمای جامع', icon: 'info', short: 'راهنما' },
+    { path: 'guide', label: 'راهنمای جامع', icon: 'info', short: 'راهنما', href: '/guide/', target: '_blank' },
 ];
 const ADMIN_NAV = { path: 'admin', label: 'مدیریت', icon: 'chip', short: 'مدیریت' };
 const MOBILE = ['', 'ai', 'trader', 'wallet'];
@@ -88,8 +88,8 @@ function renderNav() {
   const navEl = $('#nav');
   if (navEl) {
     navEl.innerHTML = navItems().map((n) => {
-      const href = n.path === 'guide' && isStaticGuidePage() ? '/guide/' : `#/${n.path}`;
-      return `<a href="${href}" class="${cur === n.path ? 'on' : ''}"${cur === n.path ? ' aria-current="page"' : ''}>${icon(n.icon)}<span>${esc(t(n.label))}</span>${n.badge ? `<em class="badge">${esc(n.badge)}</em>` : ''}</a>`;
+      const href = n.href || `#/${n.path}`;
+      return `<a href="${href}" class="${cur === n.path ? 'on' : ''}"${cur === n.path ? ' aria-current="page"' : ''}${n.target ? ` target="${n.target}" rel="noopener noreferrer"` : ''}>${icon(n.icon)}<span>${esc(t(n.label))}</span>${n.badge ? `<em class="badge">${esc(n.badge)}</em>` : ''}</a>`;
     }).join('');
   }
   const bottomEl = $('#bottombar');
@@ -109,8 +109,8 @@ function openMore() {
   const m = modal(`
     <div dir="rtl" style="text-align:right">
       <div class="sheet-grid">${rest.map((n) => {
-        const href = n.path === 'guide' && isStaticGuidePage() ? '/guide/' : `#/${n.path}`;
-        return `<a href="${href}" class="sheet-item ${cur === n.path ? 'on' : ''}">${icon(n.icon, 20)}<span>${esc(t(n.label))}</span></a>`;
+        const href = n.href || `#/${n.path}`;
+        return `<a href="${href}" class="sheet-item ${cur === n.path ? 'on' : ''}"${n.target ? ` target="${n.target}" rel="noopener noreferrer"` : ''}>${icon(n.icon, 20)}<span>${esc(t(n.label))}</span></a>`;
       }).join('')}</div>
       <div class="sheet-grid mt">
         <a href="#/account" class="sheet-item">${icon('wallet', 20)}<span>${esc(t('حساب کاربری'))}</span></a>
