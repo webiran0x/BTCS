@@ -511,7 +511,14 @@ function page(p) {
 
 const all = [...SECTIONS, ...COINS];
 const outputs = new Map();
-for (const p of all) outputs.set(path.join(root, p.path, 'index.html'), page(p));
+for (const p of all) {
+  const outPath = path.join(root, p.path, 'index.html');
+  if (p.path === 'guide/' && fs.existsSync(outPath)) {
+    outputs.set(outPath, fs.readFileSync(outPath, 'utf8'));
+  } else {
+    outputs.set(outPath, page(p));
+  }
+}
 
 // تاریخ lastmod بر اساس version.txt یا تاریخ فعلی 2026
 const rawStamp = fs.existsSync(path.join(root, 'version.txt'))
