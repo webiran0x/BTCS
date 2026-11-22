@@ -69,6 +69,7 @@ const VIEWS = {
   account: 'account',
   admin: 'admin',
   legal: 'legal',
+  guide: 'guide',
 };
 
 let cleanup = null;
