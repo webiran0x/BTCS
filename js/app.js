@@ -514,14 +514,9 @@ getAppSettings().then((s) => {
 }).catch(() => { /* بک‌اند اختیاری است */ });
 
 // ---------------------------------------------------------------- 3D world
-// function startWorld() {
-//   const go = () => import('./world/world.js').then((m) => m.startWorld()).catch((e) => {
-//     console.warn('3D world', e);
-//     document.documentElement.classList.add('no-webgl');
-//   });
-//   if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 2500 });
-//   else setTimeout(go, 800);
-// }
+function startWorld() {
+  // اگر فعلاً بخش 3D غیرفعال است، بدون خطا برمی‌گردد
+}
 
 // ---------------------------------------------------------------- boot
 {
