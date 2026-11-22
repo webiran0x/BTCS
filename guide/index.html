@@ -1551,9 +1551,8 @@
         const container = document.getElementById('introChapterIndex');
         if (!container) return;
 
-        container.innerHTML = (CHAPTERS.map((ch) => {
-          const isRead = state.read.has(ch.id) + `
-          <a href="/academy/" class="glass-card p-3.5 no-underline flex flex-col justify-between gap-2 sm:col-span-2" style="color: var(--ink-primary); border-color: rgba(10, 132, 255, 0.35);"><div class="flex items-start justify-between gap-2"><span class="font-bold text-sm leading-snug">🎓 آزمون تعاملی، شبیه‌ساز ریسک و فلش‌کارت‌های آکادمی</span><span class="route-chip shrink-0">/academy/</span></div><p class="text-xs m-0" style="color: var(--ink-muted);">مهارت خود را در ۸ فصل با حالت تمرینی یا امتحانی، آزمایشگاه اندازه پوزیشن و بازه نوسان، و دریافت گواهی‌نامه بسنجید.</p></a>`);
+        const chaptersHtml = CHAPTERS.map((ch) => {
+          const isRead = state.read.has(ch.id);
           const isBm = state.bookmarks.has(ch.id);
           return `
             <a href="#${ch.id}" data-jump-section="${ch.id}" class="glass-card p-3.5 no-underline flex flex-col justify-between gap-2" style="color: var(--ink-primary);">
@@ -1571,6 +1570,20 @@
             </a>
           `;
         }).join('');
+
+        const academyCardHtml = `
+          <a href="/academy/" class="glass-card p-3.5 no-underline flex flex-col justify-between gap-2 sm:col-span-2" style="color: var(--ink-primary); border-color: rgba(10, 132, 255, 0.35);">
+            <div class="flex items-start justify-between gap-2">
+              <span class="font-bold text-sm leading-snug">🎓 آزمون تعاملی، شبیه‌ساز ریسک و فلش‌کارت‌های آکادمی</span>
+              <span class="route-chip shrink-0">/academy/</span>
+            </div>
+            <p class="text-xs m-0" style="color: var(--ink-muted);">
+              مهارت خود را در ۸ فصل با حالت تمرینی یا امتحانی، آزمایشگاه اندازه پوزیشن و بازه نوسان، و دریافت گواهی‌نامه بسنجید.
+            </p>
+          </a>
+        `;
+
+        container.innerHTML = chaptersHtml + academyCardHtml;
       }
 
       function renderChapters() {
