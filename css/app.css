@@ -732,3 +732,28 @@ html:not(.webgl) .hero .key-hint { display: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+/* پس‌زمینه ثابت سرمه‌ای و طلایی در زمان غیرفعال بودن یا نبود WebGL */
+html.no-webgl,
+html.no-webgl body {
+  background-color: #070d19;
+  background-image:
+    radial-gradient(900px circle at 50% 18%, rgba(214, 180, 108, 0.14), transparent 60%),
+    radial-gradient(700px circle at 82% 85%, rgba(23, 47, 84, 0.55), transparent 65%),
+    linear-gradient(180deg, #091224 0%, #070d19 55%, #050811 100%);
+  background-attachment: fixed;
+}
+
+html.no-webgl #world,
+html.no-webgl #worldTip,
+.no-webgl {
+  display: none;
+}
+
+/* کلاس کمکی قابل استفاده روی کارت‌ها یا باکس‌های خاص با تم سرمه‌ای-طلایی */
+.navy-gold-surface {
+  background: linear-gradient(160deg, rgba(16, 35, 66, 0.78), rgba(7, 16, 32, 0.92));
+  border: 1px solid rgba(214, 180, 108, 0.28);
+  box-shadow:
+    0 18px 42px -18px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(246, 231, 193, 0.16);
+}
