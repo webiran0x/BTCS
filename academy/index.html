@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="author" content="BTCS Academy & Trading Simulator" />
+  <meta name="generator" content="BTCS Academy App 2026" />
+  <meta name="theme-color" content="#07080d" id="metaThemeColor" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="description" content="آکادمی تعاملی و آزمون مهارت تریدرهای BTCS: یادگیری مرحله‌به‌مرحله ۸ فصل، آزمون شبیه‌سازی‌شده، شبیه‌ساز ریسک و بازه قیمت، فلش‌کارت‌ها و گواهی‌نامه مهارت." id="metaDescription" />
+  <meta name="keywords" content="آکادمی BTCS, آزمون ترید رمزارز, شبیه‌ساز معاملات کاغذی, مدیریت ریسک, پیش‌بینی بازه قیمت, فلش‌کارت معاملاتی" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="fa_IR" />
+  <meta property="og:site_name" content="آکادمی BTCS" />
+  <meta property="og:url" content="https://btcs.ir/academy/" />
+  <meta property="og:title" content="آکادمی تعاملی و آزمون مهارت ترید | BTCS" id="ogTitle" />
+  <meta property="og:description" content="آزمون، شبیه‌ساز ریسک، فلش‌کارت و آموزش عملی پلتفرم تحلیلی و شبیه‌ساز معاملاتی BTCS در محیطی مدرن به سبک اپل." id="ogDescription" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="آکادمی تعاملی و آزمون مهارت ترید | BTCS" id="twTitle" />
+  <meta name="twitter:description" content="آزمون مهارتی، آزمایشگاه ریسک، فلش‌کارت و چک‌لیست انضباط معاملاتی BTCS." id="twDescription" />
+
+  <link rel="canonical" href="https://btcs.ir/academy/" id="canonicalLink" />
+  <title id="pageTitle">آکادمی تعاملی و آزمون مهارت ترید | BTCS</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script type="application/ld+json" id="jsonLdData">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Course",
+        "@id": "https://btcs.ir/academy/#course",
+        "name": "آکادمی جامع تحلیل بازار، شبیه‌ساز معاملات و مدیریت ریسک BTCS",
+        "inLanguage": "fa-IR",
+        "provider": {
+          "@type": "Organization",
+          "name": "BTCS",
+          "url": "https://btcs.ir/"
+        },
+        "description": "دوره آموزشی و آزمون تعاملی شامل مفاهیم بازار، تحلیل تک‌ارزی، اسکنر و فیوچرز، پیش‌بینی بازه قیمت و هوش مصنوعی، سوابق عملکرد، شبیه‌ساز معاملات، هشدارها و مدیریت ریسک."
+      },
+      {
+        "@type": "Quiz",
+        "@id": "https://btcs.ir/academy/#quiz",
+        "name": "آزمون سنجش مهارت تریدر و آشنایی با ابزارهای BTCS",
+        "inLanguage": "fa-IR",
+        "educationalLevel": "Beginner to Advanced"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://btcs.ir/academy/#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "BTCS", "item": "https://btcs.ir/" },
+          { "@type": "ListItem", "position": 2, "name": "آکادمی و آزمون", "item": "https://btcs.ir/academy/" }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    @font-face {
+      font-family: 'UnifiedAcademyFont';
+      src:
+        local('IRANYekanXVF'),
+        local('IRANYekanX'),
+        url('/fonts/IRANYekanXVF.woff2') format('woff2'),
+        url('/fonts/Vazirmatn.woff2') format('woff2'),
+        local('Vazirmatn');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --font-sans: 'UnifiedAcademyFont', 'IRANYekanXVF', 'Vazirmatn', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --transition-fast: 170ms cubic-bezier(0.25, 0.8, 0.25, 1);
+      --transition-smooth: 280ms cubic-bezier(0.22, 1, 0.36, 1);
+      --header-h: 72px;
+    }
+
+    :root[data-theme="dark"] {
+      --bg-canvas: #07080d;
+      --bg-grad-1: radial-gradient(circle at 12% 8%, rgba(10, 132, 255, 0.16), transparent 45%);
+      --bg-grad-2: radial-gradient(circle at 88% 14%, rgba(94, 92, 230, 0.14), transparent 44%);
+      --bg-grad-3: radial-gradient(circle at 50% 95%, rgba(48, 209, 88, 0.08), transparent 52%);
+      --surface-glass: rgba(18, 20, 28, 0.74);
+      --surface-glass-strong: rgba(23, 26, 36, 0.88);
+      --surface-card: rgba(255, 255, 255, 0.036);
+      --surface-card-hover: rgba(255, 255, 255, 0.068);
+      --surface-subtle: rgba(255, 255, 255, 0.055);
+      --border-hairline: rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.18);
+      --ink-primary: #f5f5f7;
+      --ink-secondary: rgba(245, 245, 247, 0.76);
+      --ink-muted: rgba(245, 245, 247, 0.54);
+      --accent-blue: #0a84ff;
+      --accent-indigo: #5e5ce6;
+      --accent-green: #30d158;
+      --accent-amber: #ff9f0a;
+      --accent-rose: #ff453a;
+      --shadow-elevated: 0 22px 54px rgba(0, 0, 0, 0.45);
+      --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    :root[data-theme="light"] {
+      --bg-canvas: #f4f5f8;
+      --bg-grad-1: radial-gradient(circle at 12% 8%, rgba(0, 122, 255, 0.09), transparent 45%);
+      --bg-grad-2: radial-gradient(circle at 88% 14%, rgba(88, 86, 214, 0.08), transparent 44%);
+      --bg-grad-3: radial-gradient(circle at 50% 95%, rgba(40, 205, 65, 0.06), transparent 52%);
+      --surface-glass: rgba(255, 255, 255, 0.78);
+      --surface-glass-strong: rgba(255, 255, 255, 0.92);
+      --surface-card: rgba(255, 255, 255, 0.74);
+      --surface-card-hover: rgba(255, 255, 255, 0.96);
+      --surface-subtle: rgba(15, 23, 42, 0.05);
+      --border-hairline: rgba(15, 23, 42, 0.09);
+      --border-strong: rgba(15, 23, 42, 0.16);
+      --ink-primary: #111318;
+      --ink-secondary: rgba(17, 19, 24, 0.78);
+      --ink-muted: rgba(17, 19, 24, 0.55);
+      --accent-blue: #007aff;
+      --accent-indigo: #5856d6;
+      --accent-green: #248a3d;
+      --accent-amber: #c96a00;
+      --accent-rose: #d70015;
+      --shadow-elevated: 0 20px 46px rgba(15, 23, 42, 0.09);
+      --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-family: var(--font-sans);
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--bg-canvas);
+      background-image: var(--bg-grad-1), var(--bg-grad-2), var(--bg-grad-3);
+      background-attachment: fixed;
+      color: var(--ink-primary);
+      font-family: var(--font-sans);
+      line-height: 1.85;
+      overflow-x: hidden;
+    }
+
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      min-height: var(--header-h);
+      background: var(--surface-glass-strong);
+      backdrop-filter: blur(24px) saturate(165%);
+      -webkit-backdrop-filter: blur(24px) saturate(165%);
+      border-bottom: 1px solid var(--border-hairline);
+    }
+
+    .glass-panel {
+      background: var(--surface-glass);
+      backdrop-filter: blur(22px) saturate(155%);
+      -webkit-backdrop-filter: blur(22px) saturate(155%);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-card);
+    }
+
+    .glass-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      transition: all var(--transition-fast);
+    }
+    .glass-card:hover {
+      background: var(--surface-card-hover);
+      border-color: var(--border-strong);
+    }
+
+    .glass-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-hairline);
+      color: var(--ink-primary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--transition-fast);
+    }
+    .glass-btn:hover {
+      background: var(--surface-card-hover);
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+    .glass-btn.primary {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
+      border-color: transparent;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .pill-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-hairline);
+      color: var(--ink-secondary);
+      font-size: 0.84rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--transition-fast);
+    }
+    .pill-tab.is-active {
+      background: linear-gradient(135deg, rgba(10, 132, 255, 0.24), rgba(94, 92, 230, 0.24));
+      border-color: rgba(10, 132, 255, 0.52);
+      color: var(--ink-primary);
+      font-weight: 600;
+    }
+
+    .route-chip {
+      display: inline-block;
+      direction: ltr;
+      unicode-bidi: isolate;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      padding: 2px 8px;
+      border-radius: 7px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-hairline);
+      color: var(--accent-blue);
+    }
+
+    .option-card {
+      width: 100%;
+      text-align: right;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      background: var(--surface-card);
+      border: 1px solid var(--border-hairline);
+      color: var(--ink-primary);
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .option-card:hover:not(:disabled) {
+      background: var(--surface-card-hover);
+      border-color: var(--accent-blue);
+    }
+    .option-card.is-correct {
+      background: rgba(48, 209, 88, 0.15);
+      border-color: rgba(48, 209, 88, 0.65);
+    }
+    .option-card.is-wrong {
+      background: rgba(255, 69, 58, 0.15);
+      border-color: rgba(255, 69, 58, 0.65);
+    }
+
+    .toast-banner {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%) translateY(24px);
+      z-index: 80;
+      background: var(--surface-glass-strong);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-strong);
+      color: var(--ink-primary);
+      padding: 11px 20px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-elevated);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-fast), transform var(--transition-smooth);
+      max-width: calc(100vw - 32px);
+      text-align: center;
+    }
+    .toast-banner.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    @media print {
+      .site-header, .no-print, .toast-banner, .modal-backdrop { display: none !important; }
+      body { background: #fff !important; color: #111 !important; }
+      .glass-panel, .glass-card { background: #fff !important; border: 1px solid #ccc !important; box-shadow: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <a href="/guide/" class="flex items-center gap-3 no-underline text-inherit">
+          <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0" style="background: linear-gradient(135deg, rgba(10,132,255,0.28), rgba(94,92,230,0.28)); border: 1px solid var(--border-strong); color: var(--accent-blue);">
+            ACAD
+          </div>
+          <div class="min-w-0">
+            <div class="text-sm sm:text-base font-bold truncate">آکادمی و آزمون BTCS</div>
+            <div class="text-xs truncate" style="color: var(--ink-muted);">یادگیری عملی، شبیه‌ساز ریسک و سنجش مهارت</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="relative w-44 sm:w-56">
+          <label for="academySearch" class="sr-only">جستجو در آکادمی</label>
+          <input
+            type="search"
+            id="academySearch"
+            placeholder="جستجو در دروس و آزمون… (/)"
+            class="w-full h-10 px-3 rounded-xl text-sm outline-none"
+            style="background: var(--surface-subtle); border: 1px solid var(--border-hairline); color: var(--ink-primary);"
+          />
+        </div>
+        <button type="button" id="openCertBtn" class="glass-btn text-xs sm:text-sm">🎓 گواهی‌نامه</button>
+        <a href="/guide/" class="glass-btn text-xs sm:text-sm">📖 راهنما</a>
+        <a href="/" class="glass-btn text-xs sm:text-sm">📈 بازارها</a>
+        <button type="button" id="themeBtn" class="glass-btn" aria-label="تغییر تم">☀️</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-16 space-y-6">
+    <!-- Hero & Gamified Stats Bar -->
+    <section class="glass-panel p-6 sm:p-8">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div class="space-y-2 max-w-2xl">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold" style="background: rgba(10,132,255,0.16); color: var(--accent-blue); border: 1px solid rgba(10,132,255,0.35);">
+              اپلیکیشن یادگیری و آزمون · ۲۰۲۶
+            </span>
+            <span class="px-3 py-1 rounded-full text-xs" style="background: var(--surface-subtle); color: var(--ink-muted); border: 1px solid var(--border-hairline);">
+              تمرین بدون ریسک سرمایه واقعی
+            </span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold leading-snug m-0">
+            آکادمی تعاملی و آزمون مهارت ترید در BTCS
+          </h1>
+          <p class="text-sm sm:text-base m-0" style="color: var(--ink-secondary);">
+            مهارت خواندن بازار، تحلیل تک‌ارزی، اسکنر و فیوچرز، پیش‌بینی بازه قیمت و هوش مصنوعی، سوابق عملکرد، شبیه‌ساز معاملات، هشدارها و مدیریت ریسک را با آزمون، آزمایشگاه‌های تعاملی و فلش‌کارت تمرین کنید.
+          </p>
+        </div>
+
+        <!-- 8. XP, Level & Streak Tracker -->
+        <div class="grid grid-cols-3 gap-3 shrink-0 tabular-nums">
+          <div class="glass-card p-3.5 text-center">
+            <div class="text-xs" style="color: var(--ink-muted);">امتیاز XP</div>
+            <div id="xpValue" class="text-xl font-extrabold mt-1" style="color: var(--accent-blue);">۰</div>
+          </div>
+          <div class="glass-card p-3.5 text-center">
+            <div class="text-xs" style="color: var(--ink-muted);">سطح آکادمی</div>
+            <div id="rankValue" class="text-sm font-bold mt-1.5" style="color: var(--accent-green);">تازه‌کار</div>
+          </div>
+          <div class="glass-card p-3.5 text-center">
+            <div class="text-xs" style="color: var(--ink-muted);">استریک روز</div>
+            <div id="streakValue" class="text-xl font-extrabold mt-1" style="color: var(--accent-amber);">۱</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Level Filter + Mode Switcher -->
+      <div class="mt-6 pt-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4" style="border-top: 1px solid var(--border-hairline);">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1" role="tablist" aria-label="فیلتر سطح تریدر">
+          <button type="button" class="pill-tab is-active" data-level-filter="all">همه سطوح</button>
+          <button type="button" class="pill-tab" data-level-filter="beginner">🌱 تازه‌کار</button>
+          <button type="button" class="pill-tab" data-level-filter="intermediate">📊 میان‌رده</button>
+          <button type="button" class="pill-tab" data-level-filter="advanced">⚡ پیشرفته و مدیر</button>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <button type="button" id="practiceModeBtn" class="pill-tab is-active">🎯 حالت تمرینی (با توضیح فوری)</button>
+          <button type="button" id="examModeBtn" class="pill-tab">⏱️ حالت امتحان (تایمر ۶ دقیقه)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main 12-Column App Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <!-- Left/Main 8 Columns: Interactive Quiz + Interactive Labs -->
+      <div class="lg:col-span-8 space-y-6">
+        <!-- 1, 2, 3, 4: Interactive Quiz Engine -->
+        <section id="quizSection" class="glass-panel p-6 sm:p-8">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-xl font-extrabold m-0">آزمون تعاملی مهارت BTCS</h2>
+              <p class="text-xs sm:text-sm m-0 mt-1" style="color: var(--ink-muted);">
+                پاسخ‌ها همراه با توضیح دلیل و ارجاع به ابزارهای پلتفرم ارائه می‌شوند.
+              </p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap tabular-nums">
+              <select id="chapterFilterSelect" class="h-10 px-3 rounded-xl text-xs sm:text-sm outline-none" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline); color: var(--ink-primary);">
+                <option value="all">همه ۸ فصل</option>
+                <option value="1">فصل ۱: بازارها و ناوبری</option>
+                <option value="2">فصل ۲: تحلیل تک‌ارزی</option>
+                <option value="3">فصل ۳: اسکنر، مقایسه و فیوچرز</option>
+                <option value="4">فصل ۴: پیش‌بینی و AI</option>
+                <option value="5">فصل ۵: یادگیری و سابقه عملکرد</option>
+                <option value="6">فصل ۶: شبیه‌ساز و ابزارها</option>
+                <option value="7">فصل ۷: کیف پول، هشدار و حساب</option>
+                <option value="8">فصل ۸: ریسک و مدیریت</option>
+              </select>
+              <span id="examTimerBadge" class="hidden px-3 py-2 rounded-xl text-xs font-bold" style="background: rgba(255, 69, 58, 0.16); color: var(--accent-rose); border: 1px solid rgba(255, 69, 58, 0.4);">
+                ۰۶:۰۰
+              </span>
+              <button type="button" id="restartQuizBtn" class="glass-btn text-xs">🔄 شروع مجدد</button>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full h-2 rounded-full overflow-hidden mb-5" style="background: var(--surface-subtle);">
+            <div id="quizProgressBar" class="h-full transition-all duration-300" style="width: 0%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));"></div>
+          </div>
+
+          <div id="quizStage"></div>
+        </section>
+
+        <!-- 5 & 6: Interactive Labs (Position Size Risk Lab + Range Forecast Lab) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- 5. Position Size & Risk Lab -->
+          <div class="glass-panel p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-bold m-0">آزمایشگاه اندازه پوزیشن و ریسک</h2>
+              <span class="route-chip">#/tools · #/trader</span>
+            </div>
+            <p class="text-xs sm:text-sm m-0" style="color: var(--ink-secondary);">
+              تمرین محاسبه حجم منطقی بر اساس سقف ریسک هر معامله پیش از ورود به شبیه‌ساز.
+            </p>
+            <div class="space-y-3 text-xs sm:text-sm tabular-nums">
+              <div>
+                <label class="block mb-1" for="simAccount">حجم کل حساب مجازی (دلار)</label>
+                <input id="simAccount" type="number" value="2000" min="100" step="100" class="w-full h-10 px-3 rounded-xl outline-none" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline); color: var(--ink-primary);" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block mb-1" for="simRiskPct">درصد ریسک مجاز (%)</label>
+                  <input id="simRiskPct" type="number" value="1.5" min="0.25" max="10" step="0.25" class="w-full h-10 px-3 rounded-xl outline-none" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline); color: var(--ink-primary);" />
+                </div>
+                <div>
+                  <label class="block mb-1" for="simStopPct">فاصله حد ضرر تا ورود (%)</label>
+                  <input id="simStopPct" type="number" value="3" min="0.5" max="30" step="0.5" class="w-full h-10 px-3 rounded-xl outline-none" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline); color: var(--ink-primary);" />
+                </div>
+              </div>
+            </div>
+            <div id="riskLabResult" class="glass-card p-4 text-xs sm:text-sm space-y-1 tabular-nums"></div>
+          </div>
+
+          <!-- 6. Forecast Range & Probability Lab -->
+          <div class="glass-panel p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-bold m-0">آزمایشگاه درک بازه نوسان و تایمینگ</h2>
+              <span class="route-chip">predict · timing</span>
+            </div>
+            <p class="text-xs sm:text-sm m-0" style="color: var(--ink-secondary);">
+              ببینید چرا تریدر حرفه‌ای به جای یک عدد قطعی، بازه احتمالی و سطح اطمینان را با حد ضرر می‌سنجد.
+            </p>
+            <div class="space-y-3 text-xs sm:text-sm tabular-nums">
+              <div>
+                <label class="block mb-1" for="simPrice">قیمت مرجع فعلی (دلار)</label>
+                <input id="simPrice" type="number" value="95000" min="1" step="500" class="w-full h-10 px-3 rounded-xl outline-none" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline); color: var(--ink-primary);" />
+              </div>
+              <div>
+                <label class="block mb-1" for="simBandPct">دامنه نوسان احتمالی بازه (±٪)</label>
+                <input id="simBandPct" type="number" value="4.5" min="1" max="25" step="0.5" class="w-full h-10 px-3 rounded-xl outline-none" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline); color: var(--ink-primary);" />
+              </div>
+            </div>
+            <div id="rangeLabResult" class="glass-card p-4 text-xs sm:text-sm space-y-1 tabular-nums"></div>
+          </div>
+        </section>
+
+        <!-- 7 & 9: Flashcards + Mistake Review Bank -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- 7. Interactive Flashcards -->
+          <div class="glass-panel p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-bold m-0">فلش‌کارت‌های مرور سریع</h2>
+              <span id="cardCounter" class="text-xs tabular-nums" style="color: var(--ink-muted);">۱ / ۶</span>
+            </div>
+            <div id="flashcardBox" class="glass-card p-5 min-h-[168px] flex flex-col justify-between gap-4"></div>
+            <div class="flex items-center justify-between gap-2">
+              <button type="button" id="prevCardBtn" class="glass-btn text-xs flex-1">← کارت قبلی</button>
+              <button type="button" id="flipCardBtn" class="glass-btn primary text-xs flex-1">برگرداندن کارت</button>
+              <button type="button" id="nextCardBtn" class="glass-btn text-xs flex-1">کارت بعدی →</button>
+            </div>
+          </div>
+
+          <!-- 9. Mistake Review Bank -->
+          <div class="glass-panel p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-bold m-0">دفترچه مرور خطاهای آزمون</h2>
+              <span id="mistakeCountBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold tabular-nums" style="background: rgba(255, 159, 10, 0.16); color: var(--accent-amber);">۰ مورد</span>
+            </div>
+            <p class="text-xs sm:text-sm m-0" style="color: var(--ink-secondary);">
+              هر سؤالی که در آزمون اشتباه پاسخ دهید اینجا ذخیره می‌شود تا دوباره تمرین کنید.
+            </p>
+            <div id="mistakesList" class="space-y-2.5 max-h-[220px] overflow-y-auto"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right Sidebar 4 Columns: 8-Chapter Curriculum + 12. Bookmarks + 13. Daily Checklist -->
+      <aside class="lg:col-span-4 space-y-6">
+        <!-- 13. Daily Trader Discipline Checklist -->
+        <section class="glass-panel p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold m-0">چک‌لیست انضباط روزانه تریدر</h2>
+            <span id="checklistPct" class="text-xs font-bold tabular-nums" style="color: var(--accent-green);">۰٪</span>
+          </div>
+          <div id="checklistContainer" class="space-y-2 text-xs sm:text-sm"></div>
+        </section>
+
+        <!-- 12. Bookmarked Items -->
+        <section class="glass-panel p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold m-0">نشان‌شده‌های من</h2>
+            <span id="bmBadge" class="text-xs tabular-nums" style="color: var(--accent-amber);">۰</span>
+          </div>
+          <div id="bookmarksContainer" class="space-y-2 text-xs sm:text-sm"></div>
+        </section>
+
+        <!-- 8-Chapter Academy Modules -->
+        <section class="glass-panel p-5 space-y-3">
+          <h2 class="text-base font-bold m-0">مسیر ۸ فصلی آکادمی</h2>
+          <div id="modulesContainer" class="space-y-2.5 max-h-[520px] overflow-y-auto pl-1"></div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <!-- 10. Printable / Shareable Certificate Modal -->
+  <div id="certModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="certModalTitle">
+    <div class="glass-panel p-6 sm:p-8 max-w-lg w-full space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 id="certModalTitle" class="text-lg font-bold m-0">گواهی‌نامه تکمیل تمرین آکادمی BTCS</h2>
+        <button type="button" id="closeCertBtn" class="glass-btn">✕</button>
+      </div>
+      <div>
+        <label class="block text-xs mb-1" for="certNameInput">نام و نام خانوادگی تریدر</label>
+        <input id="certNameInput" type="text" placeholder="مثلاً: بهزاد جلالی" class="w-full h-10 px-3 rounded-xl text-sm outline-none" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline); color: var(--ink-primary);" />
+      </div>
+      <div id="certPreviewBox" class="glass-card p-5 text-center space-y-2">
+        <div class="text-xs uppercase tracking-wider" style="color: var(--accent-blue);">گواهی تمرین و آشنایی با ابزارهای BTCS</div>
+        <div id="certHolderName" class="text-xl font-extrabold">تریدر پلتفرم BTCS</div>
+        <p class="text-xs m-0" style="color: var(--ink-secondary);">
+          برای تکمیل تمرین‌های آکادمی، بررسی اصول مدیریت ریسک و تمرین شبیه‌ساز معاملاتی در بستر BTCS.
+        </p>
+        <div id="certStatsLine" class="text-xs font-bold pt-2 tabular-nums" style="color: var(--accent-green);"></div>
+      </div>
+      <div class="flex items-center justify-end gap-2 no-print">
+        <button type="button" id="printCertBtn" class="glass-btn primary text-xs sm:text-sm">🖨️ چاپ یا ذخیره PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const MODULES = [
+        { ch: 1, level: 'beginner', route: '#/', title: 'فصل ۱: بازارها و ناوبری', tip: 'اول فضای کل بازار و ترس و طمع را ببینید، لیست پیگیری بسازید و بدون شلوغی سراغ ارز منتخب بروید.' },
+        { ch: 2, level: 'beginner', route: '#/coin/...', title: 'فصل ۲: تحلیل تک‌ارزی و نمودارها', tip: 'به جای یک کندل، پلن معاملاتی (ورود، حد ضرر، هدف)، دمو، بک‌تست، الگوها، دفتر سفارش و اخبار را بسنجید.' },
+        { ch: 3, level: 'intermediate', route: '#/scanner', title: 'فصل ۳: اسکنر، مقایسه، فیوچرز و اخبار', tip: 'از اسکنر و مقایسه برای غربال استفاده کنید و در فیوچرز به فاندینگ، سود باز و لیکوییدیشن‌ها دقت کنید.' },
+        { ch: 4, level: 'intermediate', route: '#/ai', title: 'فصل ۴: پیش‌بینی بازه و هوش مصنوعی', tip: 'موتور پیش‌بینی بازه احتمالی و تایمینگ می‌دهد، نه وعده قطعی قیمت؛ از دستیار هوشمند با تمرکز روی ارز بپرسید.' },
+        { ch: 5, level: 'intermediate', route: '#/learn', title: 'فصل ۵: یادگیری AI و سابقه عملکرد', tip: 'در #/learn و #/track عملکرد هوش مصنوعی، خرید آزمایشی و معاملات واقعی را با ضریب اعتماد تایم‌فریم‌ها بسنجید.' },
+        { ch: 6, level: 'beginner', route: '#/trader', title: 'فصل ۶: شبیه‌ساز معاملات و ابزارها', tip: 'در #/trader و #/tools اندازه پوزیشن، DCA، مبدل ارز و بکاپ را بدون ریسک سرمایه واقعی تمرین کنید.' },
+        { ch: 7, level: 'intermediate', route: '#/alerts', title: 'فصل ۷: کیف پول، هشدارها و حساب', tip: 'با هشدار قیمت و سیگنال، ایمیل/تلگرام و خلاصه روزانه در #/account از نگاه وسواس‌گونه به نمودار کم کنید.' },
+        { ch: 8, level: 'advanced', route: '#/admin', title: 'فصل ۸: مدیریت ریسک، قوانین و مدیریت', tip: 'حفظ سرمایه و سقف زیان در اولویت است؛ مدیران سیستم در #/admin آمار، کاربران، محتوا، API و Jobs را پایش می‌کنند.' }
+      ];
+
+      const QUESTIONS = [
+        {
+          id: 'q1', ch: 1, level: 'beginner',
+          q: 'وقتی تازه‌کار وارد بخش بازارها (`#/`) می‌شود، اولین قدم منطقی پیش از انتخاب ارز چیست؟',
+          options: [
+            'دیدن فضای کلی بازار و شاخص ترس و طمع و محدود کردن چند ارز در لیست پیگیری',
+            'باز کردن هم‌زمان ده‌ها نمودار اهرمی با کل سرمایه',
+            'نادیده گرفتن وضعیت بازار و خرید صرفاً بر اساس هیجان لحظه‌ای',
+            'استفاده از پلتفرم به عنوان صرافی برای نگهداری کلید خصوصی'
+          ],
+          correct: 0,
+          explain: 'در فصل ۱ دیدیم که شناخت حال‌وهوای کلی بازار (ترس، طمع، میانه) و تمرکز روی چند ارز در Watchlist جلوی تصمیم‌های عجولانه را می‌گیرد.'
+        },
+        {
+          id: 'q2', ch: 2, level: 'beginner',
+          q: 'چرا در صفحه تک‌ارزی (`#/coin/...`) اگر ارزی استیبل‌کوین باشد یا هنوز تریگر فعال نشده باشد، ورود عجولانه توصیه نمی‌شود؟',
+          options: [
+            'چون استیبل‌کوین‌ها برای ستاپ نوسانی معنادار نیستند و نبودِ تریگر یعنی هنوز شرط ورود کامل نشده است',
+            'چون نمودار استیبل‌کوین‌ها همیشه ۱۰ درصد در روز رشد می‌کند',
+            'چون در صفحه تک‌ارزی اصلاً حد ضرر وجود ندارد',
+            'چون فقط مدیر سیستم می‌تواند صفحه یک ارز را ببیند'
+          ],
+          correct: 0,
+          explain: 'در فصل ۲ تاکید شد که پلن معاملاتی با سناریو، حد ضرر و تریگر معنا دارد و استیبل‌کوین‌ها ماهیت متفاوتی با ارزهای نوسانی دارند.'
+        },
+        {
+          id: 'q3', ch: 3, level: 'intermediate',
+          q: 'در بخش فیوچرز (`#/futures`)، بررسی هم‌زمان Funding Rate، Open Interest و لیکوییدیشن‌ها چه کمکی می‌کند؟',
+          options: [
+            'کمک می‌کند بفهمید بازار چقدر اهرمی شده و احتمال نوسان تند یا تسویه اجباری پوزیشن‌ها کجاست',
+            'ضمانت می‌دهد که پوزیشن لانگ یا شورت هرگز لیکویید نمی‌شود',
+            'فقط نرخ تبدیل تومان به دلار را نشان می‌دهد',
+            'جایگزین تحلیل ریسک و حد ضرر می‌شود'
+          ],
+          correct: 0,
+          explain: 'در فصل ۳ توضیح داده شد که رشد سود باز، فاندینگ و لیکوییدیشن‌ها نشان‌دهنده فشار پوزیشن‌های اهرمی و ریسک نوسان‌های تند است.'
+        },
+        {
+          id: 'q4', ch: 4, level: 'intermediate',
+          q: 'نقش اصلی موتور پیش‌بینی و تایمینگ (`predict.js`, `timing.js`) برای یک تریدر چیست؟',
+          options: [
+            'ارائه بازه احتمالی نوسان، دید زمانی/دوام حرکت و سنجش شواهد در کنار تحلیل شخصی',
+            'تضمین قیمت قطعی در آینده نزدیک',
+            'حذف نیاز به تعیین حد ضرر',
+            'ثبت خودکار سفارش در صرافی‌های واقعی'
+          ],
+          correct: 0,
+          explain: 'در فصل ۴ دیدیم که خروجی پیش‌بینی ماهیت احتمالاتی و محدوده نوسان دارد و باید همراه با تایمینگ و مدیریت ریسک تفسیر شود.'
+        },
+        {
+          id: 'q5', ch: 5, level: 'intermediate',
+          q: 'مقایسه عملکرد معاملات هوش مصنوعی، خریدهای آزمایشی و معاملات واقعی در `#/learn` و `#/track` چه سودی دارد؟',
+          options: [
+            'به تفکیک خطای مدل یا شرایط بازار از خطای انسانی در ورود، خروج و حجم کمک می‌کند',
+            'باعث می‌شود هیچ معامله زیان‌دهی در تاریخچه دیده نشود',
+            'فقط برای نمایش رنگ‌های نمودار است',
+            'تایم‌فریم‌ها را یکسان می‌کند تا همه یک نتیجه بدهند'
+          ],
+          correct: 0,
+          explain: 'در فصل ۵ دیدیم که شفافیت سوابق، ضریب اعتماد تایم‌فریم‌ها و مقایسه سه دسته معامله، خودارزیابی واقع‌گرایانه را ممکن می‌سازد.'
+        },
+        {
+          id: 'q6', ch: 6, level: 'beginner',
+          q: 'اگر حساب مجازی شما ۲۰۰۰ دلار باشد و بخواهید حداکثر ۱.۵٪ ریسک کنید، حداکثر مبلغ ریسک مجاز این معامله چقدر است؟',
+          options: [
+            '۳۰ دلار',
+            '۱۵۰ دلار',
+            '۳۰۰ دلار',
+            '۳ دلار'
+          ],
+          correct: 0,
+          explain: '۱.۵٪ از ۲۰۰۰ دلار برابر با ۳۰ دلار است؛ در `#/tools` و `#/trader` با همین مبلغ ریسک و فاصله حد ضرر، اندازه پوزیشن محاسبه می‌شود.'
+        },
+        {
+          id: 'q7', ch: 7, level: 'intermediate',
+          q: 'مزیت اصلی هشدارهای سرور، کانال‌های ایمیل/تلگرام و خلاصه روزانه در `#/alerts` و `#/account` چیست؟',
+          options: [
+            'کاهش نگاه وسواس‌گونه مداوم به چارت و مطلع شدن هدفمند در سطوح یا سیگنال‌های تعریف‌شده',
+            'تبدیل شدن هر هشدار به یک معامله سودده قطعی',
+            'از بین بردن نیاز به داشتن پلن معاملاتی',
+            'جلوگیری از نوسان بازار رمزارزها'
+          ],
+          correct: 0,
+          explain: 'در فصل ۷ دیدیم که هشدارها و کانال‌های اطلاع‌رسانی نقش «گوش‌به‌زنگ منظم» را دارند تا تصمیم‌ها حساب‌شده‌تر باشند.'
+        },
+        {
+          id: 'q8', ch: 8, level: 'advanced',
+          q: 'در فصل هشتم (`legal.js` و `#/admin`)، اولویت اصلی تریدر پیشرفته و نقش پنل مدیریت چیست؟',
+          options: [
+            'برای تریدر: حفظ بقا و کنترل Drawdown؛ برای مدیر: پایش آمار، کاربران، محتوا، تنظیمات، API و Jobs',
+            'برای تریدر: معامله بدون حد ضرر؛ برای مدیر: حذف گزارش‌های عملکرد',
+            'تبدیل پلتفرم به کارگزاری رسمی با تضمین سود',
+            'نادیده گرفتن بیانیه ریسک در نوسان‌های شدید'
+          ],
+          correct: 0,
+          explain: 'در فصل ۸ تاکید شد که مدیریت ریسک و Drawdown خط قرمز تریدر است و پایش داده‌ها، کاربران، تنظیمات و Jobs وظیفه مدیریت پلتفرم است.'
+        }
+      ];
+
+      const FLASHCARDS = [
+        { front: 'بازه پیش‌بینی به جای عدد قطعی چه کمکی می‌کند؟', back: 'محدوده نوسان احتمالی را نشان می‌دهد تا حد ضرر و حد سود واقع‌بینانه‌تر انتخاب شوند.' },
+        { front: 'چرا در `#/track` و `#/learn` سه دسته معامله کنار هم می‌آیند؟', back: 'تا فرق بین خروجی هوش مصنوعی، تمرین آزمایشی و اجرای واقعی خودتان را دقیق ببینید.' },
+        { front: 'نبودِ تریگر یا شواهد قوی چه پیامی برای تریدر دارد؟', back: 'معامله نکردن و صبر کردن هم یک تصمیم فعال و انضباطی است.' },
+        { front: 'در `#/futures` چه عواملی فشار بازار اهرمی را نشان می‌دهند؟', back: 'نرخ تأمین مالی (Funding Rate)، سود باز (Open Interest) و لیکوییدیشن‌ها.' },
+        { front: 'هدف شبیه‌ساز معاملات (`#/trader`) چیست؟', back: 'تمرین بدون ریسک سرمایه واقعی، سنجش قواعد و کشف خطاهای رفتاری و حجمی.' },
+        { front: 'خط قرمز همیشگی در بیانیه ریسک چیست؟', back: 'هیچ ابزار تحلیلی تضمین سود نیست؛ ریسک را فقط با پولی بسنجید که توان از دست دادنش را دارید.' }
+      ];
+
+      const CHECKLIST_ITEMS = [
+        'حال‌وهوای بازار، ترس و طمع و خبرهای مهم را قبل از تصمیم چک کردم.',
+        'حد ضرر، حد سود و سقف ریسک معامله را پیش از ورود مشخص کردم.',
+        'در حالت تمرینی یا شبیه‌ساز ابتدا فرضیه را بدون عجله آزمودم.',
+        'از نگاه وسواس‌گونه و هیجانی به نمودار در نوسان‌های تند پرهیز کردم.'
+      ];
+
+      const STORAGE = {
+        theme: 'btcs_acad_theme_v1',
+        xp: 'btcs_acad_xp_v1',
+        streak: 'btcs_acad_streak_v1',
+        mistakes: 'btcs_acad_mistakes_v1',
+        bookmarks: 'btcs_acad_bm_v1',
+        checklist: 'btcs_acad_chk_v1',
+        certName: 'btcs_acad_cert_name_v1'
+      };
+
+      const state = {
+        theme: 'dark',
+        levelFilter: 'all',
+        chapterFilter: 'all',
+        mode: 'practice', // 'practice' | 'exam'
+        xp: 0,
+        streak: 1,
+        qIndex: 0,
+        score: 0,
+        answeredMap: {},
+        mistakes: [],
+        bookmarks: new Set(),
+        checklist: new Set(),
+        cardIndex: 0,
+        cardFlipped: false,
+        examSecondsLeft: 360,
+        examTimerId: null,
+        search: ''
+      };
+
+      function loadJson(key, fb) {
+        try { return JSON.parse(localStorage.getItem(key) ?? 'null') ?? fb; } catch { return fb; }
+      }
+      function saveJson(key, val) {
+        try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+      }
+
+      let toastTimer = null;
+      function showToast(msg) {
+        const el = document.getElementById('toastBanner');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+      }
+
+      function addXp(pts) {
+        state.xp += pts;
+        saveJson(STORAGE.xp, state.xp);
+        updateHud();
+      }
+
+      function getRank(xp) {
+        if (xp >= 240) return 'استاد ریسک';
+        if (xp >= 120) return 'تحلیل‌گر میان‌رده';
+        return 'تازه‌کار';
+      }
+
+      function updateHud() {
+        document.getElementById('xpValue').textContent = String(state.xp);
+        document.getElementById('rankValue').textContent = getRank(state.xp);
+        document.getElementById('streakValue').textContent = String(state.streak);
+        document.getElementById('mistakeCountBadge').textContent = `${state.mistakes.length} مورد`;
+        document.getElementById('bmBadge').textContent = String(state.bookmarks.size);
+        const pct = Math.round((state.checklist.size / CHECKLIST_ITEMS.length) * 100);
+        document.getElementById('checklistPct').textContent = `${pct}٪`;
+        updateCertPreview();
+      }
+
+      function getFilteredQuestions() {
+        return QUESTIONS.filter((item) => {
+          const matchLvl = state.levelFilter === 'all' || item.level === state.levelFilter;
+          const matchCh = state.chapterFilter === 'all' || String(item.ch) === String(state.chapterFilter);
+          const matchQ = !state.search.trim() || (item.q + ' ' + item.explain).includes(state.search.trim());
+          return matchLvl && matchCh && matchQ;
+        });
+      }
+
+      function formatTimer(sec) {
+        const m = String(Math.floor(sec / 60)).padStart(2, '0');
+        const s = String(sec % 60).padStart(2, '0');
+        return `${m}:${s}`;
+      }
+
+      function startExamTimer() {
+        stopExamTimer();
+        state.examSecondsLeft = 360;
+        const badge = document.getElementById('examTimerBadge');
+        badge.classList.remove('hidden');
+        badge.textContent = formatTimer(state.examSecondsLeft);
+        state.examTimerId = setInterval(() => {
+          state.examSecondsLeft -= 1;
+          badge.textContent = formatTimer(Math.max(0, state.examSecondsLeft));
+          if (state.examSecondsLeft <= 0) {
+            stopExamTimer();
+            showToast('زمان آزمون شبیه‌سازی‌شده به پایان رسید');
+            state.qIndex = getFilteredQuestions().length;
+            renderQuiz();
+          }
+        }, 1000);
+      }
+
+      function stopExamTimer() {
+        if (state.examTimerId) {
+          clearInterval(state.examTimerId);
+          state.examTimerId = null;
+        }
+      }
+
+      function renderQuiz() {
+        const stage = document.getElementById('quizStage');
+        const list = getFilteredQuestions();
+        const progressBar = document.getElementById('quizProgressBar');
+
+        if (!list.length) {
+          progressBar.style.width = '0%';
+          stage.innerHTML = `<div class="glass-card p-6 text-center text-sm">سؤالی با این فیلتر یافت نشد. فیلتر فصل یا سطح را روی «همه» بگذارید.</div>`;
+          return;
+        }
+
+        if (state.qIndex >= list.length) {
+          progressBar.style.width = '100%';
+          const pct = Math.round((state.score / list.length) * 100);
+          stage.innerHTML = `
+            <div class="glass-card p-6 text-center space-y-4 tabular-nums">
+              <div class="text-2xl font-extrabold" style="color: var(--accent-green);">نتیجه آزمون: ${pct}٪</div>
+              <p class="text-sm m-0" style="color: var(--ink-secondary);">
+                شما به ${state.score} سؤال از ${list.length} سؤال پاسخ درست دادید.
+              </p>
+              <div class="flex items-center justify-center gap-3 flex-wrap">
+                <button type="button" id="retryQuizInlineBtn" class="glass-btn primary">آزمون مجدد</button>
+                <button type="button" id="openCertInlineBtn" class="glass-btn">دریافت گواهی‌نامه</button>
+              </div>
+            </div>
+          `;
+          document.getElementById('retryQuizInlineBtn')?.addEventListener('click', resetQuiz);
+          document.getElementById('openCertInlineBtn')?.addEventListener('click', openCertModal);
+          return;
+        }
+
+        const item = list[state.qIndex];
+        progressBar.style.width = `${Math.round(((state.qIndex + 1) / list.length) * 100)}%`;
+        const chosen = state.answeredMap[item.id];
+        const isAnswered = typeof chosen === 'number';
+        const isBookmarked = state.bookmarks.has(`q:${item.id}`);
+
+        const optionsHtml = item.options.map((opt, idx) => {
+          let cls = 'option-card';
+          if (isAnswered && state.mode === 'practice') {
+            if (idx === item.correct) cls += ' is-correct';
+            else if (idx === chosen) cls += ' is-wrong';
+          } else if (isAnswered && idx === chosen) {
+            cls += ' is-correct';
+          }
+          const keys = ['۱', '۲', '۳', '۴'];
+          return `
+            <button type="button" class="${cls}" data-opt-idx="${idx}" ${isAnswered ? 'disabled' : ''}>
+              <span><strong class="ml-2">${keys[idx] || idx + 1}.</strong>${opt}</span>
+              <span class="text-xs opacity-75">${isAnswered && idx === item.correct && state.mode === 'practice' ? '✓' : ''}</span>
+            </button>
+          `;
+        }).join('');
+
+        const explainHtml = isAnswered && state.mode === 'practice'
+          ? `
+            <div class="mt-4 p-4 rounded-2xl text-xs sm:text-sm space-y-1" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline);">
+              <div class="font-bold" style="color: ${chosen === item.correct ? 'var(--accent-green)' : 'var(--accent-amber)'};">
+                ${chosen === item.correct ? '✓ پاسخ صحیح (+۲۵ XP)' : '✕ پاسخ نیاز به مرور دارد'}
+              </div>
+              <p class="m-0" style="color: var(--ink-secondary);">${item.explain}</p>
+            </div>
+          `
+          : '';
+
+        stage.innerHTML = `
+          <div class="space-y-4">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-full text-xs font-bold tabular-nums" style="background: rgba(10,132,255,0.14); color: var(--accent-blue);">
+                  سؤال ${state.qIndex + 1} از ${list.length}
+                </span>
+                <span class="route-chip">فصل ${item.ch}</span>
+              </div>
+              <button type="button" id="toggleQBookmarkBtn" class="glass-btn text-xs" style="min-height: 34px; padding: 5px 11px;">
+                ${isBookmarked ? '★ نشان‌شده' : '☆ نشان سؤال'}
+              </button>
+            </div>
+
+            <h3 class="text-base sm:text-lg font-bold leading-relaxed m-0">${item.q}</h3>
+            <div class="space-y-2.5">${optionsHtml}</div>
+            ${explainHtml}
+
+            <div class="flex items-center justify-between pt-2">
+              <button type="button" id="prevQBtn" class="glass-btn text-xs" ${state.qIndex === 0 ? 'disabled' : ''}>← سؤال قبلی</button>
+              <button type="button" id="nextQBtn" class="glass-btn primary text-xs">
+                ${state.qIndex === list.length - 1 ? 'مشاهده نتیجه آزمون' : 'سؤال بعدی →'}
+              </button>
+            </div>
+          </div>
+        `;
+
+        stage.querySelectorAll('[data-opt-idx]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const idx = Number(btn.getAttribute('data-opt-idx'));
+            state.answeredMap[item.id] = idx;
+            if (idx === item.correct) {
+              state.score += 1;
+              addXp(25);
+            } else {
+              if (!state.mistakes.some((m) => m.id === item.id)) {
+                state.mistakes.push(item);
+                saveJson(STORAGE.mistakes, state.mistakes);
+              }
+              addXp(5);
+            }
+            renderMistakes();
+            updateHud();
+            renderQuiz();
+          });
+        });
+
+        document.getElementById('toggleQBookmarkBtn')?.addEventListener('click', () => {
+          const key = `q:${item.id}`;
+          if (state.bookmarks.has(key)) state.bookmarks.delete(key);
+          else state.bookmarks.add(key);
+          saveJson(STORAGE.bookmarks, [...state.bookmarks]);
+          renderBookmarks();
+          updateHud();
+          renderQuiz();
+        });
+
+        document.getElementById('prevQBtn')?.addEventListener('click', () => {
+          if (state.qIndex > 0) { state.qIndex -= 1; renderQuiz(); }
+        });
+
+        document.getElementById('nextQBtn')?.addEventListener('click', () => {
+          state.qIndex += 1;
+          renderQuiz();
+        });
+      }
+
+      function resetQuiz() {
+        state.qIndex = 0;
+        state.score = 0;
+        state.answeredMap = {};
+        if (state.mode === 'exam') startExamTimer();
+        renderQuiz();
+        showToast('آزمون از ابتدا آماده شد');
+      }
+
+      function updateRiskLab() {
+        const acc = Math.max(1, Number(document.getElementById('simAccount').value) || 0);
+        const riskPct = Math.max(0.1, Number(document.getElementById('simRiskPct').value) || 0);
+        const stopPct = Math.max(0.1, Number(document.getElementById('simStopPct').value) || 0);
+
+        const maxLoss = (acc * riskPct) / 100;
+        const maxPositionSize = maxLoss / (stopPct / 100);
+
+        document.getElementById('riskLabResult').innerHTML = `
+          <div>سقف زیان مجاز معامله: <strong style="color: var(--accent-rose);">$${maxLoss.toFixed(2)}</strong></div>
+          <div>حجم پیشنهادی پوزیشن با این حد ضرر: <strong style="color: var(--accent-blue);">$${maxPositionSize.toFixed(2)}</strong></div>
+          <div class="text-xs" style="color: var(--ink-muted);">اگر حد ضرر دورتر شود، حجم پوزیشن کوچک‌تر می‌شود تا ریسک دلاری ثابت بماند.</div>
+        `;
+      }
+
+      function updateRangeLab() {
+        const price = Math.max(0.01, Number(document.getElementById('simPrice').value) || 0);
+        const band = Math.max(0.1, Number(document.getElementById('simBandPct').value) || 0);
+
+        const low = price * (1 - band / 100);
+        const high = price * (1 + band / 100);
+
+        document.getElementById('rangeLabResult').innerHTML = `
+          <div>کرانه پایین بازه احتمالی: <strong style="color: var(--accent-amber);">$${low.toLocaleString('en-US', { maximumFractionDigits: 2 })}</strong></div>
+          <div>کرانه بالای بازه احتمالی: <strong style="color: var(--accent-green);">$${high.toLocaleString('en-US', { maximumFractionDigits: 2 })}</strong></div>
+          <div class="text-xs" style="color: var(--ink-muted);">حد ضرر را در نقطه‌ای قرار دهید که نوسان عادی درون بازه باعث خروج هیجانی نشود.</div>
+        `;
+      }
+
+      function renderFlashcard() {
+        const box = document.getElementById('flashcardBox');
+        const counter = document.getElementById('cardCounter');
+        const card = FLASHCARDS[state.cardIndex];
+        counter.textContent = `${state.cardIndex + 1} / ${FLASHCARDS.length}`;
+        box.innerHTML = `
+          <div>
+            <div class="text-xs font-bold mb-2" style="color: ${state.cardFlipped ? 'var(--accent-green)' : 'var(--accent-blue)'};">
+              ${state.cardFlipped ? 'پاسخ و نکته کاربردی' : 'پرسش مرور سریع'}
+            </div>
+            <p class="text-sm sm:text-base font-bold m-0">${state.cardFlipped ? card.back : card.front}</p>
+          </div>
+          <div class="text-xs" style="color: var(--ink-muted);">برای مرور بیشتر یا کمتر، دکمه‌های پایین را بزنید.</div>
+        `;
+      }
+
+      function renderMistakes() {
+        const el = document.getElementById('mistakesList');
+        if (!state.mistakes.length) {
+          el.innerHTML = `<div class="glass-card p-3.5 text-xs" style="color: var(--ink-muted);">هنوز خطایی ثبت نشده است. اگر در آزمون گزینه‌ای را اشتباه بزنید، اینجا ظاهر می‌شود.</div>`;
+          return;
+        }
+        el.innerHTML = state.mistakes.map((m) => `
+          <div class="glass-card p-3 text-xs space-y-1">
+            <div class="font-bold">فصل ${m.ch}: ${m.q}</div>
+            <div style="color: var(--accent-green);">پاسخ درست: ${m.options[m.correct]}</div>
+          </div>
+        `).join('');
+      }
+
+      function renderBookmarks() {
+        const el = document.getElementById('bookmarksContainer');
+        const arr = [...state.bookmarks];
+        if (!arr.length) {
+          el.innerHTML = `<div class="glass-card p-3.5 text-xs" style="color: var(--ink-muted);">هیچ درس یا سؤالی نشان نشده است.</div>`;
+          return;
+        }
+        el.innerHTML = arr.map((id) => `
+          <div class="glass-card p-2.5 flex items-center justify-between gap-2 text-xs">
+            <span>${id.startsWith('ch:') ? `فصل ${id.replace('ch:', '')}` : `سؤال ${id.replace('q:', '')}`}</span>
+            <button type="button" data-remove-bm="${id}" class="text-xs px-2 py-0.5 rounded cursor-pointer" style="background: var(--surface-subtle); border: 0; color: var(--ink-muted);">حذف</button>
+          </div>
+        `).join('');
+
+        el.querySelectorAll('[data-remove-bm]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.bookmarks.delete(btn.getAttribute('data-remove-bm'));
+            saveJson(STORAGE.bookmarks, [...state.bookmarks]);
+            renderBookmarks();
+            renderModules();
+            renderQuiz();
+            updateHud();
+          });
+        });
+      }
+
+      function renderChecklist() {
+        const el = document.getElementById('checklistContainer');
+        el.innerHTML = CHECKLIST_ITEMS.map((txt, idx) => {
+          const checked = state.checklist.has(idx);
+          return `
+            <label class="glass-card p-3 flex items-start gap-2.5 cursor-pointer m-0">
+              <input type="checkbox" data-chk-idx="${idx}" ${checked ? 'checked' : ''} class="mt-1" />
+              <span class="text-xs leading-relaxed" style="color: ${checked ? 'var(--ink-primary)' : 'var(--ink-secondary)'};">${txt}</span>
+            </label>
+          `;
+        }).join('');
+
+        el.querySelectorAll('[data-chk-idx]').forEach((inp) => {
+          inp.addEventListener('change', () => {
+            const idx = Number(inp.getAttribute('data-chk-idx'));
+            if (inp.checked) {
+              state.checklist.add(idx);
+              addXp(10);
+            } else {
+              state.checklist.delete(idx);
+            }
+            saveJson(STORAGE.checklist, [...state.checklist]);
+            renderChecklist();
+            updateHud();
+          });
+        });
+      }
+
+      function renderModules() {
+        const el = document.getElementById('modulesContainer');
+        const q = state.search.trim();
+        const filtered = MODULES.filter((m) => {
+          const okLvl = state.levelFilter === 'all' || m.level === state.levelFilter;
+          const okQ = !q || (m.title + ' ' + m.tip + ' ' + m.route).includes(q);
+          return okLvl && okQ;
+        });
+
+        el.innerHTML = filtered.map((m) => {
+          const bmKey = `ch:${m.ch}`;
+          const isBm = state.bookmarks.has(bmKey);
+          return `
+            <div class="glass-card p-3.5 space-y-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <strong class="text-xs sm:text-sm">${m.title}</strong>
+                <span class="route-chip">${m.route}</span>
+              </div>
+              <p class="text-xs m-0" style="color: var(--ink-secondary);">${m.tip}</p>
+              <div class="flex items-center justify-between pt-1">
+                <button type="button" data-filter-ch="${m.ch}" class="text-xs px-2.5 py-1 rounded-lg cursor-pointer" style="background: rgba(10,132,255,0.14); color: var(--accent-blue); border: 0;">
+                  آزمون این فصل
+                </button>
+                <button type="button" data-bm-ch="${bmKey}" class="text-xs px-2 py-1 rounded-lg cursor-pointer" style="background: transparent; color: var(--accent-amber); border: 0;">
+                  ${isBm ? '★ نشان‌شده' : '☆ نشان'}
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        el.querySelectorAll('[data-filter-ch]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.chapterFilter = btn.getAttribute('data-filter-ch');
+            document.getElementById('chapterFilterSelect').value = state.chapterFilter;
+            resetQuiz();
+            document.getElementById('quizSection').scrollIntoView({ behavior: 'smooth' });
+          });
+        });
+
+        el.querySelectorAll('[data-bm-ch]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const key = btn.getAttribute('data-bm-ch');
+            if (state.bookmarks.has(key)) state.bookmarks.delete(key);
+            else state.bookmarks.add(key);
+            saveJson(STORAGE.bookmarks, [...state.bookmarks]);
+            renderBookmarks();
+            renderModules();
+            updateHud();
+          });
+        });
+      }
+
+      function openCertModal() {
+        document.getElementById('certModal').classList.add('open');
+        updateCertPreview();
+      }
+      function closeCertModal() {
+        document.getElementById('certModal').classList.remove('open');
+      }
+      function updateCertPreview() {
+        const name = (document.getElementById('certNameInput')?.value || '').trim() || 'تریدر پلتفرم BTCS';
+        document.getElementById('certHolderName').textContent = name;
+        document.getElementById('certStatsLine').textContent = `امتیاز XP: ${state.xp} · سطح: ${getRank(state.xp)} · تاریخ: ۱۴۰۵/۰۹/۰۱`;
+      }
+
+      function applyTheme(t) {
+        state.theme = t === 'light' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', state.theme);
+        document.getElementById('metaThemeColor').setAttribute('content', state.theme === 'dark' ? '#07080d' : '#f4f5f8');
+        document.getElementById('themeBtn').textContent = state.theme === 'dark' ? '☀️' : '🌙';
+        saveJson(STORAGE.theme, state.theme);
+      }
+
+      function init() {
+        applyTheme(loadJson(STORAGE.theme, 'dark'));
+        state.xp = Number(loadJson(STORAGE.xp, 0)) || 0;
+        state.streak = Number(loadJson(STORAGE.streak, 1)) || 1;
+        state.mistakes = loadJson(STORAGE.mistakes, []);
+        state.bookmarks = new Set(loadJson(STORAGE.bookmarks, []));
+        state.checklist = new Set(loadJson(STORAGE.checklist, []));
+
+        const savedCert = loadJson(STORAGE.certName, '');
+        if (savedCert && document.getElementById('certNameInput')) {
+          document.getElementById('certNameInput').value = savedCert;
+        }
+
+        document.getElementById('themeBtn').addEventListener('click', () => {
+          applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+        });
+
+        document.querySelectorAll('[data-level-filter]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.levelFilter = btn.getAttribute('data-level-filter');
+            document.querySelectorAll('[data-level-filter]').forEach((b) => b.classList.toggle('is-active', b === btn));
+            state.qIndex = 0;
+            renderQuiz();
+            renderModules();
+          });
+        });
+
+        document.getElementById('chapterFilterSelect').addEventListener('change', (e) => {
+          state.chapterFilter = e.target.value;
+          resetQuiz();
+        });
+
+        document.getElementById('practiceModeBtn').addEventListener('click', () => {
+          state.mode = 'practice';
+          stopExamTimer();
+          document.getElementById('examTimerBadge').classList.add('hidden');
+          document.getElementById('practiceModeBtn').classList.add('is-active');
+          document.getElementById('examModeBtn').classList.remove('is-active');
+          resetQuiz();
+        });
+
+        document.getElementById('examModeBtn').addEventListener('click', () => {
+          state.mode = 'exam';
+          document.getElementById('examModeBtn').classList.add('is-active');
+          document.getElementById('practiceModeBtn').classList.remove('is-active');
+          resetQuiz();
+        });
+
+        document.getElementById('restartQuizBtn').addEventListener('click', resetQuiz);
+
+        document.getElementById('academySearch').addEventListener('input', (e) => {
+          state.search = e.target.value || '';
+          state.qIndex = 0;
+          renderQuiz();
+          renderModules();
+        });
+
+        ['simAccount', 'simRiskPct', 'simStopPct'].forEach((id) => {
+          document.getElementById(id).addEventListener('input', updateRiskLab);
+        });
+        ['simPrice', 'simBandPct'].forEach((id) => {
+          document.getElementById(id).addEventListener('input', updateRangeLab);
+        });
+
+        document.getElementById('prevCardBtn').addEventListener('click', () => {
+          state.cardIndex = (state.cardIndex - 1 + FLASHCARDS.length) % FLASHCARDS.length;
+          state.cardFlipped = false;
+          renderFlashcard();
+        });
+        document.getElementById('nextCardBtn').addEventListener('click', () => {
+          state.cardIndex = (state.cardIndex + 1) % FLASHCARDS.length;
+          state.cardFlipped = false;
+          renderFlashcard();
+        });
+        document.getElementById('flipCardBtn').addEventListener('click', () => {
+          state.cardFlipped = !state.cardFlipped;
+          addXp(5);
+          renderFlashcard();
+        });
+
+        document.getElementById('openCertBtn').addEventListener('click', openCertModal);
+        document.getElementById('closeCertBtn').addEventListener('click', closeCertModal);
+        document.getElementById('certNameInput').addEventListener('input', (e) => {
+          saveJson(STORAGE.certName, e.target.value);
+          updateCertPreview();
+        });
+        document.getElementById('printCertBtn').addEventListener('click', () => window.print());
+
+        document.addEventListener('keydown', (e) => {
+          const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+          if (e.key === '/' && !isInput) {
+            e.preventDefault();
+            document.getElementById('academySearch').focus();
+          } else if (e.key === 'Escape') {
+            closeCertModal();
+          } else if (!isInput && ['1', '2', '3', '4'].includes(e.key)) {
+            const idx = Number(e.key) - 1;
+            const optBtn = document.querySelector(`#quizStage [data-opt-idx="${idx}"]`);
+            if (optBtn && !optBtn.disabled) optBtn.click();
+          }
+        });
+
+        updateRiskLab();
+        updateRangeLab();
+        renderQuiz();
+        renderFlashcard();
+        renderMistakes();
+        renderBookmarks();
+        renderChecklist();
+        renderModules();
+        updateHud();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
