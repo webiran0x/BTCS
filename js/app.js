@@ -69,7 +69,6 @@ const VIEWS = {
   account: 'account',
   admin: 'admin',
   legal: 'legal',
-  guide: 'guide',
 };
 
 let cleanup = null;
@@ -141,20 +140,20 @@ async function route(opts) {
   const [name = '', ...params] = rawHash.split('/').map(decodeURIComponent);
   const viewEl = $('#view');
 
-  if (isStaticGuidePage() && (!rawHash || name === 'guide')) {
-    if (initialGuideHtml === null && viewEl) initialGuideHtml = viewEl.innerHTML;
-    document.documentElement.dataset.page = 'guide';
-    window.dispatchEvent(new CustomEvent('cv:route', { detail: { name: 'guide', params } }));
-    renderNav();
-    if (typeof cleanup === 'function') { try { cleanup(); } catch (e) { console.error(e); } }
-    cleanup = null;
-    if (viewEl && initialGuideHtml !== null && viewEl.innerHTML !== initialGuideHtml) {
-      viewEl.innerHTML = initialGuideHtml;
+  if (name === 'guide') {
+    if (isStaticGuidePage()) {
+      if (initialGuideHtml === null && viewEl) initialGuideHtml = viewEl.innerHTML;
+      document.documentElement.dataset.page = 'guide';
+      renderNav();
+      if (typeof cleanup === 'function') { try { cleanup(); } catch (e) {} }
+      cleanup = null;
+      if (viewEl && initialGuideHtml !== null && viewEl.innerHTML !== initialGuideHtml) {
+        viewEl.innerHTML = initialGuideHtml;
+      }
+      document.title = `راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها · ${CONFIG.APP_NAME}`;
+      return;
     }
-    document.title = `راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها · ${CONFIG.APP_NAME}`;
-    if (keep !== null) { if (seq === routeSeq) window.scrollTo({ top: keep }); return; }
-    window.scrollTo({ top: 0 });
-    trackPageView('/guide/');
+    location.assign('/guide/');
     return;
   }
 
