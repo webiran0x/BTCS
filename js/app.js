@@ -149,19 +149,20 @@ async function route(opts) {
   const [name = '', ...params] = rawHash.split('/').map(decodeURIComponent);
   const viewEl = $('#view');
 
-  if (name === 'guide') {
-    if (isStaticGuidePage()) {
-      if (initialGuideHtml === null && viewEl) initialGuideHtml = viewEl.innerHTML;
-      document.documentElement.dataset.page = 'guide';
-      renderNav();
-      if (typeof cleanup === 'function') { try { cleanup(); } catch (e) {} }
-      cleanup = null;
-      if (viewEl && initialGuideHtml !== null && viewEl.innerHTML !== initialGuideHtml) {
-        viewEl.innerHTML = initialGuideHtml;
-      }
-      document.title = `راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها · ${CONFIG.APP_NAME}`;
-      return;
+  if (isStaticGuidePage() && (!name || name === 'guide')) {
+    if (initialGuideHtml === null && viewEl) initialGuideHtml = viewEl.innerHTML;
+    document.documentElement.dataset.page = 'guide';
+    renderNav();
+    if (typeof cleanup === 'function') { try { cleanup(); } catch (e) {} }
+    cleanup = null;
+    if (viewEl && initialGuideHtml !== null && viewEl.innerHTML !== initialGuideHtml) {
+      viewEl.innerHTML = initialGuideHtml;
     }
+    document.title = `راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها · ${CONFIG.APP_NAME}`;
+    return;
+  }
+
+  if (name === 'guide') {
     location.assign('/guide/');
     return;
   }
