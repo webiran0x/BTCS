@@ -15,13 +15,13 @@ import { auth, sb, backendEnabled, isAdmin, signOut, pullUserData, pushUserData,
 import { createSync, SYNCED_KEYS, TRADING_KEYS } from './lib/cloudsync.js';
 import { DEPS } from './deps.js';
 
-// تنظیم اجباری جهت راست‌به‌چین و زبان فارسی در سند اصلی[cite: 11]
+// تنظیم اجباری جهت راست‌به‌چین و زبان فارسی در سند اصلی
 if (typeof document !== 'undefined') {
   document.documentElement.dir = 'rtl';
   document.documentElement.lang = 'fa';
 }
 
-// محافظت در برابر Clickjacking[cite: 11]
+// محافظت در برابر Clickjacking
 if (typeof window !== 'undefined' && window.top !== window.self) {
   let sameOrigin = false;
   try { sameOrigin = window.top.location.origin === window.location.origin; } catch { /* دامنه دیگر */ }
@@ -43,11 +43,12 @@ const NAV = [
   { path: 'wallet', label: 'کیف پول', icon: 'wallet', short: 'کیف پول' },
   { path: 'alerts', label: 'اعلان ها', icon: 'alerts', short: 'اعلان ها' },
   { path: 'premium', label: 'اشتراک ویژه', icon: 'star', short: 'ویژه' },
+  { path: 'guide', label: 'راهنمای جامع', icon: 'info', short: 'راهنما' },
 ];
 const ADMIN_NAV = { path: 'admin', label: 'مدیریت', icon: 'chip', short: 'مدیریت' };
 const MOBILE = ['', 'ai', 'trader', 'wallet'];
 
-// نگاشت مسیرها به ماژول‌های صفحه در js/views/[cite: 11]
+// نگاشت مسیرها به ماژول‌های صفحه در js/views/
 const VIEWS = {
   '': 'markets',
   coin: 'coin',
@@ -72,17 +73,24 @@ const VIEWS = {
 
 let cleanup = null;
 let routeSeq = 0;
+let initialGuideHtml = null;
+
+function isStaticGuidePage() {
+  return typeof location !== 'undefined' && /^\/guide(\/|$)/i.test(location.pathname || '');
+}
 
 function navItems() {
   return isAdmin() ? [...NAV, ADMIN_NAV] : NAV;
 }
 
 function renderNav() {
-  const cur = location.hash.replace(/^#\/?/, '').split('/')[0];
+  const cur = isStaticGuidePage() ? 'guide' : location.hash.replace(/^#\/?/, '').split('/')[0];
   const navEl = $('#nav');
   if (navEl) {
-    navEl.innerHTML = navItems().map((n) =>
-      `<a href="#/${n.path}" class="${cur === n.path ? 'on' : ''}"${cur === n.path ? ' aria-current="page"' : ''}>${icon(n.icon)}<span>${esc(t(n.label))}</span>${n.badge ? `<em class="badge">${esc(n.badge)}</em>` : ''}</a>`).join('');
+    navEl.innerHTML = navItems().map((n) => {
+      const href = n.path === 'guide' && isStaticGuidePage() ? '/guide/' : `#/${n.path}`;
+      return `<a href="${href}" class="${cur === n.path ? 'on' : ''}"${cur === n.path ? ' aria-current="page"' : ''}>${icon(n.icon)}<span>${esc(t(n.label))}</span>${n.badge ? `<em class="badge">${esc(n.badge)}</em>` : ''}</a>`;
+    }).join('');
   }
   const bottomEl = $('#bottombar');
   if (bottomEl) {
@@ -96,11 +104,14 @@ function renderNav() {
 }
 
 function openMore() {
-  const cur = location.hash.replace(/^#\/?/, '').split('/')[0];
+  const cur = isStaticGuidePage() ? 'guide' : location.hash.replace(/^#\/?/, '').split('/')[0];
   const rest = navItems().filter((n) => !MOBILE.includes(n.path));
   const m = modal(`
     <div dir="rtl" style="text-align:right">
-      <div class="sheet-grid">${rest.map((n) => `<a href="#/${n.path}" class="sheet-item ${cur === n.path ? 'on' : ''}">${icon(n.icon, 20)}<span>${esc(t(n.label))}</span></a>`).join('')}</div>
+      <div class="sheet-grid">${rest.map((n) => {
+        const href = n.path === 'guide' && isStaticGuidePage() ? '/guide/' : `#/${n.path}`;
+        return `<a href="${href}" class="sheet-item ${cur === n.path ? 'on' : ''}">${icon(n.icon, 20)}<span>${esc(t(n.label))}</span></a>`;
+      }).join('')}</div>
       <div class="sheet-grid mt">
         <a href="#/account" class="sheet-item">${icon('wallet', 20)}<span>${esc(t('حساب کاربری'))}</span></a>
         <a href="#/legal/terms" class="sheet-item">${icon('info', 20)}<span>${esc(t('شرایط استفاده'))}</span></a>
@@ -125,7 +136,27 @@ function preloadDeps(file) {
 async function route(opts) {
   const seq = ++routeSeq;
   const keep = opts?.keepScroll === true ? window.scrollY : null;
-  const [name = '', ...params] = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
+  const rawHash = location.hash.replace(/^#\/?/, '');
+  const [name = '', ...params] = rawHash.split('/').map(decodeURIComponent);
+  const viewEl = $('#view');
+
+  if (isStaticGuidePage() && (!rawHash || name === 'guide')) {
+    if (initialGuideHtml === null && viewEl) initialGuideHtml = viewEl.innerHTML;
+    document.documentElement.dataset.page = 'guide';
+    window.dispatchEvent(new CustomEvent('cv:route', { detail: { name: 'guide', params } }));
+    renderNav();
+    if (typeof cleanup === 'function') { try { cleanup(); } catch (e) { console.error(e); } }
+    cleanup = null;
+    if (viewEl && initialGuideHtml !== null && viewEl.innerHTML !== initialGuideHtml) {
+      viewEl.innerHTML = initialGuideHtml;
+    }
+    document.title = `راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها · ${CONFIG.APP_NAME}`;
+    if (keep !== null) { if (seq === routeSeq) window.scrollTo({ top: keep }); return; }
+    window.scrollTo({ top: 0 });
+    trackPageView('/guide/');
+    return;
+  }
+
   const file = `views/${VIEWS[name] || VIEWS['']}.js`;
   document.documentElement.dataset.page = VIEWS[name] ? name || 'markets' : 'markets';
   window.dispatchEvent(new CustomEvent('cv:route', { detail: { name: document.documentElement.dataset.page, params } }));
@@ -165,12 +196,12 @@ async function route(opts) {
 
 document.querySelector('.skip-link')?.addEventListener('click', (e) => { e.preventDefault(); $('#view').focus(); });
 
-// ---------------------------------------------------------------- theme[cite: 11]
+// ---------------------------------------------------------------- theme
 function applyTheme() {
   document.documentElement.dataset.theme = 'dark';
 }
 
-// ---------------------------------------------------------------- search[cite: 11]
+// ---------------------------------------------------------------- search
 function initSearch() {
   const input = $('#searchInput'), box = $('#searchResults');
   const narrow = matchMedia('(max-width: 600px)');
@@ -189,7 +220,6 @@ function initSearch() {
   const draw = () => {
     box.hidden = !items.length;
     input.setAttribute('aria-expanded', String(!!items.length));
-    // اصلاح margin-right:auto برای تراز صحیح قیمت در چیدمان راست‌به‌چین[cite: 11]
     box.innerHTML = items.map((c, i) => `<a href="#/coin/${encodeURIComponent(c.symbol)}" id="sr-${i}" role="option" aria-selected="${i === active}" class="${i === active ? 'on' : ''}">${coinLogo(c, 22)}<b>${esc(c.name)}</b><span class="muted">${esc(c.symbol)}</span><span style="margin-right:auto;direction:ltr">${money(c.price)}</span></a>`).join('');
     if (active >= 0) input.setAttribute('aria-activedescendant', `sr-${active}`); else input.removeAttribute('aria-activedescendant');
   };
@@ -215,7 +245,7 @@ function initSearch() {
   document.addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') { e.preventDefault(); input.focus(); } });
 }
 
-// ---------------------------------------------------------------- currency[cite: 11]
+// ---------------------------------------------------------------- currency
 async function initSelectors() {
   const cur = $('#curSel');
   cur.innerHTML = CONFIG.CURRENCIES.map(([c, s]) => `<option value="${c}">${c} ${s}</option>`).join('');
@@ -229,7 +259,7 @@ async function initSelectors() {
   });
 }
 
-// ---------------------------------------------------------------- account[cite: 11]
+// ---------------------------------------------------------------- account
 function initAccount() {
   const btn = $('#accountBtn');
   if (!backendEnabled()) { btn.hidden = true; return; }
@@ -263,7 +293,7 @@ function initAccount() {
   sb();
 }
 
-// ---------------------------------------------------------------- cloud sync[cite: 11]
+// ---------------------------------------------------------------- cloud sync
 const SHOWN_ON = {
   '': ['watchlist'],
   coin: ['watchlist', 'drawings'],
@@ -319,7 +349,7 @@ document.addEventListener('visibilitychange', () => {
 setInterval(() => { if (!document.hidden && Date.now() - lastSyncAt > 100e3) syncNow(); }, 120e3);
 setInterval(() => { if (!document.hidden) showTriggeredServerAlerts(); }, 120e3);
 
-// ---------------------------------------------------------------- live ticker + alerts[cite: 11]
+// ---------------------------------------------------------------- live ticker + alerts
 let tickerCoins = [];
 async function initTicker() {
   const list = await markets().catch(() => []);
@@ -398,7 +428,7 @@ async function showTriggeredServerAlerts() {
 }
 auth.addEventListener('change', showTriggeredServerAlerts);
 
-// ---------------------------------------------------------------- risk gate (shown once)[cite: 11]
+// ---------------------------------------------------------------- risk gate (shown once)
 function riskGate() {
   if (load('riskAck', false)) return;
 
@@ -450,7 +480,7 @@ function riskGate() {
   });
 }
 
-// ---------------------------------------------------------------- banners[cite: 11]
+// ---------------------------------------------------------------- banners
 let demoBanner = '';
 let siteBanner = '';
 const paintBanners = () => { $('#banner').innerHTML = demoBanner + siteBanner; };
@@ -466,13 +496,12 @@ getAppSettings().then((s) => {
   const text = s?.site?.announcement;
   if (!text) return;
   if (load('dismissedNotice', '') === text) return;
-  // اصلاح margin-right:auto برای دکمه بستن بنر در چیدمان راست‌به‌چین[cite: 11]
   siteBanner = `<div class="banner" id="siteNotice" dir="rtl">${icon('info', 16)} ${esc(text)} <button class="icon-btn" id="noticeX" style="width:26px;height:26px;margin-right:auto" aria-label="بستن">${icon('close', 12)}</button></div>`;
   paintBanners();
   $('#noticeX')?.addEventListener('click', () => { save('dismissedNotice', text); siteBanner = ''; paintBanners(); });
 }).catch(() => { /* بک‌اند اختیاری است */ });
 
-// ---------------------------------------------------------------- 3D world[cite: 11]
+// ---------------------------------------------------------------- 3D world
 function startWorld() {
   const go = () => import('./world/world.js').then((m) => m.startWorld()).catch((e) => {
     console.warn('3D world', e);
@@ -482,8 +511,11 @@ function startWorld() {
   else setTimeout(go, 800);
 }
 
-// ---------------------------------------------------------------- boot[cite: 11]
-{ const entry = document.documentElement.dataset.route; if (entry && !location.hash) history.replaceState(null, '', entry); }
+// ---------------------------------------------------------------- boot
+{
+  const entry = document.documentElement.dataset.route;
+  if (entry && !location.hash && !isStaticGuidePage()) history.replaceState(null, '', entry);
+}
 $$('[data-app-name]').forEach((n) => { n.textContent = CONFIG.APP_NAME; });
 applyTheme(settings.get().theme || 'dark');
 applyDir();
@@ -534,8 +566,8 @@ setTimeout(() => {
   cloudLearning().then((c) => { if (c) remove('aiLearn'); }).catch(() => {});
 }, 4000);
 
-// ---------------------------------------------------------------- updates[cite: 11]
-export const BUILD = "20261105-185358";
+// ---------------------------------------------------------------- updates
+export const BUILD = "20261122-015200";
 const BUILD_STAMP = /^\d{8}-\d{6}$/;
 
 {
@@ -550,7 +582,7 @@ const idleNow = () => Date.now() - lastInput > 120e3 && !document.activeElement?
 async function checkForUpdate({ whenIdle = false } = {}) {
   if (navigator.onLine === false) return;
   try {
-    const res = await fetch(`version.txt?t=${Date.now()}`, { cache: 'no-store' });
+    const res = await fetch(`/version.txt?t=${Date.now()}`, { cache: 'no-store' });
     if (!res.ok) return;
     const latest = (await res.text()).trim();
     if (!BUILD_STAMP.test(latest)) return;
@@ -560,8 +592,8 @@ async function checkForUpdate({ whenIdle = false } = {}) {
     try { tried = JSON.parse(sessionStorage.getItem('cv:reloaded') || 'null'); } catch { /* مقدار قدیمی */ }
     if (tried?.v === latest && Date.now() - tried.at < 10 * 60e3) return;
     sessionStorage.setItem('cv:reloaded', JSON.stringify({ v: latest, at: Date.now() }));
-    const files = new Set(['./', 'index.html', 'css/app.css', 'js/app.js', 'js/deps.js']);
-    for (const [page, deps] of Object.entries(DEPS)) for (const f of [page, ...deps]) files.add(`js/${f}`);
+    const files = new Set(['/', '/index.html', '/css/app.css', '/js/app.js', '/js/deps.js']);
+    for (const [page, deps] of Object.entries(DEPS)) for (const f of [page, ...deps]) files.add(`/js/${f}`);
     await Promise.all([...files].map((f) => fetch(f, { cache: 'reload' }).catch(() => null)));
     await (await navigator.serviceWorker?.getRegistration?.())?.update?.().catch(() => {});
     for (const k of await caches.keys()) if (!k.startsWith('webllm')) await caches.delete(k);
@@ -575,14 +607,14 @@ window.addEventListener('cv:store-failed', (e) => {
 
 if (location.protocol === 'https:') {
   window.addEventListener('load', () => {
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => { /* پشتیبانی آفلاین اختیاری است */ });
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(() => { /* پشتیبانی آفلاین اختیاری است */ });
     checkForUpdate();
     document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForUpdate(); });
     setInterval(() => { if (!document.hidden) checkForUpdate({ whenIdle: true }); }, 30 * 60e3);
   });
 }
 
-// --- گفتگوی سریع: دستورات مبتنی بر داده‌های زنده بازار ---[cite: 11]
+// --- گفتگوی سریع: دستورات مبتنی بر داده‌های زنده بازار ---
 (async function initMagicChat() {
   const chatPanel = $('#chatPanel');
   const chatClose = $('#chatClose');
@@ -593,28 +625,29 @@ if (location.protocol === 'https:') {
   if (chatPanel) chatPanel.dir = 'rtl';
 
   const chatBtn = $('#chatBtn');
-  chatBtn.innerHTML = `${icon('ai', 18)}<span>گفتگوی سریع</span>`;
+  if (chatBtn) chatBtn.innerHTML = `${icon('ai', 18)}<span>گفتگوی سریع</span>`;
 
-  chatInput.maxLength = 120;
+  if (chatInput) chatInput.maxLength = 120;
   const toggleChat = () => {
+    if (!chatPanel || !chatBtn) return;
     chatPanel.hidden = !chatPanel.hidden;
     chatBtn.setAttribute('aria-expanded', String(!chatPanel.hidden));
     chatBtn.setAttribute('aria-label', chatPanel.hidden ? 'باز کردن گفتگوی سریع' : 'بستن گفتگوی سریع');
-    if (chatPanel.hidden) { chatInput.value = ''; chatBtn.focus(); }
-    else setTimeout(() => chatInput.focus(), 50);
+    if (chatPanel.hidden) { if (chatInput) chatInput.value = ''; chatBtn.focus(); }
+    else setTimeout(() => chatInput?.focus(), 50);
   };
 
-  chatBtn.addEventListener('click', toggleChat);
-  chatClose.addEventListener('click', toggleChat);
+  chatBtn?.addEventListener('click', toggleChat);
+  chatClose?.addEventListener('click', toggleChat);
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !chatPanel.hidden) toggleChat();
+    if (e.key === 'Escape' && chatPanel && !chatPanel.hidden) toggleChat();
   });
 
   let chatBusy = false;
   const sendMessage = async (message) => {
     const trimmed = String(message || '').trim().slice(0, 120);
-    if (!trimmed || chatBusy) return;
+    if (!trimmed || chatBusy || !chatMessages || !chatSend) return;
     chatBusy = true;
     chatSend.disabled = true;
 
@@ -623,7 +656,7 @@ if (location.protocol === 'https:') {
     userMsg.innerHTML = `<span class="avatar">شما</span><span class="msg" dir="auto">${esc(trimmed)}</span>`;
     chatMessages.appendChild(userMsg);
 
-    chatInput.value = '';
+    if (chatInput) chatInput.value = '';
 
     const typingInd = document.createElement('div');
     typingInd.className = 'chat-message bot';
@@ -703,7 +736,7 @@ if (location.protocol === 'https:') {
         }
         case 'clear':
         case 'reset':
-          chatMessages.querySelectorAll('.chat-message').forEach((m, i) => { if (i > 0) m.remove(); });
+          chatMessages?.querySelectorAll('.chat-message').forEach((m, i) => { if (i > 0) m.remove(); });
           return null;
         default:
           return `دستور ناشناخته /${cmd}. برای مشاهده دستورات موجود /help را تایپ کنید.`;
@@ -713,14 +746,14 @@ if (location.protocol === 'https:') {
     return 'من به دستورات سریع بر اساس داده‌های زنده پاسخ می‌دهم. برای مشاهده آن‌ها /help را تایپ کنید، یا سوالات آزاد خود را در صفحه دستیار هوشمند (#/ai) بپرسید.';
   };
 
-  chatInput.addEventListener('keydown', (e) => {
+  chatInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       sendMessage(chatInput.value);
     }
   });
 
-  chatSend.addEventListener('click', () => sendMessage(chatInput.value));
+  chatSend?.addEventListener('click', () => sendMessage(chatInput?.value));
 
   const quickQuestions = [
     '/help',
@@ -730,16 +763,18 @@ if (location.protocol === 'https:') {
     '/clear'
   ];
 
-  const quickBar = document.createElement('div');
-  quickBar.className = 'chat-quick';
-  quickBar.dir = 'rtl';
-  quickBar.innerHTML = `<span class="muted">امتحان کنید:</span>${quickQuestions.map(q => `<button class="quick-btn" type="button" data-cmd="${esc(q)}" dir="ltr" aria-label="اجرای ${esc(q)}">${esc(q)}</button>`).join(' ')}`;
-  chatMessages.parentNode.insertBefore(quickBar, chatInput.parentNode);
+  if (chatMessages?.parentNode && chatInput?.parentNode) {
+    const quickBar = document.createElement('div');
+    quickBar.className = 'chat-quick';
+    quickBar.dir = 'rtl';
+    quickBar.innerHTML = `<span class="muted">امتحان کنید:</span>${quickQuestions.map(q => `<button class="quick-btn" type="button" data-cmd="${esc(q)}" dir="ltr" aria-label="اجرای ${esc(q)}">${esc(q)}</button>`).join(' ')}`;
+    chatMessages.parentNode.insertBefore(quickBar, chatInput.parentNode);
 
-  quickBar.querySelectorAll('.quick-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      sendMessage(btn.dataset.cmd);
-      chatInput.focus();
+    quickBar.querySelectorAll('.quick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sendMessage(btn.dataset.cmd);
+        chatInput.focus();
+      });
     });
-  });
+  }
 })();
