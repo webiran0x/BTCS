@@ -44,6 +44,7 @@ const NAV = [
   { path: 'alerts', label: 'اعلان ها', icon: 'alerts', short: 'اعلان ها' },
   { path: 'premium', label: 'اشتراک ویژه', icon: 'star', short: 'ویژه' },
     { path: 'guide', label: 'راهنمای جامع', icon: 'info', short: 'راهنما', href: '/guide/', target: '_blank' },
+    { path: 'academy', label: 'آکادمی و آزمون', icon: 'star', short: 'آکادمی', href: '/academy/', target: '_blank' },
 ];
 const ADMIN_NAV = { path: 'admin', label: 'مدیریت', icon: 'chip', short: 'مدیریت' };
 const MOBILE = ['', 'ai', 'trader', 'wallet'];
