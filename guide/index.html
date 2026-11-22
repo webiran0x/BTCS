@@ -2,40 +2,39 @@
 <html lang="fa" dir="rtl" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <meta name="author" content="BTCS Analytics & Trading Simulator Guide" />
   <meta name="generator" content="BTCS Knowledge Reader 2026" />
-  <meta name="theme-color" content="#0b0c10" id="metaThemeColor" />
-  <meta name="description" content="راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS / CoinLens) شامل مقدمه و ۸ فصل کاربردی از سطح تازه‌کار تا تریدر پیشرفته و مدیر سیستم، همراه با اصول مدیریت ریسک." id="metaDescription" />
+  <meta name="theme-color" content="#07080d" id="metaThemeColor" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="description" content="راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS) شامل مقدمه و ۸ فصل کاربردی از سطح تازه‌کار تا تریدر پیشرفته و مدیر سیستم، همراه با اصول مدیریت ریسک." id="metaDescription" />
   <meta name="keywords" content="راهنمای BTCS, شبیه‌ساز معاملاتی رمزارز, تحلیل تکنیکال ارز دیجیتال, پیش‌بینی بازه قیمتی هوش مصنوعی, معاملات کاغذی, اسکنر بازار, فیوچرز, مدیریت ریسک رمزارز" id="metaKeywords" />
 
-  <!-- Open Graph Metadata -->
   <meta property="og:type" content="article" />
   <meta property="og:locale" content="fa_IR" />
-  <meta property="og:site_name" content="راهنمای جامع BTCS" />
+  <meta property="og:site_name" content="BTCS — راهنمای جامع" />
+  <meta property="og:url" content="https://btcs.ir/guide/" />
   <meta property="og:title" content="راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS)" id="ogTitle" />
   <meta property="og:description" content="از درک فضای بازار و تحلیل تک‌ارزی تا موتور پیش‌بینی بازه، معاملات کاغذی، یادگیری هوش مصنوعی و مدیریت ریسک در ۸ فصل برای تریدر ساده تا پیشرفته." id="ogDescription" />
 
-  <!-- Twitter Card Metadata -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS)" id="twTitle" />
   <meta name="twitter:description" content="مقدمه و ۸ فصل عملی برای استفاده اصولی از ابزارهای تحلیلی، شبیه‌ساز معاملاتی و سنجش عملکرد در بازار رمزارزها." id="twDescription" />
 
-  <link rel="canonical" href="#intro" id="canonicalLink" />
+  <link rel="canonical" href="https://btcs.ir/guide/" id="canonicalLink" />
   <title id="pageTitle">راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS) | از تازه‌کار تا پیشرفته</title>
 
-  <!-- Tailwind CSS CDN for responsive spacing & utility scaffolding -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Dynamic JSON-LD Structured Data (2026 SEO: TechArticle + BreadcrumbList + FAQPage) -->
   <script type="application/ld+json" id="jsonLdData">
   {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "TechArticle",
-        "@id": "#guide-article",
+        "@id": "https://btcs.ir/guide/#article",
+        "mainEntityOfPage": "https://btcs.ir/guide/",
         "headline": "راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS)",
         "inLanguage": "fa-IR",
         "datePublished": "2026-11-22",
@@ -51,19 +50,25 @@
       },
       {
         "@type": "BreadcrumbList",
-        "@id": "#guide-breadcrumb",
+        "@id": "https://btcs.ir/guide/#breadcrumb",
         "itemListElement": [
           {
             "@type": "ListItem",
             "position": 1,
-            "name": "مقدمه راهنما",
-            "item": "#intro"
+            "name": "صفحه اصلی BTCS",
+            "item": "https://btcs.ir/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "راهنمای جامع",
+            "item": "https://btcs.ir/guide/"
           }
         ]
       },
       {
         "@type": "FAQPage",
-        "@id": "#guide-faq",
+        "@id": "https://btcs.ir/guide/#faq",
         "mainEntity": [
           {
             "@type": "Question",
@@ -88,50 +93,55 @@
   </script>
 
   <style>
-    /* Font & Design Tokens — Apple Glassmorphic Minimalism (Dark Default + Light Mode) */
     @font-face {
-      font-family: 'IRANYekanXCustom';
-      src: local('IRANYekanXVF'), local('IRANYekanX'), local('Vazirmatn');
+      font-family: 'UnifiedGuideFont';
+      src:
+        local('IRANYekanXVF'),
+        local('IRANYekanX'),
+        url('/fonts/IRANYekanXVF.woff2') format('woff2'),
+        url('/fonts/Vazirmatn.woff2') format('woff2'),
+        local('Vazirmatn');
       font-weight: 100 900;
+      font-style: normal;
       font-display: swap;
     }
 
     :root {
-      --font-sans: 'IRANYekanXCustom', 'Vazirmatn', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-sans: 'UnifiedGuideFont', 'IRANYekanXVF', 'Vazirmatn', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       --radius-xl: 28px;
       --radius-lg: 20px;
       --radius-md: 14px;
       --radius-sm: 10px;
-      --transition-fast: 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
+      --transition-fast: 170ms cubic-bezier(0.25, 0.8, 0.25, 1);
       --transition-smooth: 280ms cubic-bezier(0.22, 1, 0.36, 1);
       --header-h: 72px;
     }
 
     :root[data-theme="dark"] {
-      --bg-canvas: #090a0f;
+      --bg-canvas: #07080d;
       --bg-grad-1: radial-gradient(circle at 12% 8%, rgba(10, 132, 255, 0.14), transparent 45%);
       --bg-grad-2: radial-gradient(circle at 88% 14%, rgba(94, 92, 230, 0.13), transparent 44%);
       --bg-grad-3: radial-gradient(circle at 50% 95%, rgba(48, 209, 88, 0.08), transparent 52%);
-      --surface-glass: rgba(20, 22, 29, 0.72);
-      --surface-glass-strong: rgba(26, 29, 38, 0.86);
+      --surface-glass: rgba(18, 20, 27, 0.74);
+      --surface-glass-strong: rgba(23, 26, 35, 0.88);
       --surface-card: rgba(255, 255, 255, 0.035);
-      --surface-card-hover: rgba(255, 255, 255, 0.062);
-      --surface-subtle: rgba(255, 255, 255, 0.05);
+      --surface-card-hover: rgba(255, 255, 255, 0.065);
+      --surface-subtle: rgba(255, 255, 255, 0.055);
       --border-hairline: rgba(255, 255, 255, 0.09);
-      --border-strong: rgba(255, 255, 255, 0.17);
+      --border-strong: rgba(255, 255, 255, 0.18);
       --ink-primary: #f5f5f7;
-      --ink-secondary: rgba(245, 245, 247, 0.74);
-      --ink-muted: rgba(245, 245, 247, 0.52);
+      --ink-secondary: rgba(245, 245, 247, 0.76);
+      --ink-muted: rgba(245, 245, 247, 0.54);
       --accent-blue: #0a84ff;
       --accent-indigo: #5e5ce6;
       --accent-green: #30d158;
       --accent-amber: #ff9f0a;
       --accent-gold: #ffd60a;
-      --accent-rose: #ff453a;
       --highlight-bg: rgba(255, 214, 10, 0.24);
       --highlight-ink: #fff3b0;
-      --shadow-elevated: 0 22px 54px rgba(0, 0, 0, 0.42);
-      --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.24);
+      --shadow-elevated: 0 22px 54px rgba(0, 0, 0, 0.44);
+      --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
 
     :root[data-theme="light"] {
@@ -141,20 +151,19 @@
       --bg-grad-3: radial-gradient(circle at 50% 95%, rgba(40, 205, 65, 0.06), transparent 52%);
       --surface-glass: rgba(255, 255, 255, 0.78);
       --surface-glass-strong: rgba(255, 255, 255, 0.92);
-      --surface-card: rgba(255, 255, 255, 0.68);
-      --surface-card-hover: rgba(255, 255, 255, 0.92);
-      --surface-subtle: rgba(15, 23, 42, 0.045);
+      --surface-card: rgba(255, 255, 255, 0.72);
+      --surface-card-hover: rgba(255, 255, 255, 0.94);
+      --surface-subtle: rgba(15, 23, 42, 0.05);
       --border-hairline: rgba(15, 23, 42, 0.09);
       --border-strong: rgba(15, 23, 42, 0.16);
       --ink-primary: #111318;
-      --ink-secondary: rgba(17, 19, 24, 0.76);
-      --ink-muted: rgba(17, 19, 24, 0.54);
+      --ink-secondary: rgba(17, 19, 24, 0.78);
+      --ink-muted: rgba(17, 19, 24, 0.55);
       --accent-blue: #007aff;
       --accent-indigo: #5856d6;
       --accent-green: #248a3d;
       --accent-amber: #c96a00;
       --accent-gold: #b28700;
-      --accent-rose: #d70015;
       --highlight-bg: rgba(255, 204, 0, 0.34);
       --highlight-ink: #111318;
       --shadow-elevated: 0 20px 46px rgba(15, 23, 42, 0.09);
@@ -163,6 +172,7 @@
 
     *, *::before, *::after {
       box-sizing: border-box;
+      font-family: inherit;
     }
 
     html {
@@ -190,7 +200,6 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* Skip Link for Accessibility */
     .skip-link {
       position: fixed;
       top: -100px;
@@ -210,7 +219,6 @@
       outline-offset: 2px;
     }
 
-    /* Top Reading Progress Bar */
     .progress-track {
       position: fixed;
       top: 0;
@@ -228,22 +236,21 @@
       transition: width 90ms linear;
     }
 
-    /* Top Glassmorphic Header */
     .site-header {
       position: sticky;
       top: 0;
       z-index: 40;
       min-height: var(--header-h);
       background: var(--surface-glass-strong);
-      backdrop-filter: blur(24px) saturate(160%);
-      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      backdrop-filter: blur(24px) saturate(165%);
+      -webkit-backdrop-filter: blur(24px) saturate(165%);
       border-bottom: 1px solid var(--border-hairline);
     }
 
     .glass-panel {
       background: var(--surface-glass);
-      backdrop-filter: blur(22px) saturate(150%);
-      -webkit-backdrop-filter: blur(22px) saturate(150%);
+      backdrop-filter: blur(22px) saturate(155%);
+      -webkit-backdrop-filter: blur(22px) saturate(155%);
       border: 1px solid var(--border-hairline);
       border-radius: var(--radius-xl);
       box-shadow: var(--shadow-card);
@@ -271,7 +278,6 @@
       background: var(--surface-subtle);
       border: 1px solid var(--border-hairline);
       color: var(--ink-primary);
-      font-family: var(--font-sans);
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
@@ -286,15 +292,7 @@
     .glass-btn:active {
       transform: translateY(0);
     }
-    .glass-btn.active,
-    .glass-btn[aria-pressed="true"] {
-      background: rgba(10, 132, 255, 0.16);
-      border-color: rgba(10, 132, 255, 0.45);
-      color: var(--accent-blue);
-      font-weight: 600;
-    }
 
-    /* Level Filter Pills */
     .level-pill {
       display: inline-flex;
       align-items: center;
@@ -322,12 +320,11 @@
       box-shadow: 0 4px 16px rgba(10, 132, 255, 0.16);
     }
 
-    /* Route Chip Badge */
     .route-chip {
       display: inline-block;
       direction: ltr;
       unicode-bidi: isolate;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-family: var(--font-mono);
       font-size: 0.78rem;
       padding: 1px 7px;
       border-radius: 7px;
@@ -337,7 +334,6 @@
       font-weight: 500;
     }
 
-    /* Search Highlight Mark */
     mark.search-hit {
       background: var(--highlight-bg);
       color: var(--highlight-ink);
@@ -346,7 +342,6 @@
       font-weight: 600;
     }
 
-    /* Sidebar Navigation Item */
     .nav-item {
       display: flex;
       align-items: center;
@@ -359,7 +354,6 @@
       border: 1px solid transparent;
       background: transparent;
       color: var(--ink-secondary);
-      font-family: var(--font-sans);
       font-size: 0.875rem;
       line-height: 1.5;
       cursor: pointer;
@@ -376,7 +370,6 @@
       font-weight: 600;
     }
 
-    /* Mobile Drawer */
     .drawer-backdrop {
       position: fixed;
       inset: 0;
@@ -412,7 +405,6 @@
       transform: translateX(0);
     }
 
-    /* Toast Notification Banner (no alert/confirm) */
     .toast-banner {
       position: fixed;
       bottom: 22px;
@@ -439,7 +431,6 @@
       transform: translateX(-50%) translateY(0);
     }
 
-    /* Custom Scrollbar for Subtle Polish */
     ::-webkit-scrollbar {
       width: 8px;
       height: 8px;
@@ -453,6 +444,11 @@
     }
     ::-webkit-scrollbar-thumb:hover {
       background: rgba(148, 163, 184, 0.42);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: 0.01ms !important; }
     }
 
     @media print {
@@ -472,18 +468,14 @@
   </style>
 </head>
 <body>
-  <!-- Skip Link -->
   <a href="#mainContent" class="skip-link">پرش مستقیم به محتوای راهنما</a>
 
-  <!-- Top Reading Progress Bar -->
   <div class="progress-track" aria-hidden="true">
     <div class="progress-bar" id="readingProgress"></div>
   </div>
 
-  <!-- Sticky Glassmorphic Header -->
   <header class="site-header" id="topHeader">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-      <!-- Brand & Mobile Drawer Trigger -->
       <div class="flex items-center gap-3 min-w-0">
         <button
           type="button"
@@ -501,7 +493,7 @@
           <span>فهرست</span>
         </button>
 
-        <a href="#intro" id="brandHomeLink" class="flex items-center gap-3 no-underline text-inherit group">
+        <a href="#intro" id="brandHomeLink" class="flex items-center gap-3 no-underline text-inherit">
           <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 font-bold text-sm" style="background: linear-gradient(135deg, rgba(10,132,255,0.25), rgba(94,92,230,0.28)); border: 1px solid var(--border-strong); color: var(--accent-blue);">
             BTCS
           </div>
@@ -516,7 +508,6 @@
         </a>
       </div>
 
-      <!-- Search Input + Actions -->
       <div class="flex items-center gap-2 sm:gap-2.5 flex-1 sm:flex-initial justify-end max-w-full sm:max-w-md">
         <div class="relative flex-1 sm:w-64">
           <label for="guideSearchInput" class="sr-only">جستجو در مقدمه و ۸ فصل راهنما</label>
@@ -574,7 +565,6 @@
     </div>
   </header>
 
-  <!-- Mobile Navigation Drawer & Backdrop -->
   <div class="drawer-backdrop" id="drawerBackdrop" aria-hidden="true"></div>
   <aside
     class="mobile-drawer"
@@ -589,17 +579,14 @@
     <div id="mobileNavContainer" class="space-y-1"></div>
   </aside>
 
-  <!-- Main Workspace Layout -->
   <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-16">
-    <!-- Filter & Status Bar -->
     <section class="glass-panel p-4 sm:p-5 mb-6" aria-label="فیلتر سطح معامله‌گر و وضعیت مطالعه">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <!-- Trader Level Filter Tabs -->
         <div>
           <div class="text-xs font-medium mb-2" style="color: var(--ink-muted);">
             نمایش محتوا بر اساس سطح تجربه تریدر:
           </div>
-          <div class="flex flex-wrap items-center gap-2" role="tablist" aria-label="سطح تجربه تریدر">
+          <div class="flex items-center gap-2 overflow-x-auto pb-1" role="tablist" aria-label="سطح تجربه تریدر">
             <button type="button" role="tab" aria-selected="true" data-level="all" class="level-pill is-active">
               <span>همه سطوح</span>
             </button>
@@ -615,7 +602,6 @@
           </div>
         </div>
 
-        <!-- Reading Progress & Bookmark Summary -->
         <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm" style="color: var(--ink-secondary);">
           <div class="px-3.5 py-2 rounded-xl tabular-nums" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline);">
             مطالعه‌شده: <strong id="readCountLabel" style="color: var(--accent-green);">۰ از ۹</strong> بخش
@@ -629,7 +615,6 @@
         </div>
       </div>
 
-      <!-- Active Search Status Bar (shown when searching) -->
       <div id="searchStatusBar" class="hidden mt-4 pt-3 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm" style="border-top: 1px solid var(--border-hairline); color: var(--ink-secondary);">
         <div id="searchSummaryText"></div>
         <div class="flex items-center gap-2">
@@ -639,22 +624,18 @@
       </div>
     </section>
 
-    <!-- Two-Column Grid: Desktop Sidebar TOC + Main Article Content -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      <!-- Desktop Sticky Table of Contents -->
       <aside class="hidden lg:block lg:col-span-4 xl:col-span-3 sticky top-24" aria-label="فهرست فصل‌های راهنما">
         <nav class="glass-panel p-4" aria-label="ناوبری فصل‌ها">
           <div class="flex items-center justify-between px-2 pb-3 mb-2" style="border-bottom: 1px solid var(--border-hairline);">
-            <span class="text-xs font-bold uppercase tracking-wider" style="color: var(--ink-muted);">فهرست راهنما</span>
+            <span class="text-xs font-bold" style="color: var(--ink-muted);">فهرست راهنما</span>
             <span class="text-xs tabular-nums" style="color: var(--ink-muted);">مقدمه + ۸ فصل</span>
           </div>
           <div id="desktopNavContainer" class="space-y-1 max-h-[68vh] overflow-y-auto pl-1"></div>
         </nav>
       </aside>
 
-      <!-- Primary Guide Content -->
       <main id="mainContent" tabindex="-1" class="lg:col-span-8 xl:col-span-9 space-y-6 outline-none">
-        <!-- Intro Post Article -->
         <article id="intro" data-section-id="intro" class="glass-panel p-6 sm:p-8 scroll-mt-24">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div class="flex flex-wrap items-center gap-2">
@@ -691,7 +672,6 @@
             </p>
           </div>
 
-          <!-- Target Audiences Grid -->
           <section class="mt-7" aria-label="مخاطبان این راهنما">
             <h2 class="text-lg sm:text-xl font-bold mb-3" style="color: var(--ink-primary);">
               این راهنما برای چه کسانی نوشته شده است؟
@@ -718,7 +698,6 @@
             </div>
           </section>
 
-          <!-- 8 Chapters Quick Index -->
           <section class="mt-7" aria-label="فهرست فصل‌های راهنما">
             <h2 class="text-lg sm:text-xl font-bold mb-3" style="color: var(--ink-primary);">
               فهرست فصل‌های راهنما
@@ -729,7 +708,6 @@
             <div id="introChapterIndex" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
           </section>
 
-          <!-- Golden Rule / Pre-Start Warning -->
           <aside class="mt-7 p-4 sm:p-5 rounded-2xl" style="background: rgba(255, 159, 10, 0.10); border: 1px solid rgba(255, 159, 10, 0.34);">
             <h2 class="text-base sm:text-lg font-bold mb-2" style="color: var(--accent-amber);">
               پیش از شروع یک یادآوری مهم
@@ -743,10 +721,8 @@
           </aside>
         </article>
 
-        <!-- Dynamic 8 Chapters Container -->
         <div id="chaptersContainer" class="space-y-6"></div>
 
-        <!-- Bottom Prev/Next Navigation Bar -->
         <nav class="glass-panel p-4 sm:p-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 no-print" aria-label="پیمایش بین بخش‌های راهنما">
           <button type="button" id="prevSectionBtn" class="glass-btn justify-between sm:justify-center px-5 py-3">
             <span>← بخش قبلی</span>
@@ -761,7 +737,6 @@
           </button>
         </nav>
 
-        <!-- Semantic Footer with 2026 SEO & Risk Notice -->
         <footer class="glass-panel p-6 text-xs sm:text-sm space-y-3" style="color: var(--ink-muted);">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="font-semibold" style="color: var(--ink-secondary);">
@@ -779,18 +754,9 @@
     </div>
   </div>
 
-  <!-- Toast Banner -->
   <div id="toastBanner" class="toast-banner" role="status" aria-live="polite"></div>
 
   <script>
-    /**
-     * BTCS Comprehensive User Guide Application (2026 SEO + Glassmorphic Reader)
-     * Single-file self-contained implementation with:
-     * - Full Intro Post + All 8 Chapters tailored for Beginner, Intermediate, and Advanced/Admin levels
-     * - Dynamic JSON-LD (TechArticle, BreadcrumbList, FAQPage) & Meta Tags synchronization
-     * - Instant keyword search across all sections with highlighting and hit stepping
-     * - Persistent localStorage state for theme, trader level filter, read chapters, and bookmarks
-     */
     (function () {
       'use strict';
 
@@ -808,10 +774,6 @@
         { id: 'advanced', title: '۳. تریدر پیشرفته و مدیر سیستم', badge: 'پیشرفته و مدیر', accent: 'var(--accent-indigo)' }
       ];
 
-      /**
-       * Complete 8 Chapters Content (preserving every feature, route, and nuance
-       * without repeating platform architecture in Chapter 1)
-       */
       const CHAPTERS = [
         {
           id: 'chapter-1',
@@ -1471,13 +1433,11 @@
         }
       ];
 
-      // Section list in order (intro + 8 chapters)
       const ALL_SECTIONS = [
         { id: 'intro', shortTitle: 'مقدمه راهنما', title: 'راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS)' },
         ...CHAPTERS.map((ch) => ({ id: ch.id, shortTitle: ch.shortTitle, title: ch.title }))
       ];
 
-      // Application State
       const state = {
         theme: 'dark',
         level: 'all',
@@ -1488,7 +1448,6 @@
         hitIndex: 0
       };
 
-      // Safe localStorage helpers
       function safeGet(key, fallback) {
         try {
           const val = localStorage.getItem(key);
@@ -1501,12 +1460,9 @@
       function safeSet(key, val) {
         try {
           localStorage.setItem(key, val);
-        } catch {
-          // Ignore storage quota or private mode errors
-        }
+        } catch {}
       }
 
-      // Toast notification (never uses alert/confirm)
       let toastTimer = null;
       function showToast(msg) {
         const el = document.getElementById('toastBanner');
@@ -1519,7 +1475,6 @@
         }, 2800);
       }
 
-      // Escape HTML & format inline `code` chips
       function escapeHtml(str) {
         return String(str)
           .replace(/&/g, '&amp;')
@@ -1530,12 +1485,9 @@
 
       function formatInlineCode(rawText) {
         const escaped = escapeHtml(rawText);
-        return escaped.replace(/`([^`]+)`/g, (_, codePart) => {
-          return `<span class="route-chip">${codePart}</span>`;
-        });
+        return escaped.replace(/`([^`]+)`/g, (_, codePart) => `<span class="route-chip">${codePart}</span>`);
       }
 
-      // Apply search highlighting inside a container without breaking tags
       function highlightTextNodes(rootEl, query) {
         const trimmed = query.trim();
         if (!trimmed) return [];
@@ -1593,7 +1545,6 @@
         return hits;
       }
 
-      // Render Intro Chapter Quick Index Cards
       function renderIntroChapterIndex() {
         const container = document.getElementById('introChapterIndex');
         if (!container) return;
@@ -1619,7 +1570,6 @@
         }).join('');
       }
 
-      // Render all 8 Chapters according to current level filter
       function renderChapters() {
         const container = document.getElementById('chaptersContainer');
         if (!container) return;
@@ -1654,9 +1604,9 @@
                   <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold" style="background: var(--surface-subtle); border: 1px solid var(--border-hairline); color: ${lvlMeta.accent};">
                     ${escapeHtml(lvlMeta.badge)}
                   </span>
-                  <h2 class="text-lg sm:text-xl font-bold m-0 searchable-text" style="color: var(--ink-primary);">
+                  <h3 class="text-lg sm:text-xl font-bold m-0 searchable-text" style="color: var(--ink-primary);">
                     ${formatInlineCode(lvlData.heading)}
-                  </h2>
+                  </h3>
                 </div>
                 <p class="text-sm sm:text-base mb-3.5 searchable-text" style="color: var(--ink-secondary);">
                   ${formatInlineCode(lvlData.lead)}
@@ -1723,7 +1673,6 @@
         bindArticleButtons();
       }
 
-      // Render Navigation Lists (Desktop & Mobile)
       function renderNavigationLists() {
         const buildItemsHtml = () => ALL_SECTIONS.map((sec) => {
           const isCurrent = state.currentSection === sec.id;
@@ -1761,7 +1710,6 @@
         });
       }
 
-      // Update Read & Bookmark counters
       function updateCounters() {
         const readEl = document.getElementById('readCountLabel');
         const bmEl = document.getElementById('bookmarkCountLabel');
@@ -1769,7 +1717,6 @@
         if (bmEl) bmEl.textContent = `${state.bookmarks.size}`;
       }
 
-      // Bind bookmark and read toggles on articles
       function bindArticleButtons() {
         document.querySelectorAll('.bookmark-toggle').forEach((btn) => {
           btn.addEventListener('click', () => {
@@ -1783,7 +1730,7 @@
               showToast('این بخش به نشان‌ها اضافه شد');
             }
             safeSet(STORAGE_KEYS.bookmarks, JSON.stringify([...state.bookmarks]));
-            syncAllViews();
+            syncAllViews(true);
           });
         });
 
@@ -1799,12 +1746,11 @@
               showToast('به عنوان خوانده‌شده ثبت شد');
             }
             safeSet(STORAGE_KEYS.read, JSON.stringify([...state.read]));
-            syncAllViews();
+            syncAllViews(true);
           });
         });
       }
 
-      // Update Prev/Next section buttons
       function updatePrevNextControls() {
         const idx = ALL_SECTIONS.findIndex((s) => s.id === state.currentSection);
         const safeIdx = idx === -1 ? 0 : idx;
@@ -1836,7 +1782,6 @@
         }
       }
 
-      // Dynamic 2026 SEO Meta & JSON-LD synchronization
       function syncSeoMetadata(sectionId, searchQuery) {
         const secObj = ALL_SECTIONS.find((s) => s.id === sectionId) || ALL_SECTIONS[0];
         const chapterObj = CHAPTERS.find((c) => c.id === sectionId);
@@ -1854,29 +1799,33 @@
           : `${cleanTitle} (${levelLabel}) | راهنمای جامع BTCS`;
 
         const descStr = chapterObj
-          ? `${chapterObj.introLead} — ${levelLabel} در راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی BTCS.`
-          : 'راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS) شامل اینترو و ۸ فصل کاربردی برای تریدر تازه‌کار، میان‌رده، پیشرفته و مدیر سیستم.';
+          ? `${chapterObj.introLead.replace(/`/g, '')} — ${levelLabel} در راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی BTCS.`
+          : 'راهنمای جامع پلتفرم تحلیلی و شبیه‌ساز معاملاتی رمزارزها (BTCS) شامل مقدمه و ۸ فصل کاربردی برای تریدر تازه‌کار، میان‌رده، پیشرفته و مدیر سیستم.';
+
+        const canonicalUrl = `https://btcs.ir/guide/${secObj.id === 'intro' ? '' : '#' + secObj.id}`;
 
         document.title = titleStr;
-        document.getElementById('pageTitle').textContent = titleStr;
-        document.getElementById('metaDescription').setAttribute('content', descStr);
-        document.getElementById('ogTitle').setAttribute('content', titleStr);
-        document.getElementById('ogDescription').setAttribute('content', descStr);
-        document.getElementById('twTitle').setAttribute('content', titleStr);
-        document.getElementById('twDescription').setAttribute('content', descStr);
-        document.getElementById('canonicalLink').setAttribute('href', `#${secObj.id}`);
+        const pageTitleEl = document.getElementById('pageTitle');
+        if (pageTitleEl) pageTitleEl.textContent = titleStr;
+        document.getElementById('metaDescription')?.setAttribute('content', descStr);
+        document.getElementById('ogTitle')?.setAttribute('content', titleStr);
+        document.getElementById('ogDescription')?.setAttribute('content', descStr);
+        document.getElementById('twTitle')?.setAttribute('content', titleStr);
+        document.getElementById('twDescription')?.setAttribute('content', descStr);
+        document.getElementById('canonicalLink')?.setAttribute('href', canonicalUrl);
 
         const jsonLdEl = document.getElementById('jsonLdData');
         if (jsonLdEl) {
           const breadcrumbItems = [
-            { '@type': 'ListItem', position: 1, name: 'مقدمه راهنما', item: '#intro' }
+            { '@type': 'ListItem', position: 1, name: 'صفحه اصلی BTCS', item: 'https://btcs.ir/' },
+            { '@type': 'ListItem', position: 2, name: 'راهنمای جامع', item: 'https://btcs.ir/guide/' }
           ];
           if (secObj.id !== 'intro') {
             breadcrumbItems.push({
               '@type': 'ListItem',
-              position: 2,
+              position: 3,
               name: secObj.shortTitle,
-              item: `#${secObj.id}`
+              item: `https://btcs.ir/guide/#${secObj.id}`
             });
           }
 
@@ -1885,23 +1834,24 @@
             '@graph': [
               {
                 '@type': 'TechArticle',
-                '@id': '#guide-article',
+                '@id': 'https://btcs.ir/guide/#article',
+                'mainEntityOfPage': 'https://btcs.ir/guide/',
                 'headline': titleStr,
                 'inLanguage': 'fa-IR',
                 'datePublished': '2026-11-22',
                 'dateModified': '2026-11-22',
                 'proficiencyLevel': levelLabel,
                 'description': descStr,
-                'url': `#${secObj.id}`
+                'url': canonicalUrl
               },
               {
                 '@type': 'BreadcrumbList',
-                '@id': '#guide-breadcrumb',
+                '@id': 'https://btcs.ir/guide/#breadcrumb',
                 'itemListElement': breadcrumbItems
               },
               {
                 '@type': 'FAQPage',
-                '@id': '#guide-faq',
+                '@id': 'https://btcs.ir/guide/#faq',
                 'mainEntity': [
                   {
                     '@type': 'Question',
@@ -1927,7 +1877,6 @@
         }
       }
 
-      // Apply current search query & step through hits
       let activeHits = [];
       function applySearchHighlights(scrollToHit = false) {
         const mainEl = document.getElementById('mainContent');
@@ -1936,7 +1885,6 @@
         const clearBtn = document.getElementById('clearSearchBtn');
         if (!mainEl) return;
 
-        // Remove previous <mark> elements and normalize text nodes
         mainEl.querySelectorAll('mark.search-hit').forEach((mark) => {
           const parent = mark.parentNode;
           if (parent) {
@@ -1987,7 +1935,6 @@
         syncSeoMetadata(state.currentSection, q);
       }
 
-      // Navigate to a specific section
       function navigateToSection(sectionId, shouldScroll = false) {
         const exists = ALL_SECTIONS.some((s) => s.id === sectionId);
         state.currentSection = exists ? sectionId : 'intro';
@@ -2013,7 +1960,6 @@
         }
       }
 
-      // Full re-render of dynamic sections
       function syncAllViews(preserveScroll = true) {
         const prevScrollY = window.scrollY;
         renderIntroChapterIndex();
@@ -2031,7 +1977,6 @@
         }
       }
 
-      // Theme management (Dark default, Light toggle)
       function applyTheme(themeName) {
         state.theme = themeName === 'light' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', state.theme);
@@ -2042,7 +1987,7 @@
         const labelEl = document.getElementById('themeLabel');
 
         if (state.theme === 'dark') {
-          if (metaTheme) metaTheme.setAttribute('content', '#090a0f');
+          if (metaTheme) metaTheme.setAttribute('content', '#07080d');
           if (iconEl) iconEl.textContent = '☀️';
           if (labelEl) labelEl.textContent = 'تم روشن';
         } else {
@@ -2052,7 +1997,6 @@
         }
       }
 
-      // Mobile drawer open/close
       function openMobileDrawer() {
         const drawer = document.getElementById('mobileDrawer');
         const backdrop = document.getElementById('drawerBackdrop');
@@ -2077,7 +2021,6 @@
         if (btn) btn.setAttribute('aria-expanded', 'false');
       }
 
-      // Reading progress bar & active section tracking on scroll
       function handleScroll() {
         const docEl = document.documentElement;
         const scrollTop = window.scrollY || docEl.scrollTop || 0;
@@ -2087,7 +2030,6 @@
         const bar = document.getElementById('readingProgress');
         if (bar) bar.style.width = `${pctRead.toFixed(1)}%`;
 
-        // Detect section closest to top offset
         const headerOffset = 135;
         let activeId = state.currentSection;
         for (const sec of ALL_SECTIONS) {
@@ -2108,9 +2050,8 @@
         }
       }
 
-      // Copy current section link helper (with clipboard API + execCommand fallback)
       function copyCurrentLink() {
-        const url = `${window.location.origin}${window.location.pathname}#${state.currentSection}`;
+        const url = `${window.location.origin}/guide/#${state.currentSection}`;
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(url).then(
             () => showToast('لینک این بخش در کلیپ‌بورد کپی شد'),
@@ -2137,7 +2078,6 @@
         document.body.removeChild(ta);
       }
 
-      // Initialize all event listeners & saved state
       function init() {
         applyTheme(safeGet(STORAGE_KEYS.theme, 'dark'));
         state.level = safeGet(STORAGE_KEYS.level, 'all');
@@ -2160,7 +2100,6 @@
           ? lastId
           : 'intro';
 
-        // Level filter buttons
         document.querySelectorAll('.level-pill').forEach((pill) => {
           const lvl = pill.getAttribute('data-level');
           const active = lvl === state.level;
@@ -2180,7 +2119,6 @@
           });
         });
 
-        // Search input & stepping
         const searchInput = document.getElementById('guideSearchInput');
         const clearSearchBtn = document.getElementById('clearSearchBtn');
         const prevHitBtn = document.getElementById('prevHitBtn');
@@ -2231,7 +2169,6 @@
           });
         }
 
-        // Theme & Copy Link
         document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
           applyTheme(state.theme === 'dark' ? 'light' : 'dark');
           showToast(state.theme === 'dark' ? 'تم تیره فعال شد' : 'تم روشن فعال شد');
@@ -2239,7 +2176,6 @@
 
         document.getElementById('copyLinkBtn')?.addEventListener('click', copyCurrentLink);
 
-        // Reset progress button (non-blocking reset with toast)
         document.getElementById('resetProgressBtn')?.addEventListener('click', () => {
           state.read.clear();
           state.bookmarks.clear();
@@ -2249,18 +2185,15 @@
           showToast('وضعیت خوانده‌شده‌ها و نشان‌ها پاک شد');
         });
 
-        // Mobile Drawer
         document.getElementById('openDrawerBtn')?.addEventListener('click', openMobileDrawer);
         document.getElementById('closeDrawerBtn')?.addEventListener('click', closeMobileDrawer);
         document.getElementById('drawerBackdrop')?.addEventListener('click', closeMobileDrawer);
 
-        // Brand Home Link
         document.getElementById('brandHomeLink')?.addEventListener('click', (e) => {
           e.preventDefault();
           navigateToSection('intro', true);
         });
 
-        // Keyboard shortcuts: '/' focuses search; Alt+ArrowLeft / Alt+ArrowRight navigates sections
         document.addEventListener('keydown', (e) => {
           const tag = document.activeElement ? document.activeElement.tagName : '';
           const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
@@ -2275,7 +2208,6 @@
             e.preventDefault();
             const idx = ALL_SECTIONS.findIndex((s) => s.id === state.currentSection);
             const curIdx = idx === -1 ? 0 : idx;
-            // In RTL: ArrowLeft moves to next section, ArrowRight moves to previous section
             const targetIdx = e.key === 'ArrowLeft'
               ? Math.min(ALL_SECTIONS.length - 1, curIdx + 1)
               : Math.max(0, curIdx - 1);
@@ -2283,7 +2215,6 @@
           }
         });
 
-        // Hashchange & Scroll listeners
         window.addEventListener('hashchange', () => {
           const h = (location.hash || '').replace(/^#/, '');
           if (ALL_SECTIONS.some((s) => s.id === h)) {
@@ -2293,7 +2224,6 @@
 
         window.addEventListener('scroll', handleScroll, { passive: true });
 
-        // Initial render
         syncAllViews(false);
         if (state.currentSection !== 'intro') {
           requestAnimationFrame(() => {
