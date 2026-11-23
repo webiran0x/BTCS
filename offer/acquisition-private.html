@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- جلوگیری از ایندکس و رصد در موتورهای جستجو -->
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+  <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+  <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet" />
+  <meta name="description" content="واگذاری یکپارچه دامنه برند چهارحرفی BTCS.IR همراه با پلتفرم تحلیل بازار، شبیه‌ساز ترید، ۶ ماشین‌حساب ریسک، آکادمی ۸ فصلی، لایسنس PDF و پنل مدیریت." />
+  <meta name="theme-color" content="#050508" id="themeColorMeta" />
+  <title>واگذاری پلتفرم و دامنه برند BTCS.IR | دسترسی خصوصی</title>
+
+  <!-- Tailwind CSS via CDN for responsive grid & utility layout -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* =====================================================================
+       Typography & Design Tokens (2026 Apple Spatial Glassmorphism + RTL)
+       ===================================================================== */
+    @font-face {
+      font-family: 'AppleFaSpatial';
+      src:
+        local('IRANYekanXVF'),
+        local('IRANYekanX'),
+        local('Vazirmatn'),
+        local('SF Pro Display');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --font-sans: 'AppleFaSpatial', 'IRANYekanXVF', 'IRANYekanX', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --radius-2xl: 32px;
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --ease-apple: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-snappy: cubic-bezier(0.25, 0.8, 0.25, 1);
+      --header-height: 70px;
+    }
+
+    :root[data-theme="dark"] {
+      --bg-base: #050508;
+      --mesh-1: radial-gradient(ellipse 68% 52% at 15% 6%, rgba(41, 151, 255, 0.22), transparent 62%);
+      --mesh-2: radial-gradient(ellipse 60% 48% at 86% 12%, rgba(124, 92, 255, 0.18), transparent 60%);
+      --mesh-3: radial-gradient(ellipse 70% 55% at 50% 98%, rgba(48, 209, 88, 0.11), transparent 65%);
+      --glass-nav: rgba(11, 13, 20, 0.72);
+      --glass-surface: rgba(20, 23, 34, 0.66);
+      --glass-surface-elevated: rgba(27, 31, 46, 0.82);
+      --glass-card: rgba(255, 255, 255, 0.036);
+      --glass-card-hover: rgba(255, 255, 255, 0.072);
+      --glass-pill: rgba(255, 255, 255, 0.06);
+      --hairline: rgba(255, 255, 255, 0.1);
+      --hairline-strong: rgba(255, 255, 255, 0.2);
+      --text-primary: #f5f5f7;
+      --text-secondary: rgba(245, 245, 247, 0.76);
+      --text-muted: rgba(245, 245, 247, 0.54);
+      --accent-blue: #2997ff;
+      --accent-indigo: #8a7dff;
+      --accent-green: #30d158;
+      --accent-amber: #ff9f0a;
+      --accent-gold: #e5be58;
+      --accent-rose: #ff453a;
+      --shadow-hero: 0 32px 80px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    }
+
+    :root[data-theme="light"] {
+      --bg-base: #f5f5f7;
+      --mesh-1: radial-gradient(ellipse 68% 52% at 15% 6%, rgba(0, 113, 227, 0.12), transparent 62%);
+      --mesh-2: radial-gradient(ellipse 60% 48% at 86% 12%, rgba(88, 86, 214, 0.1), transparent 60%);
+      --mesh-3: radial-gradient(ellipse 70% 55% at 50% 98%, rgba(36, 138, 61, 0.08), transparent 65%);
+      --glass-nav: rgba(255, 255, 255, 0.78);
+      --glass-surface: rgba(255, 255, 255, 0.76);
+      --glass-surface-elevated: rgba(255, 255, 255, 0.92);
+      --glass-card: rgba(255, 255, 255, 0.78);
+      --glass-card-hover: rgba(255, 255, 255, 0.98);
+      --glass-pill: rgba(17, 24, 39, 0.05);
+      --hairline: rgba(17, 24, 39, 0.09);
+      --hairline-strong: rgba(17, 24, 39, 0.18);
+      --text-primary: #111318;
+      --text-secondary: rgba(17, 19, 24, 0.76);
+      --text-muted: rgba(17, 19, 24, 0.55);
+      --accent-blue: #0071e3;
+      --accent-indigo: #5e5ce6;
+      --accent-green: #248a3d;
+      --accent-amber: #c96a00;
+      --accent-gold: #a67c14;
+      --accent-rose: #d70015;
+      --shadow-hero: 0 24px 64px rgba(15, 23, 42, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-family: var(--font-sans);
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--bg-base);
+      background-image: var(--mesh-1), var(--mesh-2), var(--mesh-3);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.85;
+      overflow-x: hidden;
+      transition: background-color 320ms var(--ease-apple), color 240ms var(--ease-apple);
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* =====================================================================
+       Apple-Style Lock Screen Overlay
+       ===================================================================== */
+    .apple-lock-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(41, 151, 255, 0.24), transparent 46%),
+        radial-gradient(circle at 82% 20%, rgba(138, 125, 255, 0.22), transparent 46%),
+        radial-gradient(circle at 50% 88%, rgba(229, 190, 88, 0.14), transparent 52%),
+        #050508;
+    }
+
+    .lock-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(85px);
+      opacity: 0.45;
+      pointer-events: none;
+      animation: orbDrift 9s ease-in-out infinite alternate;
+    }
+    .lock-orb.one {
+      width: 320px;
+      height: 320px;
+      background: rgba(41, 151, 255, 0.34);
+      top: -70px;
+      right: -60px;
+    }
+    .lock-orb.two {
+      width: 280px;
+      height: 280px;
+      background: rgba(138, 125, 255, 0.28);
+      bottom: -70px;
+      left: -50px;
+      animation-delay: -4s;
+    }
+
+    @keyframes orbDrift {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(20px, -16px) scale(1.08); }
+    }
+
+    .apple-lock-card {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 420px;
+      padding: 36px 28px 28px;
+      border-radius: 32px;
+      background: rgba(22, 25, 36, 0.74);
+      backdrop-filter: blur(36px) saturate(180%);
+      -webkit-backdrop-filter: blur(36px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 32px 84px rgba(0, 0, 0, 0.68), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      text-align: center;
+    }
+
+    .apple-lock-card.shake {
+      animation: lockShake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
+    @keyframes lockShake {
+      10%, 90% { transform: translateX(-4px); }
+      20%, 80% { transform: translateX(6px); }
+      30%, 50%, 70% { transform: translateX(-8px); }
+      40%, 60% { transform: translateX(8px); }
+    }
+
+    .lock-icon-box {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.7rem;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03));
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    }
+
+    .lock-input-wrap {
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    .lock-input {
+      width: 100%;
+      height: 50px;
+      padding: 0 46px 0 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(0, 0, 0, 0.36);
+      color: #f5f5f7;
+      font-size: 1rem;
+      letter-spacing: 0.06em;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .lock-input::placeholder {
+      letter-spacing: normal;
+      font-size: 0.86rem;
+      color: rgba(245, 245, 247, 0.46);
+    }
+
+    .lock-input:focus {
+      border-color: #2997ff;
+      background: rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 0 4px rgba(41, 151, 255, 0.22);
+    }
+
+    .lock-eye-btn {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 0;
+      background: transparent;
+      color: rgba(245, 245, 247, 0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+    }
+    .lock-eye-btn:hover {
+      color: #f5f5f7;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    #protectedSalesApp {
+      display: none;
+    }
+
+    /* Apple-style translucent header */
+    .apple-header {
+      position: sticky;
+      top: 0;
+      z-index: 45;
+      min-height: var(--header-height);
+      background: var(--glass-nav);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    /* Spatial Glass Containers */
+    .glass-hero {
+      background: var(--glass-surface);
+      backdrop-filter: blur(30px) saturate(175%);
+      -webkit-backdrop-filter: blur(30px) saturate(175%);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-hero);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-section {
+      background: var(--glass-surface);
+      backdrop-filter: blur(24px) saturate(165%);
+      -webkit-backdrop-filter: blur(24px) saturate(165%);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-card);
+    }
+
+    .bento-card {
+      background: var(--glass-card);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      transition: transform 240ms var(--ease-snappy), background-color 200ms var(--ease-snappy), border-color 200ms var(--ease-snappy);
+    }
+
+    .bento-card:hover {
+      background: var(--glass-card-hover);
+      border-color: var(--hairline-strong);
+      transform: translateY(-2px);
+    }
+
+    /* Apple Buttons */
+    .btn-apple {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 9px 18px;
+      border-radius: 999px;
+      background: var(--glass-pill);
+      border: 1px solid var(--hairline);
+      color: var(--text-primary);
+      font-size: 0.86rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 180ms var(--ease-snappy), background-color 180ms var(--ease-snappy), border-color 180ms var(--ease-snappy);
+    }
+
+    .btn-apple:hover {
+      background: var(--glass-card-hover);
+      border-color: var(--hairline-strong);
+      transform: translateY(-1px);
+    }
+
+    .btn-apple.primary {
+      background: linear-gradient(180deg, #389eff 0%, #0071e3 100%);
+      border-color: rgba(255, 255, 255, 0.24);
+      color: #ffffff;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0, 113, 227, 0.36);
+    }
+
+    .btn-apple.primary:hover {
+      box-shadow: 0 12px 28px rgba(0, 113, 227, 0.48);
+    }
+
+    .btn-apple.gold {
+      background: linear-gradient(135deg, rgba(229, 190, 88, 0.24), rgba(255, 159, 10, 0.16));
+      border-color: rgba(229, 190, 88, 0.48);
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    /* Segmented / Pill Controls */
+    .seg-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--glass-pill);
+      border: 1px solid var(--hairline);
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 180ms var(--ease-snappy);
+    }
+
+    .seg-pill.is-active {
+      background: linear-gradient(135deg, rgba(41, 151, 255, 0.24), rgba(138, 125, 255, 0.24));
+      border-color: rgba(41, 151, 255, 0.55);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .code-tag {
+      display: inline-block;
+      direction: ltr;
+      unicode-bidi: isolate;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: var(--glass-pill);
+      border: 1px solid var(--hairline);
+      color: var(--accent-blue);
+    }
+
+    /* Custom Range Slider */
+    input[type="range"].apple-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--hairline-strong);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"].apple-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 10px rgba(0, 113, 227, 0.45);
+      cursor: pointer;
+    }
+
+    /* Scroll Reveal Choreography */
+    .reveal-on-scroll {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 560ms var(--ease-apple), transform 560ms var(--ease-apple);
+    }
+    .reveal-on-scroll.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Modal Backdrop */
+    .modal-sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      overflow-y: auto;
+    }
+    .modal-sheet.open {
+      display: flex;
+    }
+
+    /* Toast Notification */
+    .toast-pill {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      z-index: 120;
+      transform: translateX(-50%) translateY(24px);
+      background: var(--glass-surface-elevated);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border: 1px solid var(--hairline-strong);
+      color: var(--text-primary);
+      padding: 11px 22px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-hero);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms var(--ease-snappy), transform 300ms var(--ease-apple);
+      max-width: calc(100vw - 32px);
+      text-align: center;
+    }
+    .toast-pill.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal-on-scroll { opacity: 1; transform: none; transition: none; }
+      .bento-card, .btn-apple, .seg-pill, .lock-orb { transition: none; animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Apple-Style Password Lock Screen -->
+  <section id="appleLockScreen" class="apple-lock-screen" aria-label="قفل ورود با رمز عبور">
+    <div class="lock-orb one" aria-hidden="true"></div>
+    <div class="lock-orb two" aria-hidden="true"></div>
+
+    <div id="appleLockCard" class="apple-lock-card">
+      <div class="lock-icon-box" aria-hidden="true">🔐</div>
+      <h1 class="text-xl font-extrabold tracking-tight m-0" style="color: #f5f5f7;">دسترسی خصوصی BTCS.IR</h1>
+      <p class="text-xs sm:text-sm leading-relaxed mt-2 mb-6" style="color: rgba(245, 245, 247, 0.72);">
+        صفحه واگذاری و بررسی پلتفرم صرفاً با رمز عبور باز می‌شود. رمز اختصاصی خود را وارد کنید.
+      </p>
+
+      <form id="appleUnlockForm" autocomplete="off">
+        <div class="lock-input-wrap">
+          <input
+            id="lockPasswordInput"
+            type="password"
+            class="lock-input"
+            placeholder="رمز عبور را وارد کنید"
+            aria-label="رمز عبور"
+            required
+            autofocus
+          />
+          <button
+            type="button"
+            id="toggleLockEyeBtn"
+            class="lock-eye-btn"
+            aria-label="نمایش یا مخفی کردن رمز"
+            title="نمایش / مخفی کردن رمز"
+          >
+            👁️
+          </button>
+        </div>
+
+        <button type="submit" class="btn-apple primary w-full" style="height: 48px; border-radius: 16px;">
+          باز کردن صفحه واگذاری
+        </button>
+      </form>
+
+      <div id="lockErrorMsg" class="min-h-[22px] mt-3 text-xs font-semibold" style="color: #ff453a;" role="alert" aria-live="polite"></div>
+
+      <div class="mt-4 pt-3.5 flex items-center justify-between gap-2 text-[11px]" style="border-top: 1px solid rgba(255, 255, 255, 0.08); color: rgba(245, 245, 247, 0.5);">
+        <span>NOINDEX · PRIVATE ROOM</span>
+        <span class="code-tag">BTCS.IR</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Protected Sales Application (Visible Only After Password Unlock) -->
+  <div id="protectedSalesApp">
+    <!-- Sticky Apple-Style Glass Navigation -->
+    <header class="apple-header">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3 flex-wrap">
+        <a href="#top" class="flex items-center gap-3 no-underline text-inherit min-w-0">
+          <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shrink-0" style="background: linear-gradient(135deg, rgba(41,151,255,0.24), rgba(229,190,88,0.2)); border: 1px solid var(--hairline-strong); color: var(--accent-blue);">
+            BTCS
+          </div>
+          <div class="min-w-0">
+            <div class="text-sm sm:text-base font-extrabold tracking-tight truncate">BTCS.IR · واگذاری پلتفرم و برند</div>
+            <div class="text-[11px] truncate" style="color: var(--text-muted);">تحلیل بازار، شبیه‌ساز ترید، ۶ ماشین‌حساب ریسک و آکادمی PDF</div>
+          </div>
+        </a>
+
+        <nav aria-label="ناوبری صفحه فروش" class="hidden xl:flex items-center gap-1 text-xs">
+          <a href="#brand-value" class="btn-apple" style="min-height: 34px; padding: 5px 12px;">ارزش برند و دامنه</a>
+          <a href="#architecture" class="btn-apple" style="min-height: 34px; padding: 5px 12px;">معماری و ماژول‌ها</a>
+          <a href="#institutional" class="btn-apple" style="min-height: 34px; padding: 5px 12px;">کاربرد ارگانی و تجاری</a>
+          <a href="#valuation" class="btn-apple" style="min-height: 34px; padding: 5px 12px;">شبیه‌ساز درآمد و واگذاری</a>
+          <a href="#faq" class="btn-apple" style="min-height: 34px; padding: 5px 12px;">پرسش خریداران</a>
+        </nav>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <button type="button" id="copyPitchBtn" class="btn-apple text-xs">📋 کپی چکیده آگهی</button>
+          <button type="button" id="openOfferBtnHeader" class="btn-apple primary text-xs">💼 ثبت پیشنهاد خرید</button>
+          <button type="button" id="lockSessionBtn" class="btn-apple text-xs" title="قفل مجدد صفحه">🔒 قفل</button>
+          <button type="button" id="themeToggleBtn" class="btn-apple" style="min-width: 42px; padding: 8px;" aria-label="تغییر تم روشن و تیره">☀️</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="top" class="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-20 space-y-8">
+      <!-- 1. HERO SHOWCASE: Domain Brand + Platform Flagship -->
+      <section class="glass-hero p-6 sm:p-10 lg:p-12">
+        <div aria-hidden="true" style="position:absolute; top:-90px; left:-70px; width:280px; height:280px; border-radius:50%; background:radial-gradient(circle, rgba(41,151,255,0.22), transparent 70%); pointer-events:none;"></div>
+        <div aria-hidden="true" style="position:absolute; bottom:-110px; right:-60px; width:320px; height:320px; border-radius:50%; background:radial-gradient(circle, rgba(229,190,88,0.16), transparent 70%); pointer-events:none;"></div>
+
+        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-7 space-y-4">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-3.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(41,151,255,0.16); color: var(--accent-blue); border: 1px solid rgba(41,151,255,0.35);">
+                واگذاری یکپارچه دامنه + پلتفرم آماده بهره‌برداری · ۲۰۲۶
+              </span>
+              <span class="px-3.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(229,190,88,0.15); color: var(--accent-gold); border: 1px solid rgba(229,190,88,0.35);">
+                دامنه ۴ حرفی یکتا: BTCS.IR
+              </span>
+            </div>
+
+            <h1 class="text-2xl sm:text-4xl lg:text-[2.65rem] font-black leading-[1.35] tracking-tight m-0">
+              پلتفرم جامع تحلیل بازار، شبیه‌ساز ترید و آکادمی با دامنه برند <span style="color: var(--accent-blue);">BTCS.IR</span>
+            </h1>
+
+            <p class="text-sm sm:text-base leading-relaxed m-0" style="color: var(--text-secondary);">
+              یک دارایی دیجیتال یکپارچه شامل دامنه کوتاه، خوش‌برند و سازمانی <strong style="color: var(--text-primary);">BTCS.IR</strong> به‌همراه پلتفرم چندبخشی تحلیل بازار، اسکنر و فیوچرز، دستیار هوشمند، شبیه‌ساز معاملات، ۶ ماشین‌حساب ریسک، آکادمی ۸ فصلی با آزمون تصادفی و صدور لایسنس مهارتی PDF. طراحی‌شده با رویکرد شفافیت، انضباط و محیط آموزشی بدون ریسک سرمایه واقعی.
+            </p>
+
+            <div class="flex flex-wrap items-center gap-3 pt-2">
+              <button type="button" id="openOfferBtnHero" class="btn-apple primary text-sm px-6">
+                💼 درخواست جلسه بررسی و ثبت پیشنهاد
+              </button>
+              <a href="#valuation" class="btn-apple text-sm px-5">
+                📊 محاسبه پتانسیل درآمد و واگذاری
+              </a>
+              <a href="#architecture" class="btn-apple gold text-sm px-5">
+                🧩 کاوش تمام بخش‌ها و مسیرها
+              </a>
+            </div>
+          </div>
+
+          <!-- Right Bento Summary Card -->
+          <div class="lg:col-span-5 space-y-3.5">
+            <div class="bento-card p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold" style="color: var(--accent-gold);">هویت برند و قابلیت سازمانی</span>
+                <span class="code-tag">https://btcs.ir/</span>
+              </div>
+              <div class="text-2xl font-black tracking-wider tabular-nums" style="direction: ltr; text-align: left;">
+                BTCS.IR
+              </div>
+              <p class="text-xs leading-relaxed m-0" style="color: var(--text-secondary);">
+                کوتاه، خوش‌تلفظ و قابل تعمیم برای <strong>ارگان‌ها، مؤسسات آموزشی، آکادمی‌های مالی، شرکت‌های فین‌تک و پروژه‌های تحلیلی</strong> جهت آموزش، ارزیابی مهارت و صدور لایسنس PDF.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 tabular-nums">
+              <div class="bento-card p-3.5 text-center">
+                <div class="text-[11px]" style="color: var(--text-muted);">بخش‌ها و مسیرها</div>
+                <div class="text-xl font-black mt-1" style="color: var(--accent-blue);">۱۲+</div>
+              </div>
+              <div class="bento-card p-3.5 text-center">
+                <div class="text-[11px]" style="color: var(--text-muted);">ماشین‌حساب ریسک</div>
+                <div class="text-xl font-black mt-1" style="color: var(--accent-green);">۶ ابزار</div>
+              </div>
+              <div class="bento-card p-3.5 text-center">
+                <div class="text-[11px]" style="color: var(--text-muted);">فصل‌های آکادمی</div>
+                <div class="text-xl font-black mt-1" style="color: var(--accent-amber);">۸ فصل</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. DOMAIN & BRAND VALUE SPOTLIGHT -->
+      <section id="brand-value" class="glass-section p-6 sm:p-8 space-y-6 reveal-on-scroll">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div class="space-y-1.5 max-w-2xl">
+            <span class="text-xs font-bold" style="color: var(--accent-gold);">مزیت استراتژیک دامنه و برند</span>
+            <h2 class="text-xl sm:text-2xl font-extrabold m-0">چرا دامنه و برند BTCS.IR یک دارایی متمایز و ماندگار است؟</h2>
+            <p class="text-xs sm:text-sm m-0" style="color: var(--text-secondary);">
+              روی تب‌های زیر کلیک کنید تا ببینید نام کوتاه و چهارحرفی <strong>BTCS</strong> چگونه برای برندسازی، تعامل با ارگان‌ها و توسعه محصول عمل می‌کند.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" class="seg-pill is-active" data-brand-tab="brand">🏷️ قدرت برندینگ و کوتاهی</button>
+            <button type="button" class="seg-pill" data-brand-tab="org">🏛️ مناسب ارگان‌ها و نهادها</button>
+            <button type="button" class="seg-pill" data-brand-tab="fintech">⚡ مناسب فین‌تک و آکادمی</button>
+          </div>
+        </div>
+
+        <div id="brandSpotlightPanel" class="bento-card p-5 sm:p-6"></div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bento-card p-4 space-y-1.5">
+            <div class="text-sm font-bold" style="color: var(--accent-blue);">کوتاهی و ماندگاری در ذهن</div>
+            <p class="text-xs m-0 leading-relaxed" style="color: var(--text-secondary);">
+              دامنه‌های ۴ حرفی با ساختار شفاف به‌سرعت در ذهن مخاطب، سخنرانی‌ها، دوره‌ها و کارت‌های لایسنس ثبت می‌شوند.
+            </p>
+          </div>
+          <div class="bento-card p-4 space-y-1.5">
+            <div class="text-sm font-bold" style="color: var(--accent-green);">انعطاف هویتی بالا</div>
+            <p class="text-xs m-0 leading-relaxed" style="color: var(--text-secondary);">
+              قابلیت تعریف به‌عنوان برند تحلیل بازار، مرکز شبیه‌سازی یا واحد آموزش و سنجش مهارت بدون محدودیت اسمی.
+            </p>
+          </div>
+          <div class="bento-card p-4 space-y-1.5">
+            <div class="text-sm font-bold" style="color: var(--accent-amber);">اعتبار بصری و لایسنس PDF</div>
+            <p class="text-xs m-0 leading-relaxed" style="color: var(--text-secondary);">
+              صدور گواهی و لایسنس مهارتی با شناسه، هش تأیید و خروجی PDF استاندارد شرکتی زیر نام برند BTCS.
+            </p>
+          </div>
+          <div class="bento-card p-4 space-y-1.5">
+            <div class="text-sm font-bold" style="color: var(--accent-indigo);">شفافیت آموزشی و غیرصرافی</div>
+            <p class="text-xs m-0 leading-relaxed" style="color: var(--text-secondary);">
+              تمرکز بر آموزش، تحلیل و شبیه‌سازی به جای صرافی یا تضمین سود، مسیر همکاری با نهادهای آموزشی و سازمانی را هموار می‌کند.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. INTERACTIVE ARCHITECTURE & MODULE EXPLORER -->
+      <section id="architecture" class="glass-section p-6 sm:p-8 space-y-6 reveal-on-scroll">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div class="space-y-1.5 max-w-2xl">
+            <span class="text-xs font-bold" style="color: var(--accent-blue);">معماری فنی و قابلیت‌های محصول</span>
+            <h2 class="text-xl sm:text-2xl font-extrabold m-0">تمام بخش‌ها، مسیرها و ابزارهای آماده در پلتفرم BTCS</h2>
+            <p class="text-xs sm:text-sm m-0" style="color: var(--text-secondary);">
+              ماژول‌ها را بر اساس دسته‌بندی فیلتر کنید و جزئیات هر بخش، مسیر و ارزش آن برای کاربر یا سازمان را بررسی نمایید.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" class="seg-pill is-active" data-mod-cat="all">همه بخش‌ها</button>
+            <button type="button" class="seg-pill" data-mod-cat="market">بازار و مشتقات</button>
+            <button type="button" class="seg-pill" data-mod-cat="risk">شبیه‌ساز و ریسک</button>
+            <button type="button" class="seg-pill" data-mod-cat="academy">آکادمی و لایسنس</button>
+            <button type="button" class="seg-pill" data-mod-cat="admin">هشدار و مدیریت</button>
+          </div>
+        </div>
+
+        <div id="modulesBentoGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </section>
+
+      <!-- 4. INSTITUTIONAL & COMMERCIAL USE CASES -->
+      <section id="institutional" class="glass-section p-6 sm:p-8 space-y-6 reveal-on-scroll">
+        <div class="space-y-1.5 max-w-2xl">
+          <span class="text-xs font-bold" style="color: var(--accent-green);">کاربرد سازمانی، آموزشی و تجاری</span>
+          <h2 class="text-xl sm:text-2xl font-extrabold m-0">چه مجموعه‌ها و ارگان‌هایی می‌توانند بیشترین بهره را ببرند؟</h2>
+          <p class="text-xs sm:text-sm m-0" style="color: var(--text-secondary);">
+            ترکیب شبیه‌ساز بدون ریسک، آزمون‌های تصادفی، دفترچه خطا، سنجش آمادگی روانی و خروجی PDF لایسنس، بستر چندمنظوره‌ای ایجاد کرده است.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="bento-card p-5 space-y-2">
+            <div class="text-base font-extrabold">🏛️ ارگان‌ها و نهادهای توانمندسازی</div>
+            <p class="text-xs sm:text-sm m-0 leading-relaxed" style="color: var(--text-secondary);">
+              برگزاری کارگاه‌های سواد مالی، درک ریسک و تمرین شبیه‌سازی برای نیروها یا اعضای مجموعه‌ها بدون نیاز به درگیری سرمایه واقعی و با ارزیابی مستند.
+            </p>
+          </div>
+
+          <div class="bento-card p-5 space-y-2">
+            <div class="text-base font-extrabold">🎓 آکادمی‌ها و مراکز آموزش مالی</div>
+            <p class="text-xs sm:text-sm m-0 leading-relaxed" style="color: var(--text-secondary);">
+              ارائه دوره ۸ فصلی آماده همراه با آزمون رندوم، سناریوهای زنده چارت، فلش‌کارت، ژورنال شخصی و صدور لایسنس مهارتی PDF با کد تأیید برای هنرجویان.
+            </p>
+          </div>
+
+          <div class="bento-card p-5 space-y-2">
+            <div class="text-base font-extrabold">💎 پلتفرم‌های اشتراکی (SaaS / VIP)</div>
+            <p class="text-xs sm:text-sm m-0 leading-relaxed" style="color: var(--text-secondary);">
+              راه‌اندازی عضویت دوره‌ای یا ویژه برای دسترسی به ابزارهای تحلیلی، اسکنر، مقایسه، فیوچرز، دستیار هوشمند، ردیابی سوابق و گزارش‌های تحلیلی.
+            </p>
+          </div>
+
+          <div class="bento-card p-5 space-y-2">
+            <div class="text-base font-extrabold">🧮 آزمایشگاه‌های ریسک و تصمیم‌یار</div>
+            <p class="text-xs sm:text-sm m-0 leading-relaxed" style="color: var(--text-secondary);">
+              بهره‌مندی کاربران از ۶ ماشین‌حساب تخصصی (اندازه پوزیشن، بازه نوسان، نسبت R:R و سربه‌سر، اهرم و لیکوییدیشن، Expectancy و هزینه فاندینگ).
+            </p>
+          </div>
+
+          <div class="bento-card p-5 space-y-2">
+            <div class="text-base font-extrabold">🤝 جذب اسپانسر و همکاری تجاری</div>
+            <p class="text-xs sm:text-sm m-0 leading-relaxed" style="color: var(--text-secondary);">
+              امکان همکاری با برندهای مرتبط با ابزارهای نرم‌افزاری، آموزش مالی یا خدمات دیجیتال با حفظ شفافیت اطلاع‌رسانی و استقلال تحلیلی.
+            </p>
+          </div>
+
+          <div class="bento-card p-5 space-y-2">
+            <div class="text-base font-extrabold">⚙️ مدیریت متمرکز و مقیاس‌پذیری</div>
+            <p class="text-xs sm:text-sm m-0 leading-relaxed" style="color: var(--text-secondary);">
+              بهره‌مندی از بخش مدیریتی (`#/manage`) برای پایش آمار، کاربران، محتوا، تنظیمات، API و Jobs در مسیر توسعه بلندمدت.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. INTERACTIVE ACQUISITION & REVENUE POTENTIAL ESTIMATOR -->
+      <section id="valuation" class="glass-section p-6 sm:p-8 space-y-6 reveal-on-scroll">
+        <div class="space-y-1.5 max-w-2xl">
+          <span class="text-xs font-bold" style="color: var(--accent-blue);">شبیه‌ساز سناریوی درآمد و ارزش‌گذاری برای خریدار</span>
+          <h2 class="text-xl sm:text-2xl font-extrabold m-0">برآورد سناریوی بهره‌برداری ماهانه و سالانه پلتفرم BTCS.IR</h2>
+          <p class="text-xs sm:text-sm m-0" style="color: var(--text-secondary);">
+            این ابزار به خریدار کمک می‌کند بر اساس مدل درآمدی مدنظر خود (اشتراک کاربری، لایسنس سازمانی/آکادمی و اسپانسرشیپ) یک تصویر شبیه‌سازی‌شده از پتانسیل درآمدی بسازد.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div class="lg:col-span-7 bento-card p-5 sm:p-6 space-y-5 tabular-nums">
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs sm:text-sm">
+                <label for="subUsersRange">تعداد کاربران اشتراکی فعال فرضی</label>
+                <strong id="subUsersLabel" style="color: var(--accent-blue);">۲۵۰ کاربر</strong>
+              </div>
+              <input id="subUsersRange" type="range" min="50" max="3000" step="50" value="250" class="apple-slider" />
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs sm:text-sm">
+                <label for="subPriceRange">میانگین حق اشتراک ماهانه هر کاربر (تومان)</label>
+                <strong id="subPriceLabel" style="color: var(--accent-green);">۲۹۰,۰۰۰ تومان</strong>
+              </div>
+              <input id="subPriceRange" type="range" min="90000" max="1500000" step="10000" value="290000" class="apple-slider" />
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs sm:text-sm">
+                <label for="orgSeatsRange">تعداد لایسنس سازمانی / آکادمی (بسته‌های آموزشی و PDF)</label>
+                <strong id="orgSeatsLabel" style="color: var(--accent-gold);">۳ پکیج سازمانی</strong>
+              </div>
+              <input id="orgSeatsRange" type="range" min="0" max="25" step="1" value="3" class="apple-slider" />
+            </div>
+
+            <div class="space-y-2">
+              <div class="flex justify-between text-xs sm:text-sm">
+                <label for="sponsorRange">درآمد ماهانه تخمینی اسپانسرشیپ / همکاری (تومان)</label>
+                <strong id="sponsorLabel" style="color: var(--accent-indigo);">۱۵,۰۰۰,۰۰۰ تومان</strong>
+              </div>
+              <input id="sponsorRange" type="range" min="0" max="150000000" step="5000000" value="15000000" class="apple-slider" />
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 space-y-4 tabular-nums">
+            <div class="bento-card p-5 space-y-3">
+              <div class="text-xs font-bold" style="color: var(--text-muted);">برآیند شبیه‌سازی‌شده درآمد ناخالص</div>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span style="color: var(--text-secondary);">درآمد اشتراک ماهانه:</span>
+                  <strong id="estSubMonthly" style="color: var(--accent-blue);">—</strong>
+                </div>
+                <div class="flex justify-between">
+                  <span style="color: var(--text-secondary);">درآمد لایسنس سازمانی ماهانه:</span>
+                  <strong id="estOrgMonthly" style="color: var(--accent-gold);">—</strong>
+                </div>
+                <div class="flex justify-between">
+                  <span style="color: var(--text-secondary);">اسپانسرشیپ ماهانه:</span>
+                  <strong id="estSponsorMonthly" style="color: var(--accent-indigo);">—</strong>
+                </div>
+                <div class="pt-3 flex justify-between items-baseline text-base" style="border-top: 1px solid var(--hairline);">
+                  <span class="font-bold">جمع تخمینی ماهانه:</span>
+                  <strong id="estTotalMonthly" class="text-xl font-black" style="color: var(--accent-green);">—</strong>
+                </div>
+                <div class="flex justify-between items-baseline text-xs sm:text-sm">
+                  <span style="color: var(--text-muted);">جمع تخمینی سالانه (۱۲ ماه):</span>
+                  <strong id="estTotalYearly" class="font-extrabold">—</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="bento-card p-4 text-xs leading-relaxed" style="color: var(--text-secondary);">
+              این ماشین‌حساب صرفاً برای بررسی سناریوهای فرضی خریداران طراحی شده و تضمین درآمد واقعی نیست؛ نتیجه نهایی به اجرای بازاریابی، کیفیت محتوا، زیرساخت و مدل قیمت‌گذاری خریدار بستگی دارد.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. TRANSFER SCOPE, DUE DILIGENCE CHECKLIST & FAQ -->
+      <section id="faq" class="grid grid-cols-1 lg:grid-cols-12 gap-6 reveal-on-scroll">
+        <div class="lg:col-span-5 glass-section p-6 sm:p-8 space-y-4">
+          <div class="text-xs font-bold" style="color: var(--accent-gold);">محدوده واگذاری و چک‌لیست خریدار</div>
+          <h2 class="text-xl font-extrabold m-0">آنچه در معامله تحویل داده می‌شود</h2>
+          <ul class="space-y-2.5 text-xs sm:text-sm p-0 m-0 list-none" style="color: var(--text-secondary);">
+            <li class="bento-card p-3 flex items-start gap-2.5">
+              <span style="color: var(--accent-green); font-weight: 800;">✓</span>
+              <span>مالکیت و انتقال رسمی دامنه برند چهارحرفی <strong style="color: var(--text-primary);">BTCS.IR</strong> طبق توافق طرفین.</span>
+            </li>
+            <li class="bento-card p-3 flex items-start gap-2.5">
+              <span style="color: var(--accent-green); font-weight: 800;">✓</span>
+              <span>پلتفرم جامع وب شامل نمای بازارها، اسکنر، مقایسه، فیوچرز، دستیار هوشمند، ردیابی سوابق، شبیه‌ساز و ابزارها.</span>
+            </li>
+            <li class="bento-card p-3 flex items-start gap-2.5">
+              <span style="color: var(--accent-green); font-weight: 800;">✓</span>
+              <span>آکادمی ۸ فصلی، آزمون تصادفی، سناریوهای چارت، ۶ ماشین‌حساب ریسک، واژه‌نامه و لایسنس مهارتی PDF.</span>
+            </li>
+            <li class="bento-card p-3 flex items-start gap-2.5">
+              <span style="color: var(--accent-green); font-weight: 800;">✓</span>
+              <span>ساختار بخش‌های حساب کاربری، هشدارها، راهنمای جامع و پنل مدیریت (`#/manage`).</span>
+            </li>
+            <li class="bento-card p-3 flex items-start gap-2.5">
+              <span style="color: var(--accent-green); font-weight: 800;">✓</span>
+              <span>ارائه دمو، توضیح معماری و همراهی اولیه برای تحویل منظم در چارچوب قرارداد واگذاری.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="lg:col-span-7 glass-section p-6 sm:p-8 space-y-4">
+          <div class="text-xs font-bold" style="color: var(--accent-blue);">پرسش‌های متداول خریداران جدی</div>
+          <h2 class="text-xl font-extrabold m-0">شفافیت کامل پیش از مذاکره و خرید</h2>
+          <div id="faqAccordion" class="space-y-3"></div>
+        </div>
+      </section>
+
+      <!-- Bottom Callout & Mandatory Non-Exchange Disclaimer -->
+      <section class="glass-hero p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 reveal-on-scroll">
+        <div class="space-y-1.5 max-w-2xl">
+          <div class="text-xs font-bold" style="color: var(--accent-blue);">آماده بررسی و واگذاری</div>
+          <h2 class="text-xl sm:text-2xl font-extrabold m-0">علاقه‌مند به خرید پلتفرم و دامنه BTCS.IR هستید؟</h2>
+          <p class="text-xs sm:text-sm m-0 leading-relaxed" style="color: var(--text-secondary);">
+            <strong>توجه حقوقی و شفافیت:</strong> پلتفرم BTCS ماهیت تحلیلی، شبیه‌ساز و آموزشی دارد و صرافی، کارگزاری یا خدمات مشاوره سرمایه‌گذاری با تضمین سود محسوب نمی‌شود. جزئیات دقیق کد، سرویس‌ها و شرایط انتقال به صورت شفاف در جلسه بررسی ارائه می‌شود.
+          </p>
+        </div>
+        <div class="flex items-center gap-3 shrink-0 flex-wrap">
+          <button type="button" id="openOfferBtnFooter" class="btn-apple primary text-sm px-6">
+            💼 ثبت درخواست و پیشنهاد خرید
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Offer / Inquiry Modal -->
+    <div id="offerModal" class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="offerModalTitle">
+      <div class="glass-section p-6 sm:p-8 max-w-xl w-full space-y-4">
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <h2 id="offerModalTitle" class="text-lg font-extrabold m-0">ثبت درخواست بررسی و پیشنهاد خرید BTCS.IR</h2>
+            <p class="text-xs m-0 mt-0.5" style="color: var(--text-muted);">جزئیات خریدار یا سازمان و پیشنهاد خود را ثبت کنید تا خلاصه آن آماده شود.</p>
+          </div>
+          <button type="button" id="closeOfferBtn" class="btn-apple" style="min-width: 38px; min-height: 38px; padding: 0;">✕</button>
+        </div>
+
+        <form id="offerForm" class="space-y-3.5 text-xs sm:text-sm">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block mb-1" for="buyerNameInput">نام و نام خانوادگی / نام مجموعه</label>
+              <input id="buyerNameInput" type="text" required placeholder="مثلاً: گروه فناوری و آموزش مالی" class="w-full h-10 px-3 rounded-xl outline-none" style="background: var(--glass-pill); border: 1px solid var(--hairline); color: var(--text-primary);" />
+            </div>
+            <div>
+              <label class="block mb-1" for="buyerRoleSelect">نوع خریدار</label>
+              <select id="buyerRoleSelect" class="w-full h-10 px-3 rounded-xl outline-none" style="background: var(--glass-pill); border: 1px solid var(--hairline); color: var(--text-primary);">
+                <option value="آکادمی یا مرکز آموزشی">آکادمی یا مرکز آموزشی</option>
+                <option value="ارگان یا نهاد سازمانی">ارگان یا نهاد سازمانی</option>
+                <option value="استارتاپ فین‌تک یا SaaS">استارتاپ فین‌تک یا SaaS</option>
+                <option value="سرمایه‌گذار یا خریدار مستقل">سرمایه‌گذار یا خریدار مستقل</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block mb-1" for="buyerContactInput">راه ارتباطی (ایمیل، تلگرام یا تلفن)</label>
+              <input id="buyerContactInput" type="text" required placeholder="name@example.com یا @id" class="w-full h-10 px-3 rounded-xl outline-none" style="background: var(--glass-pill); border: 1px solid var(--hairline); color: var(--text-primary);" />
+            </div>
+            <div>
+              <label class="block mb-1" for="buyerScopeSelect">محدوده درخواست</label>
+              <select id="buyerScopeSelect" class="w-full h-10 px-3 rounded-xl outline-none" style="background: var(--glass-pill); border: 1px solid var(--hairline); color: var(--text-primary);">
+                <option value="خرید یکپارچه دامنه BTCS.IR + کل پلتفرم">خرید یکپارچه دامنه BTCS.IR + کل پلتفرم</option>
+                <option value="درخواست دمو فنی و بررسی معماری">درخواست دمو فنی و بررسی معماری</option>
+                <option value="همکاری / لایسنس سازمانی">همکاری / لایسنس سازمانی</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block mb-1" for="buyerNotesInput">پیشنهاد، بودجه یا توضیح تکمیلی</label>
+            <textarea id="buyerNotesInput" rows="3" placeholder="زمان‌بندی مدنظر، هدف بهره‌برداری یا سوالات فنی خود را بنویسید..." class="w-full p-3 rounded-xl outline-none resize-y" style="background: var(--glass-pill); border: 1px solid var(--hairline); color: var(--text-primary);"></textarea>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2 flex-wrap">
+            <button type="button" id="copyOfferSummaryBtn" class="btn-apple text-xs">📋 کپی متن درخواست</button>
+            <button type="submit" class="btn-apple primary text-xs px-5">✓ ثبت و تایید درخواست</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastBanner" class="toast-pill" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* =====================================================================
+         Password Gate Configuration (Change Passwords Before Deployment)
+         ===================================================================== */
+      const VALID_PASSWORDS = ['BTCS2026', 'VIP-DEAL-88'];
+      const LOCK_STORAGE_KEY = 'btcs_sale_unlocked_v2';
+
+      /* =====================================================================
+         Data Definitions for Brand Spotlight, Platform Modules & Buyer FAQ
+         ===================================================================== */
+      const BRAND_SPOTLIGHTS = {
+        brand: {
+          title: 'هویت برند کوتاه، مدرن و ماندگار: BTCS.IR',
+          subtitle: 'چهار حرف متمایز با قابلیت ثبت سریع در ذهن مخاطب، لوگو، گواهی‌نامه و لینک‌های اشتراک‌گذاری',
+          points: [
+            'کوتاه و خوش‌ساخت برای تایپ سریع، معرفی شفاهی و درج در بنرها و لایسنس‌های PDF.',
+            'هماهنگ با استانداردهای طراحی مدرن ۲۰۲۶ و فضای محصولات تحلیلی و آموزشی.',
+            'قابل توسعه به عنوان برند مادر برای آکادمی، آزمایشگاه ریسک، ابزارهای تحلیلی و محتوای تخصصی.'
+          ]
+        },
+        org: {
+          title: 'مناسب ارگان‌ها، نهادهای آموزشی و برنامه‌های توانمندسازی',
+          subtitle: 'محیط آموزشی شفاف و شبیه‌ساز بدون ریسک سرمایه واقعی برای آموزش و سنجش مهارت',
+          points: [
+            'امکان آموزش مفاهیم بازار، مدیریت ریسک و انضباط تصمیم‌گیری بدون درگیر کردن سرمایه واقعی.',
+            'مناسب برای دوره‌های آموزشی سازمانی، مراکز توانمندسازی و آزمون‌های ارزیابی مهارتی.',
+            'خروجی لایسنس PDF با شناسه و کد تأیید جهت مستندسازی شرکت در دوره‌ها و تمرین‌ها.'
+          ]
+        },
+        fintech: {
+          title: 'آماده تبدیل شدن به محصول SaaS، آکادمی تخصصی یا برند فین‌تک',
+          subtitle: 'معماری چندمسیره با بخش‌های تحلیلی، شبیه‌ساز، ردیابی عملکرد و پنل مدیریت',
+          points: [
+            'ترکیب ابزارهای تحلیل و رصد با شبیه‌ساز معاملات، ۶ ماشین‌حساب ریسک و آکادمی ۸ فصلی.',
+            'بستر آماده برای تعریف پلن‌های اشتراکی، دوره‌های آموزشی یا بسته‌های سازمانی.',
+            'دارای بخش مدیریتی (#/manage) برای پایش آمار، کاربران، محتوا، تنظیمات، API و Jobs.'
+          ]
+        }
+      };
+
+      const PLATFORM_MODULES = [
+        {
+          cat: 'market',
+          name: 'نمای بازارها و رصد لحظه‌ای',
+          route: '#/',
+          summary: 'نمایش فضای کلی بازار، شاخص ترس و طمع، لیست پیگیری (Watchlist) و شروع سریع تحلیل.',
+          buyerValue: 'نقطه ورود اصلی کاربران برای رصد وضعیت کلی بازار و ساخت روال روزانه.'
+        },
+        {
+          cat: 'market',
+          name: 'تحلیل تک‌ارزی، سناریوها و بازه نوسان',
+          route: '#/coin/...',
+          summary: 'بررسی نمودار، سناریوهای ورود/حد ضرر/هدف، دمو، بک‌تست، الگوها، دفتر سفارش و درک بازه و تایمینگ.',
+          buyerValue: 'ارائه تحلیل چندبعدی به جای اتکا به یک کندل یا پیش‌بینی تک‌عددی.'
+        },
+        {
+          cat: 'market',
+          name: 'اسکنر، مقایسه و بازار فیوچرز',
+          route: '#/scanner · #/compare · #/futures',
+          summary: 'غربال سریع ارزها، مقایسه عملکرد و رصد Funding Rate، Open Interest و لیکوییدیشن‌ها.',
+          buyerValue: 'ابزارهای پرمخاطب برای تحلیل‌گران و تریدرهای میان‌رده و پیشرفته.'
+        },
+        {
+          cat: 'risk',
+          name: 'دستیار هوشمند، یادگیری و سابقه عملکرد',
+          route: '#/ai · #/learn · #/track',
+          summary: 'پرسش‌وپاسخ متمرکز روی ارز، ارزیابی عملکرد مدل‌ها و مقایسه سوابق آزمایشی و واقعی با ضریب اعتماد تایم‌فریم‌ها.',
+          buyerValue: 'ایجاد شفافیت تحلیلی و کمک به تفکیک خطای مدل از خطای اجرای انسانی.'
+        },
+        {
+          cat: 'risk',
+          name: 'شبیه‌ساز معاملات و ۶ ماشین‌حساب ریسک',
+          route: '#/trader · #/tools',
+          summary: 'تمرین بدون ریسک با پول مجازی، DCA، و محاسبه‌گرهای اندازه پوزیشن، بازه نوسان، R:R و سربه‌سر، اهرم، Expectancy و فاندینگ.',
+          buyerValue: 'ارزش عملی بالا برای کاهش خطاهای حجمی و درک ریاضی مدیریت ریسک.'
+        },
+        {
+          cat: 'academy',
+          name: 'آکادمی ۸ فصلی، آزمون تصادفی و لایسنس PDF',
+          route: '/academy/',
+          summary: 'آزمون با گزینه‌های تصادفی، سناریوهای زنده چارت، واژه‌نامه، فلش‌کارت، Anti-Tilt، XP، ژورنال و لایسنس PDF.',
+          buyerValue: 'موتور جذب، آموزش و صدور گواهی/لایسنس مناسب کاربران، آکادمی‌ها و ارگان‌ها.'
+        },
+        {
+          cat: 'admin',
+          name: 'حساب کاربری، هشدارها و پنل مدیریت',
+          route: '#/account · #/alerts · #/manage',
+          summary: 'هشدارهای قیمت و سیگنال، کانال‌های اطلاع‌رسانی و مدیریت آمار، کاربران، محتوا، تنظیمات، API و Jobs.',
+          buyerValue: 'زیرساخت عملیاتی و مدیریتی برای اداره و توسعه پلتفرم توسط خریدار.'
+        }
+      ];
+
+      const BUYER_FAQS = [
+        {
+          q: 'آیا پلتفرم BTCS صرافی یا سامانه سرمایه‌گذاری با تضمین سود است؟',
+          a: 'خیر؛ پلتفرم BTCS ماهیت تحلیلی، شبیه‌ساز و آموزشی دارد. تمام آزمون‌ها، سناریوها و ماشین‌حساب‌ها برای یادگیری، تمرین بدون ریسک سرمایه واقعی و تصمیم‌سازی آگاهانه طراحی شده‌اند.'
+        },
+        {
+          q: 'چرا دامنه BTCS.IR برای ارگان‌ها و مجموعه‌های آموزشی جذاب است؟',
+          a: 'نام کوتاه چهارحرفی BTCS هم هویت برند قوی و ماندگاری دارد و هم به دلیل تمرکز آموزشی، تحلیلی و شبیه‌ساز (بدون فعالیت صرافی)، امکان استفاده در دوره‌های توانمندسازی، آکادمی‌ها و ارزیابی‌های مهارتی را تسهیل می‌کند.'
+        },
+        {
+          q: 'خریدار چگونه می‌تواند از آکادمی و لایسنس PDF درآمدزایی کند؟',
+          a: 'خریدار می‌تواند دسترسی ویژه به سناریوها، آزمون‌ها و صدور لایسنس مهارتی PDF را در قالب پلن اشتراکی، دوره‌های آموزشی یا پکیج‌های سازمانی/آکادمیک عرضه کند.'
+        },
+        {
+          q: 'فرآیند بررسی و تحویل پلتفرم و دامنه چگونه انجام می‌شود؟',
+          a: 'پس از ثبت درخواست و هماهنگی اولیه، دمو و ساختار بخش‌ها ارائه شده و پس از توافق نهایی، انتقال دامنه BTCS.IR و تحویل پلتفرم مطابق مفاد قرارداد صورت می‌گیرد.'
+        }
+      ];
+
+      /* =====================================================================
+         State & Theme Management
+         ===================================================================== */
+      const state = {
+        theme: 'dark',
+        brandTab: 'brand',
+        modCat: 'all',
+        openFaq: 0,
+        subUsers: 250,
+        subPrice: 290000,
+        orgSeats: 3,
+        sponsor: 15000000
+      };
+
+      let toastTimer = null;
+      function showToast(message) {
+        const el = document.getElementById('toastBanner');
+        if (!el) return;
+        el.textContent = message;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+      }
+
+      function applyTheme(mode) {
+        state.theme = mode === 'light' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', state.theme);
+        const meta = document.getElementById('themeColorMeta');
+        if (meta) meta.setAttribute('content', state.theme === 'dark' ? '#050508' : '#f5f5f7');
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) btn.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+        try { localStorage.setItem('btcs_sale_theme_2026', state.theme); } catch {}
+      }
+
+      /* =====================================================================
+         Password Gate Unlock & Lock Handlers
+         ===================================================================== */
+      function unlockSalesApp() {
+        try { sessionStorage.setItem(LOCK_STORAGE_KEY, '1'); } catch {}
+        const lockEl = document.getElementById('appleLockScreen');
+        const appEl = document.getElementById('protectedSalesApp');
+        if (lockEl) lockEl.style.display = 'none';
+        if (appEl) appEl.style.display = 'block';
+        initScrollReveal();
+      }
+
+      function lockSalesApp() {
+        try { sessionStorage.removeItem(LOCK_STORAGE_KEY); } catch {}
+        const lockEl = document.getElementById('appleLockScreen');
+        const appEl = document.getElementById('protectedSalesApp');
+        const inputEl = document.getElementById('lockPasswordInput');
+        const errEl = document.getElementById('lockErrorMsg');
+        if (appEl) appEl.style.display = 'none';
+        if (lockEl) lockEl.style.display = 'flex';
+        if (inputEl) {
+          inputEl.value = '';
+          setTimeout(() => inputEl.focus(), 50);
+        }
+        if (errEl) errEl.textContent = '';
+      }
+
+      function initPasswordGate() {
+        let alreadyUnlocked = false;
+        try { alreadyUnlocked = sessionStorage.getItem(LOCK_STORAGE_KEY) === '1'; } catch {}
+        if (alreadyUnlocked) {
+          unlockSalesApp();
+        }
+
+        const form = document.getElementById('appleUnlockForm');
+        const input = document.getElementById('lockPasswordInput');
+        const eyeBtn = document.getElementById('toggleLockEyeBtn');
+        const card = document.getElementById('appleLockCard');
+        const errEl = document.getElementById('lockErrorMsg');
+        const lockBtn = document.getElementById('lockSessionBtn');
+
+        eyeBtn?.addEventListener('click', () => {
+          if (!input) return;
+          const isPwd = input.type === 'password';
+          input.type = isPwd ? 'text' : 'password';
+          eyeBtn.textContent = isPwd ? '🙈' : '👁️';
+          input.focus();
+        });
+
+        form?.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const entered = (input?.value || '').trim();
+          if (VALID_PASSWORDS.includes(entered)) {
+            if (errEl) {
+              errEl.style.color = '#30d158';
+              errEl.textContent = 'رمز صحیح است؛ در حال باز کردن صفحه…';
+            }
+            setTimeout(() => unlockSalesApp(), 200);
+          } else {
+            if (errEl) {
+              errEl.style.color = '#ff453a';
+              errEl.textContent = 'رمز عبور اشتباه است. دوباره تلاش کنید.';
+            }
+            if (card) {
+              card.classList.remove('shake');
+              void card.offsetWidth;
+              card.classList.add('shake');
+            }
+            input?.select();
+          }
+        });
+
+        lockBtn?.addEventListener('click', () => {
+          lockSalesApp();
+          showToast('صفحه قفل شد');
+        });
+      }
+
+      /* =====================================================================
+         Renderers: Brand Spotlight, Modules Grid, Valuation & FAQ
+         ===================================================================== */
+      function renderBrandSpotlight() {
+        const panel = document.getElementById('brandSpotlightPanel');
+        const item = BRAND_SPOTLIGHTS[state.brandTab] || BRAND_SPOTLIGHTS.brand;
+        if (!panel) return;
+
+        panel.innerHTML = `
+          <div class="space-y-3">
+            <div>
+              <h3 class="text-base sm:text-lg font-extrabold m-0" style="color: var(--accent-blue);">${item.title}</h3>
+              <p class="text-xs sm:text-sm m-0 mt-1" style="color: var(--text-muted);">${item.subtitle}</p>
+            </div>
+            <ul class="grid grid-cols-1 md:grid-cols-3 gap-3 p-0 m-0 list-none text-xs sm:text-sm">
+              ${item.points.map((pt) => `
+                <li class="p-3.5 rounded-2xl leading-relaxed" style="background: var(--glass-pill); border: 1px solid var(--hairline); color: var(--text-secondary);">
+                  ${pt}
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        `;
+      }
+
+      function renderModules() {
+        const grid = document.getElementById('modulesBentoGrid');
+        if (!grid) return;
+
+        const filtered = PLATFORM_MODULES.filter((m) => state.modCat === 'all' || m.cat === state.modCat);
+        grid.innerHTML = filtered.map((m) => `
+          <article class="bento-card p-5 flex flex-col justify-between gap-3">
+            <div class="space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <h3 class="text-sm sm:text-base font-extrabold m-0">${m.name}</h3>
+                <span class="code-tag shrink-0">${m.route}</span>
+              </div>
+              <p class="text-xs leading-relaxed m-0" style="color: var(--text-secondary);">${m.summary}</p>
+            </div>
+            <div class="pt-2.5 text-xs" style="border-top: 1px solid var(--hairline); color: var(--accent-green);">
+              ارزش برای خریدار: <span style="color: var(--text-primary);">${m.buyerValue}</span>
+            </div>
+          </article>
+        `).join('');
+      }
+
+      function formatToman(num) {
+        const n = Math.round(num);
+        if (n >= 1000000000) {
+          return `${(n / 1000000000).toFixed(2)} میلیارد تومان`;
+        }
+        if (n >= 1000000) {
+          return `${(n / 1000000).toFixed(1)} میلیون تومان`;
+        }
+        return `${n.toLocaleString('fa-IR')} تومان`;
+      }
+
+      function updateValuationEstimator() {
+        const users = Number(document.getElementById('subUsersRange')?.value || 250);
+        const price = Number(document.getElementById('subPriceRange')?.value || 290000);
+        const seats = Number(document.getElementById('orgSeatsRange')?.value || 3);
+        const sponsor = Number(document.getElementById('sponsorRange')?.value || 15000000);
+
+        state.subUsers = users;
+        state.subPrice = price;
+        state.orgSeats = seats;
+        state.sponsor = sponsor;
+
+        const orgUnitMonthly = 8000000;
+        const subMonthly = users * price;
+        const orgMonthly = seats * orgUnitMonthly;
+        const totalMonthly = subMonthly + orgMonthly + sponsor;
+        const totalYearly = totalMonthly * 12;
+
+        document.getElementById('subUsersLabel').textContent = `${users.toLocaleString('fa-IR')} کاربر`;
+        document.getElementById('subPriceLabel').textContent = `${price.toLocaleString('fa-IR')} تومان`;
+        document.getElementById('orgSeatsLabel').textContent = `${seats.toLocaleString('fa-IR')} پکیج سازمانی`;
+        document.getElementById('sponsorLabel').textContent = `${sponsor.toLocaleString('fa-IR')} تومان`;
+
+        document.getElementById('estSubMonthly').textContent = formatToman(subMonthly);
+        document.getElementById('estOrgMonthly').textContent = formatToman(orgMonthly);
+        document.getElementById('estSponsorMonthly').textContent = formatToman(sponsor);
+        document.getElementById('estTotalMonthly').textContent = formatToman(totalMonthly);
+        document.getElementById('estTotalYearly').textContent = formatToman(totalYearly);
+      }
+
+      function renderFaq() {
+        const container = document.getElementById('faqAccordion');
+        if (!container) return;
+
+        container.innerHTML = BUYER_FAQS.map((item, idx) => {
+          const isOpen = state.openFaq === idx;
+          return `
+            <div class="bento-card p-4">
+              <button type="button" data-faq-idx="${idx}" class="w-full flex items-center justify-between gap-3 text-right bg-transparent border-0 p-0 cursor-pointer" style="color: var(--text-primary);">
+                <span class="text-xs sm:text-sm font-bold">${item.q}</span>
+                <span class="text-sm font-bold shrink-0" style="color: var(--accent-blue);">${isOpen ? '−' : '+'}</span>
+              </button>
+              ${isOpen ? `<p class="text-xs sm:text-sm m-0 mt-2.5 pt-2.5 leading-relaxed" style="border-top: 1px solid var(--hairline); color: var(--text-secondary);">${item.a}</p>` : ''}
+            </div>
+          `;
+        }).join('');
+
+        container.querySelectorAll('[data-faq-idx]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const idx = Number(btn.getAttribute('data-faq-idx'));
+            state.openFaq = state.openFaq === idx ? -1 : idx;
+            renderFaq();
+          });
+        });
+      }
+
+      /* =====================================================================
+         Modal, Clipboard Pitch & Scroll Choreography
+         ===================================================================== */
+      function openOfferModal() {
+        document.getElementById('offerModal')?.classList.add('open');
+      }
+      function closeOfferModal() {
+        document.getElementById('offerModal')?.classList.remove('open');
+      }
+
+      function buildPitchText() {
+        return [
+          '🚀 فروش یکپارچه پلتفرم و دامنه برند یکتای BTCS.IR',
+          'دامنه کوتاه ۴ حرفی مناسب ارگان‌ها، آکادمی‌ها، مجموعه‌های آموزشی و شرکت‌های فین‌تک/تحلیلی.',
+          'بخش‌ها: بازارها (#/)، تحلیل تک‌ارزی، اسکنر (#/scanner)، مقایسه (#/compare)، فیوچرز (#/futures)، دستیار AI (#/ai)، سوابق (#/track و #/learn)، شبیه‌ساز (#/trader)، ۶ ماشین‌حساب ریسک (#/tools)، آکادمی ۸ فصلی با آزمون تصادفی و لایسنس PDF (/academy/) و پنل مدیریت (#/manage).',
+          'محیط تحلیلی، شبیه‌ساز و آموزشی (بدون صرافی یا تضمین سود).'
+        ].join('\n');
+      }
+
+      function copyToClipboardSafe(text, successMsg) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showToast(successMsg)).catch(() => {
+            fallbackCopy(text, successMsg);
+          });
+        } else {
+          fallbackCopy(text, successMsg);
+        }
+      }
+
+      function fallbackCopy(text, successMsg) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch {}
+        document.body.removeChild(ta);
+        showToast(successMsg);
+      }
+
+      function initScrollReveal() {
+        const els = document.querySelectorAll('.reveal-on-scroll');
+        if (!('IntersectionObserver' in window)) {
+          els.forEach((el) => el.classList.add('is-visible'));
+          return;
+        }
+        const obs = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              obs.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.08 });
+        els.forEach((el) => obs.observe(el));
+      }
+
+      function init() {
+        let savedTheme = 'dark';
+        try { savedTheme = localStorage.getItem('btcs_sale_theme_2026') || 'dark'; } catch {}
+        applyTheme(savedTheme);
+        initPasswordGate();
+
+        document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
+          applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+        });
+
+        document.querySelectorAll('[data-brand-tab]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.brandTab = btn.getAttribute('data-brand-tab') || 'brand';
+            document.querySelectorAll('[data-brand-tab]').forEach((b) => b.classList.toggle('is-active', b === btn));
+            renderBrandSpotlight();
+          });
+        });
+
+        document.querySelectorAll('[data-mod-cat]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.modCat = btn.getAttribute('data-mod-cat') || 'all';
+            document.querySelectorAll('[data-mod-cat]').forEach((b) => b.classList.toggle('is-active', b === btn));
+            renderModules();
+          });
+        });
+
+        ['subUsersRange', 'subPriceRange', 'orgSeatsRange', 'sponsorRange'].forEach((id) => {
+          document.getElementById(id)?.addEventListener('input', updateValuationEstimator);
+        });
+
+        ['openOfferBtnHeader', 'openOfferBtnHero', 'openOfferBtnFooter'].forEach((id) => {
+          document.getElementById(id)?.addEventListener('click', openOfferModal);
+        });
+        document.getElementById('closeOfferBtn')?.addEventListener('click', closeOfferModal);
+
+        document.getElementById('copyPitchBtn')?.addEventListener('click', () => {
+          copyToClipboardSafe(buildPitchText(), 'چکیده آگهی BTCS.IR در کلیپ‌بورد کپی شد');
+        });
+
+        document.getElementById('copyOfferSummaryBtn')?.addEventListener('click', () => {
+          const name = (document.getElementById('buyerNameInput')?.value || '').trim() || 'خریدار';
+          const role = document.getElementById('buyerRoleSelect')?.value || '';
+          const contact = (document.getElementById('buyerContactInput')?.value || '').trim() || 'ثبت نشده';
+          const scope = document.getElementById('buyerScopeSelect')?.value || '';
+          const notes = (document.getElementById('buyerNotesInput')?.value || '').trim() || '—';
+          const summary = `درخواست بررسی / خرید BTCS.IR\nنام/مجموعه: ${name} (${role})\nتماس: ${contact}\nمحدوده: ${scope}\nتوضیحات: ${notes}`;
+          copyToClipboardSafe(summary, 'خلاصه درخواست خرید کپی شد');
+        });
+
+        document.getElementById('offerForm')?.addEventListener('submit', (e) => {
+          e.preventDefault();
+          closeOfferModal();
+          showToast('درخواست بررسی و پیشنهاد شما ثبت شد؛ می‌توانید خلاصه آن را کپی و ارسال کنید');
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeOfferModal();
+        });
+
+        renderBrandSpotlight();
+        renderModules();
+        updateValuationEstimator();
+        renderFaq();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
