@@ -493,7 +493,7 @@ export async function getCandles(coin, interval = '1h', total = 500) {
         // لیست کرده باشد، کل نمودار را می‌دهد.
         if (out.length < Math.min(total, MIN_HISTORY) && coin && typeof coin === 'object') {
           const ex = await exchangeCandles(coin, interval, total).catch(() => null);
-          if (ex && ex.candles.length > out.length) return ex;
+          if (ex && ex.candles.length > out.length) { markLive(); return ex; }
         }
         markLive();
         return { candles: out, source: 'binance', pair };
@@ -503,7 +503,7 @@ export async function getCandles(coin, interval = '1h', total = 500) {
   // در بایننس نیست (یا بایننس غیرقابل‌دسترس است): کندل‌های واقعی از صرافی دیگر.
   if (coin && typeof coin === 'object') {
     const ex = await exchangeCandles(coin, interval, total).catch(() => null);
-    if (ex) return ex;
+    if (ex) { markLive(); return ex; }
   }
   if (coin && typeof coin === 'object' && coin.source === 'coingecko') {
     // خطای 404 در اینجا یک پاسخ واقعی است — «این تایم‌فریم برای این ارز وجود ندارد» —
@@ -516,7 +516,6 @@ export async function getCandles(coin, interval = '1h', total = 500) {
   }
   const demoId = (typeof coin === 'object' && coin?.source === 'demo' && coin.id) || demo.demoSymbolToId(pair || `${coin?.symbol}USDT`);
   if (demoId) {
-    markDemo('candles');
     return { candles: demo.demoCandles(demoId, interval, Math.min(total, 1500)), source: 'demo', pair };
   }
   if (!pair && typeof coin === 'object' && knownVenue(coin) === null) {
