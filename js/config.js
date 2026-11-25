@@ -10,6 +10,12 @@ export const CONFIG = {
   PAPRIKA: 'https://api.coinpaprika.com/v1',
   FEAR_GREED: 'https://api.alternative.me/fng/',
 
+  NAVASAN_API_KEY: 'freeNqUmPeZCk9vK6dbtCeCLQEp0nXSU',
+  NAVASAN_URL: 'https://api.navasan.tech',
+  NAVASAN_ITEM: 'usdt', // یا 'usd_sell'
+  NAVASAN_TTL_MS: 6 * 3600e3, // حداکثر ۴ درخواست در روز ≈ ۱۲۰ درخواست در ماه
+  NAVASAN_MONTHLY_QUOTA: 120,
+
   // استعلام‌های کیف پول (فقط برای مشاهده)
   RPC: {
     eth: 'https://ethereum-rpc.publicnode.com',
