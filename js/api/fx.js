@@ -71,7 +71,6 @@ async function fetchNavasanTomanRate() {
 
   try {
     if (!canCallNavasan()) return null;
-    incrementQuota();
 
     const url = `${baseUrl}/latest/?api_key=${encodeURIComponent(apiKey)}&item=${encodeURIComponent(item)}`;
     const res = await fetch(url, { cache: 'no-store' });
@@ -81,7 +80,12 @@ async function fetchNavasanTomanRate() {
     const entry = data?.[item] || data?.usdt || data?.usd_sell || null;
     const rawVal = entry?.value ?? entry?.dollar_rate;
     const parsed = Number(String(rawVal ?? '').replace(/,/g, '').trim());
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+
+    if (Number.isFinite(parsed) && parsed > 0) {
+      incrementQuota();
+      return parsed;
+    }
+    return null;
   } catch {
     return null;
   } finally {
