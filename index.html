@@ -41,12 +41,14 @@
   <link rel="modulepreload" href="js/app.js">
 
   <style>
+    #ticker { height: 36px; min-height: 36px; overflow: hidden; contain: layout style; }
+    .foot { min-height: 96px; contain: layout style; }
+    .bottombar { min-height: 54px; contain: layout style; }
+
     /* پایدارسازی چیدمان برای جلوگیری از پرش CLS */
     #banner:empty { min-height: 0; }
     #ticker { min-height: 36px; contain: layout style; }
-    #view { min-height: 60vh; contain: layout; }
     #accountBtn { min-width: 84px; min-height: 34px; }
-    .seo-intro { min-height: 220px; }
     .foot { min-height: 110px; contain: layout style; }
     .bottombar { min-height: 56px; contain: layout style; }
 
