@@ -201,8 +201,11 @@ async function route(opts) {
       document.getElementById('errReload')?.addEventListener('click', () => location.reload());
     }
   }
-  if (keep !== null) { if (seq === routeSeq) window.scrollTo({ top: keep }); return; }
-  window.scrollTo({ top: 0 });
+  if (keep !== null) {
+    if (seq === routeSeq) requestAnimationFrame(() => window.scrollTo({ top: keep }));
+    return;
+  }
+  requestAnimationFrame(() => window.scrollTo({ top: 0 }));
   trackPageView(location.hash || '#/');
 }
 
