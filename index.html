@@ -43,6 +43,13 @@
   <link rel="modulepreload" href="js/app.js">
 
   <style>
+    /* پایدارسازی چیدمان برای جلوگیری از پرش CLS */
+    #banner:empty { min-height: 0; }
+    #ticker { min-height: 36px; contain: layout style; }
+    #view { min-height: 60vh; contain: layout; }
+    #accountBtn { min-width: 84px; min-height: 34px; }
+    .seo-intro { min-height: 220px; }
+
     /* قرارگیری سایدبار در سمت راست و محتوای اصلی در سمت چپ */
     .app {
       display: flex;
