@@ -33,18 +33,48 @@ export async function sb() {
   return clientPromise;
 }
 
+// Deduplicate concurrent reads and cache briefly to avoid burst requests
+const __readCache = new Map();
+const __inflightReads = new Map();
+function dedupeRead(key, ttlMs, fn) {
+  const now = Date.now();
+  const cached = __readCache.get(key);
+  if (cached && cached.expiresAt > now) return Promise.resolve(cached.value);
+  if (__inflightReads.has(key)) return __inflightReads.get(key);
+  const promise = Promise.resolve()
+    .then(fn)
+    .then((val) => {
+      __inflightReads.delete(key);
+      if (ttlMs > 0) __readCache.set(key, { value: val, expiresAt: Date.now() + ttlMs });
+      return val;
+    })
+    .catch((err) => {
+      __inflightReads.delete(key);
+      throw err;
+    });
+  __inflightReads.set(key, promise);
+  return promise;
+}
+function invalidateReadCache(prefix = '') {
+  for (const k of Array.from(__readCache.keys())) {
+    if (!prefix || k.startsWith(prefix)) __readCache.delete(k);
+  }
+}
+
 async function loadProfile(client) {
   const { data: authData, error: authError } = await client.auth.getUser();
   if (authError || !authData?.user) return null;
-  
-  const { data } = await client.from('profiles').select('*').eq('id', authData.user.id).maybeSingle();
-  return data;
+  return dedupeRead(`profile:${authData.user.id}`, 8000, async () => {
+    const { data } = await client.from('profiles').select('*').eq('id', authData.user.id).maybeSingle();
+    return data;
+  });
 }
 
 export const isPremium = () => !!(auth.profile && (auth.profile.is_admin || (auth.profile.premium_until && new Date(auth.profile.premium_until) > new Date())));
 export const isAdmin = () => !!auth.profile?.is_admin;
 
 export async function refreshProfile() {
+  invalidateReadCache('profile:');
   const client = await sb();
   if (!client || !auth.user) return null;
   auth.profile = await loadProfile(client);
@@ -86,6 +116,7 @@ export async function signIn(email, password) {
 }
 
 export async function signOut() {
+  invalidateReadCache();
   const client = await sb();
   await client?.auth.signOut();
   auth.user = null; auth.profile = null;
@@ -95,6 +126,7 @@ export async function signOut() {
 export async function updateProfile(patch) {
   const client = await sb();
   if (!client || !auth.user) return;
+  invalidateReadCache(`profile:${auth.user.id}`);
   await client.from('profiles').update(patch).eq('id', auth.user.id);
   await refreshProfile();
 }
@@ -105,9 +137,11 @@ export async function updateProfile(patch) {
 export async function pullUserData() {
   const client = await sb();
   if (!client || !auth.user) return null;
-  const { data, error } = await client.from('user_data').select('*').eq('user_id', auth.user.id).maybeSingle();
-  if (error) throw new Error(error.message);
-  return data;
+  return dedupeRead(`user_data:${auth.user.id}`, 5000, async () => {
+    const { data, error } = await client.from('user_data').select('*').eq('user_id', auth.user.id).maybeSingle();
+    if (error) throw new Error(error.message);
+    return data;
+  });
 }
 
 /**
@@ -118,6 +152,7 @@ export async function pullUserData() {
 export async function pushUserData({ cols = {}, trading = {} } = {}) {
   const client = await sb();
   if (!client || !auth.user) throw new Error('Not signed in.');
+  invalidateReadCache(`user_data:${auth.user.id}`);
   const { error } = await client.rpc('sync_user_data', { p_cols: cols, p_trading: trading });
   if (error) throw new Error(error.message);
 }
@@ -163,9 +198,11 @@ export async function consumeRecoveryLink() {
 export async function serverAlerts() {
   const client = await sb();
   if (!client || !auth.user) return [];
-  const { data, error } = await client.from('alerts').select('*').order('created_at', { ascending: false }).limit(100);
-  if (error) throw new Error(error.message);
-  return data || [];
+  return dedupeRead(`alerts:${auth.user.id}`, 10000, async () => {
+    const { data, error } = await client.from('alerts').select('*').order('created_at', { ascending: false }).limit(100);
+    if (error) throw new Error(error.message);
+    return data || [];
+  });
 }
 
 /** Saves an alert on the server and returns its id. */
@@ -173,6 +210,7 @@ export async function createServerAlert(alert) {
   const client = await sb();
   if (!auth.user) throw new Error('Sign in to save alerts on the server.');
   if (!client) throw new Error('The alert server is not reachable right now.');
+  invalidateReadCache(`alerts:${auth.user.id}`);
   const { data, error } = await client.from('alerts').insert({ ...alert, user_id: auth.user.id }).select('id').single();
   if (error) throw new Error(error.message.includes('Alert limit') ? error.message : 'Could not save the alert.');
   return data?.id ?? null;
@@ -182,15 +220,18 @@ export async function createServerAlert(alert) {
 export async function serverAiAlerts() {
   const client = await sb();
   if (!client || !auth.user) return [];
-  const { data, error } = await client.from('ai_alerts').select('*').order('created_at', { ascending: false }).limit(100);
-  if (error) throw new Error(error.message);
-  return data || [];
+  return dedupeRead(`ai_alerts:${auth.user.id}`, 10000, async () => {
+    const { data, error } = await client.from('ai_alerts').select('*').order('created_at', { ascending: false }).limit(100);
+    if (error) throw new Error(error.message);
+    return data || [];
+  });
 }
 
 export async function createAiAlert(alert) {
   const client = await sb();
   if (!auth.user) throw new Error('Sign in to save alerts on the server.');
   if (!client) throw new Error('The alert server is not reachable right now.');
+  invalidateReadCache(`ai_alerts:${auth.user.id}`);
   const { data, error } = await client.from('ai_alerts').insert({ ...alert, user_id: auth.user.id }).select('id').single();
   if (error) throw new Error(error.message.includes('Alert limit') ? error.message : 'Could not save the alert.');
   return data?.id ?? null;
@@ -198,12 +239,14 @@ export async function createAiAlert(alert) {
 
 export async function deleteAiAlert(id) {
   const client = await sb();
+  invalidateReadCache('ai_alerts:');
   const { error } = await client.from('ai_alerts').delete().eq('id', id);
   if (error) throw new Error('Could not delete the alert. Try again.');
 }
 
 export async function deleteServerAlert(id) {
   const client = await sb();
+  invalidateReadCache('alerts:');
   const { error } = await client.from('alerts').delete().eq('id', id);
   if (error) throw new Error('Could not delete the alert. Try again.');
 }
