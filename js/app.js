@@ -206,7 +206,13 @@ async function route(opts) {
     return;
   }
   requestAnimationFrame(() => window.scrollTo({ top: 0 }));
-  trackPageView(location.hash || '#/');
+  const __tpvPath = location.hash || '#/';
+  const __runTpv = () => trackPageView(__tpvPath);
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(__runTpv, { timeout: 2500 });
+  } else {
+    setTimeout(__runTpv, 1200);
+  }
 }
 
 document.querySelector('.skip-link')?.addEventListener('click', (e) => { e.preventDefault(); $('#view').focus(); });

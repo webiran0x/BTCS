@@ -322,7 +322,9 @@ export async function getAiRecord({ limit = 5000, symbol = null, interval = null
 export async function getCloudLearning() {
   const client = await sb();
   if (!client) return null;
-  const { data, error } = await client.from('ai_learn').select('interval,summary,updated_at');
+  const { data, error } = await dedupeRead('ai_learn:all', 30000, () =>
+    client.from('ai_learn').select('interval,summary,updated_at')
+  );
   if (error) return null;
   return Object.fromEntries((data || []).filter((r) => r.summary).map((r) => [r.interval, { ...r.summary, updatedAt: r.updated_at }]));
 }
